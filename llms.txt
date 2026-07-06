@@ -40,7 +40,3 @@ We figure out what people actually need, then build the AI to deliver it. Most o
 - [onlyfans](https://onlyfans-gpu.vercel.app): Pre-loved GPU marketplace for discerning buyers. Mockup.
 - [alibi](https://alibi-saas.vercel.app): Client dispute app channelling a legal drama. Mockup.
 - [write like paul graham](https://paulgraham.mooch.agency): Paste your writing, get it back in Paul Graham's voice. Built from 208 of his essays.
-
-## Tools
-
-- [Ready score](https://mooch.agency/ready): A 2-minute self-audit for UX research and AI automation readiness.

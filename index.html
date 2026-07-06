@@ -442,6 +442,34 @@
   .fi-row .fi-name { font-family: var(--serif); font-size: clamp(22px, 3.2vw, 26px); line-height: 1; letter-spacing: -0.015em; color: var(--black); margin: 6px 0 8px; }
   .fi-row .fi-blurb { font-size: 13px; line-height: 1.5; color: var(--muted); max-width: 42ch; }
   .fi-end { text-align: right; white-space: nowrap; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+  /* "Starts with a 20-min call" sub-line beneath each offer tile */
+  .fi-sub {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+  .fi-hero .fi-sub { margin-top: 16px; }
+
+  /* Contact closer: email fallback text link */
+  .contact-fallback {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .contact-fallback a {
+    color: var(--ink);
+    border-bottom: 1px solid var(--hairline);
+    transition: border-color 0.15s ease;
+  }
+  .contact-fallback a:hover { border-bottom-color: var(--ink); }
+
   @media (max-width: 600px) {
     .fi-row { grid-template-columns: 36px 1fr; }
     .fi-end { grid-column: 2; text-align: left; align-items: flex-start; }
@@ -761,7 +789,13 @@
     </div>
 
     <div class="offer-index" data-reveal="child: :scope > *; cap: 5">
-      <a class="fi-hero" data-cat="ai" href="mailto:hey@mooch.agency?subject=AI%20Automation%20Setup%20%E2%80%94%20let%27s%20book%20one%20in&body=Hi%20Mooch%2C%0A%0AI%27d%20like%20to%20book%20an%20AI%20Automation%20Setup.%0A%0AHere%27s%20a%20bit%20of%20context%20on%20the%20workflow%20I%27d%20like%20to%20tackle%3A%0A%0A%5BDescribe%20the%20repetitive%20task%20or%20process%5D%0A%0A%5BYour%20name%5D%0A%5BCompany%2C%20if%20relevant%5D">
+      <!-- Offer tiles: each triggers the Cal.com popup with prefilled context.
+           href is the no-JS fallback; data-cal-link drives the popup when JS loads.
+           Slug assumed: mooch/discovery. Hold deploy until Phase 4 confirms it. -->
+      <a class="fi-hero" data-cat="ai"
+         href="https://cal.com/mooch/discovery?notes=AI%20Automation%20Setup"
+         data-cal-link="mooch/discovery"
+         data-cal-config='{"notes":"AI Automation Setup"}'>
         <span class="fi-cat">Fixed scope</span>
         <span class="fi-name">AI Automation <em>Setup</em></span>
         <span class="fi-blurb">We find your single highest-leverage AI automation and ship it end to end. Discovery, build and handover included.</span>
@@ -769,14 +803,19 @@
           <span class="fi-price">From &euro;2,500</span>
           <span class="fi-act"><span>Book AI Setup</span><span class="arrow">&rarr;</span></span>
         </span>
+        <span class="fi-sub">Starts with a 20-min call</span>
       </a>
 
-      <a class="fi-row" data-cat="audit" href="mailto:hey@mooch.agency?subject=Content%20%26%20UX%20Audit%20%E2%80%94%20interested&body=Hi%20Mooch%2C%0A%0AI%27d%20like%20to%20get%20a%20Content%20%26%20UX%20Audit.%0A%0AHere%27s%20a%20bit%20of%20context%20on%20what%20we%27re%20working%20with%3A%0A%0A%5BDescribe%20your%20site%20or%20the%20area%20you%27d%20like%20audited%5D%0A%0A%5BYour%20name%5D%0A%5BCompany%2C%20if%20relevant%5D">
+      <a class="fi-row" data-cat="audit"
+         href="https://cal.com/mooch/discovery?notes=Content%20%26%20UX%20Audit"
+         data-cal-link="mooch/discovery"
+         data-cal-config='{"notes":"Content & UX Audit"}'>
         <span class="fi-num">01</span>
         <span>
           <span class="fi-cat">Whole site</span>
           <span class="fi-name">Content &amp; UX <em>Audit</em></span>
           <span class="fi-blurb">A full review of your site's content and UX, with a prioritised list of fixes.</span>
+          <span class="fi-sub">Starts with a 20-min call</span>
         </span>
         <span class="fi-end">
           <span class="fi-price">From &euro;5,000</span>
@@ -784,12 +823,16 @@
         </span>
       </a>
 
-      <a class="fi-row" data-cat="ux" href="mailto:hey@mooch.agency?subject=UX%20Research%20Sprint%20%E2%80%94%20let%27s%20talk&body=Hi%20Mooch%2C%0A%0AI%27d%20like%20to%20run%20a%20UX%20Research%20Sprint.%0A%0AHere%27s%20what%20we%27re%20trying%20to%20figure%20out%3A%0A%0A%5BWhat%20decision%20or%20product%20question%20needs%20answering%5D%0A%0A%5BYour%20name%5D%0A%5BCompany%2C%20if%20relevant%5D">
+      <a class="fi-row" data-cat="ux"
+         href="https://cal.com/mooch/discovery?notes=UX%20Research%20Sprint"
+         data-cal-link="mooch/discovery"
+         data-cal-config='{"notes":"UX Research Sprint"}'>
         <span class="fi-num">02</span>
         <span>
           <span class="fi-cat">One week</span>
           <span class="fi-name">UX Research <em>Sprint</em></span>
           <span class="fi-blurb">One week of focused user research that tells you what to build next, and what to drop.</span>
+          <span class="fi-sub">Starts with a 20-min call</span>
         </span>
         <span class="fi-end">
           <span class="fi-price">From &euro;15,000</span>
@@ -813,8 +856,11 @@
       <h3>A new project. A small idea. A chat over <em>coffee</em>.</h3>
       <p>All welcome. We reply to everything that isn't a sales email, usually within a day.</p>
       <div class="actions">
-        <a class="pill" href="mailto:hey@mooch.agency">hey@mooch.agency <span class="arrow">&rarr;</span></a>
+        <a class="pill" id="contactCta"
+           href="https://cal.com/mooch/discovery"
+           data-cal-link="mooch/discovery">Book a discovery call <span class="arrow">&rarr;</span></a>
       </div>
+      <p class="contact-fallback">Calendars not your thing? <a href="mailto:hey@mooch.agency" id="contactEmail">hey@mooch.agency</a></p>
     </div>
   </div>
 </section>
@@ -829,7 +875,6 @@
         <h4>Studio</h4>
         <a href="#work">Work we've done</a>
         <a href="#offers">Ways to start</a>
-        <a href="/ready">AI readiness check</a>
         <a href="#about">About</a>
       </div>
       <div class="colophon-col">
@@ -851,6 +896,7 @@
         <a href="mailto:hey@mooch.agency">hey@mooch.agency</a>
         <a href="https://x.com/tahigichigi">X / @tahigichigi</a>
         <a href="https://moochagency.substack.com">Substack</a>
+        <a href="https://github.com/mooch-agency/skills" target="_blank" rel="noopener">Open-source skills</a>
       </div>
     </nav>
 
@@ -902,13 +948,29 @@
       });
     });
 
-    // Offer index (How to work with us): featured hero + numbered rows
+    // Offer tiles (How to work with us): now routes to Cal.com booking popup
     document.querySelectorAll('.fi-hero, .fi-row').forEach(function (card) {
       card.addEventListener('click', function () {
         var name = card.querySelector('.fi-name');
-        window.va('event', { name: 'offer_click', data: { offer: name ? name.textContent.trim() : card.href } });
+        window.va('event', { name: 'offer_cta', data: { offer: name ? name.textContent.trim() : card.href } });
       });
     });
+
+    // Contact closer: booking pill
+    var contactCta = document.getElementById('contactCta');
+    if (contactCta) {
+      contactCta.addEventListener('click', function () {
+        window.va('event', { name: 'contact_cta', data: { label: 'Book a discovery call' } });
+      });
+    }
+
+    // Contact closer: email fallback link
+    var contactEmail = document.getElementById('contactEmail');
+    if (contactEmail) {
+      contactEmail.addEventListener('click', function () {
+        window.va('event', { name: 'contact_email', data: { label: 'hey@mooch.agency' } });
+      });
+    }
 
     // Work list rows
     document.querySelectorAll('.work-row').forEach(function (row) {
@@ -917,6 +979,51 @@
         window.va('event', { name: 'work_click', data: { client: client || row.href } });
       });
     });
+  });
+</script>
+
+<!-- Cal.com element-click popup embed.
+     Deferred: loads after page render, intercepts clicks on [data-cal-link] elements.
+     No-JS fallback: the href on each CTA links directly to cal.com/mooch/discovery.
+     Slug assumed: mooch/discovery. Hold reroute deploy until Phase 4 confirms it. -->
+<script>
+  (function (C, A, L) {
+    var p = function (a, ar) { a.q.push(ar); };
+    var d = C.document;
+    C.Cal = C.Cal || function () {
+      var cal = C.Cal;
+      var ar = arguments;
+      if (!cal.loaded) {
+        cal.ns = {}; cal.q = cal.q || [];
+        d.head.appendChild(d.createElement("script")).src = A;
+        cal.loaded = true;
+      }
+      if (ar[0] === L) { var api = function () { p(api, arguments); }; var namespace = ar[1]; api.q = api.q || []; if (typeof namespace === "string") { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ["initNamespace", namespace]); } else p(cal, ar); return; }
+      p(cal, ar);
+    };
+  })(window, "https://app.cal.com/embed/embed.js", "init");
+
+  // Initialise the default namespace with Mooch brand colours
+  Cal("init", { origin: "https://cal.com" });
+  Cal("ui", {
+    theme: "light",
+    styles: { branding: { brandColor: "#1d1d1f" } },
+    hideEventTypeDetails: false
+  });
+</script>
+
+<!-- Booking-confirmed callback: fires when a Cal.com booking completes.
+     This is the conversion event for the discovery-call funnel. -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.Cal) {
+      Cal("on", {
+        action: "bookingSuccessful",
+        callback: function (e) {
+          window.va('event', { name: 'booking_confirmed', data: { source: 'discovery_call' } });
+        }
+      });
+    }
   });
 </script>
 
