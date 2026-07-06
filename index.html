@@ -793,7 +793,7 @@
            href is the no-JS fallback; data-cal-link drives the popup when JS loads.
            Slug assumed: mooch/discovery. Hold deploy until Phase 4 confirms it. -->
       <a class="fi-hero" data-cat="ai"
-         href="https://cal.com/mooch/discovery?notes=AI%20Automation%20Setup"
+         href="https://cal.eu/mooch/discovery?notes=AI%20Automation%20Setup"
          data-cal-link="mooch/discovery"
          data-cal-config='{"notes":"AI Automation Setup"}'>
         <span class="fi-cat">Fixed scope</span>
@@ -807,7 +807,7 @@
       </a>
 
       <a class="fi-row" data-cat="audit"
-         href="https://cal.com/mooch/discovery?notes=Content%20%26%20UX%20Audit"
+         href="https://cal.eu/mooch/discovery?notes=Content%20%26%20UX%20Audit"
          data-cal-link="mooch/discovery"
          data-cal-config='{"notes":"Content & UX Audit"}'>
         <span class="fi-num">01</span>
@@ -824,7 +824,7 @@
       </a>
 
       <a class="fi-row" data-cat="ux"
-         href="https://cal.com/mooch/discovery?notes=UX%20Research%20Sprint"
+         href="https://cal.eu/mooch/discovery?notes=UX%20Research%20Sprint"
          data-cal-link="mooch/discovery"
          data-cal-config='{"notes":"UX Research Sprint"}'>
         <span class="fi-num">02</span>
@@ -857,7 +857,7 @@
       <p>All welcome. We reply to everything that isn't a sales email, usually within a day.</p>
       <div class="actions">
         <a class="pill" id="contactCta"
-           href="https://cal.com/mooch/discovery"
+           href="https://cal.eu/mooch/discovery"
            data-cal-link="mooch/discovery">Book a discovery call <span class="arrow">&rarr;</span></a>
       </div>
       <p class="contact-fallback">Calendars not your thing? <a href="mailto:hey@mooch.agency" id="contactEmail">hey@mooch.agency</a></p>
@@ -984,7 +984,7 @@
 
 <!-- Cal.com element-click popup embed.
      Deferred: loads after page render, intercepts clicks on [data-cal-link] elements.
-     No-JS fallback: the href on each CTA links directly to cal.com/mooch/discovery.
+     No-JS fallback: the href on each CTA links directly to cal.eu/mooch/discovery.
      Slug assumed: mooch/discovery. Hold reroute deploy until Phase 4 confirms it. -->
 <script>
   (function (C, A, L) {
@@ -1001,10 +1001,10 @@
       if (ar[0] === L) { var api = function () { p(api, arguments); }; var namespace = ar[1]; api.q = api.q || []; if (typeof namespace === "string") { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ["initNamespace", namespace]); } else p(cal, ar); return; }
       p(cal, ar);
     };
-  })(window, "https://app.cal.com/embed/embed.js", "init");
+  })(window, "https://app.cal.eu/embed/embed.js", "init");
 
   // Initialise the default namespace with Mooch brand colours
-  Cal("init", { origin: "https://cal.com" });
+  Cal("init", { origin: "https://cal.eu" });
   Cal("ui", {
     theme: "light",
     styles: { branding: { brandColor: "#1d1d1f" } },
