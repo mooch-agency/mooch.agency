@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
+<meta name="description" content="Seven portfolio layout explorations for mooch.agency. Internal draft.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Portfolio section: all explorations">
+<meta property="og:description" content="Seven portfolio layout explorations for mooch.agency. Internal draft.">
+<meta property="og:image" content="https://mooch.agency/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Portfolio section: all explorations">
+<meta name="twitter:description" content="Seven portfolio layout explorations for mooch.agency. Internal draft.">
+<meta name="twitter:image" content="https://mooch.agency/og-image.png">
+<title>Portfolio section: all explorations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+  body { font-family: var(--sans); font-size: 16px; color: var(--ink); background: var(--paper); line-height: 1.5; }
+
+  /* ─── Nav ─── */
+  .toc {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--paper);
+    border-bottom: 1px solid var(--hairline);
+    padding: 12px clamp(20px, 5vw, 56px);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .toc-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-right: 8px;
+  }
+  .toc a {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 5px 12px;
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .toc a:hover { border-color: var(--ink); color: var(--ink); }
+
+  .page-header {
+    padding: 40px clamp(20px, 5vw, 56px) 32px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .page-header h1 { font-family: var(--serif); font-size: 28px; }
+  .page-header p { color: var(--muted); font-size: 14px; margin-top: 6px; max-width: 600px; }
+
+  .exploration {
+    padding: 48px clamp(20px, 5vw, 56px);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .exploration-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .exploration-title {
+    font-family: var(--serif);
+    font-size: 22px;
+    margin-top: 4px;
+  }
+  .exploration-desc {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 6px;
+    max-width: 560px;
+    margin-bottom: 32px;
+  }
+
+  /* Shared atoms */
+  .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .name {
+    font-family: var(--serif);
+    letter-spacing: -0.02em;
+    color: var(--black);
+  }
+  .name em { font-style: italic; }
+  .blurb { font-size: 15px; line-height: 1.5; color: var(--ink); }
+  .cta-link {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s;
+  }
+  .cta-link:hover { color: var(--ink); }
+  .cta-link .arrow { font-size: 14px; transition: transform 0.2s; }
+  .cta-link:hover .arrow { transform: translateX(3px); }
+
+  .section-head { margin-bottom: 32px; }
+  .section-num {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.18em; color: var(--muted); font-weight: 600;
+    display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+  }
+  .section-num strong { color: var(--ink); }
+  .section-num .rule { flex: 1; height: 1px; background: var(--hairline); }
+  .section-title {
+    font-family: var(--serif);
+    font-size: clamp(32px, 5vw, 48px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+  .section-title em { font-style: italic; }
+  .section-lead { font-size: 15px; color: var(--muted); margin-top: 8px; }
+
+  /* ─── Current ─── */
+  .current-carousel {
+    display: flex; gap: 1px; overflow-x: auto; scrollbar-width: none;
+  }
+  .current-carousel::-webkit-scrollbar { display: none; }
+  .current-card {
+    flex: 0 0 min(340px, 82vw);
+    padding: 32px 28px;
+    display: flex; flex-direction: column; gap: 12px;
+    min-height: 240px;
+    border: 1px solid var(--hairline);
+    text-decoration: none; color: inherit;
+  }
+  .current-card .name { font-size: 32px; line-height: 1; margin-top: 6px; }
+  .current-card .blurb { max-width: 28ch; }
+  .current-card .cta-link { margin-top: auto; padding-top: 20px; }
+
+  /* ─── A: Featured hero + compact grid ─── */
+  .a-layout { max-width: 900px; }
+  .a-hero {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+    border: 1px solid var(--hairline); margin-bottom: 1px;
+  }
+  .a-hero-text {
+    padding: 40px 36px; display: flex; flex-direction: column; gap: 12px;
+    background: var(--cat-product);
+  }
+  .a-hero-text .name { font-size: 42px; line-height: 1; margin-top: 8px; }
+  .a-hero-text .blurb { max-width: 30ch; margin-top: 4px; }
+  .a-hero-text .cta-link { margin-top: auto; }
+  .a-hero-img {
+    background: linear-gradient(135deg, hsl(220, 20%, 92%), hsl(220, 15%, 88%));
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    letter-spacing: 0.08em; min-height: 240px;
+  }
+  .a-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; }
+  .a-cell {
+    padding: 24px; border: 1px solid var(--hairline);
+    display: flex; flex-direction: column; gap: 8px; min-height: 160px;
+    text-decoration: none; color: inherit; transition: border-color 0.15s;
+  }
+  .a-cell:hover { border-color: var(--muted); }
+  .a-cell .name { font-size: 24px; line-height: 1; margin-top: 4px; }
+  .a-cell .blurb { font-size: 13px; color: var(--muted); max-width: 26ch; }
+  .a-cell .cta-link { margin-top: auto; font-size: 10px; }
+
+  /* ─── B: Categorised rows ─── */
+  .b-layout { max-width: 900px; }
+  .b-row-label {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.18em; color: var(--muted); font-weight: 600;
+    margin-bottom: 12px; margin-top: 36px;
+  }
+  .b-row-label:first-child { margin-top: 0; }
+  .b-products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; }
+  .b-product-card {
+    padding: 32px 28px; border: 1px solid var(--hairline); background: var(--cat-product);
+    display: flex; flex-direction: column; gap: 10px; min-height: 200px;
+    text-decoration: none; color: inherit; transition: border-color 0.15s;
+  }
+  .b-product-card:hover { border-color: var(--muted); }
+  .b-product-card .name { font-size: 30px; line-height: 1; margin-top: 4px; }
+  .b-product-card .blurb { max-width: 28ch; }
+  .b-product-card .cta-link { margin-top: auto; }
+  .b-prompts { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; }
+  .b-prompt-card {
+    padding: 24px; border: 1px solid var(--hairline); background: var(--cat-prompt);
+    display: flex; flex-direction: column; gap: 8px;
+    text-decoration: none; color: inherit; transition: border-color 0.15s;
+  }
+  .b-prompt-card:hover { border-color: var(--muted); }
+  .b-prompt-card .name { font-size: 24px; line-height: 1; margin-top: 2px; }
+  .b-prompt-card .blurb { font-size: 14px; max-width: 30ch; }
+  .b-prompt-card .cta-link { margin-top: 8px; }
+  .b-playthings { display: flex; flex-wrap: wrap; gap: 1px; }
+  .b-play-chip {
+    padding: 14px 20px; border: 1px solid var(--hairline); background: var(--cat-plaything);
+    text-decoration: none; color: inherit;
+    display: flex; align-items: center; gap: 10px; transition: border-color 0.15s;
+  }
+  .b-play-chip:hover { border-color: var(--muted); }
+  .b-play-chip .name { font-size: 18px; line-height: 1; }
+  .b-play-chip .sep { color: var(--hairline); }
+  .b-play-chip .blurb { font-size: 13px; color: var(--muted); }
+
+  /* ─── C: Stacked rows ─── */
+  .c-layout { max-width: 900px; }
+  .c-row {
+    display: grid; grid-template-columns: 200px 1fr auto;
+    align-items: center; gap: 24px; padding: 28px 0;
+    border-bottom: 1px solid var(--hairline);
+    text-decoration: none; color: inherit; transition: background 0.15s;
+  }
+  .c-row:first-child { border-top: 1px solid var(--hairline); }
+  .c-row:hover { background: var(--surface); }
+  .c-row .name { font-size: 28px; line-height: 1; }
+  .c-row .c-meta { display: flex; flex-direction: column; gap: 4px; }
+  .c-row .blurb { font-size: 14px; color: var(--muted); max-width: 38ch; }
+  .c-row .cta-link { white-space: nowrap; }
+
+  /* ─── D: Bento mosaic ─── */
+  .d-layout { max-width: 900px; }
+  .d-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: minmax(180px, auto); gap: 1px;
+  }
+  .d-card {
+    padding: 28px 24px; border: 1px solid var(--hairline);
+    display: flex; flex-direction: column; gap: 8px;
+    text-decoration: none; color: inherit; transition: border-color 0.15s;
+  }
+  .d-card:hover { border-color: var(--muted); }
+  .d-card .name { font-size: 24px; line-height: 1; margin-top: 4px; }
+  .d-card .blurb { font-size: 13px; color: var(--muted); max-width: 28ch; }
+  .d-card .cta-link { margin-top: auto; font-size: 10px; }
+  .d-card.hero { grid-column: span 2; grid-row: span 2; padding: 36px 32px; }
+  .d-card.hero .name { font-size: 48px; margin-top: 8px; }
+  .d-card.hero .blurb { font-size: 15px; color: var(--ink); max-width: 32ch; margin-top: 4px; }
+  .d-card.hero .cta-link { font-size: 11px; }
+  .d-card.wide { grid-column: span 2; }
+
+  /* ─── E: Magazine index ─── */
+  .e-layout { max-width: 780px; }
+  .e-item {
+    display: grid; grid-template-columns: 48px 1fr auto;
+    align-items: baseline; gap: 20px; padding: 20px 0;
+    border-bottom: 1px solid var(--hairline);
+    text-decoration: none; color: inherit; transition: background 0.12s;
+  }
+  .e-item:first-child { border-top: 1px solid var(--hairline); }
+  .e-item:hover { background: var(--surface); margin-inline: -12px; padding-inline: 12px; }
+  .e-num { font-family: var(--serif); font-size: 36px; line-height: 1; color: var(--hairline); }
+  .e-item:hover .e-num { color: var(--muted); }
+  .e-body { display: flex; flex-direction: column; gap: 2px; }
+  .e-body .name { font-size: 28px; line-height: 1; }
+  .e-body .blurb { font-size: 14px; color: var(--muted); max-width: 36ch; margin-top: 4px; }
+  .e-tag {
+    font-family: var(--mono); font-size: 9px; text-transform: uppercase;
+    letter-spacing: 0.18em; padding: 4px 10px; border-radius: 3px;
+    font-weight: 600; white-space: nowrap; align-self: center;
+  }
+  .e-tag.product { background: var(--cat-product); color: hsl(220, 40%, 45%); }
+  .e-tag.prompt { background: var(--cat-prompt); color: hsl(270, 40%, 45%); }
+  .e-tag.plaything { background: var(--cat-plaything); color: hsl(35, 50%, 40%); }
+
+  /* ─── F: Two-column split ─── */
+  .f-layout {
+    max-width: 900px; display: grid;
+    grid-template-columns: 1fr 1fr; gap: 48px;
+  }
+  .f-col-label {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.18em; color: var(--muted); font-weight: 600;
+    margin-bottom: 16px; padding-bottom: 12px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .f-card {
+    padding: 24px; border: 1px solid var(--hairline); margin-bottom: -1px;
+    display: flex; flex-direction: column; gap: 8px;
+    text-decoration: none; color: inherit; transition: border-color 0.15s;
+  }
+  .f-card:hover { border-color: var(--muted); }
+  .f-card .name { font-size: 26px; line-height: 1; margin-top: 2px; }
+  .f-card .blurb { font-size: 14px; color: var(--muted); max-width: 28ch; }
+  .f-card .cta-link { margin-top: 8px; font-size: 10px; }
+  .f-play-item {
+    display: flex; align-items: baseline; gap: 12px;
+    padding: 16px 0; border-bottom: 1px solid var(--hairline);
+    text-decoration: none; color: inherit; transition: background 0.12s;
+  }
+  .f-play-item:first-of-type { border-top: 1px solid var(--hairline); }
+  .f-play-item:hover { background: var(--surface); margin-inline: -8px; padding-inline: 8px; }
+  .f-play-item .name { font-size: 20px; line-height: 1; }
+  .f-play-item .blurb { font-size: 13px; color: var(--muted); flex: 1; }
+  .f-play-item .cta-link { font-size: 10px; margin-left: auto; }
+
+  @media (max-width: 640px) {
+    .a-hero { grid-template-columns: 1fr; }
+    .a-grid { grid-template-columns: 1fr 1fr; }
+    .b-products { grid-template-columns: 1fr; }
+    .b-prompts { grid-template-columns: 1fr; }
+    .c-row { grid-template-columns: 1fr; gap: 8px; padding: 20px 0; }
+    .d-grid { grid-template-columns: 1fr; }
+    .d-card.hero { grid-column: span 1; grid-row: span 1; }
+    .d-card.wide { grid-column: span 1; }
+    .e-item { grid-template-columns: 32px 1fr; }
+    .e-tag { display: none; }
+    .f-layout { grid-template-columns: 1fr; gap: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<header><nav class="toc">
+  <span class="toc-label">Jump to</span>
+  <a href="#current">Current</a>
+  <a href="#a">A</a>
+  <a href="#b">B</a>
+  <a href="#c">C</a>
+  <a href="#d">D</a>
+  <a href="#e">E</a>
+  <a href="#f">F</a>
+</nav></header>
+
+<main>
+<div class="page-header">
+  <h1>Portfolio section: all explorations</h1>
+  <p>Seven layouts, one page. Current design first, then six alternatives. Use the nav bar to jump between them.</p>
+</div>
+
+<!-- ─── CURRENT ─── -->
+<div class="exploration" id="current">
+  <div class="exploration-label">Current (reference)</div>
+  <div class="exploration-title">Horizontal carousel, flat hierarchy</div>
+  <div class="exploration-desc">All items treated equally in a scrollable row. No images. Most cards never seen.</div>
+
+  <div class="section-head">
+    <div class="section-num"><strong>02</strong> Products &amp; Playthings <span class="rule"></span></div>
+    <div class="section-title">Things we've made for <em>ourselves</em> and others.</div>
+    <div class="section-lead">Products, prompts, and playthings. Scroll through.</div>
+  </div>
+  <div class="current-carousel">
+    <a class="current-card" style="background: var(--cat-product);">
+      <span class="label">Product &middot; Live</span>
+      <span class="name">tone<em>of</em>voice.app</span>
+      <span class="blurb">Generate professional tone-of-voice guidelines in minutes.</span>
+      <span class="cta-link"><span>Try it</span><span class="arrow">&rarr;</span></span>
+    </a>
+    <a class="current-card" style="background: var(--cat-product);">
+      <span class="label">Product &middot; Private alpha</span>
+      <span class="name">fortress</span>
+      <span class="blurb">Run a full content audit on your website.</span>
+      <span class="cta-link"><span>Try it</span><span class="arrow">&rarr;</span></span>
+    </a>
+    <a class="current-card" style="background: var(--cat-product);">
+      <span class="label">Product &middot; Waitlist</span>
+      <span class="name">highway</span>
+      <span class="blurb">Automate SEO-optimised articles, without the slop.</span>
+      <span class="cta-link"><span>Try it</span><span class="arrow">&rarr;</span></span>
+    </a>
+    <a class="current-card" style="background: var(--cat-prompt);">
+      <span class="label">Prompt</span>
+      <span class="name">/sound<em>like</em>me</span>
+      <span class="blurb">Makes AI write in your actual voice.</span>
+      <span class="cta-link"><span>Steal it</span><span class="arrow">&rarr;</span></span>
+    </a>
+    <a class="current-card" style="background: var(--cat-plaything);">
+      <span class="label">Plaything</span>
+      <span class="name">sassgpt</span>
+      <span class="blurb">ChatGPT clone with attitude.</span>
+      <span class="cta-link"><span>Play with it</span><span class="arrow">&rarr;</span></span>
+    </a>
+  </div>
+</div>
+
+<!-- ─── A: Featured hero + compact grid ─── -->
+<div class="exploration" id="a">
+  <div class="exploration-label">Option A</div>
+  <div class="exploration-title">Featured hero + compact grid</div>
+  <div class="exploration-desc">Lead product gets a hero card with space for a screenshot. Everything else in a tight grid below. Hierarchy through size.</div>
+
+  <div class="section-head">
+    <div class="section-num"><strong>02</strong> Products &amp; Playthings <span class="rule"></span></div>
+    <div class="section-title">Things we've made.</div>
+    <div class="section-lead">Products, prompts, and small experiments.</div>
+  </div>
+
+  <div class="a-layout">
+    <div class="a-hero">
+      <div class="a-hero-text">
+        <span class="label">Product &middot; Live</span>
+        <span class="name">tone<em>of</em>voice.app</span>
+        <span class="blurb">Generate professional tone-of-voice guidelines in minutes. Used by 200+ teams.</span>
+        <span class="cta-link"><span>Try it</span><span class="arrow">&rarr;</span></span>
+      </div>
+      <div class="a-hero-img">[ screenshot ]</div>
+    </div>
+    <div class="a-grid">
+      <a class="a-cell" style="background: var(--cat-product);">
+        <span class="label">Product &middot; Alpha</span>
+        <span class="name">fortress</span>
+        <span class="blurb">Content audit for your entire site.</span>
+        <span class="cta-link"><span>Try it</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="a-cell" style="background: var(--cat-product);">
+        <span class="label">Product &middot; Waitlist</span>
+        <span class="name">highway</span>
+        <span class="blurb">SEO articles without the slop.</span>
+        <span class="cta-link"><span>Try it</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="a-cell" style="background: var(--cat-prompt);">
+        <span class="label">Prompt</span>
+        <span class="name">/sound<em>like</em>me</span>
+        <span class="blurb">AI that writes in your voice.</span>
+        <span class="cta-link"><span>Steal it</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="a-cell" style="background: var(--cat-prompt);">
+        <span class="label">Prompt</span>
+        <span class="name">/deslop</span>
+        <span class="blurb">Strip AI tells from any draft.</span>
+        <span class="cta-link"><span>Steal it</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="a-cell" style="background: var(--cat-plaything);">
+        <span class="label">Plaything</span>
+        <span class="name">sassgpt</span>
+        <span class="blurb">ChatGPT with attitude.</span>
+        <span class="cta-link"><span>Play</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="a-cell" style="background: var(--cat-plaything);">
+        <span class="label">Plaything</span>
+        <span class="name">egotrip</span>
+        <span class="blurb">Snobby AI travel agent.</span>
+        <span class="cta-link"><span>Play</span><span class="arrow">&rarr;</span></span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ─── B: Categorised rows ─── -->
+<div class="exploration" id="b">
+  <div class="exploration-label">Option B</div>
+  <div class="exploration-title">Categorised rows, size hierarchy</div>
+  <div class="exploration-desc">Products are big. Prompts are medium. Playthings are compact chips. The hierarchy tells the visitor what matters.</div>
+
+  <div class="section-head">
+    <div class="section-num"><strong>02</strong> Products &amp; Playthings <span class="rule"></span></div>
+    <div class="section-title">Things we've made.</div>
+    <div class="section-lead">Products we ship, prompts you can steal, things we built for fun.</div>
+  </div>
+
+  <div class="b-layout">
+    <div class="b-row-label">Products</div>
+    <div class="b-products">
+      <a class="b-product-card">
+        <span class="label">Live</span>
+        <span class="name">tone<em>of</em>voice.app</span>
+        <span class="blurb">Tone-of-voice guidelines in minutes. Used by 200+ teams.</span>
+        <span class="cta-link"><span>Try it</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="b-product-card">
+        <span class="label">Private alpha</span>
+        <span class="name">fortress</span>
+        <span class="blurb">Full content audit for your website.</span>
+        <span class="cta-link"><span>Try it</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="b-product-card">
+        <span class="label">Waitlist</span>
+        <span class="name">highway</span>
+        <span class="blurb">SEO articles on your site, without the slop.</span>
+        <span class="cta-link"><span>Join waitlist</span><span class="arrow">&rarr;</span></span>
+      </a>
+    </div>
+
+    <div class="b-row-label">Prompts</div>
+    <div class="b-prompts">
+      <a class="b-prompt-card">
+        <span class="label">Prompt</span>
+        <span class="name">/sound<em>like</em>me</span>
+        <span class="blurb">Makes AI write in your actual voice, not the corporate one.</span>
+        <span class="cta-link"><span>Steal it</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="b-prompt-card">
+        <span class="label">Prompt</span>
+        <span class="name">/deslop</span>
+        <span class="blurb">Strip the signs of AI writing from any draft.</span>
+        <span class="cta-link"><span>Steal it</span><span class="arrow">&rarr;</span></span>
+      </a>
+    </div>
+
+    <div class="b-row-label">Playthings</div>
+    <div class="b-playthings">
+      <a class="b-play-chip">
+        <span class="name">sassgpt</span>
+        <span class="sep">/</span>
+        <span class="blurb">ChatGPT with attitude</span>
+      </a>
+      <a class="b-play-chip">
+        <span class="name">gravity</span>
+        <span class="sep">/</span>
+        <span class="blurb">v0 clone that roasts your ideas</span>
+      </a>
+      <a class="b-play-chip">
+        <span class="name">egotrip</span>
+        <span class="sep">/</span>
+        <span class="blurb">Snobby AI travel agent</span>
+      </a>
+      <a class="b-play-chip">
+        <span class="name">onlyfans</span>
+        <span class="sep">/</span>
+        <span class="blurb">Pre-loved GPU marketplace</span>
+      </a>
+      <a class="b-play-chip">
+        <span class="name">alibi</span>
+        <span class="sep">/</span>
+        <span class="blurb">Client dispute drama</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ─── C: Table rows ─── -->
+<div class="exploration" id="c">
+  <div class="exploration-label">Option C</div>
+  <div class="exploration-title">Stacked rows, everything visible</div>
+  <div class="exploration-desc">No carousel, no grid. Every project gets one row. Name left, description middle, CTA right. Borrows from the studio index pattern.</div>
+
+  <div class="section-head">
+    <div class="section-num"><strong>02</strong> Products &amp; Playthings <span class="rule"></span></div>
+    <div class="section-title">Things we've made.</div>
+  </div>
+
+  <div class="c-layout">
+    <a class="c-row">
+      <div><span class="label">Product &middot; Live</span><span class="name" style="display:block; margin-top:4px;">tone<em>of</em>voice.app</span></div>
+      <div class="c-meta"><span class="blurb">Tone-of-voice guidelines in minutes. Used by 200+ teams.</span></div>
+      <span class="cta-link"><span>Try it</span><span class="arrow">&rarr;</span></span>
+    </a>
+    <a class="c-row">
+      <div><span class="label">Product &middot; Alpha</span><span class="name" style="display:block; margin-top:4px;">fortress</span></div>
+      <div class="c-meta"><span class="blurb">Full content audit for your website.</span></div>
+      <span class="cta-link"><span>Try it</span><span class="arrow">&rarr;</span></span>
+    </a>
+    <a class="c-row">
+      <div><span class="label">Product &middot; Waitlist</span><span class="name" style="display:block; margin-top:4px;">highway</span></div>
+      <div class="c-meta"><span class="blurb">SEO articles on your site, without the slop.</span></div>
+      <span class="cta-link"><span>Join waitlist</span><span class="arrow">&rarr;</span></span>
+    </a>
+    <a class="c-row">
+      <div><span class="label">Prompt</span><span class="name" style="display:block; margin-top:4px;">/sound<em>like</em>me</span></div>
+      <div class="c-meta"><span class="blurb">Makes AI write in your actual voice.</span></div>
+      <span class="cta-link"><span>Steal it</span><span class="arrow">&rarr;</span></span>
+    </a>
+    <a class="c-row">
+      <div><span class="label">Prompt</span><span class="name" style="display:block; margin-top:4px;">/deslop</span></div>
+      <div class="c-meta"><span class="blurb">Strip the signs of AI writing from any draft.</span></div>
+      <span class="cta-link"><span>Steal it</span><span class="arrow">&rarr;</span></span>
+    </a>
+    <a class="c-row">
+      <div><span class="label">Plaything</span><span class="name" style="display:block; margin-top:4px;">sassgpt</span></div>
+      <div class="c-meta"><span class="blurb">ChatGPT clone with attitude.</span></div>
+      <span class="cta-link"><span>Play</span><span class="arrow">&rarr;</span></span>
+    </a>
+    <a class="c-row">
+      <div><span class="label">Plaything</span><span class="name" style="display:block; margin-top:4px;">egotrip</span></div>
+      <div class="c-meta"><span class="blurb">Snobby AI travel agent who finds sun near you.</span></div>
+      <span class="cta-link"><span>Play</span><span class="arrow">&rarr;</span></span>
+    </a>
+    <a class="c-row">
+      <div><span class="label">Plaything</span><span class="name" style="display:block; margin-top:4px;">gravity</span></div>
+      <div class="c-meta"><span class="blurb">v0 clone that roasts your app ideas.</span></div>
+      <span class="cta-link"><span>Play</span><span class="arrow">&rarr;</span></span>
+    </a>
+  </div>
+</div>
+
+<!-- ─── D: Bento mosaic ─── -->
+<div class="exploration" id="d">
+  <div class="exploration-label">Option D</div>
+  <div class="exploration-title">Bento mosaic</div>
+  <div class="exploration-desc">Asymmetric grid. Hero product spans 2x2, everything else fills around it. Playful but structured. No scrolling, no hidden cards.</div>
+
+  <div class="section-head">
+    <div class="section-num"><strong>02</strong> Products &amp; Playthings <span class="rule"></span></div>
+    <div class="section-title">Things we've made.</div>
+    <div class="section-lead">Products we ship, prompts you can steal, things we built for fun.</div>
+  </div>
+
+  <div class="d-layout">
+    <div class="d-grid">
+      <a class="d-card hero" style="background: var(--cat-product);">
+        <span class="label">Product &middot; Live</span>
+        <span class="name">tone<em>of</em>voice.app</span>
+        <span class="blurb">Generate professional tone-of-voice guidelines in minutes. Used by 200+ teams.</span>
+        <span class="cta-link"><span>Try it</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="d-card" style="background: var(--cat-product);">
+        <span class="label">Product &middot; Alpha</span>
+        <span class="name">fortress</span>
+        <span class="blurb">Content audit for your whole site.</span>
+        <span class="cta-link"><span>Try it</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="d-card" style="background: var(--cat-product);">
+        <span class="label">Product &middot; Waitlist</span>
+        <span class="name">highway</span>
+        <span class="blurb">SEO articles, no slop.</span>
+        <span class="cta-link"><span>Join waitlist</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="d-card" style="background: var(--cat-prompt);">
+        <span class="label">Prompt</span>
+        <span class="name">/sound<em>like</em>me</span>
+        <span class="blurb">AI that writes in your voice.</span>
+        <span class="cta-link"><span>Steal it</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="d-card" style="background: var(--cat-prompt);">
+        <span class="label">Prompt</span>
+        <span class="name">/deslop</span>
+        <span class="blurb">Strip AI tells from any draft.</span>
+        <span class="cta-link"><span>Steal it</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="d-card" style="background: var(--cat-plaything);">
+        <span class="label">Plaything</span>
+        <span class="name">sassgpt</span>
+        <span class="blurb">ChatGPT with attitude.</span>
+        <span class="cta-link"><span>Play</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="d-card wide" style="background: var(--cat-plaything);">
+        <span class="label">Plaything</span>
+        <span class="name">egotrip</span>
+        <span class="blurb">Snobby AI travel agent who finds the sunniest cities near you.</span>
+        <span class="cta-link"><span>Play</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="d-card" style="background: var(--cat-plaything);">
+        <span class="label">Plaything</span>
+        <span class="name">gravity</span>
+        <span class="blurb">v0 clone that roasts your ideas.</span>
+        <span class="cta-link"><span>Play</span><span class="arrow">&rarr;</span></span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ─── E: Magazine index ─── -->
+<div class="exploration" id="e">
+  <div class="exploration-label">Option E</div>
+  <div class="exploration-title">Magazine index</div>
+  <div class="exploration-desc">Numbered list. Big faded numbers on the left, project name and one-liner in the middle, coloured category tag on the right. Reads like a table of contents.</div>
+
+  <div class="section-head">
+    <div class="section-num"><strong>02</strong> Products &amp; Playthings <span class="rule"></span></div>
+    <div class="section-title">Things we've made.</div>
+  </div>
+
+  <div class="e-layout">
+    <a class="e-item" href="#">
+      <span class="e-num">01</span>
+      <div class="e-body"><span class="name">tone<em>of</em>voice.app</span><span class="blurb">Tone-of-voice guidelines in minutes. Used by 200+ teams.</span></div>
+      <span class="e-tag product">Product</span>
+    </a>
+    <a class="e-item" href="#">
+      <span class="e-num">02</span>
+      <div class="e-body"><span class="name">fortress</span><span class="blurb">Full content audit for your website.</span></div>
+      <span class="e-tag product">Product</span>
+    </a>
+    <a class="e-item" href="#">
+      <span class="e-num">03</span>
+      <div class="e-body"><span class="name">highway</span><span class="blurb">SEO articles on your site, without the slop.</span></div>
+      <span class="e-tag product">Product</span>
+    </a>
+    <a class="e-item" href="#">
+      <span class="e-num">04</span>
+      <div class="e-body"><span class="name">/sound<em>like</em>me</span><span class="blurb">Makes AI write in your actual voice.</span></div>
+      <span class="e-tag prompt">Prompt</span>
+    </a>
+    <a class="e-item" href="#">
+      <span class="e-num">05</span>
+      <div class="e-body"><span class="name">/deslop</span><span class="blurb">Strip the signs of AI writing from any draft.</span></div>
+      <span class="e-tag prompt">Prompt</span>
+    </a>
+    <a class="e-item" href="#">
+      <span class="e-num">06</span>
+      <div class="e-body"><span class="name">sassgpt</span><span class="blurb">ChatGPT clone with attitude. Sometimes too much.</span></div>
+      <span class="e-tag plaything">Plaything</span>
+    </a>
+    <a class="e-item" href="#">
+      <span class="e-num">07</span>
+      <div class="e-body"><span class="name">egotrip</span><span class="blurb">Snobby AI travel agent who finds sun near you.</span></div>
+      <span class="e-tag plaything">Plaything</span>
+    </a>
+    <a class="e-item" href="#">
+      <span class="e-num">08</span>
+      <div class="e-body"><span class="name">gravity</span><span class="blurb">v0 clone that roasts your app ideas.</span></div>
+      <span class="e-tag plaything">Plaything</span>
+    </a>
+  </div>
+</div>
+
+<!-- ─── F: Two-column split ─── -->
+<div class="exploration" id="f">
+  <div class="exploration-label">Option F</div>
+  <div class="exploration-title">Two-column split: work / play</div>
+  <div class="exploration-desc">Left column is the serious stuff (products + prompts as cards). Right column is playthings as a compact list. Physical separation communicates what's real work and what's for fun.</div>
+
+  <div class="section-head">
+    <div class="section-num"><strong>02</strong> Products &amp; Playthings <span class="rule"></span></div>
+    <div class="section-title">Things we've made.</div>
+    <div class="section-lead">The left column ships. The right column entertains.</div>
+  </div>
+
+  <div class="f-layout">
+    <div>
+      <div class="f-col-label">Products &amp; Prompts</div>
+      <a class="f-card" style="background: var(--cat-product);">
+        <span class="label">Product &middot; Live</span>
+        <span class="name">tone<em>of</em>voice.app</span>
+        <span class="blurb">Tone-of-voice guidelines in minutes. Used by 200+ teams.</span>
+        <span class="cta-link"><span>Try it</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="f-card" style="background: var(--cat-product);">
+        <span class="label">Product &middot; Alpha</span>
+        <span class="name">fortress</span>
+        <span class="blurb">Full content audit for your website.</span>
+        <span class="cta-link"><span>Try it</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="f-card" style="background: var(--cat-product);">
+        <span class="label">Product &middot; Waitlist</span>
+        <span class="name">highway</span>
+        <span class="blurb">SEO articles, without the slop.</span>
+        <span class="cta-link"><span>Join waitlist</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="f-card" style="background: var(--cat-prompt);">
+        <span class="label">Prompt</span>
+        <span class="name">/sound<em>like</em>me</span>
+        <span class="blurb">AI that writes in your actual voice.</span>
+        <span class="cta-link"><span>Steal it</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="f-card" style="background: var(--cat-prompt);">
+        <span class="label">Prompt</span>
+        <span class="name">/deslop</span>
+        <span class="blurb">Strip AI tells from any draft.</span>
+        <span class="cta-link"><span>Steal it</span><span class="arrow">&rarr;</span></span>
+      </a>
+    </div>
+    <div>
+      <div class="f-col-label">Playthings</div>
+      <a class="f-play-item" href="#">
+        <span class="name">sassgpt</span>
+        <span class="blurb">ChatGPT with attitude.</span>
+        <span class="cta-link"><span>Play</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="f-play-item" href="#">
+        <span class="name">gravity</span>
+        <span class="blurb">v0 clone that roasts ideas.</span>
+        <span class="cta-link"><span>Play</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="f-play-item" href="#">
+        <span class="name">egotrip</span>
+        <span class="blurb">Snobby AI travel agent.</span>
+        <span class="cta-link"><span>Play</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="f-play-item" href="#">
+        <span class="name">onlyfans</span>
+        <span class="blurb">Pre-loved GPU marketplace.</span>
+        <span class="cta-link"><span>Play</span><span class="arrow">&rarr;</span></span>
+      </a>
+      <a class="f-play-item" href="#">
+        <span class="name">alibi</span>
+        <span class="blurb">Client dispute drama.</span>
+        <span class="cta-link"><span>Play</span><span class="arrow">&rarr;</span></span>
+      </a>
+    </div>
+  </div>
+</div>
+</main>
+
+</body>
+</html>

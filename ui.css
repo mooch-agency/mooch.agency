@@ -39,7 +39,7 @@
   border-radius: 980px;
   font-size: 14px;
   font-weight: 500;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--hairline-focus);
   cursor: pointer;
   transition: border-color var(--t-deliver) var(--ease-deliver),
               color var(--t-deliver) var(--ease-deliver),
@@ -48,3 +48,34 @@
 .ghost:hover { border-color: var(--ink); color: var(--black); }
 .ghost:active { transform: scale(0.96); }
 .ghost:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Dark footer utility — apply to .colophon to override tokens for
+   white-on-black context. Consolidates the --muted and hairline
+   overrides previously copy-pasted across 8+ pages. */
+.colophon-dark {
+  background: var(--black);
+  color: var(--paper);
+  --muted: #8e8e93;
+  --colophon-rule: #2a2a2c;
+}
+
+/* Copy button — mono-spaced action chip used in prompt pages.
+   Promoted from inline styles (rule of three: deslop, soundlikeme,
+   prompt-template). */
+.copy-btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--hairline-focus);
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  min-height: 44px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.copy-btn:hover { border-color: var(--ink); }
+.copy-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.copy-btn.copied { color: var(--muted); }

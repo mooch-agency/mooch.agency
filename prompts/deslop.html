@@ -22,23 +22,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/motion.css">
+<link rel="stylesheet" href="/ui.css">
 <style>
-  :root {
-    --black: #000000;
-    --ink: #1d1d1f;
-    --paper: #ffffff;
-    --surface: #fbfbfd;
-    --muted: #6e6e73;
-    --hairline: #d2d2d7;
-    --serif: 'Instrument Serif', 'Times New Roman', serif;
-    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Liberation Mono", monospace;
-    --pad-x: clamp(20px, 5vw, 56px);
-    --rhythm: clamp(80px, 12vw, 160px);
-    --max: 1320px;
-    --col: 720px;
-  }
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
   body {
@@ -69,16 +56,6 @@
   .topbar a { color: var(--ink); }
   .topbar a:hover { border-bottom: 1px solid var(--ink); }
   .topbar .you { color: var(--muted); }
-
-  .reveal { opacity: 0; transform: translateY(12px); animation: reveal 0.8s cubic-bezier(0.2, 0, 0.2, 1) forwards; }
-  .reveal.d1 { animation-delay: 0.05s; }
-  .reveal.d2 { animation-delay: 0.18s; }
-  .reveal.d3 { animation-delay: 0.32s; }
-  .reveal.d4 { animation-delay: 0.46s; }
-  @keyframes reveal { to { opacity: 1; transform: translateY(0); } }
-  @media (prefers-reduced-motion: reduce) {
-    .reveal { animation: none; opacity: 1; transform: none; }
-  }
 
   .case-hero {
     padding: clamp(64px, 10vw, 120px) var(--pad-x) clamp(48px, 8vw, 96px);
@@ -230,22 +207,6 @@
     letter-spacing: 0.14em;
     color: var(--muted);
   }
-  .prompt-box-head .copy-btn {
-    font-family: var(--mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: var(--ink);
-    background: var(--paper);
-    border: 1px solid var(--hairline);
-    border-radius: 6px;
-    padding: 8px 14px;
-    cursor: pointer;
-    min-height: 44px;
-    transition: border-color 0.15s ease, color 0.15s ease;
-  }
-  .prompt-box-head .copy-btn:hover { border-color: var(--ink); }
-  .prompt-box-head .copy-btn.copied { color: var(--muted); }
   .prompt-box pre {
     margin: 0;
     padding: 22px 20px;
@@ -334,9 +295,6 @@
 
   .colophon {
     padding: 56px var(--pad-x) 40px;
-    background: var(--black);
-    color: var(--paper);
-    --muted: #8e8e93;
   }
   .colophon-inner {
     max-width: 1320px;
@@ -358,7 +316,7 @@
     align-items: center;
     gap: 12px;
     padding-top: 36px;
-    border-top: 1px solid #2a2a2c;
+    border-top: 1px solid var(--colophon-rule);
     font-family: var(--mono);
     font-size: 11px;
     text-transform: uppercase;
@@ -368,7 +326,7 @@
   .colophon-links a:hover { border-bottom-color: var(--paper); }
   .colophon-sep { color: var(--muted); font-size: 10px; }
   .colophon-foot {
-    border-top: 1px solid #2a2a2c;
+    border-top: 1px solid var(--colophon-rule);
     margin-top: 36px;
     padding-top: 20px;
     display: flex;
@@ -548,7 +506,7 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
 
 </main>
 
-<footer class="colophon">
+<footer class="colophon colophon-dark">
   <div class="colophon-inner">
     <div class="colophon-mark">Mooch<em>.</em></div>
 
@@ -565,6 +523,7 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
     <div class="colophon-foot">
       <span>&copy; 2026 Mooch Agency Ltd.</span>
       <span class="colophon-credits">Set in Instrument Serif &amp; SF Pro. Built by two humans and one MoochBot. Hosted on Vercel because we're not animals.</span>
+      <a href="/privacy" class="colophon-version">Privacy</a>
       <span class="colophon-version">N&deg; 01</span>
     </div>
   </div>

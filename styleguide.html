@@ -163,6 +163,11 @@
       <button class="pill" type="button" aria-disabled="true">Disabled <span class="arrow">&rarr;</span></button>
     </div>
     <p class="sg-note">.pill and .ghost from ui.css. Hover, press (scale 0.96) and keyboard focus rings included. Tab to one to see the ring.</p>
+    <div class="sg-buttons" style="margin-top:24px">
+      <button class="copy-btn" type="button">Copy</button>
+      <button class="copy-btn copied" type="button">Copied</button>
+    </div>
+    <p class="sg-note">.copy-btn from ui.css. Mono action chip used in prompt pages. Add .copied for the confirmed state.</p>
   </section>
 
   <!-- MOTION -->
@@ -199,7 +204,7 @@
   (function () {
     var rs = getComputedStyle(document.documentElement);
 
-    var colours = ['--black', '--ink', '--paper', '--surface', '--muted', '--hairline'];
+    var colours = ['--black', '--ink', '--paper', '--surface', '--muted', '--muted-small', '--hairline', '--hairline-focus'];
     var sw = document.getElementById('swatches');
     colours.forEach(function (name) {
       var val = rs.getPropertyValue(name).trim();

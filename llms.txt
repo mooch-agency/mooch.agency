@@ -32,6 +32,10 @@ We figure out what people actually need, then build the AI to deliver it. Most o
 - [/deslop](https://www.notion.so/tahi/deslop-a60e4b10f9df43f3bf6ea366eed1b31f): A prompt to remove signs of AI writing.
 - [/revolut-account-migration](https://www.notion.so/tahi/revolut-account-migration-dcdc2afa0c0940e289aca3761dc6b638): A prompt to help you close your Revolut account and open a new local one, with less headache.
 
+## Legal
+
+- [Privacy policy](https://mooch.agency/privacy): How Mooch handles data, analytics, and privacy. No cookies, no tracking pixels, no ads.
+
 ## Playthings
 
 - [sassgpt](https://sassgpt.vercel.app): ChatGPT clone where the models have attitude.

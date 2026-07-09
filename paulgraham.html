@@ -42,6 +42,13 @@
   }
   a { color: inherit; text-decoration: none; }
 
+  /* Visually hidden but accessible to screen readers */
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
   /* ───────── Topbar ───────── */
   .topbar {
     display: grid;
@@ -137,6 +144,9 @@
   /* Output */
   #output { flex: 1; font-size: 18px; line-height: 1.6; color: var(--ink); white-space: pre-wrap; }
   #output .w { display: inline-block; }
+  /* Intentional variant of .reveal: faster (0.5s vs 1.56s) and subtler
+     (2px vs 14px shift, 6px vs 4px blur) for per-word streamed API output.
+     Not a candidate for motion.css promotion, it serves a different purpose. */
   .settle { animation: settle 0.5s var(--ease-decide) both; }
   @keyframes settle { from { opacity: 0; filter: blur(6px); transform: translateY(2px); }
                       to { opacity: 1; filter: blur(0); transform: none; } }
@@ -356,10 +366,12 @@
 </head>
 <body>
 
-<div class="topbar">
+<header class="topbar">
   <a class="brand" href="https://mooch.agency">MOOCH</a>
   <span class="right">Write Like Paul Graham</span>
-</div>
+</header>
+
+<main>
 
 <section class="hero">
   <div class="wrap">
@@ -370,8 +382,9 @@
   </div>
 </section>
 
-<section class="tool">
+<section class="tool" aria-labelledby="tool-heading">
   <div class="wrap">
+    <h2 id="tool-heading" class="visually-hidden">Rewriter</h2>
     <div class="vscore" id="vscore">
       <div class="vscore-label">Voice Score</div>
       <div class="vscore-nums">
@@ -421,8 +434,9 @@
   </div>
 </section>
 
-<section class="method">
+<section class="method" aria-labelledby="method-heading">
   <div class="wrap">
+    <h2 id="method-heading" class="visually-hidden">How it works</h2>
     <div class="method-bar">
       <button class="method-toggle" id="methodToggle" aria-expanded="false" aria-controls="methodPanel">
         How it works <span class="chev">↓</span>
@@ -442,6 +456,8 @@
     </div>
   </div>
 </section>
+
+</main>
 
 <footer>
   <div class="foot-grid">

@@ -8,7 +8,9 @@
   --paper: #ffffff;
   --surface: #fbfbfd;
   --muted: #6e6e73;
+  --muted-small: #5a5a5f;  /* Higher contrast (~7:1 on white) for text below 14px */
   --hairline: #d2d2d7;
+  --hairline-focus: #86868b;  /* Darker hairline for focusable element borders */
   --error: #b00020;
 
   /* Type families */
