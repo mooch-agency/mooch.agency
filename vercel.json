@@ -3,7 +3,9 @@
   "trailingSlash": false,
   "redirects": [
     { "source": "/log", "destination": "/", "permanent": true },
-    { "source": "/ready", "destination": "/", "permanent": true }
+    { "source": "/ready", "destination": "/", "permanent": true },
+    { "source": "/contrabando", "destination": "/lisbon-restaurant-group", "permanent": true },
+    { "source": "/contrabando.html", "destination": "/lisbon-restaurant-group", "permanent": true }
   ],
   "headers": [
     {
