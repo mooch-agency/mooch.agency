@@ -67,7 +67,7 @@
   .topbar .right { justify-self: end; }
 
   /* ───────── Hero ───────── */
-  .hero { padding: clamp(56px, 9vw, 120px) var(--pad-x) clamp(32px, 5vw, 56px); }
+  .hero { padding: clamp(56px, 9vw, 120px) var(--pad-x) 0; }
   .wrap { max-width: var(--max); margin: 0 auto; }
   .eyebrow {
     font-family: var(--mono);
@@ -104,9 +104,8 @@
     color: var(--muted);
     margin-top: 18px;
     text-wrap: pretty;
+    text-transform: uppercase;
   }
-  /* Ink the figures, mute the labels: the eye catches 208 / 490k / 25 first. */
-  .credential .cred-n { color: var(--ink); font-weight: 500; }
   /* "Who?" — a small mono pill after the deck that reveals the Paul Graham bio.
      Matches the credential/eyebrow mono aesthetic; kept quiet until hovered. */
   .who {
@@ -203,16 +202,9 @@
   }
   .placeholder-out { color: var(--muted); }
   /* quiet wordmark, screenshot-ready */
-  .pane .stamp {
-    position: absolute; right: clamp(18px, 2.4vw, 28px); bottom: clamp(14px, 2vw, 20px);
-    font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--hairline);
-  }
 
   /* Controls */
   .controls { display: flex; align-items: center; gap: 16px; margin-top: 22px; flex-wrap: wrap; }
-  .hint { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
-  .kbd { border: 1px solid var(--hairline); border-radius: 5px; padding: 1px 6px; }
 
   /* Score readout */
   .score { display: flex; align-items: center; gap: 12px; margin-left: auto; }
@@ -261,7 +253,6 @@
     textarea#input { min-height: 240px; }
     .controls { gap: 12px; }
     .pill#rewrite { width: 100%; }
-    .hint { display: none; }
     .score { margin-left: 0; width: 100%; justify-content: flex-start; }
     #m-output-text .w { display: inline-block; }
   }
@@ -427,7 +418,6 @@
     <h1 class="reveal d2">Write like <em>Paul Graham</em>.</h1>
     <p class="hero-deck reveal d3">Paste your writing, get it back in <a href="https://x.com/paulg" target="_blank" rel="noopener">Paul Graham</a>'s style. <button type="button" class="who" aria-expanded="false" aria-controls="pgBio">Who?</button></p>
     <p id="pgBio" class="who-bio" hidden>Paul Graham is the investor and essayist behind Y&nbsp;Combinator, known for <a href="https://paulgraham.com" target="_blank" rel="noopener">clear, concise prose</a>.</p>
-    <p class="credential reveal d3">Built on <span class="cred-n">208</span> essays &bull; <span class="cred-n">490k</span> words &bull; <span class="cred-n" id="pgYears">25</span> years of writing</p>
   </div>
 </section>
 
@@ -458,15 +448,13 @@
         <div class="pane-label">
           <span>Paul Graham</span>
         </div>
-        <div id="output"><span class="placeholder-out">Here's how he would write it.</span></div>
+        <div id="output"><span class="placeholder-out">His rewrite appears here.</span></div>
         <button class="ghost copy hidden" id="copy">Copy</button>
-        <span class="stamp">Mooch</span>
       </div>
     </div>
 
     <div class="controls">
       <button class="pill" id="rewrite">Rewrite <span class="arrow">↘</span></button>
-      <span class="hint"><span class="kbd">⌘</span> <span class="kbd">↵</span> to rewrite</span>
       <span class="score hidden" id="score">
         <span class="dial">
           <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true">
@@ -671,10 +659,6 @@ const mRewriteAgainBtn = document.getElementById("mRewriteAgain");
 const M_DIAL_C = 251.33;
 const mDialOffset = (s) => M_DIAL_C * (1 - Math.max(0, Math.min(100, s)) / 100);
 
-// PG's first essay was 2001; he's still publishing, so the span stays current.
-const pgYearsEl = document.getElementById("pgYears");
-if (pgYearsEl) pgYearsEl.textContent = new Date().getFullYear() - 2001;
-
 // "Who?" toggle: reveal/hide the Paul Graham bio with a blur-settle.
 const whoBtn = document.querySelector(".who");
 const whoBio = document.getElementById("pgBio");
@@ -837,7 +821,7 @@ async function rewrite(){
     } else if (full.trim()){
       errEl.textContent = msg;
     } else {
-      output.innerHTML = '<span class="placeholder-out">Here\'s how he would write it.</span>';
+      output.innerHTML = '<span class="placeholder-out">His rewrite appears here.</span>';
       errEl.textContent = msg;
     }
   } finally {
@@ -931,7 +915,7 @@ mSeeOrigBtn.addEventListener("click", () => {
 
 mRewriteAgainBtn.addEventListener("click", () => {
   closeMobileHero();
-  output.innerHTML = '<span class="placeholder-out">Here\'s how he would write it.</span>';
+  output.innerHTML = '<span class="placeholder-out">His rewrite appears here.</span>';
   copyBtn.classList.add("hidden");
   showBefore(); updateSampleBtn();
   setTimeout(() => input.focus(), 540);
