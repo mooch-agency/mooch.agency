@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mooch. AI automation and UX.</title>
+<title>Mooch. UX &amp; AI Automation.</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
@@ -11,11 +11,11 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://mooch.agency">
 <link rel="canonical" href="https://mooch.agency">
-<meta property="og:title" content="Mooch. AI automation and UX.">
+<meta property="og:title" content="Mooch. UX &amp; AI Automation.">
 <meta property="og:description" content="A two-person agency in London and Lisbon. We help teams build things people actually want, then use AI to multiply the gains.">
 <meta property="og:image" content="https://mooch.agency/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Mooch. AI automation and UX.">
+<meta name="twitter:title" content="Mooch. UX &amp; AI Automation.">
 <meta name="twitter:description" content="A two-person agency in London and Lisbon. We help teams build things people actually want, then use AI to multiply the gains.">
 <meta name="twitter:image" content="https://mooch.agency/og.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,6 +29,8 @@
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+  /* Anchor links glide instead of snapping; reduced-motion keeps instant jumps. */
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
   body {
     font-family: var(--sans);
     font-size: 17px;
@@ -145,10 +147,15 @@
   .marquee::after { right: 0; background: linear-gradient(270deg, var(--surface), transparent); }
   .marquee-track {
     display: flex;
-    gap: 64px;
     width: max-content;
     animation: scroll 38s linear infinite;
+    will-change: transform;
   }
+  /* Spacing lives on each span as a trailing margin, not the track's flex `gap`.
+     A flex gap sits only *between* siblings, so the last item of each duplicated
+     half has no trailing gap and the -50% loop point drops one 64px space, which
+     reads as a jump. A per-span margin-right is carried by every item, including
+     the seam, so the halves tile seamlessly. */
   .marquee-track span {
     font-family: var(--serif);
     font-size: 32px;
@@ -159,6 +166,7 @@
     display: inline-flex;
     align-items: center;
     gap: 64px;
+    margin-right: 64px;
   }
   .marquee-track span::after {
     content: '✦';
@@ -589,6 +597,24 @@
   /* Reveal, word-stagger and scroll-rise motion is shared: see motion.css. */
   .hero-deck .deck-lead { color: var(--black); }
   .hero-deck .deck-tail { color: var(--muted); }
+  @media (max-width: 600px) {
+    .deck-break { display: none; }
+  }
+
+  /* AI tease (see ai-tease.js). The deck's last word reveals AS "skynet." in the
+     same sans as the sentence, sits a beat, then does a fast guilty flip back to
+     "AI." like someone covering up a typo. Never hinted at elsewhere. No-JS and
+     reduced-motion visitors only ever see "AI." (the real markup). */
+  /* The crossfade lives on the wrapper, not .word: .word already carries the
+     entrance animation (fill-mode both), and an animated property always wins
+     over a transition on the same element, so a transition placed on .word
+     itself would never visibly run. See motion.css's .rise/.in note for the
+     same gotcha elsewhere. Timing is quick: the correction is meant to feel hasty. */
+  .ai-tease { transition: opacity 0.1s var(--ease-deliver), filter 0.14s var(--ease-deliver); }
+  .ai-tease.tease-swap { opacity: 0; filter: blur(5px); }
+  @media (prefers-reduced-motion: reduce) {
+    .ai-tease { transition: none; }
+  }
 
   @media (prefers-reduced-motion: reduce) {
     .marquee-track { animation: none; }
@@ -617,13 +643,13 @@
 <main>
 <section class="hero">
   <div class="hero-grid">
-    <div class="hero-eyebrow reveal d1">AI automation &amp; UX</div>
+    <div class="hero-eyebrow reveal d1">UX &amp; AI Automation</div>
     <h1 class="reveal-words" data-stagger="0.2">Hey, we're <em>Mooch.</em></h1>
   </div>
   <div class="hero-meta">
-    <div class="hero-deck reveal-words" data-stagger><span class="deck-lead">An AI automation and UX agency that's lean and long-term focused.</span> <span class="deck-tail">We help teams make things their customers really want and use AI to compound the benefits.</span></div>
+    <div class="hero-deck reveal-words" data-stagger><span class="deck-lead">We find out what your customers really want,<br class="deck-break"> then build and scale it with <span class="ai-tease">AI.</span></span></div>
     <div class="hero-actions reveal d4">
-      <a class="pill" href="#work">See selected work <span class="arrow">&rarr;</span></a>
+      <a class="pill" href="#work">Read our work <span class="arrow">&rarr;</span></a>
       <a class="ghost" href="#contact">Get in touch</a>
     </div>
   </div>
@@ -714,13 +740,13 @@
       <a class="bento-card tall" data-cat="product" href="https://toneofvoice.app">
         <span class="label">Product &middot; Live</span>
         <span class="name">tone<em>of</em>voice.app</span>
-        <span class="blurb">Generate professional tone-of-voice guidelines in minutes. Used by 200+ teams.</span>
+        <span class="blurb">Professional tone of voice guidelines in seconds.</span>
         <span class="cta"><span>Try it</span><span class="arrow">&rarr;</span></span>
       </a>
       <a class="bento-card tall" data-cat="product" href="https://joinhighway.vercel.app/">
         <span class="label">Product &middot; Waitlist</span>
         <span class="name">highway</span>
-        <span class="blurb">Self-driving content, without the slop.</span>
+        <span class="blurb">SEO articles that write themselves.</span>
         <span class="cta"><span>Join waitlist</span><span class="arrow">&rarr;</span></span>
       </a>
       <a class="bento-card" data-cat="product" href="https://usefortress.vercel.app">
@@ -732,12 +758,12 @@
       <a class="bento-card" data-cat="product" href="https://samantha.mooch.agency">
         <span class="label">Product &middot; Live</span>
         <span class="name">samantha</span>
-        <span class="blurb">She reads the web out loud, just for you.</span>
+        <span class="blurb">Get any article read to you.</span>
         <span class="cta"><span>Try it</span><span class="arrow">&rarr;</span></span>
       </a>
       <a class="bento-card" data-cat="prompt" href="https://github.com/gichigi/claude-doggy-dogg" target="_blank" rel="noopener">
         <span class="label">Prompt</span>
-        <span class="name">claude-doggy-dogg</span>
+        <span class="name">claude doggy dogg</span>
         <span class="blurb">Make Claude Code talk like Snoop Dogg.</span>
         <span class="cta"><span>Steal it</span><span class="arrow">&rarr;</span></span>
       </a>
@@ -750,7 +776,7 @@
       <a class="bento-card" data-cat="plaything" href="https://paulgraham.mooch.agency/">
         <span class="label">Plaything</span>
         <span class="name">Write like <em>Paul Graham</em></span>
-        <span class="blurb">Rewrite your writing in Paul Graham's voice, with a Voice Score.</span>
+        <span class="blurb">Rewrite articles in Paul Graham's style.</span>
         <span class="cta"><span>Play</span><span class="arrow">&rarr;</span></span>
       </a>
       <a class="bento-card" data-cat="plaything" href="https://sassgpt.vercel.app/">
@@ -762,13 +788,13 @@
       <a class="bento-card" data-cat="plaything" href="https://theopenclaws.com/">
         <span class="label">Plaything</span>
         <span class="name">openclaws</span>
-        <span class="blurb">A &euro;999 polymer clip that holds your MacBook lid open.</span>
+        <span class="blurb">Keep your agents running 24/7.</span>
         <span class="cta"><span>Play</span><span class="arrow">&rarr;</span></span>
       </a>
       <a class="bento-card" data-cat="plaything" href="https://gravity-v0.vercel.app/">
         <span class="label">Plaything</span>
         <span class="name">gravity</span>
-        <span class="blurb">v0 clone that roasts your ideas.</span>
+        <span class="blurb">vibe coding app that roasts your ideas.</span>
         <span class="cta"><span>Play</span><span class="arrow">&rarr;</span></span>
       </a>
     </div>
@@ -845,7 +871,7 @@
     <div class="closer-block">
       <span class="small">04 / About</span>
       <h3>A husband-and-wife team of <em>two</em>, working from London &amp; Lisbon.</h3>
-      <p>We're an AI automation and UX agency. We help teams make things their customers really want and use AI to compound the benefits. Most of our clients come to us for one and stay for both.</p>
+      <p>We're a UX and AI automation agency. We help teams make things their customers really want and use AI to compound the benefits. Most of our clients come to us for one and stay for both.</p>
       <p>We started Mooch because we wanted to work on things we care about, with people we like, from anywhere in the world. So far, so good.</p>
     </div>
     <div class="closer-block" id="contact">
@@ -907,6 +933,7 @@
 </footer>
 
 <script src="/motion.js"></script>
+<script src="/ai-tease.js" defer></script>
 
 <!-- Vercel Web Analytics (static-site install). Activates once Web Analytics is
      enabled on the mooch.agency Vercel project; script served at /_vercel/insights/script.js -->

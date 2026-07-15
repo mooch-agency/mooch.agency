@@ -3,6 +3,13 @@
    var(--ink) etc. defined per page. Every animated state degrades to fully
    visible under reduced motion. */
 
+/* Anchor links glide instead of snapping. Gated on no-preference so reduced-motion
+   visitors keep instant jumps. The topbar scrolls away (not sticky), so no
+   scroll-padding offset is needed. */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
 /* Reveal on load: the "deciding" slow, considered blur settle. */
 .reveal {
   opacity: 0;

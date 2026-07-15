@@ -105,6 +105,54 @@
     margin-top: 18px;
     text-wrap: pretty;
   }
+  /* Ink the figures, mute the labels: the eye catches 208 / 490k / 25 first. */
+  .credential .cred-n { color: var(--ink); font-weight: 500; }
+  /* "Who?" — a small mono pill after the deck that reveals the Paul Graham bio.
+     Matches the credential/eyebrow mono aesthetic; kept quiet until hovered. */
+  .who {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 3px 9px;
+    margin-left: 4px;
+    cursor: pointer;
+    position: relative;
+    white-space: nowrap;
+    vertical-align: 2px;
+    transition: color 0.15s var(--ease-deliver), border-color 0.15s var(--ease-deliver);
+  }
+  .who:hover, .who:focus-visible { color: var(--ink); border-color: var(--hairline-focus); outline: none; }
+  .who[aria-expanded="true"] { color: var(--ink); border-color: var(--ink); }
+  /* Extend the hit area to ~40px tall without growing the visible pill. */
+  .who::after { content: ''; position: absolute; inset: -11px -4px; }
+  .who-bio {
+    font-size: clamp(15px, 1.6vw, 17px);
+    line-height: 1.5;
+    color: var(--muted);
+    max-width: 42ch;
+    margin-top: 14px;
+  }
+  /* Match the page's inline-link idiom (.method-note a): ink text, hairline underline. */
+  .who-bio a {
+    color: var(--ink);
+    border-bottom: 1px solid var(--hairline);
+    transition: border-color 0.15s var(--ease-deliver);
+  }
+  .who-bio a:hover, .who-bio a:focus-visible { border-bottom-color: var(--ink); }
+  .who-bio.revealing { animation: whoBio 0.6s var(--ease-decide) both; }
+  @keyframes whoBio {
+    from { opacity: 0; transform: translateY(6px); filter: blur(4px); }
+    to   { opacity: 1; transform: none; filter: blur(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .who-bio.revealing { animation: none; }
+    .who { transition: none; }
+  }
 
   /* ───────── Tool ───────── */
   .tool { padding: clamp(8px, 2vw, 24px) var(--pad-x) clamp(80px, 12vw, 140px); }
@@ -377,8 +425,9 @@
   <div class="wrap">
     <div class="eyebrow reveal d1">Plaything</div>
     <h1 class="reveal d2">Write like <em>Paul Graham</em>.</h1>
-    <p class="hero-deck reveal d3"><a href="https://x.com/paulg" target="_blank" rel="noopener">Paul Graham</a> is the investor and essayist behind Y&nbsp;Combinator, known for clear, concise prose. Paste your writing and get it back in his voice.</p>
-    <p class="credential reveal d3">Built on 208 essays &bull; 490,813 words &bull; <span id="pgYears">25</span> years of writing</p>
+    <p class="hero-deck reveal d3">Paste your writing, get it back in <a href="https://x.com/paulg" target="_blank" rel="noopener">Paul Graham</a>'s style. <button type="button" class="who" aria-expanded="false" aria-controls="pgBio">Who?</button></p>
+    <p id="pgBio" class="who-bio" hidden>Paul Graham is the investor and essayist behind Y&nbsp;Combinator, known for <a href="https://paulgraham.com" target="_blank" rel="noopener">clear, concise prose</a>.</p>
+    <p class="credential reveal d3">Built on <span class="cred-n">208</span> essays &bull; <span class="cred-n">490k</span> words &bull; <span class="cred-n" id="pgYears">25</span> years of writing</p>
   </div>
 </section>
 
@@ -625,6 +674,25 @@ const mDialOffset = (s) => M_DIAL_C * (1 - Math.max(0, Math.min(100, s)) / 100);
 // PG's first essay was 2001; he's still publishing, so the span stays current.
 const pgYearsEl = document.getElementById("pgYears");
 if (pgYearsEl) pgYearsEl.textContent = new Date().getFullYear() - 2001;
+
+// "Who?" toggle: reveal/hide the Paul Graham bio with a blur-settle.
+const whoBtn = document.querySelector(".who");
+const whoBio = document.getElementById("pgBio");
+if (whoBtn && whoBio) {
+  whoBtn.addEventListener("click", () => {
+    const open = whoBtn.getAttribute("aria-expanded") === "true";
+    whoBtn.setAttribute("aria-expanded", String(!open));
+    if (open) {
+      whoBio.hidden = true;
+      whoBio.classList.remove("revealing");
+    } else {
+      whoBio.hidden = false;
+      whoBio.classList.remove("revealing");
+      void whoBio.offsetWidth; // restart the reveal animation
+      whoBio.classList.add("revealing");
+    }
+  });
+}
 
 // Vercel Web Analytics custom events. No-op until the injected script loads.
 function track(name, data){ try { window.va && window.va("event", data ? { name, data } : { name }); } catch (_) {} }
