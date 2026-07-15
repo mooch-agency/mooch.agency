@@ -205,6 +205,8 @@
 
   /* Controls */
   .controls { display: flex; align-items: center; gap: 16px; margin-top: 22px; flex-wrap: wrap; }
+  .hint { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+  .kbd { border: 1px solid var(--hairline); border-radius: 5px; padding: 1px 6px; }
 
   /* Score readout */
   .score { display: flex; align-items: center; gap: 12px; margin-left: auto; }
@@ -253,6 +255,7 @@
     textarea#input { min-height: 240px; }
     .controls { gap: 12px; }
     .pill#rewrite { width: 100%; }
+    .hint { display: none; }
     .score { margin-left: 0; width: 100%; justify-content: flex-start; }
     #m-output-text .w { display: inline-block; }
   }
@@ -455,6 +458,7 @@
 
     <div class="controls">
       <button class="pill" id="rewrite">Rewrite <span class="arrow">↘</span></button>
+      <span class="hint"><span class="kbd">⌘</span> <span class="kbd">↵</span></span>
       <span class="score hidden" id="score">
         <span class="dial">
           <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true">
