@@ -6,16 +6,19 @@ import Anthropic from '@anthropic-ai/sdk';
 import puppeteer from 'puppeteer-core';
 import { writeFileSync, mkdirSync } from 'fs';
 
-const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const OUT = new URL('./runs/', import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true });
 
-const [site, runId = '1', pickerModel = 'claude-haiku-4-5'] = process.argv.slice(2);
-const slug = site.replace(/https?:\/\/(www\.)?/, '').split(/[/.]/)[0];
-const tag = `${slug}_pipe_r${runId}`;
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const t0 = Date.now();
 const PRICE = { 'claude-haiku-4-5': { in: 1, out: 5 }, 'claude-sonnet-4-6': { in: 3, out: 15 }, 'claude-opus-4-8': { in: 5, out: 25 } };
+const PRICE_KEYS = Object.keys(PRICE);
+const [site, runId = '1', pickerModel = 'claude-sonnet-4-6'] = process.argv.slice(2);
+if (!site || !/^https?:\/\//.test(site)) { console.error('usage: node run-pipeline.mjs <site_url> [run_id] [picker_model]'); process.exit(2); }
+if (!PRICE_KEYS.includes(pickerModel)) { console.error(`unknown picker model ${pickerModel}; known: ${PRICE_KEYS.join(', ')}`); process.exit(2); }
+const slug = site.replace(/https?:\/\/(www\.)?/, '').split(/[/.]/)[0];
+const tag = `${slug}_pipe_r${runId}`;
 const cost = (model, u) => ((u.input_tokens * PRICE[model].in) + (u.output_tokens * PRICE[model].out)) / 1e6;
 
 async function fetchPage(browser, url) {
@@ -34,6 +37,8 @@ async function fetchPage(browser, url) {
 }
 
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new', args: ['--disable-blink-features=AutomationControlled'] });
+process.on('uncaughtException', async (e) => { console.error(e); try { await browser.close(); } catch {} process.exit(1); });
+process.on('unhandledRejection', async (e) => { console.error(e); try { await browser.close(); } catch {} process.exit(1); });
 
 // STAGE 1: homepage fetch + link inventory.
 const tFetch1 = Date.now();
@@ -60,12 +65,16 @@ ${home.text.slice(0, 4000)}
 Internal links found on the homepage (url | link label):
 ${internal.map(l => `${l.url} | ${l.label}`).join('\n').slice(0, 8000)}
 
-Pick UP TO 4 links (the homepage is already included). Priority: revenue pages (pricing/shop/services/booking) > trust/conversion (about/contact) > support (FAQ/delivery/terms). Prefer pages likely to carry claims, prices, or counts that can contradict other pages. Reply with ONLY a JSON array of URLs, e.g. ["https://..","https://.."].`;
+Pick UP TO 4 links (the homepage is already included). Priority: revenue pages (pricing/shop/services/booking) > trust/conversion (about/contact) > support (FAQ/delivery/terms). For shops/e-commerce, collections and product pages ARE the revenue pages: include at least one. Prefer pages likely to carry claims, prices, or counts that can contradict other pages. Reply with ONLY a JSON array of URLs, e.g. ["https://..","https://.."].`;
 const tPick = Date.now();
 const pick = await anthropic.messages.create({ model: pickerModel, max_tokens: 500, messages: [{ role: 'user', content: pickerInput }] });
 const pickText = pick.content.filter(b => b.type === 'text').map(b => b.text).join('');
 let picked = [];
 try { picked = JSON.parse(pickText.match(/\[[\s\S]*\]/)[0]).slice(0, 4); } catch {}
+// Only fetch picks that exist in the homepage's internal-link inventory: blocks hallucinated or
+// page-injected URLs from entering the judge context, and guarantees same-origin.
+const allowed = new Set(internal.map(l => l.url));
+picked = picked.map(u => String(u).replace(/\/$/, '')).filter(u => allowed.has(u));
 const picker_ms = Date.now() - tPick, picker_cost = cost(pickerModel, pick.usage);
 
 // STAGE 3: parallel fetch of picked pages.
@@ -76,13 +85,18 @@ const stage3_ms = Date.now() - tFetch2;
 // STAGE 4: programmatic hard-404 check on audited pages' internal links (status only), in parallel spirit but sequential here for simplicity.
 const tLinks = Date.now();
 const allLinks = [...new Set(pages.flatMap(p => p.links.map(l => { try { const u = new URL(l.href); return u.origin === origin ? (u.origin + u.pathname).replace(/\/$/, '') : null; } catch { return null; } }).filter(Boolean)))];
-const linkResults = [];
+const linkResults = []; const unreachable = [];
 for (const u of allLinks.slice(0, 60)) {
-  try { const r = await fetch(u, { method: 'GET', redirect: 'follow', headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' }, signal: AbortSignal.timeout(10000) }); if (r.status >= 400) linkResults.push({ url: u, status: r.status }); }
-  catch (e) { linkResults.push({ url: u, status: 'error' }); }
+  try {
+    const r = await fetch(u, { method: 'GET', redirect: 'follow', headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' }, signal: AbortSignal.timeout(10000) });
+    // Only definitive not-found statuses are reportable. 403/429/5xx are often bot-blocks or blips:
+    // recording them as broken would violate the near-zero-FP rule, so they are logged, never reported.
+    if (r.status === 404 || r.status === 410) linkResults.push({ url: u, status: r.status });
+    else if (r.status >= 400) unreachable.push({ url: u, status: r.status });
+  } catch { unreachable.push({ url: u, status: 'timeout/error' }); }
 }
 const links_ms = Date.now() - tLinks;
-await browser.close();
+await browser.close().catch(() => {});
 
 // STAGE 5: single Opus judge call over the bundle.
 const SYSTEM = `You are a meticulous website content auditor. You receive the rendered VISIBLE text of several pages from ONE website. Find real content issues. Near-zero false positives: one wrong finding costs more than five missed ones.
@@ -108,7 +122,7 @@ const record = {
   timing: { total_s: Math.round(total_ms / 1000), homepage_fetch_s: Math.round(stage1_ms / 1000), picker_s: Math.round(picker_ms / 1000), page_fetch_s: Math.round(stage3_ms / 1000), link_check_s: Math.round(links_ms / 1000), judge_s: Math.round(judge_ms / 1000) },
   cost: { picker: +picker_cost.toFixed(4), judge: +judge_cost.toFixed(4), total: +(picker_cost + judge_cost).toFixed(4) },
   picker: { input_links: internal, picked, pages_used: pages.map(p => p.url) },
-  link_check: { checked: Math.min(allLinks.length, 60), broken: linkResults },
+  link_check: { checked: Math.min(allLinks.length, 60), broken: linkResults, unreachable_not_reported: unreachable },
   findings: gated, n: gated.length, gate_pass: gated.filter(f => f.gate === 'pass').length, gate_fail: gated.filter(f => f.gate === 'fail').length,
   judge_usage: judge.usage,
 };

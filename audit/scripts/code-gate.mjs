@@ -18,7 +18,7 @@ const norm = (s) => s.normalize('NFC')
   .trim();
 
 const browser = await puppeteer.launch({
-  executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   headless: 'new',
   args: ['--disable-blink-features=AutomationControlled'],
 });

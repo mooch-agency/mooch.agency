@@ -5,7 +5,7 @@
 import puppeteer from 'puppeteer-core';
 import { appendFileSync } from 'fs';
 
-const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const url = process.argv[2];
 if (!url) { console.error('usage: node read-url.mjs <url>'); process.exit(2); }
 if (process.env.READER_LOG) { try { appendFileSync(process.env.READER_LOG, url + '\n'); } catch {} }
