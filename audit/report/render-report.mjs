@@ -34,6 +34,7 @@ const CATEGORY_LABEL = {
   spelling: "Spelling / grammar",
   stale: "Stale content",
   formatting: "Formatting artifact",
+  factual: "Factual error",
 };
 
 function esc(s) {
