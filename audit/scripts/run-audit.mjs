@@ -15,6 +15,7 @@
 // so the orchestration (merge -> report -> PDF) is testable without API spend.
 
 import { buildReport } from "../report/build-report.mjs";
+import { logRun } from "./langsmith.mjs";
 import { spawn } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { dirname, join } from "path";
@@ -72,6 +73,8 @@ export async function runAudit({ url, auditId, email }) {
     record,
     OUT
   );
+  // Observability: one LangSmith run per audit. Never fatal to the audit.
+  await logRun(record).catch(() => {});
   const broken = (record.link_check && record.link_check.broken) || [];
   return {
     recordPath,

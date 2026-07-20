@@ -38,16 +38,34 @@ const ALLOWED_HOSTS = [
 ];
 
 // Best-effort in-memory limiter, same pattern as api/rewrite.js. Resets when the
-// instance recycles, so it stops casual loops but isn't durable. Durable per-IP +
-// per-domain caps are Phase 5 (story 12); this is the cheap floor until then.
+// instance recycles, so it stops casual loops but isn't durable. Three layers:
+// per-IP (min + day), per-audited-domain (day, so one target can't be spammed),
+// and a global daily floor. Durable caps + Cloudflare Turnstile are R3 (story 12);
+// at R2 nothing runs until a human approves the lead, so the real exposure is junk
+// rows, not agent spend. This is the cheap floor until then.
 const RATE_PER_MIN = 5;
 const RATE_PER_DAY = 30;
+const PER_TARGET_PER_DAY = 10;
+const GLOBAL_PER_DAY = 300;
+const DAY = 86_400_000;
 const hits = new Map();
+const targetHits = new Map();
+let globalDay = [];
+
+// Trims a timestamp list to the last `windowMs` and returns whether adding one
+// more would exceed `cap`. Does not mutate on a reject.
+function overCap(list, cap, windowMs, now) {
+  const fresh = list.filter((t) => now - t < windowMs);
+  list.length = 0;
+  list.push(...fresh);
+  return fresh.length >= cap;
+}
+
 function rateLimited(ip) {
   const now = Date.now();
   const rec = hits.get(ip) || { min: [], day: [] };
   rec.min = rec.min.filter((t) => now - t < 60_000);
-  rec.day = rec.day.filter((t) => now - t < 86_400_000);
+  rec.day = rec.day.filter((t) => now - t < DAY);
   if (rec.min.length >= RATE_PER_MIN || rec.day.length >= RATE_PER_DAY) {
     hits.set(ip, rec);
     return true;
@@ -55,6 +73,22 @@ function rateLimited(ip) {
   rec.min.push(now);
   rec.day.push(now);
   hits.set(ip, rec);
+  return false;
+}
+
+// Per-audited-domain daily cap + global daily floor. Checked after the URL is
+// known. Records the hit only when accepted.
+function targetOrGlobalLimited(domain) {
+  const now = Date.now();
+  const list = targetHits.get(domain) || [];
+  if (overCap(list, PER_TARGET_PER_DAY, DAY, now)) {
+    targetHits.set(domain, list);
+    return true;
+  }
+  if (overCap(globalDay, GLOBAL_PER_DAY, DAY, now)) return true;
+  list.push(now);
+  targetHits.set(domain, list);
+  globalDay.push(now);
   return false;
 }
 
@@ -218,6 +252,19 @@ module.exports = async (req, res) => {
   const domain = email.split("@")[1];
   if (!(await hasMailExchanger(domain))) {
     return res.status(400).json({ ok: false, error: "email", reason: "mx" });
+  }
+
+  // Per-audited-domain + global daily caps, counted only on otherwise-valid
+  // submissions so bad-email attempts can't exhaust a target's allowance.
+  const targetDomain = (() => {
+    try {
+      return new URL(url).hostname.replace(/^www\./, "");
+    } catch {
+      return url;
+    }
+  })();
+  if (targetOrGlobalLimited(targetDomain)) {
+    return res.status(429).json({ ok: false, error: "rate" });
   }
 
   const auditId = makeAuditId();

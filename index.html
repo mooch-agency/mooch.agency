@@ -815,9 +815,25 @@
   var submitHTML = submit.innerHTML; // preserve label + arrow for restore
   var sentEmail = band.querySelector(".audit-sent-email");
 
-  // No-op if Vercel Analytics isn't loaded (wired fully in Phase 5).
+  // Vercel Analytics custom events. window.va is bootstrapped near the insights
+  // script at the end of the page; guarded so it no-ops if analytics is blocked.
   function track(name, data) {
     try { if (window.va) window.va("event", Object.assign({ name: name }, data || {})); } catch (e) {}
+  }
+
+  // Funnel top: fire audit_band_view once when the band first enters view.
+  if ("IntersectionObserver" in window) {
+    var seen = false;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting && !seen) {
+          seen = true;
+          track("audit_band_view", {});
+          io.disconnect();
+        }
+      });
+    }, { threshold: 0.4 });
+    io.observe(band);
   }
 
   // Cheap placeholder filter so obvious filler fails before hitting the server.
