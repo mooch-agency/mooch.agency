@@ -1,0 +1,100 @@
+// Per-lead orchestrator: URL -> pipeline record -> branded report + PDF.
+// Used by the batch runner (RUNNER.md) once per Approved lead. Keeps the merged
+// record (pipeline output + the lead's auditId + email) so the later send step
+// can find the exact PDF and address by auditId.
+//
+// LLM engine (the picker + judge inside the pipeline):
+//   AUDIT_LLM=api (default) -> audit/scripts/run-pipeline.mjs via the Anthropic
+//     SDK. This is the measured, validated path (needs ANTHROPIC_API_KEY).
+//   The subscription path (claude -p, $0 marginal, the R2 target) is not wired
+//     here yet: it needs a live subscription smoke test, which belongs with the
+//     Phase 4 live-run tests. Tracked on the ticket. Until then the runner uses
+//     the API engine; the ~$0.15/audit cost is trivial and it is what is proven.
+//
+// Test seam: AUDIT_RECORD_FIXTURE=<path> skips the pipeline and uses that record,
+// so the orchestration (merge -> report -> PDF) is testable without API spend.
+
+import { buildReport } from "../report/build-report.mjs";
+import { spawn } from "node:child_process";
+import { readFileSync, writeFileSync, mkdirSync } from "fs";
+import { dirname, join } from "path";
+import { pathToFileURL, fileURLToPath } from "url";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const RUNS = join(HERE, "runs");
+const OUT = join(HERE, "..", "report", "out");
+
+// Mirrors run-pipeline.mjs's slug EXACTLY (from the full URL string, stripping
+// protocol + www) so we read back the file it actually wrote. Deriving from the
+// URL host instead would keep "www" and miss the file for www sites.
+function pipelineSlug(url) {
+  return url.replace(/https?:\/\/(www\.)?/, "").split(/[/.]/)[0];
+}
+
+// Runs run-pipeline.mjs as a child, returns the record it wrote. The pipeline
+// keys its output file by <slug>_pipe_r<runId>, so we pass auditId as runId.
+function runPipeline(url, auditId) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(
+      process.execPath,
+      [join(HERE, "run-pipeline.mjs"), url, auditId],
+      { stdio: ["ignore", "inherit", "inherit"], env: process.env }
+    );
+    child.on("error", reject);
+    child.on("exit", (code) => {
+      if (code !== 0) return reject(new Error(`pipeline exited ${code}`));
+      const recordPath = join(RUNS, `${pipelineSlug(url)}_pipe_r${auditId}.json`);
+      try {
+        resolve(JSON.parse(readFileSync(recordPath, "utf8")));
+      } catch (e) {
+        reject(new Error(`pipeline record not found at ${recordPath}: ${e.message}`));
+      }
+    });
+  });
+}
+
+// { url, auditId, email } -> { recordPath, pdfPath, htmlPath, thin, findingCount, summary }
+export async function runAudit({ url, auditId, email }) {
+  mkdirSync(OUT, { recursive: true });
+  const fixture = process.env.AUDIT_RECORD_FIXTURE;
+  const record = fixture
+    ? JSON.parse(readFileSync(fixture, "utf8"))
+    : await runPipeline(url, auditId);
+
+  // Stamp the lead's identity onto the record so downstream steps are self-contained.
+  record.auditId = auditId;
+  record.email = email;
+  record.site = record.site || url;
+  const recordPath = join(OUT, `${auditId}.record.json`);
+  writeFileSync(recordPath, JSON.stringify(record, null, 2));
+
+  const { htmlPath, pdfPath, thin, findingCount, weight } = await buildReport(
+    record,
+    OUT
+  );
+  const broken = (record.link_check && record.link_check.broken) || [];
+  return {
+    recordPath,
+    htmlPath,
+    pdfPath,
+    thin,
+    findingCount,
+    summary: `${findingCount} findings${
+      broken.length ? ` + ${broken.length} broken links` : ""
+    }, weight ${weight}${thin ? " (thin -> good-shape variant)" : ""}`,
+  };
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const [url, auditId, email] = process.argv.slice(2);
+  if (!url || !auditId || !email) {
+    console.error("usage: node run-audit.mjs <url> <auditId> <email>");
+    process.exit(2);
+  }
+  runAudit({ url, auditId, email })
+    .then((r) => console.log(JSON.stringify(r, null, 2)))
+    .catch((e) => {
+      console.error(e.message);
+      process.exit(1);
+    });
+}
