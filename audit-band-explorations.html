@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audit band explorations — comparison slide-out</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/ui.css">
+<style>
+/* Exploration page for the audit band's comparison slide-out (exploration ticket
+   Q9: band carries ONE positioning line + an optional comparison slide-out).
+   Goal: kill the "is this an SEO tool?" confusion found in user research, without
+   a string of issue types in the band copy. Three treatments, all in live tokens.
+   Not linked from anywhere; delete after a winner ships. */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; }
+body { font-family: var(--sans); font-size: 17px; line-height: 1.5; color: var(--ink); background: var(--paper); }
+a { color: inherit; text-decoration: none; }
+
+.page-head { padding: 48px var(--pad-x) 24px; border-bottom: 1px solid var(--hairline); }
+.page-head h1 { font-family: var(--serif); font-size: 34px; }
+.page-head p { color: var(--muted); max-width: 64ch; margin-top: 8px; font-size: 15px; }
+.treatment-label {
+  font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--muted);
+  padding: 40px var(--pad-x) 0; display: flex; align-items: center; gap: 12px;
+}
+.treatment-label strong { color: var(--ink); }
+.treatment-label .verdict { margin-left: auto; text-transform: none; letter-spacing: 0; }
+
+/* ── Band shell (mirrors the live band) ─────────────────────────── */
+.band { background: var(--surface); border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); padding: clamp(48px, 8vw, 96px) var(--pad-x); margin-top: 16px; }
+.band-inner { max-width: var(--col); }
+.eyebrow { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.eyebrow .rule { flex: 1; height: 1px; background: var(--hairline); max-width: 80px; }
+.band h2 { font-family: var(--serif); font-size: clamp(32px, 5vw, 48px); line-height: 1.08; }
+.band h2 em { font-style: italic; }
+.band .lead { color: var(--muted-small); margin-top: 12px; max-width: 52ch; }
+.fields { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.input {
+  flex: 1 1 220px; min-width: 0; font-family: var(--sans); font-size: 16px;
+  color: var(--ink); background: var(--paper); border: 1px solid var(--hairline-focus);
+  border-radius: 12px; padding: 13px 16px;
+}
+.input::placeholder { color: var(--muted); }
+.input:focus-visible { outline: none; border-color: var(--ink); }
+
+/* ── Comparison content (shared) ────────────────────────────────── */
+.cmp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cmp-table th {
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--muted); font-weight: 600;
+  text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--hairline);
+}
+.cmp-table th:not(:first-child), .cmp-table td:not(:first-child) { text-align: center; width: 96px; }
+.cmp-table td { padding: 11px 12px; border-bottom: 1px solid var(--hairline); }
+.cmp-table tr:last-child td { border-bottom: none; }
+.tick { color: var(--ink); font-weight: 600; }
+.cross { color: var(--hairline-focus); }
+.cmp-foot { font-family: var(--mono); font-size: 11px; color: var(--muted-small); margin-top: 14px; }
+
+/* ── Treatment A: inline disclosure under the lead ──────────────── */
+.disclose-trigger {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 16px;
+  font-size: 14px; color: var(--muted-small); background: none; border: none;
+  cursor: pointer; font-family: var(--sans); padding: 0;
+  border-bottom: 1px solid var(--hairline-focus);
+}
+.disclose-trigger:hover { color: var(--ink); border-color: var(--ink); }
+.disclose-trigger .chev { transition: transform 0.25s var(--ease-deliver); font-size: 11px; }
+.disclose-trigger[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.disclosure {
+  display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.45s var(--ease-decide);
+}
+.disclosure[data-open] { grid-template-rows: 1fr; }
+.disclosure > div { overflow: hidden; }
+.disclosure .card {
+  background: var(--paper); border: 1px solid var(--hairline); border-radius: 16px;
+  padding: 20px; margin-top: 18px;
+}
+/* Rows cascade in when opened */
+.disclosure[data-open] .cmp-table tr { animation: rowIn 0.5s var(--ease-decide) both; }
+.disclosure[data-open] .cmp-table tr:nth-child(1) { animation-delay: 0.08s; }
+.disclosure[data-open] .cmp-table tr:nth-child(2) { animation-delay: 0.14s; }
+.disclosure[data-open] .cmp-table tr:nth-child(3) { animation-delay: 0.20s; }
+.disclosure[data-open] .cmp-table tr:nth-child(4) { animation-delay: 0.26s; }
+.disclosure[data-open] .cmp-table tr:nth-child(5) { animation-delay: 0.32s; }
+.disclosure[data-open] .cmp-table tr:nth-child(6) { animation-delay: 0.38s; }
+@keyframes rowIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ── Treatment B: edge drawer ───────────────────────────────────── */
+.drawer-scrim {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.28); opacity: 0;
+  pointer-events: none; transition: opacity 0.3s ease; z-index: 40;
+}
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 92vw);
+  background: var(--paper); border-left: 1px solid var(--hairline); z-index: 50;
+  transform: translateX(102%); transition: transform 0.5s var(--ease-decide);
+  padding: 36px 28px; overflow-y: auto;
+}
+body[data-drawer] .drawer { transform: none; }
+body[data-drawer] .drawer-scrim { opacity: 1; pointer-events: auto; }
+.drawer h3 { font-family: var(--serif); font-size: 28px; line-height: 1.1; }
+.drawer .sub { color: var(--muted-small); font-size: 14px; margin: 10px 0 22px; }
+.drawer-close {
+  position: absolute; top: 20px; right: 20px; background: none; border: 1px solid var(--hairline);
+  border-radius: 980px; width: 32px; height: 32px; cursor: pointer; font-size: 14px; color: var(--muted);
+}
+.drawer-close:hover { border-color: var(--ink); color: var(--ink); }
+
+/* ── Treatment C: flip strip ────────────────────────────────────── */
+.strip {
+  margin-top: 18px; border: 1px solid var(--hairline); border-radius: 14px;
+  background: var(--paper); overflow: hidden;
+}
+.strip-head {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; background: none; border: none; cursor: pointer;
+  font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--muted-small);
+}
+.strip-head:hover { color: var(--ink); }
+.strip-head .pill-mini {
+  font-family: var(--mono); font-size: 10px; border: 1px solid var(--hairline);
+  border-radius: 980px; padding: 3px 10px; color: var(--muted);
+}
+.strip-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s var(--ease-decide); }
+.strip[data-open] .strip-body { grid-template-rows: 1fr; }
+.strip-body > div { overflow: hidden; }
+.strip-rows { padding: 0 18px 16px; }
+.strip-row { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-top: 1px solid var(--hairline); font-size: 14px; }
+.strip-row:first-child { border-top: none; }
+.strip-row .who { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; width: 76px; flex: none; }
+.strip-row.them .who { color: var(--muted); }
+.strip-row.us .who { color: var(--ink); font-weight: 600; }
+.strip-row.them { color: var(--muted-small); }
+
+.note { padding: 16px var(--pad-x) 64px; font-family: var(--mono); font-size: 11px; color: var(--muted); max-width: 720px; }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <h1>Comparison slide-out <em style="font-family:var(--serif)">explorations</em></h1>
+  <p>Q9 decision: the band carries one positioning line plus an optional comparison slide-out. Research says people mistake this for an SEO audit tool, so every treatment answers "how is this different from Semrush?" in one glance. Same comparison content, three interaction shapes.</p>
+</header>
+
+<!-- ═══ Treatment A ═══ -->
+<div class="treatment-label"><strong>A</strong> Inline disclosure <span class="rule" style="flex:1;height:1px;background:var(--hairline);max-width:80px"></span><span class="verdict">calm, stays in flow, mobile-safe</span></div>
+<section class="band">
+  <div class="band-inner">
+    <div class="eyebrow">&#9733; Free site audit <span class="rule"></span></div>
+    <h2>Get a free <em>content audit</em>.</h2>
+    <p class="lead">Semrush tells you a link is broken. We tell you two of your pages contradict each other.</p>
+    <button class="disclose-trigger" aria-expanded="false" aria-controls="cmpA" onclick="toggleA(this)">
+      Not an SEO tool. See the difference <span class="chev">&#9662;</span>
+    </button>
+    <div class="disclosure" id="cmpA">
+      <div>
+        <div class="card">
+          <table class="cmp-table">
+            <thead><tr><th>What gets checked</th><th>SEO tools</th><th>Mooch</th></tr></thead>
+            <tbody>
+              <tr><td>Broken links</td><td class="tick">&#10003;</td><td class="tick">&#10003;</td></tr>
+              <tr><td>Keywords, meta tags, sitemaps</td><td class="tick">&#10003;</td><td class="cross">&mdash;</td></tr>
+              <tr><td>Two pages that contradict each other</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+              <tr><td>Prices that don't match across pages</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+              <tr><td>"Closed for Christmas" still up in July</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+              <tr><td>Typos your customers notice</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+            </tbody>
+          </table>
+          <p class="cmp-foot">SEO tools read your site like a robot. We read it like your sharpest customer.</p>
+        </div>
+      </div>
+    </div>
+    <div class="fields">
+      <input class="input" placeholder="yoursite.com" aria-label="Your website URL">
+      <input class="input" placeholder="you@company.com" aria-label="Your email">
+      <a class="pill" href="#">Get my audit <span class="arrow">&rarr;</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Treatment B ═══ -->
+<div class="treatment-label"><strong>B</strong> Edge drawer <span class="rule" style="flex:1;height:1px;background:var(--hairline);max-width:80px"></span><span class="verdict">roomiest, but leaves the band</span></div>
+<section class="band">
+  <div class="band-inner">
+    <div class="eyebrow">&#9733; Free site audit <span class="rule"></span></div>
+    <h2>Get a free <em>content audit</em>.</h2>
+    <p class="lead">Semrush tells you a link is broken. We tell you two of your pages contradict each other. <a href="#" style="border-bottom:1px solid var(--hairline-focus)" onclick="document.body.setAttribute('data-drawer','');return false">How is that different from an SEO tool?</a></p>
+    <div class="fields">
+      <input class="input" placeholder="yoursite.com" aria-label="Your website URL">
+      <input class="input" placeholder="you@company.com" aria-label="Your email">
+      <a class="pill" href="#">Get my audit <span class="arrow">&rarr;</span></a>
+    </div>
+  </div>
+</section>
+<div class="drawer-scrim" onclick="document.body.removeAttribute('data-drawer')"></div>
+<aside class="drawer" role="dialog" aria-label="How this differs from an SEO tool">
+  <button class="drawer-close" onclick="document.body.removeAttribute('data-drawer')" aria-label="Close">&#10005;</button>
+  <h3>Not an SEO <em style="font-style:italic">tool</em>.</h3>
+  <p class="sub">SEO tools score your site for Google. This audit reads it the way a careful customer does, and catches what makes them quietly leave.</p>
+  <table class="cmp-table">
+    <thead><tr><th></th><th>SEO tools</th><th>Mooch</th></tr></thead>
+    <tbody>
+      <tr><td>Broken links</td><td class="tick">&#10003;</td><td class="tick">&#10003;</td></tr>
+      <tr><td>Keywords, meta tags, sitemaps</td><td class="tick">&#10003;</td><td class="cross">&mdash;</td></tr>
+      <tr><td>Cross-page contradictions</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+      <tr><td>Mismatched prices</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+      <tr><td>Stale promises &amp; dates</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+      <tr><td>Typos customers notice</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+    </tbody>
+  </table>
+  <p class="cmp-foot">Every finding is a verbatim quote from your live pages. No score, no jargon.</p>
+</aside>
+
+<!-- ═══ Treatment C ═══ -->
+<div class="treatment-label"><strong>C</strong> Flip strip <span class="rule" style="flex:1;height:1px;background:var(--hairline);max-width:80px"></span><span class="verdict">most compact, reads as content not chrome</span></div>
+<section class="band">
+  <div class="band-inner">
+    <div class="eyebrow">&#9733; Free site audit <span class="rule"></span></div>
+    <h2>Get a free <em>content audit</em>.</h2>
+    <p class="lead">Semrush tells you a link is broken. We tell you two of your pages contradict each other.</p>
+    <div class="strip" id="strip">
+      <button class="strip-head" onclick="document.getElementById('strip').toggleAttribute('data-open')">
+        <span>What an SEO tool misses</span><span class="pill-mini">not an SEO audit</span>
+      </button>
+      <div class="strip-body"><div class="strip-rows">
+        <div class="strip-row them"><span class="who">SEO tool</span> "Your meta description is 12 characters too long."</div>
+        <div class="strip-row us"><span class="who">Mooch</span> "Your pricing page says &pound;19/mo. Your homepage says &pound;15."</div>
+        <div class="strip-row them"><span class="who">SEO tool</span> "3 images are missing alt text."</div>
+        <div class="strip-row us"><span class="who">Mooch</span> "Your About page says 8 locations. Your footer lists 9."</div>
+        <div class="strip-row them"><span class="who">SEO tool</span> "Sitemap last modified 84 days ago."</div>
+        <div class="strip-row us"><span class="who">Mooch</span> "'Back after Christmas' is still on your delivery page. It's July."</div>
+      </div></div>
+    </div>
+    <div class="fields">
+      <input class="input" placeholder="yoursite.com" aria-label="Your website URL">
+      <input class="input" placeholder="you@company.com" aria-label="Your email">
+      <a class="pill" href="#">Get my audit <span class="arrow">&rarr;</span></a>
+    </div>
+  </div>
+</section>
+
+<p class="note">Exploration only, not linked from the site. A = calm disclosure in flow (recommended start). B = drawer, roomiest but modal. C = example-led flip strip: shows the difference instead of claiming it. All content shared; winner folds into index.html and the rest gets deleted.</p>
+
+<script>
+function toggleA(btn) {
+  const panel = document.getElementById('cmpA');
+  const open = panel.toggleAttribute('data-open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+// Esc closes the drawer
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.body.removeAttribute('data-drawer'); });
+</script>
+</body>
+</html>
