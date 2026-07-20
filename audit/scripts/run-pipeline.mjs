@@ -5,9 +5,12 @@
 import Anthropic from '@anthropic-ai/sdk';
 import puppeteer from 'puppeteer-core';
 import { writeFileSync, mkdirSync } from 'fs';
+import { fileURLToPath } from 'url';
 
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const OUT = new URL('./runs/', import.meta.url).pathname;
+// fileURLToPath decodes percent-encoding (e.g. a space -> %20); using .pathname
+// directly would write to a literal "%20" path that decoded readers can't find.
+const OUT = fileURLToPath(new URL('./runs/', import.meta.url));
 mkdirSync(OUT, { recursive: true });
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -34,6 +37,24 @@ async function fetchPage(browser, url) {
     const links = await p.evaluate(() => [...document.querySelectorAll('a[href]')].map(a => ({ href: a.href, label: (a.innerText || '').trim().slice(0, 60) })));
     await p.close(); return { url, title, text, links };
   } catch (e) { await p.close(); return { url, title: '', text: '', links: [], error: String(e).slice(0, 150) }; }
+}
+
+// A page is unusable if it errored, returned near-empty text, or shows a bot
+// challenge instead of real content. These are the cases the fallback rescues.
+const THIN_CHARS = 200;
+const CHALLENGE = /verify (you are|you're) human|checking your browser|enable javascript to|access denied|are you a robot|captcha|cf-browser-verification|attention required/i;
+function unusable(p) {
+  return !p || p.error || !p.text || p.text.length < THIN_CHARS || CHALLENGE.test(p.text.slice(0, 1500));
+}
+
+// One retry with a longer settle: some pages are slow-hydrating SPAs or throw a
+// transient interstitial that clears on a second, more patient load.
+async function fetchWithRetry(browser, url) {
+  const first = await fetchPage(browser, url);
+  if (!unusable(first)) return first;
+  await new Promise(r => setTimeout(r, 2500));
+  const retry = await fetchPage(browser, url);
+  return unusable(retry) ? first : retry;
 }
 
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new', args: ['--disable-blink-features=AutomationControlled'] });
@@ -77,9 +98,36 @@ const allowed = new Set(internal.map(l => l.url));
 picked = picked.map(u => String(u).replace(/\/$/, '')).filter(u => allowed.has(u));
 const picker_ms = Date.now() - tPick, picker_cost = cost(pickerModel, pick.usage);
 
-// STAGE 3: parallel fetch of picked pages.
+// STAGE 3: fetch picked pages, with a thin-text / bot-block fallback. A page that
+// stays unusable after a longer-settle retry is swapped for the next-priority
+// unused internal link, and the swap (or the skip) is recorded in coverage notes
+// so the report can disclose exactly what was and wasn't read.
 const tFetch2 = Date.now();
-const pages = [home, ...(await Promise.all(picked.map(u => fetchPage(browser, u))))].filter(p => p.text && p.text.length > 200);
+const coverageNotes = [];
+const usedUrls = new Set([site.replace(/\/$/, ''), ...picked]);
+const fallbackPool = internal.map(l => l.url).filter(u => !usedUrls.has(u));
+// Fast path stays parallel: fetch all picked at once. Only the (rare) unusable
+// ones fall through to sequential swapping, so the common case keeps its speed.
+const initial = await Promise.all(picked.map((u, i) => fetchWithRetry(browser, u).then(p => [i, p])));
+initial.sort((a, b) => a[0] - b[0]);
+const good = [];
+for (const [, page] of initial) {
+  if (!unusable(page)) { good.push(page); continue; }
+  let swapped = false;
+  while (fallbackPool.length) {
+    const alt = fallbackPool.shift();
+    const altPage = await fetchWithRetry(browser, alt);
+    if (!unusable(altPage)) {
+      good.push(altPage);
+      coverageNotes.push(`${page.url} was unreadable (bot-block or empty); audited ${alt} instead`);
+      swapped = true;
+      break;
+    }
+  }
+  if (!swapped) coverageNotes.push(`${page.url} was unreadable and no readable substitute was available`);
+}
+if (unusable(home)) coverageNotes.push(`the homepage ${site} was unreadable (bot-block or empty); findings may be limited`);
+const pages = [home, ...good].filter(p => p.text && p.text.length > THIN_CHARS);
 const stage3_ms = Date.now() - tFetch2;
 
 // STAGE 4: programmatic hard-404 check on audited pages' internal links (status only), in parallel spirit but sequential here for simplicity.
@@ -122,6 +170,7 @@ const record = {
   timing: { total_s: Math.round(total_ms / 1000), homepage_fetch_s: Math.round(stage1_ms / 1000), picker_s: Math.round(picker_ms / 1000), page_fetch_s: Math.round(stage3_ms / 1000), link_check_s: Math.round(links_ms / 1000), judge_s: Math.round(judge_ms / 1000) },
   cost: { picker: +picker_cost.toFixed(4), judge: +judge_cost.toFixed(4), total: +(picker_cost + judge_cost).toFixed(4) },
   picker: { input_links: internal, picked, pages_used: pages.map(p => p.url) },
+  coverage: { notes: coverageNotes },
   link_check: { checked: Math.min(allLinks.length, 60), broken: linkResults, unreachable_not_reported: unreachable },
   findings: gated, n: gated.length, gate_pass: gated.filter(f => f.gate === 'pass').length, gate_fail: gated.filter(f => f.gate === 'fail').length,
   judge_usage: judge.usage,

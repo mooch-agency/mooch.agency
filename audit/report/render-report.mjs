@@ -97,6 +97,7 @@ function reportModel(record, dateStr) {
     weight,
     thin,
     broken,
+    coverageNotes: (record.coverage && record.coverage.notes) || [],
   };
 }
 
@@ -187,10 +188,17 @@ function coverageBlock(m) {
   const pages = m.pages
     .map((p) => `<li><a href="${safeHref(p)}">${esc(pathOf(p))}</a></li>`)
     .join("\n");
+  const notes = (m.coverageNotes || []).length
+    ? `<p class="block-lead" style="margin-top:16px">Notes on what we could read:</p>
+       <ul class="link-list">${m.coverageNotes
+         .map((n) => `<li class="muted">${esc(n)}</li>`)
+         .join("\n")}</ul>`
+    : "";
   return `<section class="block coverage">
     <h2 class="block-title">Coverage</h2>
     <p class="block-lead">Pages we read for this audit:</p>
     <ul class="link-list">${pages}</ul>
+    ${notes}
     <p class="muted small">Free audits cover your key pages. A paid engagement audits the whole site.</p>
   </section>`;
 }
