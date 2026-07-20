@@ -75,6 +75,11 @@ export async function queryByStatus(status) {
 
 export async function setStatus(pageId, status, note) {
   const properties = { Status: { select: { name: status } } };
+  // Story 16: Sent carries a timestamp. Stamped here so every path that flips
+  // to Sent gets one without the caller remembering to.
+  if (status === "Sent") {
+    properties["Sent at"] = { date: { start: new Date().toISOString() } };
+  }
   if (note != null) {
     properties["Coverage note"] = {
       rich_text: [{ text: { content: String(note).slice(0, 1900) } }],

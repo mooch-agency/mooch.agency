@@ -75,11 +75,18 @@ junk defence).
 
 ## LLM engine (R2 vs R3)
 
-`run-audit.mjs` currently uses the **API engine** (`AUDIT_LLM=api`, the default):
-the validated SDK pipeline, ~$0.11–0.22/audit. The ticket's R2 target is the
-**subscription** path (`claude -p`, $0 marginal). That path is not wired yet because
-it needs a live subscription smoke test, which rides with the Phase 4 live-run tests.
-Until then the runner uses the API key; the cost is trivial and it is what is proven.
+Two engines, switched by `AUDIT_LLM`:
+
+- **`subscription`** — `claude -p` on Tahi's subscription, $0 marginal. The R2
+  default for the daily runner: `AUDIT_LLM=subscription node scripts/run-audit.mjs …`.
+  Requires the `claude` CLI logged in on this Mac. Smoke-tested 20 Jul: tability
+  trap passes, cost 0.
+- **`api`** (code default) — the SDK pipeline via `ANTHROPIC_API_KEY`,
+  ~$0.11–0.22/audit. Use when running anywhere the CLI isn't logged in (R3's
+  server runner).
+
+If a run exits with `UNREADABLE_SITE`, that lead is a story-13 personal-reply
+case: don't send anything, reply to them yourself and set **Rejected**.
 
 ## R3 (automation) — two toggles, no rebuild
 

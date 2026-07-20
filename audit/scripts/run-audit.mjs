@@ -43,6 +43,12 @@ function runPipeline(url, auditId) {
     );
     child.on("error", reject);
     child.on("exit", (code) => {
+      // Exit 3 = no readable pages (bot-block/empty site): a personal-reply case
+      // per story 13, not a crash. Distinct message so the runner acts on it.
+      if (code === 3)
+        return reject(
+          new Error(`UNREADABLE_SITE: no readable pages on ${url}; reply personally and set Rejected (story 13)`)
+        );
       if (code !== 0) return reject(new Error(`pipeline exited ${code}`));
       const recordPath = join(RUNS, `${pipelineSlug(url)}_pipe_r${auditId}.json`);
       try {

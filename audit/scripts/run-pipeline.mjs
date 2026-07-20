@@ -13,7 +13,44 @@ const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Conte
 const OUT = fileURLToPath(new URL('./runs/', import.meta.url));
 mkdirSync(OUT, { recursive: true });
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// LLM engine (story 16). AUDIT_LLM=api (default) uses the SDK + ANTHROPIC_API_KEY:
+// the measured, validated path. AUDIT_LLM=subscription shells out to `claude -p`
+// on Tahi's subscription ($0 marginal, the R2 target); requires the claude CLI to
+// be logged in. Both return { text, usage } so the rest of the pipeline is
+// engine-blind; subscription cost is reported as 0.
+const ENGINE = (process.env.AUDIT_LLM || 'api').toLowerCase();
+const anthropic = ENGINE === 'api' ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) : null;
+
+async function llmCall({ model, system, prompt, maxTokens, thinking }) {
+  if (ENGINE === 'api') {
+    const res = await anthropic.messages.create({
+      model, max_tokens: maxTokens,
+      ...(thinking ? { thinking } : {}),
+      ...(system ? { system } : {}),
+      messages: [{ role: 'user', content: prompt }],
+    });
+    return { text: res.content.filter(b => b.type === 'text').map(b => b.text).join('\n'), usage: res.usage };
+  }
+  // subscription: claude -p, prompt on stdin, JSON envelope out for usage numbers.
+  const { spawn } = await import('node:child_process');
+  const args = ['-p', '--model', model, '--output-format', 'json'];
+  if (system) args.push('--append-system-prompt', system);
+  return new Promise((resolve, reject) => {
+    const child = spawn('claude', args, { stdio: ['pipe', 'pipe', 'inherit'] });
+    let out = '';
+    child.stdout.on('data', d => (out += d));
+    child.on('error', reject);
+    child.on('exit', (code) => {
+      if (code !== 0) return reject(new Error(`claude -p exited ${code}`));
+      try {
+        const j = JSON.parse(out);
+        resolve({ text: j.result || '', usage: j.usage || { input_tokens: 0, output_tokens: 0 } });
+      } catch (e) { reject(new Error(`claude -p output not JSON: ${String(out).slice(0, 200)}`)); }
+    });
+    child.stdin.end(prompt);
+  });
+}
+
 const t0 = Date.now();
 const PRICE = { 'claude-haiku-4-5': { in: 1, out: 5 }, 'claude-sonnet-4-6': { in: 3, out: 15 }, 'claude-opus-4-8': { in: 5, out: 25 } };
 const PRICE_KEYS = Object.keys(PRICE);
@@ -22,7 +59,8 @@ if (!site || !/^https?:\/\//.test(site)) { console.error('usage: node run-pipeli
 if (!PRICE_KEYS.includes(pickerModel)) { console.error(`unknown picker model ${pickerModel}; known: ${PRICE_KEYS.join(', ')}`); process.exit(2); }
 const slug = site.replace(/https?:\/\/(www\.)?/, '').split(/[/.]/)[0];
 const tag = `${slug}_pipe_r${runId}`;
-const cost = (model, u) => ((u.input_tokens * PRICE[model].in) + (u.output_tokens * PRICE[model].out)) / 1e6;
+// Subscription runs cost $0 marginal; API runs are priced from the usage numbers.
+const cost = (model, u) => ENGINE !== 'api' ? 0 : ((u.input_tokens * PRICE[model].in) + (u.output_tokens * PRICE[model].out)) / 1e6;
 
 async function fetchPage(browser, url) {
   const p = await browser.newPage();
@@ -88,8 +126,8 @@ ${internal.map(l => `${l.url} | ${l.label}`).join('\n').slice(0, 8000)}
 
 Pick UP TO 4 links (the homepage is already included). Priority: revenue pages (pricing/shop/services/booking) > trust/conversion (about/contact) > support (FAQ/delivery/terms). For shops/e-commerce, collections and product pages ARE the revenue pages: include at least one. Prefer pages likely to carry claims, prices, or counts that can contradict other pages. Reply with ONLY a JSON array of URLs, e.g. ["https://..","https://.."].`;
 const tPick = Date.now();
-const pick = await anthropic.messages.create({ model: pickerModel, max_tokens: 500, messages: [{ role: 'user', content: pickerInput }] });
-const pickText = pick.content.filter(b => b.type === 'text').map(b => b.text).join('');
+const pick = await llmCall({ model: pickerModel, prompt: pickerInput, maxTokens: 500 });
+const pickText = pick.text;
 let picked = [];
 try { picked = JSON.parse(pickText.match(/\[[\s\S]*\]/)[0]).slice(0, 4); } catch {}
 // Only fetch picks that exist in the homepage's internal-link inventory: blocks hallucinated or
@@ -130,6 +168,17 @@ if (unusable(home)) coverageNotes.push(`the homepage ${site} was unreadable (bot
 const pages = [home, ...good].filter(p => p.text && p.text.length > THIN_CHARS);
 const stage3_ms = Date.now() - tFetch2;
 
+// Nothing readable = no audit. Without this, the judge would run on an empty
+// bundle, return 0 findings, and the thin-report floor would emit "your site's
+// in good shape" for a site we never read (story 13: never a half report).
+// Exit 3 tells the runner "unreadable site, reply personally", distinct from
+// exit 1 (crash).
+if (pages.length === 0) {
+  console.error(`No readable pages on ${site} (${coverageNotes.join('; ') || 'all fetches empty'}). Aborting before the judge.`);
+  await browser.close().catch(() => {});
+  process.exit(3);
+}
+
 // STAGE 4: programmatic hard-404 check on audited pages' internal links (status only), in parallel spirit but sequential here for simplicity.
 const tLinks = Date.now();
 const allLinks = [...new Set(pages.flatMap(p => p.links.map(l => { try { const u = new URL(l.href); return u.origin === origin ? (u.origin + u.pathname).replace(/\/$/, '') : null; } catch { return null; } }).filter(Boolean)))];
@@ -153,8 +202,8 @@ RULES: every finding = exact page URL + VERBATIM quote copied character-for-char
 END with ONE fenced json block: {"findings":[{"url","quote","evidence_type":"body|title","severity":"critical|high|medium|low","category":"contradiction|pricing|naming|spelling|stale|formatting"}]}. Empty findings is valid.`;
 const bundle = pages.map(p => `=== PAGE: ${p.url}\nTITLE: ${p.title}\n\n${p.text}`).join('\n\n');
 const tJudge = Date.now();
-const judge = await anthropic.messages.create({ model: 'claude-opus-4-8', max_tokens: 16000, thinking: { type: 'adaptive' }, system: SYSTEM, messages: [{ role: 'user', content: `Website: ${site}\nAudit these ${pages.length} pages.\n\n${bundle}` }] });
-const judgeText = judge.content.filter(b => b.type === 'text').map(b => b.text).join('\n');
+const judge = await llmCall({ model: 'claude-opus-4-8', maxTokens: 16000, thinking: { type: 'adaptive' }, system: SYSTEM, prompt: `Website: ${site}\nAudit these ${pages.length} pages.\n\n${bundle}` });
+const judgeText = judge.text;
 let findings = [];
 try { const blocks = [...judgeText.matchAll(/```json\s*([\s\S]*?)```/g)]; for (let i = blocks.length - 1; i >= 0; i--) { const j = JSON.parse(blocks[i][1]); if (Array.isArray(j.findings)) { findings = j.findings; break; } } } catch {}
 const judge_ms = Date.now() - tJudge, judge_cost = cost('claude-opus-4-8', judge.usage);
