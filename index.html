@@ -248,6 +248,50 @@
     cursor: pointer;
   }
   .work-row:hover { background: var(--surface); }
+
+  /* ───────── Free audit band (Treatment B) ───────── */
+  .audit-band { background: var(--surface); border-bottom: 1px solid var(--hairline); }
+  .audit-band-inner { max-width: var(--col); }
+  .audit-form { margin-top: 32px; }
+  .audit-fields { display: flex; flex-wrap: wrap; gap: 12px; }
+  .audit-input {
+    flex: 1 1 220px;
+    min-width: 0;
+    font-family: var(--sans);
+    font-size: 16px;                 /* >=16px stops iOS zoom-on-focus */
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--hairline-focus);
+    border-radius: 12px;
+    padding: 13px 16px;
+    transition: border-color 0.15s ease;
+  }
+  .audit-input::placeholder { color: var(--muted); }
+  .audit-input:focus-visible { outline: none; border-color: var(--ink); }
+  .audit-input[aria-invalid="true"] { border-color: var(--error); }
+  .audit-submit { flex: 0 0 auto; }
+  .audit-msg { margin-top: 12px; font-size: 14px; color: var(--error); min-height: 1.2em; }
+  .audit-msg:empty { margin-top: 0; min-height: 0; }
+  .audit-note {
+    margin-top: 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--muted-small);
+  }
+  /* State machine: [data-state] on the band toggles form vs confirmation.
+     No fake progress — "validating" only disables the submit button. */
+  .audit-sent { display: none; margin-top: 24px; }
+  .audit-band[data-state="sent"] .audit-form { display: none; }
+  .audit-band[data-state="sent"] .audit-sent { display: block; }
+  .audit-sent-title { font-family: var(--serif); font-size: clamp(28px, 5vw, 40px); line-height: 1.1; }
+  .audit-sent-body { margin-top: 8px; color: var(--muted-small); max-width: 46ch; }
+  .audit-sent-email { color: var(--ink); }
+  .audit-band[data-state="validating"] .audit-submit { opacity: 0.5; pointer-events: none; }
+  @media (max-width: 560px) {
+    .audit-fields { flex-direction: column; align-items: stretch; }
+    .audit-submit { width: 100%; }
+  }
   /* Delivery beat: the title leans toward you the instant you point at it */
   .work-row:hover .client { transform: translateX(8px); }
   .work-row .idx {
@@ -650,6 +694,7 @@
     <div class="hero-deck reveal-words" data-stagger><span class="deck-lead">We find out what your customers really want,<br class="deck-break"> then build and scale it with <span class="ai-tease">AI.</span></span></div>
     <div class="hero-actions reveal d4">
       <a class="pill" href="#work">Read our work <span class="arrow">&rarr;</span></a>
+      <a class="ghost" href="#audit">Free site audit</a>
       <a class="ghost" href="#contact">Get in touch</a>
     </div>
   </div>
@@ -725,6 +770,121 @@
     </div>
   </div>
 </section>
+
+<!-- Free audit band (Treatment B): full-width surface band between Work and
+     Products. Morphs in place through 3 honest states via [data-state]:
+     input -> validating -> sent. The audit runs later (manual-first, R2); this
+     only captures the lead. See v1 audit ticket, Phase 1. -->
+<section class="section audit-band" id="audit" data-state="input">
+  <div class="section-inner">
+    <div class="audit-band-inner" data-reveal="child: :scope > *; cap: 6">
+      <div class="section-num"><strong>&#9733;</strong> Free site audit <span class="rule"></span></div>
+      <h2 class="section-title">Get a free <em>content audit</em>.</h2>
+      <p class="section-lead">Semrush tells you a link is broken. We tell you two of your pages contradict each other. Drop your URL in and we'll email you a findings report on your key pages.</p>
+
+      <form class="audit-form" novalidate>
+        <div class="audit-fields">
+          <input class="audit-input" type="url" name="url" inputmode="url" autocomplete="url" spellcheck="false" placeholder="yoursite.com" aria-label="Your website URL" required>
+          <input class="audit-input" type="email" name="email" autocomplete="email" spellcheck="false" placeholder="you@company.com" aria-label="Your email address" required>
+          <button class="pill audit-submit" type="submit">Get my audit <span class="arrow">&rarr;</span></button>
+        </div>
+        <p class="audit-msg" role="alert" aria-live="assertive"></p>
+        <p class="audit-note">Content checks only, no SEO fluff. We email the report, usually within one business day.</p>
+      </form>
+
+      <div class="audit-sent" role="status" aria-live="polite">
+        <h3 class="audit-sent-title">On its way.</h3>
+        <p class="audit-sent-body">Your report will land at <span class="audit-sent-email"></span> within one business day. Worth a peek in spam if it's shy.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+// Free audit band: client-side validation + submit to /api/audit. The server
+// re-validates (mailchecker + dns.resolveMx), so this layer only catches obvious
+// typos fast and drives the 3 visual states. No fake progress: "validating" just
+// disables the button while the request is in flight.
+(function () {
+  var band = document.getElementById("audit");
+  if (!band) return;
+  var form = band.querySelector(".audit-form");
+  var urlEl = form.querySelector('input[name="url"]');
+  var emailEl = form.querySelector('input[name="email"]');
+  var msg = form.querySelector(".audit-msg");
+  var sentEmail = band.querySelector(".audit-sent-email");
+
+  // No-op if Vercel Analytics isn't loaded (wired fully in Phase 5).
+  function track(name, data) {
+    try { if (window.va) window.va("event", Object.assign({ name: name }, data || {})); } catch (e) {}
+  }
+
+  // Cheap placeholder filter so obvious filler fails before hitting the server.
+  // The server's mailchecker blocklist is the real gate.
+  var JUNK = /^(test|example|email|domain|a|b|x|y|z|asdf?|qwerty|none|no)@|@(test|example|domain|a|b|x)\.[a-z]+$/i;
+  function emailLooksReal(v) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return false;
+    return !JUNK.test(v);
+  }
+
+  var VALIDATION_COPY = {
+    url: "That doesn't look like a website address. Try something like yoursite.com.",
+    syntax: "That email doesn't look right. Mind checking it?",
+    blocklist: "That email doesn't look like it can receive mail. Try another?",
+    mx: "That email doesn't look like it can receive mail. Try another?",
+    store: "Something went wrong on our end. Give it another go in a moment.",
+    rate: "That's a few tries quickly. Give it a minute and try again.",
+    network: "Couldn't reach us just now. Check your connection and try again.",
+  };
+
+  function setInvalid(el, on) { if (el) el.setAttribute("aria-invalid", on ? "true" : "false"); }
+  function fail(reason, focusEl) {
+    band.setAttribute("data-state", "input");
+    msg.textContent = VALIDATION_COPY[reason] || VALIDATION_COPY.store;
+    if (focusEl) { setInvalid(focusEl, true); focusEl.focus(); }
+    track("audit_validation_fail", { reason: reason });
+  }
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    msg.textContent = "";
+    setInvalid(urlEl, false);
+    setInvalid(emailEl, false);
+    track("audit_submit_attempt", {});
+
+    var url = urlEl.value.trim();
+    var email = emailEl.value.trim().toLowerCase();
+    if (!url) return fail("url", urlEl);
+    // Client only distinguishes "obviously wrong" (syntax/junk). blocklist and mx
+    // are the server's verdicts, returned as data.reason on a 400.
+    if (!emailLooksReal(email)) return fail("syntax", emailEl);
+
+    band.setAttribute("data-state", "validating");
+    var res;
+    try {
+      res = await fetch("/api/audit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: url, email: email }),
+      });
+    } catch (err) {
+      return fail("network", null);
+    }
+
+    var data = {};
+    try { data = await res.json(); } catch (err) {}
+    if (res.ok && data.ok) {
+      sentEmail.textContent = email;
+      band.setAttribute("data-state", "sent");
+      track("audit_submit_success", {});
+      return;
+    }
+    // Map server rejections back to a field + message.
+    var reason = data.reason || data.error || "store";
+    var focusEl = data.error === "url" ? urlEl : data.error === "email" ? emailEl : null;
+    fail(reason, focusEl);
+  });
+})();
+</script>
 
 <section class="section" id="products">
   <div class="section-inner">
