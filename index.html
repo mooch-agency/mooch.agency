@@ -272,12 +272,49 @@
   .audit-submit { flex: 0 0 auto; }
   .audit-msg { margin-top: 12px; font-size: 14px; color: var(--error); min-height: 1.2em; }
   .audit-msg:empty { margin-top: 0; min-height: 0; }
-  .audit-note {
-    margin-top: 10px;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.04em;
-    color: var(--muted-small);
+  /* Comparison slide-out (Q9 Treatment A): trigger + grid-rows disclosure. */
+  .audit-disclose {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 4px;
+    font-size: 14px; color: var(--muted-small); background: none; border: none;
+    cursor: pointer; font-family: var(--sans); padding: 0;
+    border-bottom: 1px solid var(--hairline-focus);
+  }
+  .audit-disclose:hover { color: var(--ink); border-color: var(--ink); }
+  .audit-disclose:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .audit-disclose .chev { transition: transform 0.25s var(--ease-deliver); font-size: 11px; }
+  .audit-disclose[aria-expanded="true"] .chev { transform: rotate(180deg); }
+  .audit-disclosure { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.45s var(--ease-decide); }
+  .audit-disclosure[data-open] { grid-template-rows: 1fr; }
+  .audit-disclosure > div { overflow: hidden; }
+  .audit-cmp-card { background: var(--paper); border: 1px solid var(--hairline); border-radius: 16px; padding: 20px; margin-top: 18px; }
+  .audit-cmp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .audit-cmp-table th {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--muted); font-weight: 600;
+    text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--hairline);
+  }
+  .audit-cmp-table th:not(:first-child), .audit-cmp-table td:not(:first-child) { text-align: center; width: 96px; }
+  .audit-cmp-table td { padding: 11px 12px; border-bottom: 1px solid var(--hairline); }
+  .audit-cmp-table tr:last-child td { border-bottom: none; }
+  .audit-cmp-table .tick { color: var(--ink); font-weight: 600; }
+  .audit-cmp-table .cross { color: var(--hairline-focus); }
+  /* Rows cascade in when opened; reduced-motion gets an instant open. */
+  .audit-disclosure[data-open] .audit-cmp-table tbody tr { animation: auditRowIn 0.5s var(--ease-decide) both; }
+  .audit-disclosure[data-open] .audit-cmp-table tbody tr:nth-child(1) { animation-delay: 0.08s; }
+  .audit-disclosure[data-open] .audit-cmp-table tbody tr:nth-child(2) { animation-delay: 0.14s; }
+  .audit-disclosure[data-open] .audit-cmp-table tbody tr:nth-child(3) { animation-delay: 0.20s; }
+  .audit-disclosure[data-open] .audit-cmp-table tbody tr:nth-child(4) { animation-delay: 0.26s; }
+  .audit-disclosure[data-open] .audit-cmp-table tbody tr:nth-child(5) { animation-delay: 0.32s; }
+  .audit-disclosure[data-open] .audit-cmp-table tbody tr:nth-child(6) { animation-delay: 0.38s; }
+  @keyframes auditRowIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .audit-disclosure { transition: none; }
+    .audit-disclosure[data-open] .audit-cmp-table tbody tr { animation: none; }
+  }
+  @media (max-width: 560px) {
+    /* The two verdict columns shrink so the finding text keeps room. */
+    .audit-cmp-table th:not(:first-child), .audit-cmp-table td:not(:first-child) { width: 52px; }
+    .audit-cmp-card { padding: 14px; }
   }
   /* State machine: [data-state] on the band toggles form vs confirmation.
      No fake progress — "validating" only disables the submit button. */
@@ -781,9 +818,32 @@
 <section class="section audit-band" id="audit" data-state="input">
   <div class="section-inner">
     <div class="audit-band-inner" data-reveal="child: :scope > *; cap: 6">
-      <div class="section-num"><strong>&#9733;</strong> Free site audit <span class="rule"></span></div>
+      <div class="section-num"><strong>&#9733;</strong> Two minutes &middot; Report by email <span class="rule"></span></div>
       <h2 class="section-title">Get a free <em>content audit</em>.</h2>
-      <p class="section-lead">Semrush tells you a link is broken. We tell you two of your pages contradict each other. Drop your URL in and we'll email you a findings report on your key pages.</p>
+      <p class="section-lead">We'll read up to five key pages and show you where the issues are.</p>
+
+      <!-- Q9 comparison slide-out (Treatment A from the explorations page).
+           Answers "is this an SEO tool?" on demand instead of in the band copy. -->
+      <button class="audit-disclose" type="button" aria-expanded="false" aria-controls="audit-cmp">
+        What we audit for <span class="chev">&#9662;</span>
+      </button>
+      <div class="audit-disclosure" id="audit-cmp">
+        <div>
+          <div class="audit-cmp-card">
+            <table class="audit-cmp-table">
+              <thead><tr><th>What gets checked</th><th>SEO tools</th><th>Mooch</th></tr></thead>
+              <tbody>
+                <tr><td>Broken links</td><td class="tick">&#10003;</td><td class="tick">&#10003;</td></tr>
+                <tr><td>Keywords, meta tags, sitemaps</td><td class="tick">&#10003;</td><td class="cross">&mdash;</td></tr>
+                <tr><td>&pound;19 on the pricing page, &pound;15 on the homepage</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+                <tr><td>Your delivery page citing a law repealed in 2021</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+                <tr><td>"Closed for Christmas" still up in July</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+                <tr><td>The typo in the headline everyone sees</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
       <form class="audit-form" novalidate>
         <div class="audit-fields">
@@ -792,7 +852,6 @@
           <button class="pill audit-submit" type="submit">Get my audit <span class="arrow">&rarr;</span></button>
         </div>
         <p class="audit-msg" role="alert" aria-live="assertive"></p>
-        <p class="audit-note">We check pricing mismatches, cross-page contradictions, broken links, stale copy and typos. No SEO fluff. Report by email, usually within one business day.</p>
       </form>
 
       <div class="audit-sent" role="status" aria-live="polite">
@@ -822,6 +881,16 @@
   // script at the end of the page; guarded so it no-ops if analytics is blocked.
   function track(name, data) {
     try { if (window.va) window.va("event", Object.assign({ name: name }, data || {})); } catch (e) {}
+  }
+
+  // Comparison slide-out toggle ("What we audit for").
+  var disclose = band.querySelector(".audit-disclose");
+  var disclosure = document.getElementById("audit-cmp");
+  if (disclose && disclosure) {
+    disclose.addEventListener("click", function () {
+      var open = disclosure.toggleAttribute("data-open");
+      disclose.setAttribute("aria-expanded", open ? "true" : "false");
+    });
   }
 
   // Funnel top: fire audit_band_view once when the band first enters view.
