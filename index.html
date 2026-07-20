@@ -298,14 +298,6 @@
   .audit-cmp-table tr:last-child td { border-bottom: none; }
   .audit-cmp-table .tick { color: var(--ink); font-weight: 600; }
   .audit-cmp-table .cross { color: var(--hairline-focus); }
-  /* Category label above each example: same grammar as the report's finding
-     cards (category + quote), so the band previews the deliverable. */
-  .audit-cmp-table .cat {
-    display: block;
-    font-family: var(--mono); font-size: 10px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--muted); margin-bottom: 3px;
-  }
   /* Rows cascade in when opened; reduced-motion gets an instant open. */
   .audit-disclosure[data-open] .audit-cmp-table tbody tr { animation: auditRowIn 0.5s var(--ease-decide) both; }
   .audit-disclosure[data-open] .audit-cmp-table tbody tr:nth-child(1) { animation-delay: 0.08s; }
@@ -842,13 +834,13 @@
             <table class="audit-cmp-table">
               <thead><tr><th>What gets checked</th><th>SEO tools</th><th>Mooch</th></tr></thead>
               <tbody>
-                <tr><td><span class="cat">Broken links</span>Links that lead nowhere</td><td class="tick">&#10003;</td><td class="tick">&#10003;</td></tr>
-                <tr><td><span class="cat">Technical SEO</span>Keywords, meta tags, sitemaps</td><td class="tick">&#10003;</td><td class="cross">&mdash;</td></tr>
-                <tr><td><span class="cat">Pricing</span>&pound;19 on the pricing page, &pound;15 on the homepage</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
-                <tr><td><span class="cat">Contradictions</span>Eight locations on About, nine in the footer</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
-                <tr><td><span class="cat">Wrong facts</span>A law repealed in 2021, still cited</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
-                <tr><td><span class="cat">Stale content</span>"Closed for Christmas" still up in July</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
-                <tr><td><span class="cat">Typos</span>In the headline everyone sees</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+                <tr><td>Pricing mismatches</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+                <tr><td>Contradictions</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+                <tr><td>Wrong facts</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+                <tr><td>Stale content</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+                <tr><td>Typos</td><td class="cross">&mdash;</td><td class="tick">&#10003;</td></tr>
+                <tr><td>Broken links</td><td class="tick">&#10003;</td><td class="tick">&#10003;</td></tr>
+                <tr><td>Keywords, meta tags, sitemaps</td><td class="tick">&#10003;</td><td class="cross">&mdash;</td></tr>
               </tbody>
             </table>
           </div>
