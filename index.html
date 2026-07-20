@@ -811,6 +811,8 @@
   var urlEl = form.querySelector('input[name="url"]');
   var emailEl = form.querySelector('input[name="email"]');
   var msg = form.querySelector(".audit-msg");
+  var submit = form.querySelector(".audit-submit");
+  var submitHTML = submit.innerHTML; // preserve label + arrow for restore
   var sentEmail = band.querySelector(".audit-sent-email");
 
   // No-op if Vercel Analytics isn't loaded (wired fully in Phase 5).
@@ -839,6 +841,7 @@
   function setInvalid(el, on) { if (el) el.setAttribute("aria-invalid", on ? "true" : "false"); }
   function fail(reason, focusEl) {
     band.setAttribute("data-state", "input");
+    submit.innerHTML = submitHTML; // restore label after a failed attempt
     msg.textContent = VALIDATION_COPY[reason] || VALIDATION_COPY.store;
     if (focusEl) { setInvalid(focusEl, true); focusEl.focus(); }
     track("audit_validation_fail", { reason: reason });
@@ -846,6 +849,9 @@
 
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
+    // Guard against a second submit (e.g. double Enter) while a request is in
+    // flight, which would write two lead rows.
+    if (band.getAttribute("data-state") === "validating") return;
     msg.textContent = "";
     setInvalid(urlEl, false);
     setInvalid(emailEl, false);
@@ -859,6 +865,7 @@
     if (!emailLooksReal(email)) return fail("syntax", emailEl);
 
     band.setAttribute("data-state", "validating");
+    submit.textContent = "Sending…"; // honest in-flight cue, not fake progress
     var res;
     try {
       res = await fetch("/api/audit", {
