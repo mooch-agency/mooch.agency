@@ -1,0 +1,54 @@
+# Audit batch runner (story 16, R2). Manual trigger: Actions -> "Audit batch"
+# -> Run workflow. Processes the Inbound Audit Leads DB in two halves:
+#   Approved -> run audit -> PDF attached to the row -> Ready for review
+#   Send     -> report emailed via Resend (cc hey@) -> Sent
+# Human flips stay in Notion; this only processes rows a human moved.
+# Secrets: NOTION_TOKEN, ANTHROPIC_API_KEY, RESEND_API_KEY.
+
+name: Audit batch
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: audit-batch
+  cancel-in-progress: false
+
+jobs:
+  batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: audit
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: audit/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # puppeteer-core needs a real Chrome; the pipeline + PDF both use it.
+      - name: Install Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Run batch
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+          AUDIT_LLM: api
+        run: node scripts/batch.mjs
