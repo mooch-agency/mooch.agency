@@ -101,16 +101,28 @@ process.on('unhandledRejection', async (e) => { console.error(e); try { await br
 
 // STAGE 1: homepage fetch + link inventory.
 const tFetch1 = Date.now();
-const home = await fetchPage(browser, site);
 const origin = new URL(site).origin;
-const internal = []; const seen = new Set();
-for (const l of home.links) {
-  try {
-    const u = new URL(l.href); if (u.origin !== origin) continue;
-    const clean = (u.origin + u.pathname).replace(/\/$/, '');
-    if (clean === (origin + '').replace(/\/$/, '') || seen.has(clean)) continue;
-    seen.add(clean); internal.push({ url: clean, label: l.label });
-  } catch {}
+const buildInventory = (h) => {
+  const inv = []; const seen = new Set();
+  for (const l of h.links) {
+    try {
+      const u = new URL(l.href); if (u.origin !== origin) continue;
+      const clean = (u.origin + u.pathname).replace(/\/$/, '');
+      if (clean === (origin + '').replace(/\/$/, '') || seen.has(clean)) continue;
+      seen.add(clean); inv.push({ url: clean, label: l.label });
+    } catch {}
+  }
+  return inv;
+};
+let home = await fetchPage(browser, site);
+let internal = buildInventory(home);
+// Homepage text present but zero internal links means the nav hadn't rendered
+// when we snapshotted (late-hydrating menu). Without this, every picked page is
+// filtered out against an empty inventory and the audit silently degrades to the
+// homepage alone. One patient refetch recovers the links.
+if (internal.length === 0 && home.text && home.text.length > 200) {
+  const retry = await fetchWithRetry(browser, site);
+  if (retry.links && retry.links.length) { home = retry; internal = buildInventory(home); }
 }
 const stage1_ms = Date.now() - tFetch1;
 
@@ -128,6 +140,7 @@ Pick UP TO 4 links (the homepage is already included). Priority: revenue pages (
 const tPick = Date.now();
 const pick = await llmCall({ model: pickerModel, prompt: pickerInput, maxTokens: 500 });
 const pickText = pick.text;
+if (process.env.AUDIT_DEBUG) console.error('[picker raw]', JSON.stringify(pickText));
 let picked = [];
 try { picked = JSON.parse(pickText.match(/\[[\s\S]*\]/)[0]).slice(0, 4); } catch {}
 // Only fetch picks that exist in the homepage's internal-link inventory: blocks hallucinated or
@@ -165,6 +178,7 @@ for (const [, page] of initial) {
   if (!swapped) coverageNotes.push(`${page.url} was unreadable and no readable substitute was available`);
 }
 if (unusable(home)) coverageNotes.push(`the homepage ${site} was unreadable (bot-block or empty); findings may be limited`);
+else if (internal.length === 0) coverageNotes.push(`only the homepage could be read; its navigation links did not load, so deeper pages were not audited`);
 const pages = [home, ...good].filter(p => p.text && p.text.length > THIN_CHARS);
 const stage3_ms = Date.now() - tFetch2;
 
@@ -199,8 +213,9 @@ await browser.close().catch(() => {});
 const SYSTEM = `You are a meticulous website content auditor. You receive the rendered VISIBLE text of several pages from ONE website. Find real content issues. Near-zero false positives: one wrong finding costs more than five missed ones.
 FIND (on and ACROSS pages): pricing inconsistencies; cross-page contradictions (counts, names, claims, hours, dates); naming inconsistencies; spelling/grammar; visible formatting artifacts; stale content; factual errors. Cross-page contradictions are the highest value.
 FACTUAL ERRORS are statements that are demonstrably, verifiably wrong: a cited law/regulation/standard that has been repealed or superseded, a plainly incorrect date or figure, a claim that is impossible or self-refuting. Flag ONLY when you are certain it is wrong from widely established fact; if it depends on the business's private data or you are not sure, do NOT flag it. Never guess. This is the highest-FP-risk category, so hold it to the strictest bar.
-RULES: every finding = exact page URL + VERBATIM quote copied character-for-character from the provided text + severity + category. No paraphrase. Do NOT flag intentional design, responsive duplicates, HTML-level issues, or anything not quotable verbatim. Pricing: exact figure + billing period. "Including X and Y" = examples, not exhaustive.
-END with ONE fenced json block: {"findings":[{"url","quote","evidence_type":"body|title","severity":"critical|high|medium|low","category":"contradiction|pricing|naming|spelling|grammar|stale|formatting|factual"}]}. Empty findings is valid.`;
+RULES: every finding = exact page URL + VERBATIM quote copied character-for-character from the provided text + severity + category + issue. No paraphrase in the quote. Do NOT flag intentional design, responsive duplicates, HTML-level issues, or anything not quotable verbatim. Pricing: exact figure + billing period. "Including X and Y" = examples, not exhaustive.
+ISSUE: one short plain-English sentence naming exactly what is wrong and where, in your own words. Name the specific problem: the misspelled word, the two figures that disagree, the outdated claim. Be concrete a reader gets it in 3 seconds. Do NOT rewrite their copy or hand them the corrected version (that is the conversation we want them to start).
+END with ONE fenced json block: {"findings":[{"url","quote","evidence_type":"body|title","severity":"critical|high|medium|low","category":"contradiction|pricing|naming|spelling|grammar|stale|formatting|factual","issue":"..."}]}. Empty findings is valid.`;
 const bundle = pages.map(p => `=== PAGE: ${p.url}\nTITLE: ${p.title}\n\n${p.text}`).join('\n\n');
 const tJudge = Date.now();
 const judge = await llmCall({ model: 'claude-opus-4-8', maxTokens: 16000, thinking: { type: 'adaptive' }, system: SYSTEM, prompt: `Website: ${site}\nAudit these ${pages.length} pages.\n\n${bundle}` });

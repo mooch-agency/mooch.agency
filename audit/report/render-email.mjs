@@ -75,11 +75,15 @@ export function renderEmail(record, dateStr) {
 
   const top = passed.slice(0, 3).map((f) => {
     const label = CATEGORY_LABEL[f.category] || f.category || "Issue";
-    return `<tr><td style="padding:12px 0;border-bottom:1px solid #d2d2d7">
-      <div style="font:600 11px/1 -apple-system,Arial,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:#6e6e73;margin-bottom:6px">${esc(
+    const issue = f.issue || label;
+    return `<tr><td style="padding:14px 0;border-bottom:1px solid #d2d2d7">
+      <div style="font:600 11px/1 -apple-system,Arial,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:#6e6e73;margin-bottom:7px">${esc(
         label
       )}</div>
-      <div style="font:400 18px/1.4 Georgia,'Times New Roman',serif;color:#1d1d1f;padding-left:12px;border-left:2px solid #1d1d1f">${esc(
+      <div style="font:400 18px/1.35 Georgia,'Times New Roman',serif;color:#1d1d1f;margin-bottom:9px">${esc(
+        issue
+      )}</div>
+      <div style="font:400 13px/1.5 -apple-system,Arial,sans-serif;color:#6e6e73;padding-left:11px;border-left:2px solid #d2d2d7">${esc(
         f.quote
       )}</div>
     </td></tr>`;

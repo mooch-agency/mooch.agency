@@ -148,6 +148,7 @@ function findingCards(m) {
   const cards = m.findings
     .map((f) => {
       const s = sev(f);
+      const issue = f.issue || CATEGORY_LABEL[f.category] || f.category || "Issue";
       return `<article class="finding">
         <div class="finding-head">
           <span class="chip chip-${esc((f.severity || "low").toLowerCase())}">${esc(
@@ -157,8 +158,11 @@ function findingCards(m) {
             CATEGORY_LABEL[f.category] || f.category || "Issue"
           )}</span>
         </div>
-        <a class="finding-url" href="${safeHref(f.url)}">${esc(pathOf(f.url))}</a>
-        <blockquote class="finding-quote">${esc(f.quote)}</blockquote>
+        <p class="finding-issue">${esc(issue)}</p>
+        <div class="finding-evidence">
+          <span class="finding-evidence-label">On ${esc(pathOf(f.url))}</span>
+          <blockquote class="finding-quote">${esc(f.quote)}</blockquote>
+        </div>
       </article>`;
     })
     .join("\n");
@@ -267,10 +271,11 @@ th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacin
 .chip-medium{background:var(--med-bg);color:var(--med)}
 .chip-low{background:var(--low-bg);color:var(--low)}
 .finding{padding:20px 0;border-bottom:1px solid var(--hairline)}
-.finding-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.finding-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .finding-cat{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.finding-url{display:inline-block;font-family:var(--mono);font-size:12px;color:var(--muted-small);margin-bottom:10px;word-break:break-all}
-.finding-quote{font-family:var(--serif);font-size:20px;line-height:1.4;padding-left:16px;border-left:2px solid var(--ink)}
+.finding-issue{font-family:var(--serif);font-size:22px;line-height:1.25;color:var(--ink);margin-bottom:12px}
+.finding-evidence-label{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px}
+.finding-quote{font-size:14px;line-height:1.5;color:var(--muted-small);padding-left:14px;border-left:2px solid var(--hairline)}
 .link-list{list-style:none;font-family:var(--mono);font-size:13px}
 .link-list li{padding:6px 0;border-bottom:1px solid var(--hairline);word-break:break-all}
 .muted{color:var(--muted)}.small{font-size:12px}
@@ -301,7 +306,7 @@ export function renderReport(record, dateStr) {
     : `${
         m.findings.length || m.broken.length
           ? `<section class="block"><h2 class="block-title">Worst offenders</h2>
-             <table><thead><tr><th>Severity</th><th>Issue</th><th>Page</th></tr></thead>
+             <table><thead><tr><th>Severity</th><th>Type</th><th>Page</th></tr></thead>
              <tbody>${worstOffendersRows(m)}</tbody></table></section>`
           : ""
       }
