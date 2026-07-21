@@ -812,13 +812,11 @@
     </div>
 
     <div class="offer-index" data-reveal="child: :scope > *; cap: 5">
-      <!-- Offer tiles: each triggers the Cal.com popup with prefilled context.
-           href is the no-JS fallback; data-cal-link drives the popup when JS loads.
-           Slug assumed: mooch/discovery. Hold deploy until Phase 4 confirms it. -->
+      <!-- Offer tiles: each opens the cal.eu discovery booking in a new tab,
+           with a prefilled ?notes= param naming the offer. -->
       <a class="fi-hero" data-cat="ai"
          href="https://cal.eu/mooch/discovery?notes=AI%20Automation%20Setup"
-         data-cal-link="mooch/discovery"
-         data-cal-config='{"notes":"AI Automation Setup"}'>
+         target="_blank" rel="noopener">
         <span class="fi-cat">Fixed scope</span>
         <span class="fi-name">AI Automation <em>Setup</em></span>
         <span class="fi-blurb">We find your single highest-leverage AI automation and ship it end to end. Discovery, build and handover included.</span>
@@ -831,8 +829,7 @@
 
       <a class="fi-row" data-cat="audit"
          href="https://cal.eu/mooch/discovery?notes=Content%20%26%20UX%20Audit"
-         data-cal-link="mooch/discovery"
-         data-cal-config='{"notes":"Content & UX Audit"}'>
+         target="_blank" rel="noopener">
         <span class="fi-num">01</span>
         <span>
           <span class="fi-cat">Whole site</span>
@@ -848,8 +845,7 @@
 
       <a class="fi-row" data-cat="ux"
          href="https://cal.eu/mooch/discovery?notes=UX%20Research%20Sprint"
-         data-cal-link="mooch/discovery"
-         data-cal-config='{"notes":"UX Research Sprint"}'>
+         target="_blank" rel="noopener">
         <span class="fi-num">02</span>
         <span>
           <span class="fi-cat">One week</span>
@@ -881,7 +877,7 @@
       <div class="actions">
         <a class="pill" id="contactCta"
            href="https://cal.eu/mooch/discovery"
-           data-cal-link="mooch/discovery">Book a discovery call <span class="arrow">&rarr;</span></a>
+           target="_blank" rel="noopener">Book a discovery call <span class="arrow">&rarr;</span></a>
       </div>
       <p class="contact-fallback">Calendars not your thing? <a href="mailto:hey@mooch.agency?subject=A%20project%2C%20an%20idea%2C%20or%20a%20coffee&amp;body=Hi%20guys%2C%0D%0A%0D%0AWhat%20I%27m%20working%20on%3A%0D%0AWhere%20you%20could%20help%3A%0D%0ARough%20timeline%3A" id="contactEmail">hey@mooch.agency</a></p>
     </div>
@@ -974,7 +970,7 @@
       });
     });
 
-    // Offer tiles (How to work with us): now routes to Cal.com booking popup
+    // Offer tiles (How to work with us): open the cal.eu discovery booking in a new tab
     document.querySelectorAll('.fi-hero, .fi-row').forEach(function (card) {
       card.addEventListener('click', function () {
         var name = card.querySelector('.fi-name');
@@ -1005,51 +1001,6 @@
         window.va('event', { name: 'work_click', data: { client: client || row.href } });
       });
     });
-  });
-</script>
-
-<!-- Cal.com element-click popup embed.
-     Deferred: loads after page render, intercepts clicks on [data-cal-link] elements.
-     No-JS fallback: the href on each CTA links directly to cal.eu/mooch/discovery.
-     Slug assumed: mooch/discovery. Hold reroute deploy until Phase 4 confirms it. -->
-<script>
-  (function (C, A, L) {
-    var p = function (a, ar) { a.q.push(ar); };
-    var d = C.document;
-    C.Cal = C.Cal || function () {
-      var cal = C.Cal;
-      var ar = arguments;
-      if (!cal.loaded) {
-        cal.ns = {}; cal.q = cal.q || [];
-        d.head.appendChild(d.createElement("script")).src = A;
-        cal.loaded = true;
-      }
-      if (ar[0] === L) { var api = function () { p(api, arguments); }; var namespace = ar[1]; api.q = api.q || []; if (typeof namespace === "string") { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ["initNamespace", namespace]); } else p(cal, ar); return; }
-      p(cal, ar);
-    };
-  })(window, "https://app.cal.eu/embed/embed.js", "init");
-
-  // Initialise the default namespace with Mooch brand colours
-  Cal("init", { origin: "https://app.cal.eu" });
-  Cal("ui", {
-    theme: "light",
-    styles: { branding: { brandColor: "#1d1d1f" } },
-    hideEventTypeDetails: false
-  });
-</script>
-
-<!-- Booking-confirmed callback: fires when a Cal.com booking completes.
-     This is the conversion event for the discovery-call funnel. -->
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    if (window.Cal) {
-      Cal("on", {
-        action: "bookingSuccessful",
-        callback: function (e) {
-          window.va('event', { name: 'booking_confirmed', data: { source: 'discovery_call' } });
-        }
-      });
-    }
   });
 </script>
 
