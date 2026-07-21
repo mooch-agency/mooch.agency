@@ -18,8 +18,10 @@ import { fileURLToPath, pathToFileURL } from "url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const RUNS = join(HERE, "runs");
 
-// TODO(Tahi): confirm the brplumbing + publishinghousebnb exact URLs against the
-// case-study notes before relying on those two live. tability.io is exact.
+// Fixtures: tability + including-examples are confirmed live (20 Jul).
+// TODO: publishinghousebnb.com footer-404 fixture has rotted (only the homepage
+// loads, no 404s) — find a replacement site with genuine footer 404s before
+// relying on the link-check trap.
 const TRAPS = [
   {
     name: "tability-hidden-pricing",
@@ -37,16 +39,20 @@ const TRAPS = [
     },
   },
   {
-    name: "brplumbing-including",
-    url: "https://www.brplumbing.co.uk",
-    // "including Bexhill and Hastings" signals examples, not an exhaustive list; it
-    // must not be flagged as a coverage contradiction.
+    name: "including-examples",
+    // Replaces the original brplumbing fixture (brplumbing.co.uk is now NXDOMAIN).
+    // This page claims coverage of "the surrounding Sierra Nevada foothills"
+    // then lists "including Prather, Tollhouse, and the Shaver Lake corridor".
+    // The "including X and Y" signals examples, not an exhaustive list, so it must
+    // NOT be flagged as a coverage contradiction. Confirmed readable + phrase
+    // present + passes live 20 Jul; re-confirm the phrase if the site changes.
+    url: "https://www.stedmansplumbing.com/plumber-auberry-ca",
     assert: (rec) => {
       const bad = (rec.findings || []).filter((f) =>
-        /including\s+bexhill/i.test(f.quote || "")
+        /including\s+prather/i.test(f.quote || "")
       );
       return bad.length === 0
-        ? { pass: true, detail: '"including Bexhill" not flagged' }
+        ? { pass: true, detail: '"including Prather..." not flagged' }
         : { pass: false, detail: `flagged an "including" example: ${bad.map((b) => b.quote).join(" | ")}` };
     },
   },
