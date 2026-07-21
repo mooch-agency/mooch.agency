@@ -116,24 +116,28 @@ export async function uploadFile(path, contentType = "application/pdf") {
   return created.id;
 }
 
-export async function attachReport(pageId, pdfPath) {
-  const fileUploadId = await uploadFile(pdfPath, "application/pdf");
+// Attaches the PDF (and optionally the record JSON) to the row's Report property.
+// The record rides along so a later send, possibly in a different CI container,
+// can rebuild the email without local disk (batch.mjs downloads it back).
+export async function attachReport(pageId, pdfPath, recordPath) {
+  const files = [];
+  const pdfId = await uploadFile(pdfPath, "application/pdf");
+  files.push({ name: basename(pdfPath), type: "file_upload", file_upload: { id: pdfId } });
+  if (recordPath) {
+    const recId = await uploadFile(recordPath, "application/json");
+    files.push({ name: basename(recordPath), type: "file_upload", file_upload: { id: recId } });
+  }
   return notion(`pages/${pageId}`, {
     method: "PATCH",
-    body: JSON.stringify({
-      properties: {
-        Report: {
-          files: [
-            {
-              name: basename(pdfPath),
-              type: "file_upload",
-              file_upload: { id: fileUploadId },
-            },
-          ],
-        },
-      },
-    }),
+    body: JSON.stringify({ properties: { Report: { files } } }),
   });
+}
+
+// Returns the row's Report files as [{name, url}] (urls are time-limited).
+export async function getReportFiles(pageId) {
+  const page = await notion(`pages/${pageId}`);
+  const files = page.properties?.Report?.files || [];
+  return files.map((f) => ({ name: f.name, url: f.file?.url || f.external?.url || "" }));
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
