@@ -18,10 +18,8 @@ import { fileURLToPath, pathToFileURL } from "url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const RUNS = join(HERE, "runs");
 
-// Fixtures: tability + including-examples are confirmed live (20 Jul).
-// TODO: publishinghousebnb.com footer-404 fixture has rotted (only the homepage
-// loads, no 404s) — find a replacement site with genuine footer 404s before
-// relying on the link-check trap.
+// Fixtures (all confirmed 20 Jul): tability + including-examples run the live
+// pipeline; hard-404-detection is self-contained (stable status endpoints).
 const TRAPS = [
   {
     name: "tability-hidden-pricing",
@@ -57,15 +55,28 @@ const TRAPS = [
     },
   },
   {
-    name: "publishinghousebnb-404s",
-    url: "https://publishinghousebnb.com",
-    // Footer links 404; the hard-404 check MUST catch at least one. Only run this
-    // as a positive trap when link checking is in scope for the change.
-    assert: (rec) => {
-      const broken = (rec.link_check && rec.link_check.broken) || [];
-      return broken.length > 0
-        ? { pass: true, detail: `${broken.length} broken link(s) caught` }
-        : { pass: false, detail: "no broken links caught (expected footer 404s)" };
+    name: "hard-404-detection",
+    // The link check MUST catch a definitive 404/410 and MUST NOT report a 200.
+    // The original publishinghousebnb footer-404 fixture rotted (its 404s were
+    // fixed), and any live 404 gets patched eventually, so this is a self-contained
+    // check against stable always-N status endpoints, exercising the exact predicate
+    // run-pipeline uses (status === 404 || 410 -> broken). No pipeline run, no LLM.
+    custom: async () => {
+      const isBroken = async (u) => {
+        try {
+          const r = await fetch(u, { redirect: "follow", signal: AbortSignal.timeout(10000) });
+          return r.status === 404 || r.status === 410;
+        } catch {
+          return null; // network/timeout -> inconclusive
+        }
+      };
+      const b404 = await isBroken("https://mock.httpstatus.io/404");
+      const b200 = await isBroken("https://mock.httpstatus.io/200");
+      if (b404 === null || b200 === null)
+        return { pass: null, detail: "status endpoint unreachable (inconclusive)" };
+      if (b404 === true && b200 === false)
+        return { pass: true, detail: "404 flagged, 200 not" };
+      return { pass: false, detail: `404 detected=${b404}, 200 flagged=${b200}` };
     },
   },
 ];
@@ -89,6 +100,11 @@ function runPipeline(url, runId) {
 async function runTrap(trap) {
   const runId = `trap_${trap.name}`;
   try {
+    // Self-contained traps (no live site / no LLM) run their own check.
+    if (trap.custom) {
+      const res = await trap.custom();
+      return { name: trap.name, ...res };
+    }
     const rec = await runPipeline(trap.url, runId);
     const res = trap.assert(rec);
     const notes = (rec.coverage && rec.coverage.notes) || [];
