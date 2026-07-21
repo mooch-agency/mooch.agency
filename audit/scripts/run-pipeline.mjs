@@ -95,6 +95,80 @@ async function fetchWithRetry(browser, url) {
   return unusable(retry) ? first : retry;
 }
 
+// ── Page-DISCOVERY fallbacks ────────────────────────────────────────────────
+// These only decide WHICH pages to read (the inventory the picker chooses from);
+// they never provide content for findings. The audit still reads rendered text
+// via puppeteer and every quote is gate-checked, so the no-hidden-DOM rule holds.
+// They run only when the rendered homepage yields zero internal links (a soft
+// bot-block or a JS nav that never hydrated), where the audit would otherwise
+// silently collapse to the homepage alone.
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+async function fetchText(u) {
+  try {
+    const r = await fetch(u, { headers: { 'user-agent': UA }, redirect: 'follow', signal: AbortSignal.timeout(12000) });
+    return r.ok ? await r.text() : '';
+  } catch { return ''; }
+}
+// www and non-www are the same site; sitemaps often list the apex while the
+// audited URL is www (or vice-versa), so match on the registrable host.
+function sameSiteFactory(site) {
+  const base = (() => { try { return new URL(site).hostname.replace(/^www\./, ''); } catch { return ''; } })();
+  return (u) => { try { return new URL(u).hostname.replace(/^www\./, '') === base; } catch { return false; } };
+}
+function cleanUrl(u) { const x = new URL(u); return (x.origin + x.pathname).replace(/\/$/, ''); }
+
+// Fallback 1: parse anchors from the SERVER HTML (a plain fetch, pre-JS). Recovers
+// SSR nav that the headless browser was served without or stripped.
+async function inventoryFromRawHtml(site) {
+  const sameSite = sameSiteFactory(site);
+  const html = await fetchText(site);
+  if (!html) return [];
+  const homeClean = cleanUrl(site);
+  const seen = new Set(); const inv = [];
+  for (const m of html.matchAll(/<a\b[^>]*?href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+    let href; try { href = new URL(m[1], site).href; } catch { continue; }
+    if (!sameSite(href)) continue;
+    let clean; try { clean = cleanUrl(href); } catch { continue; }
+    if (clean === homeClean || seen.has(clean)) continue;
+    seen.add(clean); inv.push({ url: clean, label: m[2].replace(/<[^>]+>/g, '').trim().slice(0, 60) });
+  }
+  return inv;
+}
+
+// Fallback 2: robots.txt Sitemap: line, then /sitemap.xml and /sitemap_index.xml.
+// Handles a <sitemapindex> by fetching a few child sitemaps (page-* first).
+async function inventoryFromSitemap(site) {
+  const sameSite = sameSiteFactory(site);
+  const origin = new URL(site).origin;
+  const candidates = [];
+  const robots = await fetchText(origin + '/robots.txt');
+  for (const m of robots.matchAll(/sitemap:\s*(\S+)/gi)) candidates.push(m[1].trim());
+  candidates.push(origin + '/sitemap.xml', origin + '/sitemap_index.xml');
+  const tried = new Set(); const pageUrls = new Set();
+  for (const sm of candidates) {
+    if (tried.has(sm)) continue; tried.add(sm);
+    const xml = await fetchText(sm);
+    if (!xml.includes('<loc')) continue;
+    const locs = [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map(m => m[1]);
+    if (/<sitemapindex/i.test(xml)) {
+      const kids = locs.sort((a, b) => (b.includes('page') ? 1 : 0) - (a.includes('page') ? 1 : 0)).slice(0, 3);
+      for (const k of kids) { if (tried.has(k)) continue; tried.add(k); const cx = await fetchText(k); for (const m of cx.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)) pageUrls.add(m[1]); }
+    } else {
+      for (const l of locs) pageUrls.add(l);
+    }
+    if (pageUrls.size) break;
+  }
+  const homeClean = cleanUrl(site);
+  const seen = new Set(); const inv = [];
+  for (const u of pageUrls) {
+    if (!sameSite(u)) continue;
+    let clean; try { clean = cleanUrl(u); } catch { continue; }
+    if (clean === homeClean || seen.has(clean)) continue;
+    seen.add(clean); inv.push({ url: clean, label: '' });
+  }
+  return inv;
+}
+
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new', args: ['--disable-blink-features=AutomationControlled'] });
 process.on('uncaughtException', async (e) => { console.error(e); try { await browser.close(); } catch {} process.exit(1); });
 process.on('unhandledRejection', async (e) => { console.error(e); try { await browser.close(); } catch {} process.exit(1); });
@@ -120,10 +194,14 @@ let internal = buildInventory(home);
 // when we snapshotted (late-hydrating menu). Without this, every picked page is
 // filtered out against an empty inventory and the audit silently degrades to the
 // homepage alone. One patient refetch recovers the links.
+let discovery = 'dom';
 if (internal.length === 0 && home.text && home.text.length > 200) {
   const retry = await fetchWithRetry(browser, site);
   if (retry.links && retry.links.length) { home = retry; internal = buildInventory(home); }
 }
+// Discovery fallbacks when the rendered nav is missing: server HTML, then sitemap.
+if (internal.length === 0) { internal = await inventoryFromRawHtml(site); if (internal.length) discovery = 'raw-html'; }
+if (internal.length === 0) { internal = await inventoryFromSitemap(site); if (internal.length) discovery = 'sitemap'; }
 const stage1_ms = Date.now() - tFetch1;
 
 // STAGE 2: picker model chooses up to 4 pages (home is always included as #5).
@@ -234,7 +312,7 @@ const record = {
   tag, site, pickerModel,
   timing: { total_s: Math.round(total_ms / 1000), homepage_fetch_s: Math.round(stage1_ms / 1000), picker_s: Math.round(picker_ms / 1000), page_fetch_s: Math.round(stage3_ms / 1000), link_check_s: Math.round(links_ms / 1000), judge_s: Math.round(judge_ms / 1000) },
   cost: { picker: +picker_cost.toFixed(4), judge: +judge_cost.toFixed(4), total: +(picker_cost + judge_cost).toFixed(4) },
-  picker: { input_links: internal, picked, pages_used: pages.map(p => p.url) },
+  picker: { discovery, input_links: internal, picked, pages_used: pages.map(p => p.url) },
   coverage: { notes: coverageNotes },
   link_check: { checked: Math.min(allLinks.length, 60), broken: linkResults, unreachable_not_reported: unreachable },
   findings: gated, n: gated.length, gate_pass: gated.filter(f => f.gate === 'pass').length, gate_fail: gated.filter(f => f.gate === 'fail').length,
