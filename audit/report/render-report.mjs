@@ -32,6 +32,7 @@ const CATEGORY_LABEL = {
   pricing: "Pricing inconsistency",
   naming: "Naming inconsistency",
   spelling: "Spelling / grammar",
+  grammar: "Spelling / grammar",
   stale: "Stale content",
   formatting: "Formatting artifact",
   factual: "Factual error",
