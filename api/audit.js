@@ -30,12 +30,32 @@ const NATALIE_USER_ID =
 const DATA_SOURCE_ID =
   process.env.AUDIT_LEADS_DS_ID || "fd9fd4d9-944a-4b94-b3ff-7c753be81605";
 
+// Extra hosts allowed on top of the same-origin match below (apex, www, local
+// dev). Preview deploys (*.vercel.app) don't need listing: they pass the
+// same-origin check because their Origin host equals the request Host.
 const ALLOWED_HOSTS = [
   "mooch.agency",
   "www.mooch.agency",
   "localhost",
   "127.0.0.1",
 ];
+
+// The endpoint only ever gets same-origin POSTs from the band, so the real test
+// is "does the Origin host match the host this request came in on". That holds
+// on production, on every Vercel preview URL, and on localhost, with no deploy
+// hostnames hardcoded. A genuine cross-site POST (Origin host != request Host)
+// still fails and is rejected. The static list above is a belt-and-braces extra.
+function originAllowed(origin, host) {
+  let originHost;
+  try {
+    originHost = new URL(origin).hostname.toLowerCase();
+  } catch {
+    return false;
+  }
+  const reqHost = String(host || "").split(":")[0].toLowerCase();
+  if (reqHost && originHost === reqHost) return true;
+  return ALLOWED_HOSTS.includes(originHost);
+}
 
 // Best-effort in-memory limiter, same pattern as api/rewrite.js. Resets when the
 // instance recycles, so it stops casual loops but isn't durable. Three layers:
@@ -206,14 +226,8 @@ module.exports = async (req, res) => {
 
   // Same-origin only. Blocks casual cross-site abuse of a public write endpoint.
   const origin = req.headers.origin || "";
-  if (origin) {
-    let ok = false;
-    try {
-      ok = ALLOWED_HOSTS.includes(new URL(origin).hostname);
-    } catch {
-      ok = false;
-    }
-    if (!ok) return res.status(403).json({ ok: false, error: "origin" });
+  if (origin && !originAllowed(origin, req.headers.host)) {
+    return res.status(403).json({ ok: false, error: "origin" });
   }
 
   const ip =
