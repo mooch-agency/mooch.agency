@@ -169,7 +169,7 @@ async function inventoryFromSitemap(site) {
   return inv;
 }
 
-const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new', args: ['--disable-blink-features=AutomationControlled'] });
+const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new', args: ['--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-setuid-sandbox'] });
 process.on('uncaughtException', async (e) => { console.error(e); try { await browser.close(); } catch {} process.exit(1); });
 process.on('unhandledRejection', async (e) => { console.error(e); try { await browser.close(); } catch {} process.exit(1); });
 

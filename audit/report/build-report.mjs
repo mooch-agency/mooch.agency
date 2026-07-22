@@ -60,6 +60,9 @@ export async function htmlToPdf(html, pdfPath) {
   const browser = await puppeteer.launch({
     executablePath: CHROME,
     headless: "new",
+    // --no-sandbox is required in CI (GitHub Actions runner has no configured
+    // SUID sandbox helper). Harmless on local Chrome. Same on every launch site.
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
   try {
     const page = await browser.newPage();

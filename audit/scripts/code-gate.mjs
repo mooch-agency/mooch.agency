@@ -20,7 +20,7 @@ const norm = (s) => s.normalize('NFC')
 const browser = await puppeteer.launch({
   executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   headless: 'new',
-  args: ['--disable-blink-features=AutomationControlled'],
+  args: ['--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-setuid-sandbox'],
 });
 
 // Fetch each unique URL once.

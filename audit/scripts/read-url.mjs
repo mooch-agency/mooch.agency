@@ -12,7 +12,7 @@ if (process.env.READER_LOG) { try { appendFileSync(process.env.READER_LOG, url +
 
 const browser = await puppeteer.launch({
   executablePath: CHROME, headless: 'new',
-  args: ['--disable-blink-features=AutomationControlled'],
+  args: ['--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-setuid-sandbox'],
 });
 try {
   const p = await browser.newPage();
