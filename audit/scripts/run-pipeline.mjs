@@ -6,6 +6,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import puppeteer from 'puppeteer-core';
 import { writeFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
+import { THIN_CHARS, unusable, fetchWithRetry, resolveWithSwaps } from './page-fallback.mjs';
 
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 // fileURLToPath decodes percent-encoding (e.g. a space -> %20); using .pathname
@@ -77,23 +78,8 @@ async function fetchPage(browser, url) {
   } catch (e) { await p.close(); return { url, title: '', text: '', links: [], error: String(e).slice(0, 150) }; }
 }
 
-// A page is unusable if it errored, returned near-empty text, or shows a bot
-// challenge instead of real content. These are the cases the fallback rescues.
-const THIN_CHARS = 200;
-const CHALLENGE = /verify (you are|you're) human|checking your browser|enable javascript to|access denied|are you a robot|captcha|cf-browser-verification|attention required/i;
-function unusable(p) {
-  return !p || p.error || !p.text || p.text.length < THIN_CHARS || CHALLENGE.test(p.text.slice(0, 1500));
-}
-
-// One retry with a longer settle: some pages are slow-hydrating SPAs or throw a
-// transient interstitial that clears on a second, more patient load.
-async function fetchWithRetry(browser, url) {
-  const first = await fetchPage(browser, url);
-  if (!unusable(first)) return first;
-  await new Promise(r => setTimeout(r, 2500));
-  const retry = await fetchPage(browser, url);
-  return unusable(retry) ? first : retry;
-}
+// Thin-text / bot-block fallback lives in its own module so it can be unit-tested
+// without a browser (see page-fallback.test.mjs).
 
 // ── Page-DISCOVERY fallbacks ────────────────────────────────────────────────
 // These only decide WHICH pages to read (the inventory the picker chooses from);
@@ -172,6 +158,8 @@ async function inventoryFromSitemap(site) {
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new', args: ['--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-setuid-sandbox'] });
 process.on('uncaughtException', async (e) => { console.error(e); try { await browser.close(); } catch {} process.exit(1); });
 process.on('unhandledRejection', async (e) => { console.error(e); try { await browser.close(); } catch {} process.exit(1); });
+// The fallback helpers take an injected fetcher so tests can swap the browser out.
+const fetchOne = (url) => fetchPage(browser, url);
 
 // STAGE 1: homepage fetch + link inventory.
 const tFetch1 = Date.now();
@@ -196,7 +184,7 @@ let internal = buildInventory(home);
 // homepage alone. One patient refetch recovers the links.
 let discovery = 'dom';
 if (internal.length === 0 && home.text && home.text.length > 200) {
-  const retry = await fetchWithRetry(browser, site);
+  const retry = await fetchWithRetry(fetchOne, site);
   if (retry.links && retry.links.length) { home = retry; internal = buildInventory(home); }
 }
 // Discovery fallbacks when the rendered nav is missing: server HTML, then sitemap.
@@ -237,24 +225,14 @@ const usedUrls = new Set([site.replace(/\/$/, ''), ...picked]);
 const fallbackPool = internal.map(l => l.url).filter(u => !usedUrls.has(u));
 // Fast path stays parallel: fetch all picked at once. Only the (rare) unusable
 // ones fall through to sequential swapping, so the common case keeps its speed.
-const initial = await Promise.all(picked.map((u, i) => fetchWithRetry(browser, u).then(p => [i, p])));
+const initial = await Promise.all(picked.map((u, i) => fetchWithRetry(fetchOne, u).then(p => [i, p])));
 initial.sort((a, b) => a[0] - b[0]);
-const good = [];
-for (const [, page] of initial) {
-  if (!unusable(page)) { good.push(page); continue; }
-  let swapped = false;
-  while (fallbackPool.length) {
-    const alt = fallbackPool.shift();
-    const altPage = await fetchWithRetry(browser, alt);
-    if (!unusable(altPage)) {
-      good.push(altPage);
-      coverageNotes.push(`${page.url} was unreadable (bot-block or empty); audited ${alt} instead`);
-      swapped = true;
-      break;
-    }
-  }
-  if (!swapped) coverageNotes.push(`${page.url} was unreadable and no readable substitute was available`);
-}
+const { good, notes: swapNotes } = await resolveWithSwaps({
+  initial: initial.map(([, p]) => p),
+  fallbackPool,
+  fetchOne,
+});
+coverageNotes.push(...swapNotes);
 if (unusable(home)) coverageNotes.push(`the homepage ${site} was unreadable (bot-block or empty); findings may be limited`);
 else if (internal.length === 0) coverageNotes.push(`only the homepage could be read; its navigation links did not load, so deeper pages were not audited`);
 const pages = [home, ...good].filter(p => p.text && p.text.length > THIN_CHARS);

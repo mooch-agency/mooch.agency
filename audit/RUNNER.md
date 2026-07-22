@@ -88,6 +88,22 @@ Two engines, switched by `AUDIT_LLM`:
 If a run exits with `UNREADABLE_SITE`, that lead is a story-13 personal-reply
 case: don't send anything, reply to them yourself and set **Rejected**.
 
+## Tests
+
+Run both after any change to the reader, picker, judge, gate or fallback.
+
+```
+pnpm --dir audit test                                   # unit tests, no network, seconds
+AUDIT_LLM=subscription node scripts/regression-traps.mjs # live traps, ~3 min, $0 marginal
+```
+
+Unit tests cover the thin-text / bot-block fallback (`page-fallback.mjs`): the
+retry, the next-priority swap, and the coverage note for a page with no readable
+substitute. The traps are the false-positive tripwires: tability's hidden per-user
+price must never surface, stedmansplumbing's "including Prather…" must never be
+flagged as a coverage contradiction, and the hard-404 predicate must catch a 404
+without flagging a 200.
+
 ## R3 (automation) — two toggles, no rebuild
 
 1. **Trigger:** replace "moochbot runs step 1 daily" with run-on-submit (the endpoint

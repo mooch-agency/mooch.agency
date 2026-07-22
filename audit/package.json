@@ -3,6 +3,9 @@
   "private": true,
   "type": "module",
   "description": "Self-serve content-audit runtime: pipeline, report/PDF, code gate, batch runner.",
+  "scripts": {
+    "test": "node --test scripts/*.test.mjs"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",
     "puppeteer-core": "^24.0.0"
