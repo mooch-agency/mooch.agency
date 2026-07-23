@@ -1,6 +1,22 @@
 /* Mooch design tokens — single source of truth for colour, type, spacing, motion.
    Linked by every page. A page may still override any token in its own :root
    (e.g. the dark footer lightens --muted locally). */
+
+/* Metric-matched fallback for Instrument Serif. While the web font loads, the
+   system serif (Times New Roman / Liberation Serif / Tinos, all metric-compatible)
+   is rendered with adjusted metrics so its box matches Instrument Serif, so the
+   swap-in causes no layout shift (CLS). Overrides computed with @capsizecss; the
+   extra local() names make it resolve on Linux (CI runner + visitors), not just
+   macOS/Windows. Once the web font loads, rendering is identical. */
+@font-face {
+  font-family: 'Instrument Serif Fallback';
+  src: local('Times New Roman'), local('TimesNewRomanPSMT'), local('Tinos'), local('Liberation Serif');
+  ascent-override: 117.9435%;
+  descent-override: 36.9318%;
+  line-gap-override: 0%;
+  size-adjust: 83.9385%;
+}
+
 :root {
   /* Palette */
   --black: #000000;
@@ -15,7 +31,7 @@
   --error: #b00020;
 
   /* Type families */
-  --serif: 'Instrument Serif', 'Times New Roman', serif;
+  --serif: 'Instrument Serif', 'Instrument Serif Fallback', 'Times New Roman', serif;
   --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Liberation Mono", monospace;
 
