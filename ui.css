@@ -56,7 +56,7 @@
   background: var(--black);
   color: var(--paper);
   --muted: #8e8e93;
-  --colophon-rule: #2a2a2c;
+  --colophon-rule: var(--hairline-dark);
 }
 
 /* Copy button — mono-spaced action chip used in prompt pages.

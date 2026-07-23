@@ -80,11 +80,10 @@ const EXCLUDED = new Set([
 // indexed. Anything else in the sitemap with noindex is a real bug.
 const SITEMAP_NOINDEX_ALLOWED = new Set(['prompts/deslop.html', 'prompts/soundlikeme.html']);
 
-// Raw colour literals tolerated inside inline CSS. These are pre-existing
-// achromatic structural neutrals that are not yet tokens in tokens.css. Tech
-// debt: migrate to a token and delete this allowlist. Everything else hardcoded
-// gets flagged.
-const ALLOWED_INLINE_HEX = new Set(['#2a2a2c']); // dark-footer hairline
+// Inline colour literals are never tolerated: every colour must come from a
+// token in tokens.css. This set is intentionally empty — the former #2a2a2c
+// dark-footer hairline is now the --hairline-dark token. Keep it empty.
+const ALLOWED_INLINE_HEX = new Set(); // no exceptions
 
 // ---------------------------------------------------------------------------
 // Reporting

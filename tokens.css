@@ -11,6 +11,7 @@
   --muted-small: #5a5a5f;  /* Higher contrast (~7:1 on white) for text below 14px */
   --hairline: #d2d2d7;
   --hairline-focus: #86868b;  /* Darker hairline for focusable element borders */
+  --hairline-dark: #2a2a2c;   /* Hairline rule for dark-footer (.colophon-dark) context */
   --error: #b00020;
 
   /* Type families */
