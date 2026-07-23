@@ -287,7 +287,6 @@ th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacin
 .closer-actions{display:flex;flex-wrap:wrap;gap:12px}
 .closer-contact{margin-top:14px;font-size:13px;color:var(--muted-small)}
 .btn{display:inline-block;background:var(--black);color:var(--paper);padding:12px 20px;border-radius:980px;font-size:14px;font-weight:500;border:1px solid var(--black)}
-.btn-ghost{background:transparent;color:var(--ink);border-color:var(--hairline)}
 .colophon{margin-top:26px;font-family:var(--mono);font-size:11px;color:var(--muted)}
 @media print{
   body{font-size:12px}

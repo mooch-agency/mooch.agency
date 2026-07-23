@@ -283,25 +283,31 @@ if (pages.length === 0) {
 // rather than ship phantom findings. Near-zero false positives is the whole point.
 const tLinks = Date.now();
 const LINK_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)';
+// Memoised so a URL probed as an audited page isn't re-fetched when it also shows
+// up in the on-page link inventory below.
+const statusCache = new Map();
 async function statusOf(u) {
+  if (statusCache.has(u)) return statusCache.get(u);
+  let s;
   try {
     const r = await fetch(u, { method: 'GET', redirect: 'follow', headers: { 'user-agent': LINK_UA }, signal: AbortSignal.timeout(10000) });
-    return r.status;
-  } catch { return 'error'; }
+    s = r.status;
+  } catch { s = 'error'; }
+  statusCache.set(u, s);
+  return s;
 }
-// Probe the audited pages first. A not-found status on a page we successfully read
-// proves the origin soft-404s and disqualifies status-based link checking this run.
-const auditedSameOrigin = [...new Set(pages.map(p => p.url).filter(u => { try { return new URL(u).origin === origin; } catch { return false; } }))];
-let softNotFound = false;
-for (const u of auditedSameOrigin) {
-  const s = await statusOf(u);
-  if (s === 404 || s === 410) { softNotFound = true; break; }
-}
+// Probe the audited pages first, in parallel. A not-found status on a page we
+// successfully read proves the origin soft-404s and disqualifies status-based
+// link checking this run. cleanUrl-normalised so keys align with allLinks (below)
+// and the memoised statusOf dedupes the overlap.
+const auditedSameOrigin = [...new Set(pages.map(p => p.url).filter(u => { try { return new URL(u).origin === origin; } catch { return false; } }).map(cleanUrl))];
+const softNotFound = (await Promise.all(auditedSameOrigin.map(statusOf))).some(s => s === 404 || s === 410);
 const allLinks = [...new Set(pages.flatMap(p => p.links.map(l => { try { const u = new URL(l.href); return u.origin === origin ? (u.origin + u.pathname).replace(/\/$/, '') : null; } catch { return null; } }).filter(Boolean)))];
 const linkResults = []; const unreachable = [];
-if (softNotFound) {
-  coverageNotes.push('Broken-link check skipped: this site returns 404 statuses for pages that still load (client-side rendering/redirects), so HTTP status is not a reliable signal of a dead link here.');
-} else {
+// On a soft-404 origin the HTTP status is meaningless, so skip status-based link
+// reporting entirely. Recorded internally via link_check.soft_404 (+ note), never
+// surfaced to the client. Otherwise check each on-page link.
+if (!softNotFound) {
   for (const u of allLinks.slice(0, 60)) {
     const s = await statusOf(u);
     // Only definitive not-found statuses are reportable. 403/429/5xx are often bot-blocks or blips:
@@ -341,7 +347,7 @@ const record = {
   cost: { picker: +picker_cost.toFixed(4), judge: +judge_cost.toFixed(4), total: +(picker_cost + judge_cost).toFixed(4) },
   picker: { discovery, input_links: internal, picked, pages_used: pages.map(p => p.url) },
   coverage: { notes: coverageNotes },
-  link_check: { checked: softNotFound ? 0 : Math.min(allLinks.length, 60), soft_404: softNotFound, broken: linkResults, unreachable_not_reported: unreachable },
+  link_check: { checked: softNotFound ? 0 : Math.min(allLinks.length, 60), soft_404: softNotFound, ...(softNotFound ? { note: 'broken-link check skipped: origin returns 404 statuses for pages that still load (soft-404), so status codes are unreliable' } : {}), broken: linkResults, unreachable_not_reported: unreachable },
   findings: gated, n: gated.length, gate_pass: gated.filter(f => f.gate === 'pass').length, gate_fail: gated.filter(f => f.gate === 'fail').length,
   judge_usage: judge.usage,
 };
