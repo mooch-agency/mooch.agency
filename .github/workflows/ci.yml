@@ -178,15 +178,6 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # Pin Chrome so the chromedriver pin in the axe step matches its major
-      # version. setup-chrome defaults to the latest stable Chrome, which floats
-      # ahead of a pinned chromedriver and breaks the axe run ("session not
-      # created: chromedriver only supports Chrome version N"). Keep this milestone
-      # and the chromedriver@N.x pin below in lockstep when upgrading.
-      - uses: browser-actions/setup-chrome@v1
-        with:
-          chrome-version: '150'
-
       # Changed shipped pages -> URLs. Falls back to the homepage when a PR only
       # touches CSS/config so we always have at least one page to test.
       # Untrusted input (base_ref, PR filenames) is passed via env and each slug
@@ -222,17 +213,19 @@ jobs:
         env:
           URLS: ${{ steps.changed.outputs.urls }}
         run: |
+          # Use the runner's preinstalled, version-matched Chrome + ChromeDriver.
+          # $CHROMEWEBDRIVER is provided by the GitHub-hosted image and always
+          # matches the preinstalled google-chrome, sidestepping the version skew
+          # from @axe-core/cli pulling its own floating chromedriver.
           for u in $URLS; do
             echo "axe: $u"
-            # Pinned, not floated to latest: chromedriver's major MUST match the
-            # Chrome milestone pinned above (chromedriver 150.x <-> Chrome 150), and
-            # @axe-core/cli is pinned for reproducible runs. Bump all three together.
-            pnpm dlx --package=@axe-core/cli@4.12.1 --package=chromedriver@150.0.4 axe "$u" --exit
+            pnpm dlx --package=@axe-core/cli@4.12.1 axe "$u" --chromedriver-path "$CHROMEWEBDRIVER/chromedriver" --exit
           done
 
       - name: Performance budgets (Lighthouse CI)
         env:
           URLS: ${{ steps.changed.outputs.urls }}
+          CHROME_PATH: /usr/bin/google-chrome
         run: |
           urlflags=""
           for u in $URLS; do urlflags="$urlflags --collect.url=$u"; done
