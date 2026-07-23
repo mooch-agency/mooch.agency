@@ -217,9 +217,19 @@ jobs:
           # $CHROMEWEBDRIVER is provided by the GitHub-hosted image and always
           # matches the preinstalled google-chrome, sidestepping the version skew
           # from @axe-core/cli pulling its own floating chromedriver.
+          #
+          # force-prefers-reduced-motion: the site's .reveal entrance animation
+          # starts elements at opacity:0 and fades them in with staggered delays.
+          # Without this, axe samples mid-animation and reports false colour-contrast
+          # failures on partially-transparent text (e.g. a #000 h1 reads as grey).
+          # The site honours prefers-reduced-motion by rendering content at full
+          # opacity immediately, so this measures the settled page.
           for u in $URLS; do
             echo "axe: $u"
-            pnpm dlx --package=@axe-core/cli@4.12.1 axe "$u" --chromedriver-path "$CHROMEWEBDRIVER/chromedriver" --exit
+            pnpm dlx --package=@axe-core/cli@4.12.1 axe "$u" \
+              --chromedriver-path "$CHROMEWEBDRIVER/chromedriver" \
+              --chrome-options="headless,no-sandbox,disable-gpu,force-prefers-reduced-motion" \
+              --exit
           done
 
       - name: Performance budgets (Lighthouse CI)
