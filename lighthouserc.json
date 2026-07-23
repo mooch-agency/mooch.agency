@@ -1,0 +1,18 @@
+{
+  "//": "Lighthouse CI budgets for mooch.agency. URLs are passed on the command line (--collect.url) by the a11y-perf job, scoped to the pages changed in the PR. LHCI defaults to mobile emulation, so categories:performance is the mobile score.",
+  "ci": {
+    "collect": {
+      "numberOfRuns": 1,
+      "settings": {
+        "chromeFlags": "--no-sandbox --headless=new"
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": ["error", { "minScore": 0.9 }],
+        "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }]
+      }
+    }
+  }
+}
