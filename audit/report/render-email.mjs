@@ -67,11 +67,15 @@ export function renderEmail(record, dateStr) {
     ? `<p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1d1d1f">We read ${passed.length ? "your" : ""} key pages on <strong>${esc(
         host
       )}</strong> and found nothing material to fix. That is rarer than you would think. The full audit is attached.</p>`
-    : `<p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1d1d1f">We found <strong>${n} content ${
-        n === 1 ? "issue" : "issues"
-      }</strong> on <strong>${esc(
-        host
-      )}</strong>. The worst few are below; the full report is attached as a PDF.</p>`;
+    : `<p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#1d1d1f">${
+        n <= 3
+          ? `We found <strong>${n} content ${n === 1 ? "issue" : "issues"}</strong> on <strong>${esc(host)}</strong>${
+              n === 1 ? "" : ", a few small things to tidy"
+            }. ${n === 1 ? "It's" : "They're"} below; the full report is attached as a PDF.`
+          : `We found <strong>${n} content issues</strong> on <strong>${esc(
+              host
+            )}</strong>. The worst offenders are below; the full report is attached as a PDF.`
+      }</p>`;
 
   const top = passed.slice(0, 3).map((f) => {
     const label = CATEGORY_LABEL[f.category] || f.category || "Issue";
@@ -108,7 +112,11 @@ export function renderEmail(record, dateStr) {
   <tr><td style="padding-top:24px">
     ${teaser}
     ${findingsTable}
-    <p style="margin:0 0 24px;font-size:16px;line-height:1.5;color:#1d1d1f">Want these fixed, or your whole site read the same way? Just reply to this email, or grab a 20-minute call.</p>
+    <p style="margin:0 0 24px;font-size:16px;line-height:1.5;color:#1d1d1f">${
+      thin
+        ? "Want your whole site read the same way? Just reply to this email, or grab a 20-minute call."
+        : "Want these fixed, or your whole site read the same way? Just reply to this email, or grab a 20-minute call."
+    }</p>
     <table role="presentation" cellpadding="0" cellspacing="0"><tr>
       <td style="border-radius:980px;background:#000000"><a href="mailto:${CONTACT_EMAIL}" style="display:inline-block;padding:12px 22px;font:500 14px -apple-system,Arial,sans-serif;color:#ffffff;text-decoration:none">Reply to talk fixes</a></td>
       <td style="padding-left:10px"><a href="${BOOKING_URL}" style="display:inline-block;padding:12px 22px;font:500 14px -apple-system,Arial,sans-serif;color:#1d1d1f;text-decoration:none;border:1px solid #d2d2d7;border-radius:980px">Book a call</a></td>

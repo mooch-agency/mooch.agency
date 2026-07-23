@@ -37,6 +37,23 @@ const TRAPS = [
     },
   },
   {
+    name: "soft-404-no-phantom-links",
+    // anglianphe.co.uk returns a 404 STATUS for pages that still load: /contact
+    // 404s on a plain GET but client-side redirects to a live /contact-us/, and an
+    // AUDITED page (/locations/colchester/shower-repair) returns the same 404. HTTP
+    // status is therefore not a reliable dead-link signal here. The soft-404 guard
+    // must detect this (a pages_used probe 404s) and SUPPRESS the broken-links
+    // section rather than ship phantom "broken" findings. Found 23 Jul in Natalie's
+    // E2E test, where the report wrongly claimed /contact etc. were broken.
+    url: "https://anglianphe.co.uk",
+    assert: (rec) => {
+      const broken = (rec.link_check && rec.link_check.broken) || [];
+      return broken.length === 0
+        ? { pass: true, detail: `no phantom broken links (soft_404=${rec.link_check && rec.link_check.soft_404})` }
+        : { pass: false, detail: `reported ${broken.length} broken link(s) on a soft-404 site: ${broken.map((b) => b.url).join(", ")}` };
+    },
+  },
+  {
     name: "including-examples",
     // Replaces the original brplumbing fixture (brplumbing.co.uk is now NXDOMAIN).
     // This page claims coverage of "the surrounding Sierra Nevada foothills"

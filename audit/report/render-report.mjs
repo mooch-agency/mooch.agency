@@ -226,12 +226,12 @@ function closerPage(m) {
       <p class="closer-body">${
         m.thin
           ? "Your key pages are clean. The next step up is a whole-site audit and the fixes that follow."
-          : "This is the free taster. Reply to the email this came in on and we will talk through the fixes, or book a 20-minute call."
+          : `This is the free taster read. Email ${CONTACT_EMAIL} to talk through the fixes, or book a 20-minute call.`
       }</p>
       <div class="closer-actions">
-        <a class="btn" href="mailto:${CONTACT_EMAIL}">Email ${CONTACT_EMAIL}</a>
-        <a class="btn btn-ghost" href="${BOOKING_URL}">Book a 20-min call</a>
+        <a class="btn" href="${BOOKING_URL}">Book a 20-min call</a>
       </div>
+      <p class="closer-contact">Prefer email? <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p>
       <p class="colophon"><a href="${SITE_URL}">mooch.agency</a> &middot; UX &amp; AI automation</p>
     </div>
   </section>`;
@@ -255,13 +255,13 @@ a{color:inherit}
 .wordmark{font-family:var(--serif);font-size:34px;line-height:1}
 .wordmark em{font-style:italic}
 .eyebrow{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-top:14px}
-.report-title{font-family:var(--serif);font-size:clamp(30px,5vw,44px);line-height:1.08;margin-top:10px}
+.report-title{font-family:var(--serif);font-size:clamp(30px,5vw,44px);line-height:1.08;margin-top:10px;text-wrap:balance}
 .report-title em{font-style:italic}
 .report-meta{font-family:var(--mono);font-size:12px;color:var(--muted-small);margin-top:12px}
-.verdict{font-size:19px;line-height:1.5;margin:28px 0 8px}
+.verdict{font-size:19px;line-height:1.5;margin:28px 0 8px;text-wrap:pretty}
 .block{margin-top:40px}
-.block-title{font-family:var(--serif);font-size:26px;line-height:1.1;margin-bottom:6px}
-.block-lead{color:var(--muted-small);margin-bottom:18px;max-width:56ch}
+.block-title{font-family:var(--serif);font-size:26px;line-height:1.1;margin-bottom:6px;text-wrap:balance}
+.block-lead{color:var(--muted-small);margin-bottom:18px;max-width:56ch;text-wrap:pretty}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
 th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600}
@@ -273,18 +273,19 @@ th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacin
 .finding{padding:20px 0;border-bottom:1px solid var(--hairline)}
 .finding-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .finding-cat{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.finding-issue{font-family:var(--serif);font-size:22px;line-height:1.25;color:var(--ink);margin-bottom:12px}
+.finding-issue{font-family:var(--serif);font-size:22px;line-height:1.25;color:var(--ink);margin-bottom:12px;text-wrap:balance}
 .finding-evidence-label{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px}
-.finding-quote{font-size:14px;line-height:1.5;color:var(--muted-small);padding-left:14px;border-left:2px solid var(--hairline)}
+.finding-quote{font-size:14px;line-height:1.5;color:var(--muted-small);padding-left:14px;border-left:2px solid var(--hairline);text-wrap:pretty}
 .link-list{list-style:none;font-family:var(--mono);font-size:13px}
 .link-list li{padding:6px 0;border-bottom:1px solid var(--hairline);word-break:break-all}
 .muted{color:var(--muted)}.small{font-size:12px}
 .coverage .link-list li{border:none;padding:3px 0}
 .closer{background:var(--surface);border-radius:20px;margin-top:48px;padding:44px 36px}
 .closer-eyebrow{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
-.closer-title{font-family:var(--serif);font-size:32px;line-height:1.1;margin:10px 0 12px}
-.closer-body{color:var(--muted-small);max-width:52ch;margin-bottom:24px}
+.closer-title{font-family:var(--serif);font-size:32px;line-height:1.1;margin:10px 0 12px;text-wrap:balance}
+.closer-body{color:var(--muted-small);max-width:52ch;margin-bottom:24px;text-wrap:pretty}
 .closer-actions{display:flex;flex-wrap:wrap;gap:12px}
+.closer-contact{margin-top:14px;font-size:13px;color:var(--muted-small)}
 .btn{display:inline-block;background:var(--black);color:var(--paper);padding:12px 20px;border-radius:980px;font-size:14px;font-weight:500;border:1px solid var(--black)}
 .btn-ghost{background:transparent;color:var(--ink);border-color:var(--hairline)}
 .colophon{margin-top:26px;font-family:var(--mono);font-size:11px;color:var(--muted)}
