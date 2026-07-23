@@ -1,0 +1,183 @@
+name: CI
+
+# Deterministic, scriptable pre-launch gate for mooch.agency. This replaces the
+# manually-run pre-launch-website-check skill with checks every PR must pass.
+#
+# Jobs:
+#   fast        HTML validation + internal/sitemap link check + scripts/check-site.mjs
+#   security    secret scanning (gitleaks) + pnpm audit   (runs in parallel with fast)
+#   a11y-perf   axe-core + Lighthouse CI budgets           (runs after fast)
+#
+# Note: audit-batch.yml is a separate, unrelated pipeline — do not fold this into it.
+
+on:
+  pull_request:
+    # Gate only when something that affects the shipped site (or this gate's own
+    # tooling) changes. The site is static HTML/CSS; the tooling paths are here
+    # so a change to the checker re-runs the checker.
+    paths:
+      - '**.html'
+      - '**.css'
+      - 'vercel.json'
+      - 'sitemap.xml'
+      - 'scripts/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.htmlvalidateignore'
+      - 'lighthouserc.json'
+      - '.github/workflows/ci.yml'
+
+# Check-only: this workflow never writes to the repo.
+permissions:
+  contents: read
+
+# Supersede in-flight runs for the same ref when new commits land.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # fast — deterministic markup, link and site checks. Sub-minute, blocks the PR.
+  # ---------------------------------------------------------------------------
+  fast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # 1. Valid HTML across the shipped site (non-shipped pages are skipped via
+      #    .htmlvalidateignore, which mirrors check-site.mjs's exclusion list).
+      - name: Validate HTML
+        run: pnpm run ci:validate-html
+
+      # 2. Broken internal + sitemap links, with #fragment resolution. Offline
+      #    mode means internal links only — no external hosts are hit on a PR.
+      #    --fallback-extensions html mirrors Vercel cleanUrls (/gov-uk -> gov-uk.html).
+      - name: Check internal links (lychee)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --offline
+            --include-fragments
+            --fallback-extensions html
+            --root-dir ${{ github.workspace }}
+            --no-progress
+            "*.html" "prompts/*.html" "sitemap.xml"
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 3. The 10-discipline site checks (SEO, content hygiene, tokens, social
+      #    cards, index hygiene, uniqueness). Exits non-zero with file+line.
+      - name: Run site checks
+        run: pnpm run ci:check
+
+  # ---------------------------------------------------------------------------
+  # security — secret scanning + dependency audit. Parallel with `fast`.
+  # ---------------------------------------------------------------------------
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # gitleaks scans the full history/diff
+
+      - name: Scan for secrets (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Private repos under an org need a (free) GITLEAKS_LICENSE; public
+          # repos do not. Add it as a secret if this repo is private.
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high
+
+  # ---------------------------------------------------------------------------
+  # a11y-perf — heavier browser-driven checks. Runs only after `fast` passes,
+  # scoped to the pages changed in the PR to keep runtime down.
+  # ---------------------------------------------------------------------------
+  a11y-perf:
+    needs: fast
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # needed to diff against the PR base
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - uses: browser-actions/setup-chrome@v1
+
+      # Changed shipped pages -> URLs. Falls back to the homepage when a PR only
+      # touches CSS/config so we always have at least one page to test.
+      # Untrusted input (base_ref, PR filenames) is passed via env and each slug
+      # is charset-sanitised, so nothing attacker-controlled reaches the shell.
+      - name: Determine changed pages
+        id: changed
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_REF" || true
+          mapfile -t files < <(git diff --name-only "origin/$BASE_REF"...HEAD -- '*.html' 'prompts/*.html' || true)
+          urls=""
+          for f in "${files[@]}"; do
+            [ -z "$f" ] && continue
+            case "$f" in *-template.html|stagger-tuner.html|styleguide.html|paulgraham.html|portfolio-*.html|404.html|ready.html) continue;; esac
+            slug="${f%.html}"; [ "$slug" = "index" ] && slug=""
+            # Only allow a safe URL-path charset; skip anything else outright.
+            case "$slug" in *[!a-zA-Z0-9/_-]*) echo "skip unsafe filename: $f"; continue;; esac
+            urls="$urls http://localhost:3000/$slug"
+          done
+          [ -z "$(echo "$urls" | tr -d ' ')" ] && urls="http://localhost:3000/"
+          echo "urls=$(echo "$urls" | xargs)" >> "$GITHUB_OUTPUT"
+          echo "Testing: $urls"
+
+      # Serve the static site the way Vercel does (clean URLs). Backgrounded so
+      # it stays up for the axe and Lighthouse steps that follow.
+      - name: Serve static site
+        run: |
+          pnpm dlx serve@14 -l 3000 . > /tmp/serve.log 2>&1 &
+          pnpm dlx wait-on@7 http://localhost:3000 --timeout 30000
+
+      - name: Accessibility (axe-core)
+        env:
+          URLS: ${{ steps.changed.outputs.urls }}
+        run: |
+          for u in $URLS; do
+            echo "axe: $u"
+            pnpm dlx --package=@axe-core/cli --package=chromedriver axe "$u" --exit
+          done
+
+      - name: Performance budgets (Lighthouse CI)
+        env:
+          URLS: ${{ steps.changed.outputs.urls }}
+        run: |
+          urlflags=""
+          for u in $URLS; do urlflags="$urlflags --collect.url=$u"; done
+          pnpm dlx @lhci/cli@0.14.x autorun $urlflags
