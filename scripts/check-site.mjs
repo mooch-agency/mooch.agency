@@ -34,7 +34,15 @@ import path from 'node:path';
 import { load } from 'cheerio';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = process.argv[2] ? path.resolve(process.argv[2]) : path.resolve(__dirname, '..');
+
+// CLI: an optional <root-dir> positional plus flags. `--list-pages` prints the
+// shipped-page set (one per line) and exits. CI uses it as the single source of
+// truth for lychee's input, so the link checker and this checker can never drift
+// on which pages ship (and lychee never touches template/dev/lab pages).
+const ARGV = process.argv.slice(2);
+const LIST_PAGES = ARGV.includes('--list-pages');
+const rootArg = ARGV.find((a) => !a.startsWith('-'));
+const ROOT = rootArg ? path.resolve(rootArg) : path.resolve(__dirname, '..');
 
 const SITE_ORIGIN = 'https://mooch.agency';
 const CURRENT_YEAR = new Date().getFullYear(); // today; a page dated 2026 passes in 2026, is "stale" in 2027
@@ -317,6 +325,11 @@ function checkColours(rel, raw) {
     while ((m = colour.exec(text))) {
       const val = m[0];
       const norm = val.toLowerCase();
+      // Token composition — an rgb()/hsl() built from a var() reference, e.g.
+      // `rgb(var(--brand))`, `rgba(var(--brand-rgb), .5)`, `rgb(var(--x) / 50%)`.
+      // These are token-based, not hardcoded literals, so they must not be
+      // flagged. A literal like `rgb(51,102,255)` (no var()) still is.
+      if (/var\(/i.test(val)) continue;
       if (isBlackWhite(val)) continue;
       if (ALLOWED_INLINE_HEX.has(norm)) continue;
       if (printRanges.some(([s, e]) => m.index >= s && m.index < e)) continue;
@@ -345,6 +358,10 @@ function checkSocial(rel, raw, $) {
   }
   const dim = imageSize(readFileSync(path.join(ROOT, imgRel)));
   if (!dim) {
+    // TODO: imageSize() only decodes PNG and JPEG. The site ships PNG/JPG
+    // og:images today, so a null here means a genuinely unreadable/corrupt
+    // image. If we ever adopt SVG/WebP/AVIF og:images, add a decoder for them
+    // (or skip the dimension assertion for those types) rather than failing.
     fail('Social cards', rel, `og:image ${imgRel}: could not read dimensions (expected PNG/JPEG ~${OG_W}x${OG_H})`, null);
   } else {
     const okW = Math.abs(dim.width - OG_W) <= OG_W * OG_TOL;
@@ -383,13 +400,25 @@ function checkIndexHygiene(pages) {
       fail('Index hygiene', rel, 'shipped page is missing from sitemap.xml', null);
     }
   }
-  // 3. No stray noindex: a page in the sitemap must be indexable, unless it is a
-  //    deliberate sitemap+noindex utility page (SITEMAP_NOINDEX_ALLOWED).
-  for (const rel of pages) {
-    if (!sitemapKeys.has(fileToKey(rel))) continue;
-    const raw = read(rel);
-    if (/<meta[^>]+name=["']robots["'][^>]*content=["'][^"']*noindex/i.test(raw) && !SITEMAP_NOINDEX_ALLOWED.has(rel)) {
-      fail('Index hygiene', rel, 'page is in the sitemap but marked noindex', lineOf(raw, /name=["']robots["']/i));
+  // 3. No stray noindex or dev/lab page in the sitemap. Iterate the sitemap
+  //    entries (not just the shipped `pages`): a <loc> that resolves to an
+  //    EXCLUDED template/dev/lab page, or to any page carrying a noindex robots
+  //    meta, is a bug — it must not be advertised for indexing. The only
+  //    exception is the deliberate sitemap+noindex utility allowlist (prompts/*).
+  //    Iterating `pages` (as before) silently passed such entries, because
+  //    EXCLUDED/dev pages are filtered out of `pages` and were never inspected.
+  for (const loc of locs) {
+    const file = keyToFile(locToKey(loc));
+    if (file === null) continue;                     // unresolved: already reported by check 1
+    if (SITEMAP_NOINDEX_ALLOWED.has(file)) continue; // deliberately-listed noindex utility page
+    const locLine = lineOf(sitemapRaw, new RegExp(loc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    if (EXCLUDED.has(file)) {
+      fail('Index hygiene', 'sitemap.xml', `sitemap lists non-shipped page ${loc} (resolves to excluded ${file})`, locLine);
+      continue;
+    }
+    const raw = read(file);
+    if (/<meta[^>]+name=["']robots["'][^>]*content=["'][^"']*noindex/i.test(raw)) {
+      fail('Index hygiene', file, `page is in the sitemap but marked noindex (${loc})`, lineOf(raw, /name=["']robots["']/i));
     }
   }
   // 4. robots.txt must not Disallow any indexable page.
@@ -417,18 +446,97 @@ function checkUniqueness(seenTitles, seenDescs) {
 }
 
 // ---------------------------------------------------------------------------
+// Fragments — every same-origin fragment link on a shipped page must resolve to
+// a real id on its target shipped page. We own this check (rather than lychee)
+// because lychee can't reliably resolve root-relative fragments: `/#work`
+// resolves `/` to a directory, so `--include-fragments` reports "Cannot find
+// fragment" on every clean page. Handled link forms: `#id`, `/#id`, `/page#id`,
+// `/page.html#id`, relative `page.html#id`, and same-origin absolute
+// `https://mooch.agency/page#id`. Skipped (out of scope): external origins,
+// non-http schemes (mailto:/tel:), and fragments whose target is not a shipped
+// page (their existence is lychee's job, not ours).
+// ---------------------------------------------------------------------------
+function checkFragments(pages) {
+  const shipped = new Set(pages);
+  const idCache = new Map(); // rel -> Set<id>
+  const idsOf = (rel) => {
+    if (!idCache.has(rel)) {
+      const $$ = load(read(rel));
+      const ids = new Set();
+      $$('[id]').each((_, el) => { const v = $$(el).attr('id'); if (v) ids.add(v); });
+      $$('a[name]').each((_, el) => { const v = $$(el).attr('name'); if (v) ids.add(v); }); // legacy anchors
+      idCache.set(rel, ids);
+    }
+    return idCache.get(rel);
+  };
+
+  for (const rel of pages) {
+    const raw = read(rel);
+    const $ = load(raw);
+    $('a[href]').each((_, a) => {
+      const href = ($(a).attr('href') || '').trim();
+      const hashIdx = href.indexOf('#');
+      if (hashIdx === -1) return;                 // no fragment at all
+      let pathPart = href.slice(0, hashIdx);
+      const frag = href.slice(hashIdx + 1);
+      if (!frag) return;                          // `#` or `path#` — top-of-page, nothing to resolve
+
+      // Same-origin absolute -> reduce to its path; skip external / non-http.
+      if (/^[a-zA-Z][\w+.-]*:/.test(pathPart)) {
+        const m = /^https?:\/\/([^/]+)([^#]*)$/i.exec(pathPart);
+        if (!m) return;                           // mailto:, tel:, or other scheme
+        const host = m[1].toLowerCase().replace(/^www\./, '');
+        if (host !== 'mooch.agency') return;      // external host
+        pathPart = m[2] || '/';
+      }
+
+      // Resolve the fragment's target page to a file on disk.
+      let targetRel;
+      if (pathPart === '') {
+        targetRel = rel;                          // same-page fragment
+      } else {
+        let key;
+        if (pathPart.startsWith('/')) {
+          key = pathPart.replace(/^\/+/, '').replace(/\/+$/, '').replace(/\.html$/i, '');
+        } else {
+          const dir = path.posix.dirname(rel);
+          const joined = path.posix.normalize(path.posix.join(dir === '.' ? '' : dir, pathPart));
+          key = joined.replace(/^\/+/, '').replace(/\/+$/, '').replace(/\.html$/i, '');
+        }
+        targetRel = keyToFile(key);
+      }
+      if (!targetRel || !shipped.has(targetRel)) return; // unresolved or non-shipped target -> skip
+
+      if (!idsOf(targetRel).has(frag)) {
+        const loc = lineOf(raw, new RegExp('href=["\']' + href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '["\']', 'i'));
+        fail('Fragments', rel, `fragment link "${href}" has no matching id "#${frag}" on ${targetRel}`, loc);
+      }
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
 const pages = discoverPages();
+
+// `--list-pages`: print the shipped-page set and exit. CI feeds this straight to
+// lychee so both tools check exactly the same pages (see the CLI note up top).
+if (LIST_PAGES) {
+  process.stdout.write(pages.join('\n') + '\n');
+  process.exit(0);
+}
+
 const seenTitles = {}, seenDescs = {};
 for (const rel of pages) checkPage(rel, seenTitles, seenDescs);
 checkUniqueness(seenTitles, seenDescs);
 checkIndexHygiene(pages);
+checkFragments(pages);
 
 // ---------------------------------------------------------------------------
 // Output — grouped by discipline, file + line where feasible.
 // ---------------------------------------------------------------------------
-const DISCIPLINES = ['SEO & Meta', 'Content hygiene', 'Trust & contactability', 'Mobile', 'Design tokens', 'Social cards', 'Index hygiene', 'Uniqueness & structure'];
+const DISCIPLINES = ['SEO & Meta', 'Content hygiene', 'Trust & contactability', 'Mobile', 'Design tokens', 'Social cards', 'Fragments', 'Index hygiene', 'Uniqueness & structure'];
 console.log(`check-site: ${pages.length} shipped pages under ${ROOT}`);
 console.log(pages.map((p) => `  - ${p}`).join('\n'));
 console.log('');

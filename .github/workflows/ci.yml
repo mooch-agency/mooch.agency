@@ -4,9 +4,10 @@ name: CI
 # manually-run pre-launch-website-check skill with checks every PR must pass.
 #
 # Jobs:
-#   fast        HTML validation + internal/sitemap link check + scripts/check-site.mjs
-#   security    secret scanning (gitleaks) + pnpm audit   (runs in parallel with fast)
-#   a11y-perf   axe-core + Lighthouse CI budgets           (runs after fast)
+#   fast         HTML validation + internal/sitemap link check + scripts/check-site.mjs
+#   security     secret scanning (gitleaks CLI) + pnpm audit   (runs in parallel with fast)
+#   a11y-perf    axe-core + Lighthouse CI budgets              (runs after fast)
+#   ci-required  umbrella check that gates on all three        (make THIS the required check)
 #
 # Note: audit-batch.yml is a separate, unrelated pipeline — do not fold this into it.
 
@@ -23,9 +24,33 @@ on:
       - 'scripts/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
+      - '.htmlvalidate.json'
       - '.htmlvalidateignore'
       - 'lighthouserc.json'
       - '.github/workflows/ci.yml'
+    # ┌────────────────────────────────────────────────────────────────────────┐
+    # │ DECISION NEEDED (Tahi) — required-check + path-filter deadlock.         │
+    # │                                                                        │
+    # │ This `paths:` filter means the WHOLE workflow is skipped for a PR that  │
+    # │ touches no matching path (e.g. a README- or docs-only PR). GitHub then  │
+    # │ posts NO status for `fast`/`security`/`a11y-perf`. If you mark any of   │
+    # │ those as *required* status checks in branch protection, such a PR sits  │
+    # │ "Expected — waiting for status" forever and can never merge.            │
+    # │                                                                         │
+    # │ Two ways out — pick one before making checks required:                  │
+    # │  (A) Require ONLY the `ci-required` umbrella job below (added, needs all,│
+    # │      if: always()). It works as the single required check ONLY IF the   │
+    # │      workflow actually runs — so combine it with (B).                   │
+    # │  (B) Drop this `on:`-level `paths:` filter so the workflow always runs, │
+    # │      and gate the expensive work INSIDE each job with a `changes` step  │
+    # │      (dorny/paths-filter or a `git diff` guard). Then `ci-required`     │
+    # │      always posts a status and nothing deadlocks.                       │
+    # │                                                                         │
+    # │ Left as-is here (filter retained per the S3 path-list fix). Moving to a │
+    # │ full in-job `changes` gate is a restructure I can't verify without a    │
+    # │ live PR, so it's documented, not applied. `ci-required` is added ready  │
+    # │ for when you drop the filter.                                           │
+    # └────────────────────────────────────────────────────────────────────────┘
 
 # Check-only: this workflow never writes to the repo.
 permissions:
@@ -59,19 +84,35 @@ jobs:
       - name: Validate HTML
         run: pnpm run ci:validate-html
 
-      # 2. Broken internal + sitemap links, with #fragment resolution. Offline
-      #    mode means internal links only — no external hosts are hit on a PR.
-      #    --fallback-extensions html mirrors Vercel cleanUrls (/gov-uk -> gov-uk.html).
+      # 2. Broken internal + sitemap links. Two deliberate scoping decisions:
+      #
+      #    (a) Input is the shipped-page set, derived from the SAME source of truth
+      #        as the checker (`check-site.mjs --list-pages`). Globbing "*.html"
+      #        would drag in case-study-template.html / prompt-template.html, whose
+      #        intentional placeholder links (/work/[next-slug]) don't exist and
+      #        would fail the job. Deriving the list here keeps lychee and the
+      #        checker locked to the same pages with no second exclusion list.
+      #
+      #    (b) No --include-fragments. lychee resolves a root-relative link like
+      #        `/#work` to the root DIRECTORY, then can't find the `#work` id in a
+      #        directory, so it errors on every clean page. Fragment resolution is
+      #        instead done deterministically in check-site.mjs (Fragments
+      #        discipline), which we control. lychee here checks link EXISTENCE
+      #        only. Offline mode keeps it to internal links (no external hosts).
+      #        --fallback-extensions html mirrors Vercel cleanUrls (/gov-uk -> gov-uk.html).
+      - name: Enumerate shipped pages (single source of truth for lychee)
+        id: shipped
+        run: echo "files=$(node scripts/check-site.mjs --list-pages | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+
       - name: Check internal links (lychee)
         uses: lycheeverse/lychee-action@v2
         with:
           args: >-
             --offline
-            --include-fragments
             --fallback-extensions html
             --root-dir ${{ github.workspace }}
             --no-progress
-            "*.html" "prompts/*.html" "sitemap.xml"
+            ${{ steps.shipped.outputs.files }} sitemap.xml
           fail: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -88,16 +129,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # gitleaks scans the full history/diff
 
-      - name: Scan for secrets (gitleaks)
-        uses: gitleaks/gitleaks-action@v2
+      # License-free secret scan. gitleaks-action@v2 requires a GITLEAKS_LICENSE
+      # for PRIVATE org repos (the action refuses to run without one); the gitleaks
+      # CLI has no such gate. We download a pinned release binary and scan the
+      # checked-out tree with `gitleaks dir`. The version is pinned deliberately
+      # (don't float to latest) for reproducible scans — bump it consciously.
+      # `dir` scans files on disk, so no git history / fetch-depth:0 is needed.
+      # gitleaks exits non-zero when it finds a secret, which fails this job.
+      - name: Scan for secrets (gitleaks CLI, license-free)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Private repos under an org need a (free) GITLEAKS_LICENSE; public
-          # repos do not. Add it as a secret if this repo is private.
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+          GITLEAKS_VERSION: 8.30.1
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o /tmp/gitleaks.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          /tmp/gitleaks dir . --no-banner --redact --verbose
 
       - uses: pnpm/action-setup@v4
         with:
@@ -132,7 +178,14 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      # Pin Chrome so the chromedriver pin in the axe step matches its major
+      # version. setup-chrome defaults to the latest stable Chrome, which floats
+      # ahead of a pinned chromedriver and breaks the axe run ("session not
+      # created: chromedriver only supports Chrome version N"). Keep this milestone
+      # and the chromedriver@N.x pin below in lockstep when upgrading.
       - uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: '150'
 
       # Changed shipped pages -> URLs. Falls back to the homepage when a PR only
       # touches CSS/config so we always have at least one page to test.
@@ -171,7 +224,10 @@ jobs:
         run: |
           for u in $URLS; do
             echo "axe: $u"
-            pnpm dlx --package=@axe-core/cli --package=chromedriver axe "$u" --exit
+            # Pinned, not floated to latest: chromedriver's major MUST match the
+            # Chrome milestone pinned above (chromedriver 150.x <-> Chrome 150), and
+            # @axe-core/cli is pinned for reproducible runs. Bump all three together.
+            pnpm dlx --package=@axe-core/cli@4.12.1 --package=chromedriver@150.0.4 axe "$u" --exit
           done
 
       - name: Performance budgets (Lighthouse CI)
@@ -181,3 +237,33 @@ jobs:
           urlflags=""
           for u in $URLS; do urlflags="$urlflags --collect.url=$u"; done
           pnpm dlx @lhci/cli@0.14.x autorun $urlflags
+
+  # ---------------------------------------------------------------------------
+  # ci-required — single umbrella status check. Make THIS the one required check
+  # in branch protection instead of fast/security/a11y-perf individually. It runs
+  # regardless of the others' outcome (if: always()) and fails if any of them
+  # failed or was cancelled; jobs that were SKIPPED (e.g. a11y-perf when fast
+  # failed) don't fail it on their own — fast's failure already does. This makes
+  # the required check deterministic once the workflow runs. See the deadlock note
+  # at the top: this only helps once the `on:` path filter is dropped, since a PR
+  # matching no path skips the whole workflow (this job included).
+  # ---------------------------------------------------------------------------
+  ci-required:
+    needs: [fast, security, a11y-perf]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require fast, security and a11y-perf to have passed
+        env:
+          FAST: ${{ needs.fast.result }}
+          SECURITY: ${{ needs.security.result }}
+          A11Y_PERF: ${{ needs.a11y-perf.result }}
+        run: |
+          echo "fast=$FAST security=$SECURITY a11y-perf=$A11Y_PERF"
+          for r in "$FAST" "$SECURITY" "$A11Y_PERF"; do
+            if [ "$r" = "failure" ] || [ "$r" = "cancelled" ]; then
+              echo "::error::A required job did not pass (result: $r)"
+              exit 1
+            fi
+          done
+          echo "All required jobs passed or were skipped."
