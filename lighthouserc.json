@@ -1,0 +1,19 @@
+{
+  "//": "Lighthouse CI budgets for mooch.agency. URLs are passed on the command line (--collect.url) by the a11y-perf job, scoped to the pages changed in the PR. LHCI defaults to mobile emulation, so categories:performance is the mobile score.",
+  "//numberOfRuns": "3 runs; LHCI asserts against the MEDIAN, which smooths single-run variance in LCP/CLS/perf so a one-off slow cold run doesn't false-fail the gate.",
+  "ci": {
+    "collect": {
+      "numberOfRuns": 3,
+      "settings": {
+        "chromeFlags": "--no-sandbox --headless=new"
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": ["error", { "minScore": 0.9 }],
+        "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }]
+      }
+    }
+  }
+}

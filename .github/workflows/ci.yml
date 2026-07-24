@@ -1,0 +1,272 @@
+name: CI
+
+# Deterministic, scriptable pre-launch gate for mooch.agency. This replaces the
+# manually-run pre-launch-website-check skill with checks every PR must pass.
+#
+# Jobs:
+#   fast         HTML validation + internal/sitemap link check + scripts/check-site.mjs
+#   security     secret scanning (gitleaks CLI) + pnpm audit   (runs in parallel with fast)
+#   a11y-perf    axe-core + Lighthouse CI budgets              (runs after fast)
+#   ci-required  umbrella check that gates on all three        (make THIS the required check)
+#
+# Note: audit-batch.yml is a separate, unrelated pipeline — do not fold this into it.
+
+on:
+  pull_request:
+    # Gate only when something that affects the shipped site (or this gate's own
+    # tooling) changes. The site is static HTML/CSS; the tooling paths are here
+    # so a change to the checker re-runs the checker.
+    paths:
+      - '**.html'
+      - '**.css'
+      - 'vercel.json'
+      - 'sitemap.xml'
+      - 'scripts/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.htmlvalidate.json'
+      - '.htmlvalidateignore'
+      - 'lighthouserc.json'
+      - '.github/workflows/ci.yml'
+    # ┌────────────────────────────────────────────────────────────────────────┐
+    # │ DECISION NEEDED (Tahi) — required-check + path-filter deadlock.         │
+    # │                                                                        │
+    # │ This `paths:` filter means the WHOLE workflow is skipped for a PR that  │
+    # │ touches no matching path (e.g. a README- or docs-only PR). GitHub then  │
+    # │ posts NO status for `fast`/`security`/`a11y-perf`. If you mark any of   │
+    # │ those as *required* status checks in branch protection, such a PR sits  │
+    # │ "Expected — waiting for status" forever and can never merge.            │
+    # │                                                                         │
+    # │ Two ways out — pick one before making checks required:                  │
+    # │  (A) Require ONLY the `ci-required` umbrella job below (added, needs all,│
+    # │      if: always()). It works as the single required check ONLY IF the   │
+    # │      workflow actually runs — so combine it with (B).                   │
+    # │  (B) Drop this `on:`-level `paths:` filter so the workflow always runs, │
+    # │      and gate the expensive work INSIDE each job with a `changes` step  │
+    # │      (dorny/paths-filter or a `git diff` guard). Then `ci-required`     │
+    # │      always posts a status and nothing deadlocks.                       │
+    # │                                                                         │
+    # │ Left as-is here (filter retained per the S3 path-list fix). Moving to a │
+    # │ full in-job `changes` gate is a restructure I can't verify without a    │
+    # │ live PR, so it's documented, not applied. `ci-required` is added ready  │
+    # │ for when you drop the filter.                                           │
+    # └────────────────────────────────────────────────────────────────────────┘
+
+# Check-only: this workflow never writes to the repo.
+permissions:
+  contents: read
+
+# Supersede in-flight runs for the same ref when new commits land.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # fast — deterministic markup, link and site checks. Sub-minute, blocks the PR.
+  # ---------------------------------------------------------------------------
+  fast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # 1. Valid HTML across the shipped site (non-shipped pages are skipped via
+      #    .htmlvalidateignore, which mirrors check-site.mjs's exclusion list).
+      - name: Validate HTML
+        run: pnpm run ci:validate-html
+
+      # 2. Broken internal + sitemap links. Two deliberate scoping decisions:
+      #
+      #    (a) Input is the shipped-page set, derived from the SAME source of truth
+      #        as the checker (`check-site.mjs --list-pages`). Globbing "*.html"
+      #        would drag in case-study-template.html / prompt-template.html, whose
+      #        intentional placeholder links (/work/[next-slug]) don't exist and
+      #        would fail the job. Deriving the list here keeps lychee and the
+      #        checker locked to the same pages with no second exclusion list.
+      #
+      #    (b) No --include-fragments. lychee resolves a root-relative link like
+      #        `/#work` to the root DIRECTORY, then can't find the `#work` id in a
+      #        directory, so it errors on every clean page. Fragment resolution is
+      #        instead done deterministically in check-site.mjs (Fragments
+      #        discipline), which we control. lychee here checks link EXISTENCE
+      #        only. Offline mode keeps it to internal links (no external hosts).
+      #        --fallback-extensions html mirrors Vercel cleanUrls (/gov-uk -> gov-uk.html).
+      - name: Enumerate shipped pages (single source of truth for lychee)
+        id: shipped
+        run: echo "files=$(node scripts/check-site.mjs --list-pages | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+
+      - name: Check internal links (lychee)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --offline
+            --fallback-extensions html
+            --root-dir ${{ github.workspace }}
+            --no-progress
+            ${{ steps.shipped.outputs.files }} sitemap.xml
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 3. The 10-discipline site checks (SEO, content hygiene, tokens, social
+      #    cards, index hygiene, uniqueness). Exits non-zero with file+line.
+      - name: Run site checks
+        run: pnpm run ci:check
+
+  # ---------------------------------------------------------------------------
+  # security — secret scanning + dependency audit. Parallel with `fast`.
+  # ---------------------------------------------------------------------------
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # License-free secret scan. gitleaks-action@v2 requires a GITLEAKS_LICENSE
+      # for PRIVATE org repos (the action refuses to run without one); the gitleaks
+      # CLI has no such gate. We download a pinned release binary and scan the
+      # checked-out tree with `gitleaks dir`. The version is pinned deliberately
+      # (don't float to latest) for reproducible scans — bump it consciously.
+      # `dir` scans files on disk, so no git history / fetch-depth:0 is needed.
+      # gitleaks exits non-zero when it finds a secret, which fails this job.
+      - name: Scan for secrets (gitleaks CLI, license-free)
+        env:
+          GITLEAKS_VERSION: 8.30.1
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o /tmp/gitleaks.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          /tmp/gitleaks dir . --no-banner --redact --verbose
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high
+
+  # ---------------------------------------------------------------------------
+  # a11y-perf — heavier browser-driven checks. Runs only after `fast` passes,
+  # scoped to the pages changed in the PR to keep runtime down.
+  # ---------------------------------------------------------------------------
+  a11y-perf:
+    needs: fast
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # needed to diff against the PR base
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Changed shipped pages -> URLs. Falls back to the homepage when a PR only
+      # touches CSS/config so we always have at least one page to test.
+      # Untrusted input (base_ref, PR filenames) is passed via env and each slug
+      # is charset-sanitised, so nothing attacker-controlled reaches the shell.
+      - name: Determine changed pages
+        id: changed
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_REF" || true
+          mapfile -t files < <(git diff --name-only "origin/$BASE_REF"...HEAD -- '*.html' 'prompts/*.html' || true)
+          urls=""
+          for f in "${files[@]}"; do
+            [ -z "$f" ] && continue
+            case "$f" in *-template.html|stagger-tuner.html|styleguide.html|paulgraham.html|portfolio-*.html|404.html|ready.html) continue;; esac
+            slug="${f%.html}"; [ "$slug" = "index" ] && slug=""
+            # Only allow a safe URL-path charset; skip anything else outright.
+            case "$slug" in *[!a-zA-Z0-9/_-]*) echo "skip unsafe filename: $f"; continue;; esac
+            urls="$urls http://localhost:3000/$slug"
+          done
+          [ -z "$(echo "$urls" | tr -d ' ')" ] && urls="http://localhost:3000/"
+          echo "urls=$(echo "$urls" | xargs)" >> "$GITHUB_OUTPUT"
+          echo "Testing: $urls"
+
+      # Serve the static site the way Vercel does (clean URLs). Backgrounded so
+      # it stays up for the axe and Lighthouse steps that follow.
+      - name: Serve static site
+        run: |
+          pnpm dlx serve@14 -l 3000 . > /tmp/serve.log 2>&1 &
+          pnpm dlx wait-on@7 http://localhost:3000 --timeout 30000
+
+      - name: Accessibility (axe-core)
+        env:
+          URLS: ${{ steps.changed.outputs.urls }}
+        run: |
+          # Use the runner's preinstalled, version-matched Chrome + ChromeDriver.
+          # $CHROMEWEBDRIVER is provided by the GitHub-hosted image and always
+          # matches the preinstalled google-chrome, sidestepping the version skew
+          # from @axe-core/cli pulling its own floating chromedriver.
+          #
+          # force-prefers-reduced-motion: the site's .reveal entrance animation
+          # starts elements at opacity:0 and fades them in with staggered delays.
+          # Without this, axe samples mid-animation and reports false colour-contrast
+          # failures on partially-transparent text (e.g. a #000 h1 reads as grey).
+          # The site honours prefers-reduced-motion by rendering content at full
+          # opacity immediately, so this measures the settled page.
+          for u in $URLS; do
+            echo "axe: $u"
+            pnpm dlx --package=@axe-core/cli@4.12.1 axe "$u" \
+              --chromedriver-path "$CHROMEWEBDRIVER/chromedriver" \
+              --chrome-options="headless,no-sandbox,disable-gpu,force-prefers-reduced-motion" \
+              --exit
+          done
+
+      - name: Performance budgets (Lighthouse CI)
+        env:
+          URLS: ${{ steps.changed.outputs.urls }}
+          CHROME_PATH: /usr/bin/google-chrome
+        run: |
+          urlflags=""
+          for u in $URLS; do urlflags="$urlflags --collect.url=$u"; done
+          pnpm dlx @lhci/cli@0.14.x autorun $urlflags
+
+  # ---------------------------------------------------------------------------
+  # ci-required — single umbrella status check. Make THIS the one required check
+  # in branch protection instead of fast/security/a11y-perf individually. It runs
+  # regardless of the others' outcome (if: always()) and fails if any of them
+  # failed or was cancelled; jobs that were SKIPPED (e.g. a11y-perf when fast
+  # failed) don't fail it on their own — fast's failure already does. This makes
+  # the required check deterministic once the workflow runs. See the deadlock note
+  # at the top: this only helps once the `on:` path filter is dropped, since a PR
+  # matching no path skips the whole workflow (this job included).
+  # ---------------------------------------------------------------------------
+  ci-required:
+    needs: [fast, security, a11y-perf]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require fast, security and a11y-perf to have passed
+        env:
+          FAST: ${{ needs.fast.result }}
+          SECURITY: ${{ needs.security.result }}
+          A11Y_PERF: ${{ needs.a11y-perf.result }}
+        run: |
+          echo "fast=$FAST security=$SECURITY a11y-perf=$A11Y_PERF"
+          for r in "$FAST" "$SECURITY" "$A11Y_PERF"; do
+            if [ "$r" = "failure" ] || [ "$r" = "cancelled" ]; then
+              echo "::error::A required job did not pass (result: $r)"
+              exit 1
+            fi
+          done
+          echo "All required jobs passed or were skipped."
