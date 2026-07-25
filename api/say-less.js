@@ -14,7 +14,7 @@
 // conservative max_tokens, best-effort per-instance rate limit (halved,
 // since one ask is two upstream calls), origin check, kill switch.
 
-const SAYLESS_SYSTEM = require("./say-less-system.js");
+const SAYLESS_SYSTEM = require("./_say-less-system.js");
 
 const MODEL = process.env.SAYLESS_MODEL || "claude-sonnet-5";
 const MAX_TOKENS = 1500;           // headroom over the longest benchmark reply (~330 words)
@@ -60,7 +60,7 @@ function totalWords(text) {
   return String(text || "").split(/\s+/).filter((w) => /[0-9A-Za-z]/.test(w)).length;
 }
 
-async function streamArm(arm, system, question, write) {
+async function streamArm(arm, system, question, write, signal) {
   const body = {
     model: MODEL,
     max_tokens: MAX_TOKENS,
@@ -79,6 +79,7 @@ async function streamArm(arm, system, question, write) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify(body),
+      signal,
     });
   } catch (e) {
     write({ arm, error: "Upstream unreachable." });
@@ -109,6 +110,14 @@ async function streamArm(arm, system, question, write) {
         if (!payload || payload === "[DONE]") continue;
         let obj;
         try { obj = JSON.parse(payload); } catch { continue; }
+        // A mid-stream error (overloaded_error and friends) closes the
+        // upstream without a further content_block_delta; without this
+        // check the loop falls through to "done" below and reports a
+        // truncated answer as a clean, complete one.
+        if (obj.type === "error") {
+          write({ arm, error: (obj.error && obj.error.message) || "Answer failed. Try again." });
+          return;
+        }
         if (obj.type === "content_block_delta" && obj.delta && obj.delta.text) {
           full += obj.delta.text;
           write({ arm, delta: obj.delta.text });
@@ -142,12 +151,17 @@ module.exports = async function handler(req, res) {
     return res.end("Slow down a moment, then try again.");
   }
 
-  const q = (req.query && req.query.q) ||
+  let q = (req.query && req.query.q) ||
     new URL(req.url, "http://internal").searchParams.get("q") || "";
-  const prompt = q.trim();
+  if (Array.isArray(q)) q = q[0] || ""; // repeated ?q= params
+  const prompt = String(q).trim();
   if (!prompt) {
     res.statusCode = 400;
     return res.end("Missing q.");
+  }
+  if (prompt.length > 1200) { // matches the page's own input maxlength
+    res.statusCode = 413;
+    return res.end("Question too long.");
   }
   const words = prompt.split(/\s+/).filter(Boolean).length;
   if (words > WORD_CAP) {
@@ -166,7 +180,12 @@ module.exports = async function handler(req, res) {
   if (res.flushHeaders) res.flushHeaders();
 
   let closed = false;
-  req.on("close", () => { closed = true; });
+  // A closed connection has to cancel the upstream Anthropic calls, not just
+  // stop writing to a dead response: without this, Stop (or a closed tab)
+  // still runs both replies to completion server-side, and Anthropic still
+  // bills for tokens generated after nobody is listening.
+  const controller = new AbortController();
+  req.on("close", () => { closed = true; controller.abort(); });
 
   function write(obj) {
     if (closed) return;
@@ -181,8 +200,8 @@ module.exports = async function handler(req, res) {
   }, PING_EVERY_MS);
 
   await Promise.all([
-    streamArm("default", null, prompt, write),
-    streamArm("sayless", SAYLESS_SYSTEM, prompt, write),
+    streamArm("default", null, prompt, write, controller.signal),
+    streamArm("sayless", SAYLESS_SYSTEM, prompt, write, controller.signal),
   ]);
 
   clearInterval(ping);

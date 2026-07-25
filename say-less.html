@@ -7,19 +7,19 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
-<meta name="description" content="Ask Claude anything and watch it answer twice: once plain, once with the Say Less style. 71% shorter on average, same reasoning. Private beta plugin for Claude Code.">
+<meta name="description" content="Ask Claude anything and watch it answer twice: once plain, once with the Say Less style. 71% shorter, median, same reasoning. Private beta plugin for Claude Code.">
 <meta name="robots" content="noindex">
 <link rel="canonical" href="https://mooch.agency/say-less">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://mooch.agency/say-less">
 <meta property="og:title" content="Say Less: try it live, cuts replies 71% | Mooch">
-<meta property="og:description" content="Ask Claude anything and watch it answer twice: once plain, once with the Say Less style. 71% shorter on average, same reasoning.">
+<meta property="og:description" content="Ask Claude anything and watch it answer twice: once plain, once with the Say Less style. 71% shorter, median, same reasoning.">
 <meta property="og:image" content="https://mooch.agency/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Say Less: try it live, cuts replies 71% | Mooch">
-<meta name="twitter:description" content="Ask Claude anything and watch it answer twice: once plain, once with the Say Less style. 71% shorter on average, same reasoning.">
+<meta name="twitter:description" content="Ask Claude anything and watch it answer twice: once plain, once with the Say Less style. 71% shorter, median, same reasoning.">
 <meta name="twitter:image" content="https://mooch.agency/og-image.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -320,7 +320,7 @@
     <h2 id="tool-heading" class="visually-hidden">Try it</h2>
 
     <form class="ask-form" id="f">
-      <input type="text" id="q" placeholder="Ask anything, e.g. should I use UUIDs or integers for primary keys?" autocomplete="off" maxlength="1200">
+      <input type="text" id="q" aria-label="Your question" placeholder="Ask anything, e.g. should I use UUIDs or integers for primary keys?" autocomplete="off" maxlength="1200">
       <button class="pill" id="go" type="submit">Ask</button>
     </form>
     <div class="examples" id="examples"></div>
@@ -526,6 +526,15 @@ f.addEventListener("submit", (e) => {
   if (busy) { idle(); say("<span>Stopped.</span>"); return; } // button doubles as Stop
   const prompt = q.value.trim();
   if (!prompt) { q.focus(); return; }
+  // Matches api/say-less.js's own word cap exactly. EventSource can't read
+  // a failed response's body, so without this check a too-long question
+  // just shows "the stream dropped" instead of the real, fixable reason.
+  const promptWords = prompt.split(/\s+/).filter(Boolean).length;
+  if (promptWords > 200) {
+    sayError(`Keep it under 200 words. That was ${promptWords}.`);
+    q.focus();
+    return;
+  }
 
   busy = true;
   go.textContent = "Stop";
