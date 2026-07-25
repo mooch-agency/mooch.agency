@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Say Less: a Claude Code plugin that cuts replies 71% | Mooch</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
+<meta name="description" content="A Claude Code plugin that cuts reply length 71% on average without changing what Claude knows or how it reasons. Private beta, invite-only.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://mooch.agency/say-less">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mooch.agency/say-less">
+<meta property="og:title" content="Say Less: a Claude Code plugin that cuts replies 71% | Mooch">
+<meta property="og:description" content="A Claude Code plugin that cuts reply length 71% on average without changing what Claude knows or how it reasons. Private beta, invite-only.">
+<meta property="og:image" content="https://mooch.agency/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Say Less: a Claude Code plugin that cuts replies 71% | Mooch">
+<meta name="twitter:description" content="A Claude Code plugin that cuts reply length 71% on average without changing what Claude knows or how it reasons. Private beta, invite-only.">
+<meta name="twitter:image" content="https://mooch.agency/og-image.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/motion.css">
+<link rel="stylesheet" href="/ui.css">
+<style>
+  /* Page-specific layout only; colour/type/spacing tokens all come from
+     tokens.css, structural classes (.case-hero, .prompt-box, .ba-grid, .copy-btn)
+     from ui.css / the shared case-body rules. See prompt-template.html, which
+     this page is copied from: closer fit than case-study-template.html since
+     Say Less is a steal-this-tool page, not a client case study. */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+  body {
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--paper);
+    font-feature-settings: "tnum", "kern", "liga", "ss01";
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  /* Topbar (matches index.html / case-study-template.html) */
+  .topbar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 24px var(--pad-x);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .topbar .left { justify-self: start; }
+  .topbar .right { justify-self: end; text-align: right; }
+  .topbar a { color: var(--ink); }
+  .topbar a:hover { border-bottom: 1px solid var(--ink); }
+  .topbar .you { color: var(--muted); }
+
+  /* Hero (mirrors case-hero / prompt-template's hero) */
+  .case-hero {
+    padding: clamp(64px, 10vw, 120px) var(--pad-x) clamp(48px, 8vw, 96px);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .case-hero-inner { max-width: var(--max); margin: 0 auto; }
+  .case-hero .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    margin-bottom: 48px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .case-hero .eyebrow strong { color: var(--ink); font-weight: 600; }
+  .case-hero .eyebrow .rule { flex: 0 0 60px; height: 1px; background: var(--ink); }
+  .case-hero h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(56px, 11vw, 148px);
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+    color: var(--black);
+    margin-bottom: clamp(28px, 4vw, 48px);
+    max-width: 18ch;
+  }
+  .case-hero h1 em { font-style: italic; }
+  .case-hero .standfirst {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(22px, 2.4vw, 32px);
+    font-style: italic;
+    line-height: 1.3;
+    color: var(--ink);
+    max-width: 36ch;
+    margin-bottom: clamp(40px, 6vw, 64px);
+  }
+
+  /* Metadata strip */
+  .case-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    padding-top: 28px;
+    border-top: 1px solid var(--hairline);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .case-meta dt { color: var(--muted); margin-bottom: 4px; }
+  .case-meta dd { color: var(--ink); }
+  @media (min-width: 720px) { .case-meta { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1080px) { .case-meta { grid-template-columns: repeat(5, 1fr); } }
+
+  /* Body */
+  .case-body {
+    padding: clamp(64px, 10vw, 120px) var(--pad-x) clamp(96px, 12vw, 160px);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .case-body-inner {
+    max-width: var(--col);
+    margin: 0 auto;
+    font-size: 18px;
+    line-height: 1.65;
+    color: var(--ink);
+  }
+  .case-body h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(36px, 4.6vw, 56px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--black);
+    margin-top: clamp(64px, 8vw, 112px);
+    margin-bottom: 28px;
+    scroll-margin-top: 40px;
+  }
+  .case-body h2:first-child { margin-top: 0; }
+  .case-body h2 .num {
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    display: block;
+    font-style: normal;
+    margin-bottom: 28px;
+    font-weight: 400;
+  }
+  .case-body p { margin-bottom: 1.1em; hanging-punctuation: first last; }
+  .case-body p strong { font-weight: 600; color: var(--black); }
+  .case-body a { border-bottom: 1px solid var(--hairline); transition: border-color 0.15s ease; }
+  .case-body a:hover { border-bottom-color: var(--ink); }
+
+  /* Lead line (TL;DR) */
+  .case-body .lead-stat {
+    font-family: var(--serif);
+    font-size: clamp(28px, 4vw, 44px);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--black);
+    margin: 8px 0 24px;
+    max-width: 22ch;
+  }
+  .case-body .lead-stat strong { font-weight: 400; font-style: italic; }
+
+  /* Use-case line */
+  .user-need {
+    border-left: 2px solid var(--black);
+    padding: 14px 0 14px 20px;
+    margin: 32px 0 40px;
+    font-family: var(--sans);
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .user-need .qual { color: var(--muted); }
+
+  /* Copy-pasteable blocks: the install prompt, the raw commands, the clone
+     command. Same component for all three so they read as one family. */
+  .prompt-box {
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    background: var(--surface);
+    margin: 24px 0 40px;
+    overflow: hidden;
+  }
+  .prompt-box-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--hairline);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+  }
+  .prompt-box pre {
+    margin: 0;
+    padding: 22px 20px;
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-x: auto;
+  }
+
+  /* Before / after example pair, real output, both arms in full */
+  .ba-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin: 24px 0 40px;
+  }
+  @media (min-width: 720px) { .ba-grid { grid-template-columns: 1fr 1fr; } }
+  .ba-col {
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    padding: 20px;
+    background: var(--paper);
+  }
+  .ba-col .ba-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .ba-col.after { background: var(--surface); }
+  .ba-col p { font-size: 15.5px; line-height: 1.6; margin-bottom: 0.8em; }
+  .ba-col p:last-child { margin-bottom: 0; }
+  .ba-col ul { padding-left: 1.2em; margin: 0 0 0.8em; }
+  .ba-col li { margin-bottom: 0.4em; font-size: 15.5px; line-height: 1.55; }
+  .ba-col pre {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin: 0 0 0.8em;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-x: auto;
+  }
+  .ba-col.after pre { background: var(--paper); }
+
+  /* Footer (matches index.html) */
+  .colophon { padding: 56px var(--pad-x) 40px; }
+  .colophon-inner {
+    max-width: 1320px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .colophon-mark { font-family: var(--serif); font-size: clamp(72px, 16vw, 240px); line-height: 0.85; letter-spacing: -0.04em; }
+  .colophon-mark em { font-style: italic; color: var(--muted); }
+  .colophon-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding-top: 36px;
+    border-top: 1px solid var(--colophon-rule);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .colophon-links a { color: var(--paper); border-bottom: 1px solid transparent; transition: border-color 0.15s ease; }
+  .colophon-links a:hover { border-bottom-color: var(--paper); }
+  .colophon-sep { color: var(--muted); font-size: 10px; }
+  .colophon-foot {
+    border-top: 1px solid var(--colophon-rule);
+    margin-top: 36px;
+    padding-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+  }
+  .colophon-credits { max-width: 48ch; text-align: center; }
+  .colophon-version { color: var(--muted); border-bottom: 1px solid transparent; transition: border-color 0.15s ease; }
+  .colophon-version:hover { border-bottom-color: var(--paper); color: var(--paper); }
+
+  @media print {
+    body { background: #fff; color: #000; }
+    .topbar, .colophon { display: none; }
+    .case-hero { padding: 24px 0; border: none; }
+    .case-body { padding: 0; max-width: 100%; }
+    .case-body-inner { max-width: 100%; }
+    a { color: #000; text-decoration: underline; }
+    .reveal { opacity: 1; transform: none; animation: none; }
+    .prompt-box, .ba-col { break-inside: avoid; border: 1px solid #000; }
+    .copy-btn { display: none; }
+    * { box-shadow: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="left"><a href="/">Mooch</a> &nbsp;/&nbsp; <span class="you">Say Less</span></div>
+  <div class="right">Plugin &nbsp; &middot; &nbsp; <span>Private beta</span></div>
+</header>
+
+<main>
+
+<section class="case-hero">
+  <div class="case-hero-inner">
+    <div class="eyebrow reveal d1"><span class="rule"></span> <strong>Tool</strong> &middot; Claude Code plugin &middot; Invite-only beta</div>
+    <h1 class="reveal d2">Make Claude <em>say less</em>.</h1>
+    <p class="standfirst reveal d3">Claude Code writes too much. This plugin cuts word count without changing what it knows or how it reasons.</p>
+    <dl class="case-meta reveal d4">
+      <div><dt>Cuts by</dt><dd>71% median, up to 80%</dd></div>
+      <div><dt>Runs on</dt><dd>Claude Code, any model</dd></div>
+      <div><dt>Reasoning</dt><dd>Unchanged</dd></div>
+      <div><dt>Access</dt><dd>Invite-only beta</dd></div>
+      <div><dt>Licence</dt><dd>MIT</dd></div>
+    </dl>
+  </div>
+</section>
+
+<article class="case-body">
+  <div class="case-body-inner">
+
+    <h2><span class="num">&sect; 01</span>What it does</h2>
+    <p class="lead-stat">Same answer, <strong>71% shorter</strong>.</p>
+    <p>Say Less is an output style for Claude Code. It changes how much Claude writes, not what it knows: reasoning, tool use, and coding behaviour are unchanged, only the reply gets shorter. Outcome first, one reason, the rest on request.</p>
+    <div class="user-need">
+      <span class="qual">Use this when</span> you're skimming past everything Claude writes to find the one line that matters<br>
+      <span class="qual">so that you can</span> read the whole reply instead, and stop missing things in it
+    </div>
+
+    <h2><span class="num">&sect; 02</span>Install</h2>
+    <p>Paste this into any Claude Code session. It installs the plugin, verifies it's active, and tells you what to do if you're not on the access list yet.</p>
+    <div class="prompt-box">
+      <div class="prompt-box-head">
+        <span>Prompt</span>
+        <button class="copy-btn" type="button" data-copy-target="install-prompt">Copy</button>
+      </div>
+      <pre id="install-prompt">Install the Say Less plugin: run `claude plugin marketplace add gichigi/say-less` then `claude plugin install say-less@say-less`, then verify with `claude plugin list`. If the marketplace add fails with a clone or auth error, tell me this is an invite-only beta and I need repo access from Tahi first, and check `gh auth status`. Finish by telling me to restart my session and ask any question to see the style.</pre>
+    </div>
+    <p>Or run it yourself:</p>
+    <div class="prompt-box">
+      <div class="prompt-box-head">
+        <span>Shell</span>
+        <button class="copy-btn" type="button" data-copy-target="install-commands">Copy</button>
+      </div>
+      <pre id="install-commands">claude plugin marketplace add gichigi/say-less
+claude plugin install say-less@say-less</pre>
+    </div>
+    <p>Private beta, invite-only. Don't have access yet? Ask Tahi. Repo: <a href="https://github.com/gichigi/say-less">github.com/gichigi/say-less</a>.</p>
+
+    <h2><span class="num">&sect; 03</span>Before / after</h2>
+    <p>Real output, same prompt, same model. The only difference between the two columns is the style.</p>
+    <div class="ba-grid">
+      <div class="ba-col before">
+        <div class="ba-label">Default &middot; 98 words</div>
+        <p>The problem is <code>DATE(created_at)</code>, wrapping a column in a function prevents the database from using an index on <code>created_at</code>.</p>
+        <p><strong>Fix: use a range instead</strong></p>
+        <pre>SELECT * FROM events
+WHERE created_at &gt;= '2026-07-01'
+  AND created_at &lt;  '2026-07-02';</pre>
+        <p>This is <strong>sargable</strong>, the index on <code>created_at</code> can be used directly.</p>
+        <p><strong>Why it's faster:</strong></p>
+        <ul>
+          <li>Original: evaluates <code>DATE()</code> on every row (full table scan even with an index)</li>
+          <li>Fixed: the optimiser can do an index range scan and skip irrelevant rows entirely</li>
+        </ul>
+        <p><strong>Also make sure you have the index:</strong></p>
+        <pre>CREATE INDEX idx_events_created_at ON events (created_at);</pre>
+        <p>If you're selecting all columns (<code>SELECT *</code>) on 10M rows, also consider whether you need all columns, projecting only the columns you need reduces I/O significantly, especially if the table is wide.</p>
+      </div>
+      <div class="ba-col after">
+        <div class="ba-label">Say Less &middot; 41 words</div>
+        <p><code>DATE(created_at)</code> wraps the column in a function, making any index on <code>created_at</code> unusable. Use a range instead:</p>
+        <pre>SELECT * FROM events
+WHERE created_at &gt;= '2026-07-01' AND created_at &lt; '2026-07-02';</pre>
+        <p>Then ensure you have an index on <code>created_at</code>. Also drop the <code>*</code> and select only the columns you need, returning 10M-row-wide results is expensive regardless of the scan.</p>
+      </div>
+    </div>
+    <p>Same findings, 58% less to read. That gap holds across the board: shorter on 10/10 benchmark prompts, by 61% to 80%.</p>
+
+    <h2><span class="num">&sect; 04</span>See it live</h2>
+    <p>Clone the repo and ask it anything. Both arms answer at once, side by side, so you watch the gap instead of taking a benchmark's word for it.</p>
+    <div class="prompt-box">
+      <div class="prompt-box-head">
+        <span>Shell</span>
+        <button class="copy-btn" type="button" data-copy-target="clone-commands">Copy</button>
+      </div>
+      <pre id="clone-commands">git clone https://github.com/gichigi/say-less &amp;&amp; cd say-less
+python3 benchmark/serve_compare.py</pre>
+    </div>
+
+    <h2><span class="num">&sect; 05</span>How it's built</h2>
+    <p>Examples set the length, not rules: the style file's own examples are the target the model matches, not a list of instructions it follows. One soft length bound is load-bearing, remove it and replies creep back up.</p>
+    <p>Every number on this page comes from a hermetic benchmark: no personal <code>CLAUDE.md</code>, settings, or plugin reaches either arm, so the style is the only variable. Counted in code, never by a model. Full method and results: <a href="https://github.com/gichigi/say-less/blob/master/benchmark/RESEARCH.md">benchmark/RESEARCH.md</a>.</p>
+
+  </div>
+</article>
+
+</main>
+
+<footer class="colophon colophon-dark">
+  <div class="colophon-inner">
+    <div class="colophon-mark">Mooch<em>.</em></div>
+
+    <div class="colophon-links">
+      <a href="mailto:hey@mooch.agency?subject=A%20project%2C%20an%20idea%2C%20or%20a%20coffee&amp;body=Hi%20guys%2C%0D%0A%0D%0AWhat%20I%27m%20working%20on%3A%0D%0AWhere%20you%20could%20help%3A%0D%0ARough%20timeline%3A">hey@mooch.agency</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://x.com/tahigichigi">X / @tahigichigi</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://moochagency.substack.com">Substack</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://toneofvoice.app">toneofvoice.app</a>
+    </div>
+
+    <div class="colophon-foot">
+      <span>&copy; 2026 Mooch Agency Ltd.</span>
+      <span class="colophon-credits">Set in Instrument Serif &amp; SF Pro. Built by two humans and one MoochBot. Hosted on Vercel because we're not animals.</span>
+      <a href="/privacy" class="colophon-version">Privacy</a>
+      <span class="colophon-version">N&deg; 01</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var target = document.getElementById(btn.getAttribute('data-copy-target'));
+      if (!target) return;
+      navigator.clipboard.writeText(target.textContent.trim()).then(function () {
+        var original = btn.textContent;
+        btn.textContent = 'Copied';
+        btn.classList.add('copied');
+        setTimeout(function () {
+          btn.textContent = original;
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    });
+  });
+</script>
+
+</body>
+</html>
