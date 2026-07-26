@@ -106,14 +106,6 @@
   .strip a:hover { border-bottom: 1px solid var(--ink); }
   .strip .here { color: var(--muted-small); }
   .strip .state { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
-  .lamp {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--hairline-focus); flex: none;
-  }
-  .lamp[data-state="running"] { background: var(--paper); animation: lampPulse 1.1s ease-in-out infinite; }
-  .lamp[data-state="done"] { background: var(--paper); }
-  .lamp[data-state="error"] { background: var(--error); }
-  @keyframes lampPulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 
   /* ── Hero ──────────────────────────────────────────────────────────────
      Deliberately short. The device below is the argument; this is the label
@@ -153,7 +145,7 @@
   .ghost:focus-visible { outline-color: var(--paper); }
   .example-btn { flex: 0 0 auto; align-self: center; font-size: 12.5px; padding: 8px 14px; min-height: 40px; margin-right: 6px; }
   @media (max-width: 600px) {
-    .example-btn .example-label { display: none; }
+    .example-btn .example-label-ext { display: none; }   /* "Random" alone on phones */
     .example-btn { padding: 8px 12px; }
   }
 
@@ -218,9 +210,15 @@
     background: var(--black); border: 1px solid var(--hairline-focus);
     border-radius: 999px; padding: 8px 20px;
   }
-  .delta-chip .n { font-size: 21px; line-height: 1; transition: color 0.3s var(--ease-deliver); }
-  .delta-chip.settled { border-color: #d97757; animation: chipPop 0.7s var(--ease-decide); }
-  .delta-chip.settled .n { color: #d97757; }
+  .delta-chip { display: flex; align-items: baseline; gap: 7px; }
+  .delta-chip .n { font-size: 21px; line-height: 1; }
+  .delta-word {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.14em; color: var(--muted-small);
+  }
+  .delta-word:empty { display: none; }
+  /* Settle stays white; the coral lives only in the one-time ring flash. */
+  .delta-chip.settled { animation: chipPop 0.7s var(--ease-decide); }
   @keyframes chipPop {
     0%   { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(217, 119, 87, 0.45); }
     35%  { transform: translateX(-50%) scale(1.3); }
@@ -259,7 +257,7 @@
   }
   @keyframes pulse { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
   @media (prefers-reduced-motion: reduce) {
-    .dot, .lamp[data-state="running"] { animation: none; opacity: 1; }
+    .dot { animation: none; opacity: 1; }
   }
 
   /* The delta note is the live region, and it is always self-sufficient:
@@ -318,6 +316,15 @@
     overflow-x: auto; white-space: pre;
   }
   .pane-body .md-code code { background: none; border: 0; padding: 0; }
+
+  .pane-body .md-table-wrap { overflow-x: auto; margin: 0 0 12px; }
+  .pane-body .md-table { border-collapse: collapse; font-size: 13.5px; }
+  .pane-body .md-table th, .pane-body .md-table td {
+    border: 1px solid var(--hairline); padding: 6px 10px;
+    text-align: left; vertical-align: top;
+  }
+  .pane-body .md-table th { font-weight: 600; background: var(--chassis); }
+
 
   /* The long default answer collapses past roughly one screen behind a See
      more toggle; the short answer always shows whole. */
@@ -456,14 +463,14 @@
 
 <header class="strip">
   <span class="nameplate"><a href="/">Mooch</a> &nbsp;/&nbsp; <span class="here">Say Less</span></span>
-  <span class="state"><span class="lamp" id="lamp" data-state="idle"></span><span id="statusText">Idle</span></span>
+  <span class="state">Private beta</span>
 </header>
 
 <main>
 
 <section class="hero">
   <div class="rig">
-    <p class="eyebrow reveal d1"><span class="rule"></span> Claude Code plugin &middot; private beta</p>
+    <p class="eyebrow reveal d1"><span class="rule"></span> Claude Code plugin</p>
     <h1 class="reveal d2">Make Claude <em>say less</em>.</h1>
     <p class="standfirst reveal d3">Say Less is a Claude Code plugin that cuts replies by ~71% without cutting reasoning. Free to install.</p>
   </div>
@@ -479,7 +486,7 @@
         <input type="text" id="q" autocomplete="off" maxlength="1200"
                aria-label="Ask Claude Code anything" placeholder="Ask anything…">
         <button type="button" class="ghost example-btn" id="exampleBtn">
-          <span class="example-label">Random question</span>
+          <span class="example-label">Random<span class="example-label-ext"> question</span></span>
         </button>
         <button class="go" id="go" type="submit" aria-label="Ask" title="Ask">
           <span class="go-icon" aria-hidden="true">&rarr;</span>
@@ -488,7 +495,7 @@
     </form>
 
     <div class="term-wrap">
-      <div class="delta-chip" aria-hidden="true"><span class="n" id="deltaNum">vs</span></div>
+      <div class="delta-chip" aria-hidden="true"><span class="n" id="deltaNum">vs</span><span class="delta-word" id="deltaWord"></span></div>
       <div class="panes">
         <div class="pane pane-sayless">
           <div class="pane-head"><span><span class="cdot" aria-hidden="true">&#9679;</span>Claude Code with Say Less</span><span class="state-line" id="hB">Standby</span></div>
@@ -611,6 +618,7 @@ const go = document.getElementById("go");
 const goIcon = go.querySelector(".go-icon");
 const termWrap = document.querySelector(".term-wrap");
 const deltaChip = document.querySelector(".delta-chip");
+const deltaWord = document.getElementById("deltaWord");
 const deltaNum = document.getElementById("deltaNum");
 const deltaNote = document.getElementById("deltaNote");
 const lamp = document.getElementById("lamp");
@@ -671,12 +679,25 @@ function renderMd(src) {
     .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
     .replace(/\*([^*\s][^*]*)\*/g, "<i>$1</i>");
   const lines = String(src || "").split("\n");
-  let html = "", para = [], list = null, code = null;
+  let html = "", para = [], list = null, code = null, table = null;
   const flushPara = () => { if (para.length) { html += "<p>" + inline(esc(para.join(" "))) + "</p>"; para = []; } };
   const flushList = () => {
     if (!list) return;
     html += "<" + list.tag + ">" + list.items.map((i) => "<li>" + inline(esc(i)) + "</li>").join("") + "</" + list.tag + ">";
     list = null;
+  };
+  const cells = (line) => line.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map((c) => inline(esc(c.trim())));
+  const flushTable = () => {
+    if (!table) return;
+    let head = null, body = table;
+    // A |---|---| second row marks the first as the header.
+    if (table.length > 1 && /^[\s:|-]+$/.test(table[1]) && table[1].includes("-")) {
+      head = cells(table[0]); body = table.slice(2);
+    }
+    html += '<div class="md-table-wrap"><table class="md-table">';
+    if (head) html += "<thead><tr>" + head.map((c) => "<th>" + c + "</th>").join("") + "</tr></thead>";
+    html += "<tbody>" + body.map((r) => "<tr>" + cells(r).map((c) => "<td>" + c + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>";
+    table = null;
   };
   for (const line of lines) {
     if (code !== null) {
@@ -684,7 +705,9 @@ function renderMd(src) {
       else code.push(line);
       continue;
     }
-    if (/^```/.test(line)) { flushPara(); flushList(); code = []; continue; }
+    if (/^```/.test(line)) { flushPara(); flushList(); flushTable(); code = []; continue; }
+    if (/^\s*\|/.test(line)) { flushPara(); flushList(); (table = table || []).push(line); continue; }
+    flushTable();
     const h = line.match(/^(#{1,4})\s+(.*)/);
     if (h) { flushPara(); flushList(); html += '<p class="md-h">' + inline(esc(h[2])) + "</p>"; continue; }
     const li = line.match(/^\s*[-*]\s+(.*)/);
@@ -694,7 +717,7 @@ function renderMd(src) {
     if (!line.trim()) { flushPara(); flushList(); continue; }
     para.push(line.trim());
   }
-  flushPara(); flushList();
+  flushPara(); flushList(); flushTable();
   // Mid-stream inside an unclosed fence: show it as code so streaming reads right.
   if (code !== null) html += '<pre class="md-code">' + esc(code.join("\n")) + "</pre>";
   return html;
@@ -769,7 +792,7 @@ function setSub(k, html, cls) {
 // The note is the live region. It always states the figure in words so the
 // numeral above can stay aria-hidden, and it is only written at events worth
 // announcing (start, settle, failure), never per streamed token.
-function setNote(text, isError) {
+function setNote(text, isError, isResult) {
   deltaNote.textContent = text;                   // server text, never parsed as markup
   deltaNote.classList.toggle("err", !!isError);
 }
@@ -778,11 +801,9 @@ function setDelta(text, isNull) {
   deltaNum.classList.toggle("null", !!isNull);
 }
 
-const STATUS = { idle: "Idle", running: "Running", done: "Done", stopped: "Stopped", error: "Error" };
-function setStatus(s) {
-  lamp.setAttribute("data-state", s);
-  statusText.textContent = STATUS[s];
-}
+// The strip now carries the beta label; run state lives in the pane heads
+// and the delta chip, so setStatus keeps the API and drops the display.
+function setStatus() {}
 
 // Below this, both answers are barely a sentence in and a percentage would be
 // noise rather than a reading, so the readout stays honestly blank.
@@ -858,14 +879,16 @@ function finish() {
   deltaChip.classList.add("settled");
   if (a === b) {
     setDelta("0%");
-    setNote("0%: same length.");
+    setNote("0%: same length.", false, true);
     return;
   }
   const p = Math.round(Math.abs(1 - b / a) * 100);
   setDelta(p + "%");
+  deltaWord.textContent = b < a ? "shorter" : "longer";
   setNote(b < a
     ? p + "% shorter with Say Less."
-    : p + "% longer with Say Less. It happens: the style protects completeness over brevity.");
+    : p + "% longer with Say Less. It happens: the style protects completeness over brevity.",
+    false, true);
 }
 
 f.addEventListener("submit", (e) => {
@@ -889,6 +912,7 @@ f.addEventListener("submit", (e) => {
   reset();
   collapseDefault();
   deltaChip.classList.remove("settled");
+  deltaWord.textContent = "";
   document.getElementById("tqA").textContent = "> " + prompt;
   document.getElementById("tqB").textContent = "> " + prompt;
   setNote("Both running.");

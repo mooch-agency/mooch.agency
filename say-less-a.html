@@ -273,6 +273,15 @@
   }
   .colbody .md-code code { background: none; border: 0; padding: 0; }
 
+  .colbody .md-table-wrap { overflow-x: auto; margin: 0 0 12px; }
+  .colbody .md-table { border-collapse: collapse; font-size: 13.5px; }
+  .colbody .md-table th, .colbody .md-table td {
+    border: 1px solid var(--hairline); padding: 6px 10px;
+    text-align: left; vertical-align: top;
+  }
+  .colbody .md-table th { font-weight: 600; background: var(--surface); }
+
+
 
   /* The default answer is long; that is the point, but nobody should scroll
      five screens of it. It renders collapsed behind a fade and a See more
@@ -613,12 +622,25 @@ function renderMd(src) {
     .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
     .replace(/\*([^*\s][^*]*)\*/g, "<i>$1</i>");
   const lines = String(src || "").split("\n");
-  let html = "", para = [], list = null, code = null;
+  let html = "", para = [], list = null, code = null, table = null;
   const flushPara = () => { if (para.length) { html += "<p>" + inline(esc(para.join(" "))) + "</p>"; para = []; } };
   const flushList = () => {
     if (!list) return;
     html += "<" + list.tag + ">" + list.items.map((i) => "<li>" + inline(esc(i)) + "</li>").join("") + "</" + list.tag + ">";
     list = null;
+  };
+  const cells = (line) => line.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map((c) => inline(esc(c.trim())));
+  const flushTable = () => {
+    if (!table) return;
+    let head = null, body = table;
+    // A |---|---| second row marks the first as the header.
+    if (table.length > 1 && /^[\s:|-]+$/.test(table[1]) && table[1].includes("-")) {
+      head = cells(table[0]); body = table.slice(2);
+    }
+    html += '<div class="md-table-wrap"><table class="md-table">';
+    if (head) html += "<thead><tr>" + head.map((c) => "<th>" + c + "</th>").join("") + "</tr></thead>";
+    html += "<tbody>" + body.map((r) => "<tr>" + cells(r).map((c) => "<td>" + c + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>";
+    table = null;
   };
   for (const line of lines) {
     if (code !== null) {
@@ -626,7 +648,9 @@ function renderMd(src) {
       else code.push(line);
       continue;
     }
-    if (/^```/.test(line)) { flushPara(); flushList(); code = []; continue; }
+    if (/^```/.test(line)) { flushPara(); flushList(); flushTable(); code = []; continue; }
+    if (/^\s*\|/.test(line)) { flushPara(); flushList(); (table = table || []).push(line); continue; }
+    flushTable();
     const h = line.match(/^(#{1,4})\s+(.*)/);
     if (h) { flushPara(); flushList(); html += '<p class="md-h">' + inline(esc(h[2])) + "</p>"; continue; }
     const li = line.match(/^\s*[-*]\s+(.*)/);
@@ -636,7 +660,7 @@ function renderMd(src) {
     if (!line.trim()) { flushPara(); flushList(); continue; }
     para.push(line.trim());
   }
-  flushPara(); flushList();
+  flushPara(); flushList(); flushTable();
   // Mid-stream inside an unclosed fence: show it as code so streaming reads right.
   if (code !== null) html += '<pre class="md-code">' + esc(code.join("\n")) + "</pre>";
   return html;
