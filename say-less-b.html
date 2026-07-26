@@ -218,7 +218,9 @@
     grid-column: 1 / -1; margin-top: clamp(44px, 6vw, 72px);
     border-bottom: 1px solid var(--black);   /* closes the way it opens */
   }
-  .spread[hidden] { display: none; }
+  .spread.empty .count, .spread.empty .see-more { visibility: hidden; }
+  .spread.empty .stamp-num { font-style: italic; }
+  .spread.empty .colbody { min-height: clamp(90px, 14vh, 160px); }
   /* The masthead double rule that opens the spread: a 2px bar, a 3px gap, then
      a hairline. content-box so the two borders sit either side of the gap. */
   .spread-rule {
@@ -336,16 +338,19 @@
   .see-more:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
   .see-more[hidden] { display: none; }
 
-  /* The spread's entrance, once the first words arrive: the same cascade the
-     page opened with. Classes are removed on animationend so no filter or
-     transform is left sitting on the sticky stamp's ancestors. */
-  .cascade { animation: cascadeIn 0.9s var(--ease-decide) both; }
-  .cascade.c2 { animation-delay: 0.12s; }
-  .cascade.c3 { animation-delay: 0.24s; }
-  @keyframes cascadeIn {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: none; }
+  /* Terminal dressing: Claude Code's coral dot in each page head, a hairline
+     under it, and the question echoed as a prompt line. */
+  .colname .cdot { color: #d97757; margin-right: 7px; }
+  .colhead { border-bottom: 1px solid var(--hairline); padding-bottom: 10px; }
+  .term-q {
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    margin-top: 12px; overflow-wrap: break-word;
   }
+  .term-q:empty { display: none; }
+
+  /* Empty-state ghost lines: the outcome's shape before any words exist. */
+  .ghost-line { display: block; height: 10px; border-radius: 3px; background: var(--hairline); opacity: 0.45; margin: 0 0 9px; }
+
 
   /* Live caret. Sits at the end of the text while an arm is streaming, so
      "this is being written right now" is visible without a label saying so. */
@@ -394,7 +399,7 @@
   .below a.inline:hover { border-bottom-color: var(--ink); }
   .below a.inline:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
   .install-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 22px 0 4px; }
-  .install-actions .ghost .chev { display: inline-block; transition: transform var(--t-deliver) var(--ease-deliver); }
+  .install-actions .ghost .chev { display: inline-block; font-size: 10px; transition: transform var(--t-deliver) var(--ease-deliver); }
   .install-actions .ghost[aria-expanded="true"] .chev { transform: rotate(180deg); }
   .prompt-details[hidden] { display: none; }
   .prompt-details { margin-top: 12px; }
@@ -483,7 +488,6 @@
   @media (prefers-reduced-motion: reduce) {
     .swap-out, .swap-in { animation: none; }
     .caret { animation: none; }
-    .cascade { animation: none; }
     .wait-dot { animation: none; }
     .stamp[data-state="running"] .stamp-num::after { animation: none; opacity: 1; }
   }
@@ -511,10 +515,10 @@
     </div>
 
     <h1 class="reveal d2">Make Claude <em>say less</em>.</h1>
-    <p class="standfirst reveal d2">Claude Code writes too much. Say Less is a plugin that <b>cuts replies by up to 90%</b>.</p>
+    <p class="standfirst reveal d2">Say Less is a Claude Code plugin that <b>cuts replies by ~71%</b> without cutting reasoning. Free to install.</p>
 
     <form class="ask reveal d3" id="f">
-      <label class="ask-label" for="q">Ask Claude anything</label>
+      <label class="ask-label" for="q">Ask Claude Code anything</label>
       <div class="ask-shell">
         <input type="text" id="q" placeholder="Ask anything…" autocomplete="off" maxlength="1200" aria-describedby="askError">
         <button class="pill ask-go" id="go" type="submit">Ask <span class="arrow" aria-hidden="true">&rarr;</span></button>
@@ -524,29 +528,31 @@
     </form>
 
     <div class="ask-aside reveal d3">
-      <button type="button" class="try-btn" id="tryBtn">Try an example</button>
+      <button type="button" class="try-btn" id="tryBtn">Random question</button>
     </div>
 
-    <!-- The spread stays out of the document until the visitor asks: nothing
-         honest to show before a real run, and an empty frame is scaffolding. -->
-    <div class="spread" id="spread" hidden>
+    <!-- The frame is on screen from the start, empty: the double rule, the
+         gutter and the two labelled pages say "side by side" before any run.
+         The stamp and counts stay out until there is something true to show. -->
+    <div class="spread empty" id="spread">
       <h2 class="visually-hidden">Default Claude next to Say Less</h2>
       <div class="spread-rule"></div>
 
       <div class="grid">
         <div class="stamp-cell">
-          <div class="stamp" id="stamp" data-state="running" aria-hidden="true">
-            <span class="stamp-num" id="stampNum"></span>
-            <span class="stamp-label" id="stampLabel">measuring</span>
+          <div class="stamp" id="stamp" data-state="done" aria-hidden="true">
+            <span class="stamp-num" id="stampNum">vs</span>
+            <span class="stamp-label" id="stampLabel"></span>
             <p class="stamp-note" id="stampNote"></p>
           </div>
         </div>
 
         <div class="col col-def">
           <div class="colhead">
-            <h3 class="colname" id="nameDefault">Default</h3>
+            <h3 class="colname" id="nameDefault"><span class="cdot" aria-hidden="true">&#9679;</span>Claude Code</h3>
             <span class="count" id="cA">0<span class="unit">words</span></span>
           </div>
+          <div class="term-q" id="tqA"></div>
           <p class="sub" id="sA">No style</p>
           <section class="colbody" id="a" aria-labelledby="nameDefault"></section>
           <button class="see-more" id="seeMore" type="button" hidden aria-expanded="false" aria-controls="a">See the full answer</button>
@@ -554,9 +560,10 @@
 
         <div class="col col-less">
           <div class="colhead">
-            <h3 class="colname" id="nameSayless">Say Less</h3>
+            <h3 class="colname" id="nameSayless"><span class="cdot" aria-hidden="true">&#9679;</span>Claude Code with Say Less</h3>
             <span class="count" id="cB">0<span class="unit">words</span></span>
           </div>
+          <div class="term-q" id="tqB"></div>
           <p class="sub" id="sB">Style on</p>
           <section class="colbody" id="b" aria-labelledby="nameSayless"></section>
         </div>
@@ -577,7 +584,7 @@
     <section class="below-block" aria-labelledby="install-heading">
       <h2 id="install-heading">Install</h2>
       <div class="body">
-        <p>Copy this, paste it into any Claude Code session, and it installs itself.</p>
+        <p>Copy the prompt, paste it into Claude Code.</p>
         <div class="install-actions">
           <button class="pill" type="button" data-copy-target="install-prompt">Copy install prompt</button>
           <button class="ghost" type="button" id="promptToggle" aria-expanded="false" aria-controls="promptDetails">
@@ -649,14 +656,18 @@ claude plugin install say-less@say-less</pre>
 // Example prompts, from say-less.html. That page paired each with a short chip
 // label; this layout has one constant button, so only the prompt is used.
 const EXAMPLES = [
+  "What's the difference between Git and GitHub?",
+  "Explain what an API is in simple terms.",
+  "How do I undo my last Git commit?",
+  "Should I learn Python or JavaScript first?",
+  "How do I center a div in CSS?",
+  "What's a 404 error and why does it happen?",
+  "Explain recursion like I'm new to coding.",
+  "What actually is the cloud, physically?",
+  "How do I rename a Git branch?",
+  "What's the difference between == and === in JavaScript?",
   "What's the default Postgres port?",
-  "Should I use REST or GraphQL for a new internal API?",
-  "Should I use UUIDs or auto-increment integers for primary keys in Postgres?",
-  "Explain what eventual consistency means for a web app.",
-  "Our Docker image is 2.1GB. How do I make it smaller?",
-  "Should we write unit tests for private methods?",
   "How do I resolve a git merge conflict?",
-  "What's an N+1 query problem and how do I fix it?",
 ];
 
 const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -678,9 +689,9 @@ const stampNote = document.getElementById("stampNote");
 
 const UI = {
   default: { body: document.getElementById("a"), count: document.getElementById("cA"),
-             sub: document.getElementById("sA"), name: "Default", caret: null },
+             sub: document.getElementById("sA"), name: "Claude Code", caret: null },
   sayless: { body: document.getElementById("b"), count: document.getElementById("cB"),
-             sub: document.getElementById("sB"), name: "Say Less", caret: null },
+             sub: document.getElementById("sB"), name: "Claude Code with Say Less", caret: null },
 };
 
 
@@ -721,6 +732,16 @@ function renderMd(src) {
   // Mid-stream inside an unclosed fence: show it as code so streaming reads right.
   if (code !== null) html += '<pre class="md-code">' + esc(code.join("\n")) + "</pre>";
   return html;
+}
+
+// Empty-state ghost lines: the outcome's shape (a long answer next to a
+// short one) before any words exist. The first real render overwrites them.
+if (spread.classList.contains("empty")) {
+  const seed = (el, widths) => {
+    el.innerHTML = widths.map((w) => '<span class="ghost-line" style="width:' + w + '%"></span>').join("");
+  };
+  seed(document.getElementById("a"), [96, 100, 88, 97, 62, 92, 100, 84, 45]);
+  seed(document.getElementById("b"), [72, 34]);
 }
 
 // Every word counts, code included: code is still reading. Matches
@@ -912,12 +933,12 @@ f.addEventListener("submit", (e) => {
   stampNote.textContent = "";
   statusEl.textContent = "Running. Both answers are being written now.";
 
-  // Nothing else changes at submit: the button flips to Stop and the quiet
-  // answering line appears. The spread enters only when the first real words
-  // arrive, cascading in the way the page itself did on load, so the visitor
-  // never watches an empty frame and the page never jumps early.
+  // At submit the button flips to Stop and the answering line appears; the
+  // empty frame starts filling when the first real words arrive.
   askWait.hidden = false;
-  const firstRun = spread.hidden;
+  document.getElementById("tqA").textContent = "> " + prompt;
+  document.getElementById("tqB").textContent = "> " + prompt;
+  const firstRun = spread.classList.contains("empty");
   let revealed = !firstRun;
 
   const fillStart = () => {
@@ -936,19 +957,8 @@ f.addEventListener("submit", (e) => {
     revealed = true;
     askWait.hidden = true;
     lede.classList.add("ran");
-    spread.hidden = false;
+    spread.classList.remove("empty");   // the frame was already on screen
     fillStart();
-    if (!reduce) {
-      const cells = [".col-def", ".stamp-cell", ".col-less"]
-        .map((c) => spread.querySelector(c));
-      cells.forEach((el, i) => {
-        el.classList.add("cascade", "c" + (i + 1));
-        el.addEventListener("animationend", function done() {
-          el.classList.remove("cascade", "c1", "c2", "c3");
-          el.removeEventListener("animationend", done);
-        });
-      });
-    }
     spread.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
   };
 
@@ -994,7 +1004,7 @@ f.addEventListener("submit", (e) => {
     if (!busy) return;
     idle();
     const msg = "The stream dropped, or the demo hit its rate limit. Try again shortly.";
-    if (spread.hidden) askError.textContent = msg;   // nothing revealed yet
+    if (spread.classList.contains("empty")) askError.textContent = msg;   // nothing shown yet
     else { setStamp("error", "!", "no result"); stampNote.textContent = msg; }
     statusEl.textContent = msg;
   };

@@ -211,43 +211,47 @@
     to   { opacity: 1; filter: blur(0); transform: none; }
   }
 
-  /* Two columns divided by a single hairline, not a bordered card: the
-     answers are the page's content here, not a widget sitting on it. */
+  /* Two terminal panes side by side: bordered, mono-headed, unmistakably the
+     same CLI run twice. The coral dot is Claude Code's own accent. */
   .cols {
-    display: grid; grid-template-columns: 1fr 1fr;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
     margin-top: clamp(26px, 3.4vw, 38px);
-    border-top: 1px solid var(--hairline);
+    text-align: left;
   }
-  .cols[hidden] { display: none; }
-  .col { padding-top: 24px; min-width: 0; }
-  .col.plain { padding-right: clamp(20px, 3vw, 44px); }
-  .col.styled {
-    padding-left: clamp(20px, 3vw, 44px);
-    border-left: 1px solid var(--hairline);
+  .cols.empty .count, .cols.empty .see-more { visibility: hidden; }
+  .cols.empty .colbody { min-height: clamp(90px, 12vh, 140px); }
+  .col { min-width: 0; border: 1px solid var(--hairline); border-radius: 12px; background: var(--paper); overflow: hidden; }
+  .colhead {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--hairline);
   }
-  @media (max-width: 640px) {
-    .cols { grid-template-columns: 1fr; }
-    .col.plain { padding-right: 0; padding-bottom: 26px; }
-    .col.styled { padding-left: 0; border-left: 0; border-top: 1px solid var(--hairline); }
-  }
-
-  .colhead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
   .colname {
     font-family: var(--mono); font-size: 11px; text-transform: uppercase;
-    letter-spacing: 0.18em; color: var(--muted);
+    letter-spacing: 0.14em; color: var(--muted);
   }
-  .col.styled .colname { color: var(--ink); }
+  .colname .cdot { color: #d97757; margin-right: 7px; }
   .count {
-    font-family: var(--serif); font-size: 30px; line-height: 1;
+    font-family: var(--serif); font-size: 20px; line-height: 1;
     letter-spacing: -0.02em; color: var(--black); font-variant-numeric: tabular-nums;
   }
-  .count .unit { font-family: var(--sans); font-size: 12px; letter-spacing: 0; color: var(--muted); margin-left: 6px; }
+  .count .unit { font-family: var(--sans); font-size: 11px; letter-spacing: 0; color: var(--muted); margin-left: 5px; }
+  .term-q {
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    padding: 12px 16px 0; overflow-wrap: break-word;
+  }
+  .term-q:empty { display: none; }
   .sub {
     font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--muted); margin: 6px 0 16px; font-variant-numeric: tabular-nums; min-height: 14px;
+    color: var(--muted); margin: 10px 16px 12px; font-variant-numeric: tabular-nums; min-height: 14px;
   }
   .sub.fail { color: var(--error); }
-  .colbody { font-size: 15px; line-height: 1.6; overflow-wrap: break-word; min-height: 2em; }
+  .colbody { font-size: 15px; line-height: 1.6; overflow-wrap: break-word; min-height: 2em; padding: 0 16px 14px; }
+  @media (max-width: 640px) {
+    .cols { grid-template-columns: 1fr; }
+    .colbody { font-size: 16px; }
+  }
+
+  .col.styled .colname { color: var(--ink); }
   /* Rendered markdown inside the answers. Code sits on paper with a hairline
      so it reads on both the white and the tinted column. */
   .colbody p { margin: 0 0 12px; }
@@ -269,7 +273,6 @@
   }
   .colbody .md-code code { background: none; border: 0; padding: 0; }
 
-  @media (max-width: 640px) { .colbody { font-size: 16px; } }
 
   /* The default answer is long; that is the point, but nobody should scroll
      five screens of it. It renders collapsed behind a fade and a See more
@@ -283,7 +286,7 @@
     font-family: var(--mono); font-size: 11px; text-transform: uppercase;
     letter-spacing: 0.14em; color: var(--ink);
     background: none; border: 0; cursor: pointer;
-    min-height: 44px; padding: 0; margin-top: 4px;
+    min-height: 44px; padding: 0; margin: 0 16px 14px;
     text-decoration: underline; text-decoration-color: var(--hairline);
     text-underline-offset: 5px;
     transition: text-decoration-color var(--t-deliver) var(--ease-deliver);
@@ -292,14 +295,11 @@
   .see-more:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
   .see-more[hidden] { display: none; }
 
-  /* The columns' entrance, once the first words arrive: the same cascade the
-     page opened with. Classes come off on animationend so nothing persists. */
-  .cascade { animation: cascadeIn 0.9s var(--ease-decide) both; }
-  .cascade.c2 { animation-delay: 0.12s; }
-  @keyframes cascadeIn {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: none; }
-  }
+  /* Empty-state ghost lines: the outcome's shape, a long answer next to a
+     short one, before any words exist. The first real render overwrites them. */
+  .ghost-line { display: block; height: 10px; border-radius: 3px; background: var(--hairline); opacity: 0.45; margin: 0 0 9px; }
+
+
   .dot {
     display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor;
     animation: pulse 1s ease-in-out infinite; vertical-align: middle; margin-right: 6px;
@@ -364,7 +364,7 @@
     color: var(--ink); white-space: pre-wrap; word-wrap: break-word; overflow-x: auto;
   }
   .install-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 24px 0 8px; }
-  .install-actions .ghost .chev { display: inline-block; transition: transform var(--t-deliver) var(--ease-deliver); }
+  .install-actions .ghost .chev { display: inline-block; font-size: 10px; transition: transform var(--t-deliver) var(--ease-deliver); }
   .install-actions .ghost[aria-expanded="true"] .chev { transform: rotate(180deg); }
   .prompt-details[hidden] { display: none; }
   .prompt-details { margin-top: 8px; }
@@ -397,7 +397,6 @@
   @media (prefers-reduced-motion: reduce) {
     .stage, .scroll-cue { transition: none; }
     .result.settle, .cols.settle { animation: none; }
-    .cascade { animation: none; }
     .dot { animation: none; opacity: 0.6; }
   }
 
@@ -422,13 +421,13 @@
 
 <section class="stage" id="stage" aria-labelledby="title">
   <div class="stage-inner">
-    <p class="eyebrow reveal d1">Claude Code plugin</p>
     <h1 id="title" class="reveal d2">Make Claude <em>say less</em>.</h1>
-    <p class="claim reveal d3">Claude Code writes too much. Say Less is a plugin that cuts replies by up to 90%.</p>
+    <p class="claim reveal d3">Say Less is a Claude Code plugin that cuts replies by ~71% without cutting reasoning. Free to install.</p>
 
     <div class="ask reveal d4">
+      <p class="eyebrow">Claude Code plugin</p>
       <form id="f">
-        <label class="visually-hidden" for="q">Ask Claude a question</label>
+        <label class="visually-hidden" for="q">Ask Claude Code anything</label>
         <div class="ask-shell">
           <textarea id="q" rows="1" maxlength="1200" autocomplete="off" spellcheck="false"
             placeholder="Ask anything…"></textarea>
@@ -438,7 +437,7 @@
         </div>
       </form>
       <div class="ask-foot">
-        <button type="button" class="example-btn" id="exampleBtn">Try an example</button>
+        <button type="button" class="example-btn" id="exampleBtn">Random question</button>
       </div>
       <p class="ask-wait" id="askWait" hidden><span class="dot" aria-hidden="true"></span>Answering</p>
     </div>
@@ -446,21 +445,23 @@
     <div class="results">
       <div class="result" id="result" aria-live="polite"></div>
 
-      <div class="cols" id="cols" hidden>
+      <div class="cols empty" id="cols">
         <div class="col plain">
           <div class="colhead">
-            <span class="colname">Default</span>
+            <span class="colname"><span class="cdot" aria-hidden="true">&#9679;</span>Claude Code</span>
             <span class="count" id="cA">0<span class="unit">words</span></span>
           </div>
+          <div class="term-q" id="tqA"></div>
           <p class="sub" id="sA">No style</p>
           <div class="colbody" id="a"></div>
           <button class="see-more" id="seeMore" type="button" hidden aria-expanded="false" aria-controls="a">See the full answer</button>
         </div>
         <div class="col styled">
           <div class="colhead">
-            <span class="colname">Say Less</span>
+            <span class="colname"><span class="cdot" aria-hidden="true">&#9679;</span>Claude Code with Say Less</span>
             <span class="count" id="cB">0<span class="unit">words</span></span>
           </div>
+          <div class="term-q" id="tqB"></div>
           <p class="sub" id="sB">Style on</p>
           <div class="colbody" id="b"></div>
         </div>
@@ -474,7 +475,7 @@
 <section class="band" id="install" aria-labelledby="install-heading">
   <div class="band-inner">
     <h2 id="install-heading">Install</h2>
-    <p>Copy this, paste it into any Claude Code session, and it installs itself.</p>
+    <p>Copy the prompt, paste it into Claude Code.</p>
 
     <div class="install-actions">
       <button class="pill" type="button" data-copy-target="install-prompt">Copy install prompt</button>
@@ -547,14 +548,18 @@ claude plugin install say-less@say-less</pre>
 // through a multi-step how-to, so a press can land anywhere in the product's
 // real length range.
 const EXAMPLES = [
+  "What's the difference between Git and GitHub?",
+  "Explain what an API is in simple terms.",
+  "How do I undo my last Git commit?",
+  "Should I learn Python or JavaScript first?",
+  "How do I center a div in CSS?",
+  "What's a 404 error and why does it happen?",
+  "Explain recursion like I'm new to coding.",
+  "What actually is the cloud, physically?",
+  "How do I rename a Git branch?",
+  "What's the difference between == and === in JavaScript?",
   "What's the default Postgres port?",
-  "Should I use REST or GraphQL for a new internal API?",
-  "Should I use UUIDs or auto-increment integers for primary keys in Postgres?",
-  "Explain what eventual consistency means for a web app.",
-  "Our Docker image is 2.1GB. How do I make it smaller?",
-  "Should we write unit tests for private methods?",
   "How do I resolve a git merge conflict?",
-  "What's an N+1 query problem and how do I fix it?",
 ];
 
 const f = document.getElementById("f");
@@ -576,9 +581,9 @@ q.addEventListener("input", autogrow);
 
 const UI = {
   default: { body: document.getElementById("a"), count: document.getElementById("cA"),
-             sub: document.getElementById("sA"), name: "Default" },
+             sub: document.getElementById("sA"), name: "Claude Code" },
   sayless: { body: document.getElementById("b"), count: document.getElementById("cB"),
-             sub: document.getElementById("sB"), name: "Say Less" },
+             sub: document.getElementById("sB"), name: "Claude Code with Say Less" },
 };
 
 // One control for examples. Each press loads a different prompt into the field
@@ -595,7 +600,6 @@ exampleBtn.addEventListener("click", () => {
   autogrow();
   q.focus();
   q.setSelectionRange(text.length, text.length);
-  exampleBtn.textContent = "Try another";
 });
 
 
@@ -636,6 +640,16 @@ function renderMd(src) {
   // Mid-stream inside an unclosed fence: show it as code so streaming reads right.
   if (code !== null) html += '<pre class="md-code">' + esc(code.join("\n")) + "</pre>";
   return html;
+}
+
+// Empty-state ghost lines: the outcome's shape (a long answer next to a
+// short one) before any words exist. The first real render overwrites them.
+if (cols.classList.contains("empty")) {
+  const seed = (el, widths) => {
+    el.innerHTML = widths.map((w) => '<span class="ghost-line" style="width:' + w + '%"></span>').join("");
+  };
+  seed(document.getElementById("a"), [96, 100, 88, 97, 62, 92, 100, 84, 45]);
+  seed(document.getElementById("b"), [72, 34]);
 }
 
 // Every word counts, code included: code is still reading. Matches
@@ -762,11 +776,12 @@ f.addEventListener("submit", (e) => {
   setGoState(true);
   reset();                    // on a first run the columns are still hidden
   result.textContent = "";
-  // Nothing else changes at submit: the button flips to Stop and the quiet
-  // answering line appears. The stage collapse and the columns wait for the
-  // first real words, then cascade in the way the page itself did on load.
+  // At submit the button flips to Stop and the answering line appears; the
+  // empty frame starts filling when the first real words arrive.
   askWait.hidden = false;
-  const firstRun = cols.hidden;
+  document.getElementById("tqA").textContent = "> " + prompt;
+  document.getElementById("tqB").textContent = "> " + prompt;
+  const firstRun = cols.classList.contains("empty");
   let revealed = !firstRun;
   if (!firstRun) collapseDefault();   // a repeat ask recollapses the new answer
 
@@ -775,17 +790,8 @@ f.addEventListener("submit", (e) => {
     revealed = true;
     askWait.hidden = true;
     document.body.classList.add("asked");   // stage releases its centring now
-    cols.hidden = false;
+    cols.classList.remove("empty");         // the frame was already on screen
     collapseDefault();
-    if (!reduce) {
-      cols.querySelectorAll(".col").forEach((el, i) => {
-        el.classList.add("cascade", "c" + (i + 1));
-        el.addEventListener("animationend", function done() {
-          el.classList.remove("cascade", "c1", "c2");
-          el.removeEventListener("animationend", done);
-        });
-      });
-    }
     // The stage collapse takes ~620ms, so measuring before it lands would
     // scroll against a moving target. Wait for it, then only scroll if the
     // columns really are off-screen.
