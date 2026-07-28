@@ -24,6 +24,7 @@
     }
   ],
   "functions": {
-    "api/rewrite.js": { "includeFiles": "api/pg-system.md" }
+    "api/rewrite.js": { "includeFiles": "api/pg-system.md" },
+    "api/say-less.js": { "maxDuration": 60 }
   }
 }

@@ -73,6 +73,7 @@ const EXCLUDED = new Set([
   'portfolio-all.html',             // portfolio index / lab page (noindex, not in sitemap)
   'portfolio-explorations.html',    // portfolio lab page (noindex, not in sitemap)
   'portfolio-explorations-2.html',  // portfolio lab page (noindex, not in sitemap)
+  'say-less.html',                  // Claude Code plugin, private beta, invite-only (noindex, not in sitemap)
 ]);
 
 // Pages that legitimately sit in the sitemap AND carry noindex: the prompt

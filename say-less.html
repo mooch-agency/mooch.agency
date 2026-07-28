@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Say Less: try it live, cuts replies 71% | Mooch</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
+<meta name="description" content="Ask Claude anything and watch it answer twice: once plain, once with the Say Less style. 71% shorter, median, same reasoning. A free plugin for Claude Code.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://mooch.agency/say-less">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mooch.agency/say-less">
+<meta property="og:title" content="Say Less: try it live, cuts replies 71% | Mooch">
+<meta property="og:description" content="Ask Claude anything and watch it answer twice: once plain, once with the Say Less style. 71% shorter, median, same reasoning.">
+<meta property="og:image" content="https://mooch.agency/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Say Less: try it live, cuts replies 71% | Mooch">
+<meta name="twitter:description" content="Ask Claude anything and watch it answer twice: once plain, once with the Say Less style. 71% shorter, median, same reasoning.">
+<meta name="twitter:image" content="https://mooch.agency/og-image.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/motion.css">
+<link rel="stylesheet" href="/ui.css">
+<style>
+  /* ═══════════════════════════════════════════════════════════════════════
+     Say Less, "Instrument" direction.
+
+     The page is one working device: a dark chassis, a single control, and a
+     bank of readouts that are all showing something genuinely measured. No
+     value is decorative. Instrument Serif carries the display line and the
+     numeric readings so this still reads as Mooch and not as a generic
+     developer landing page.
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  /* ── Dark chassis ──────────────────────────────────────────────────────
+     Rather than hard-coding light-on-dark values in every rule, the tokens
+     are remapped once here, the same move .colophon-dark makes for the
+     footer. Every component below keeps referring to --ink / --muted /
+     --hairline, so this page stays diffable against the light pages.
+
+     Contrast against the #000 ground, computed rather than assumed:
+       --ink          #f5f5f7   19.4:1  body and display text
+       --muted        #8e8e93    6.4:1  house dark-context muted, AA
+       --muted-small  #a8a8ad    8.9:1  used below 14px
+       --error        #ff6b6b    7.6:1  (--error's #b00020 fails on black)
+       --hairline-focus #6a6a71  3.7:1  control borders, clears WCAG 1.4.11 */
+  :root {
+    --ink: #f5f5f7;
+    --muted: #8e8e93;
+    --muted-small: #a8a8ad;
+    --hairline: #2a2a2c;        /* = the house --hairline-dark */
+    --hairline-focus: #6a6a71;
+    --error: #ff6b6b;
+    --surface: #0f0f12;         /* transcript panes */
+    --chassis: #0a0a0c;         /* instrument face */
+    --field-bg: #1a1a1f;        /* the one control, the brightest surface */
+    --rig: 1100px;              /* one chassis width for the whole page */
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html {
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* motion.css turns on smooth scrolling and notes that the house topbar
+       scrolls away. This one is sticky, so anchored scrolls need the offset. */
+    scroll-padding-top: 60px;
+  }
+  body {
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--black);
+    font-feature-settings: "tnum", "kern", "liga", "ss01";
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  .rig { max-width: var(--rig); margin: 0 auto; }
+
+  /* ── Status strip ──────────────────────────────────────────────────────
+     The house topbar is a nameplate. This one earns its height by carrying
+     the instrument's run state, and it is sticky so that state stays with
+     you while you scroll the two answers on a phone. Drop the live readout
+     and this band should be deleted; it exists because it reads something. */
+  .strip {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    min-height: 44px; padding: 0 var(--pad-x);
+    background: var(--black); border-bottom: 1px solid var(--hairline);
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.16em; color: var(--muted-small);
+  }
+  /* Inline-block so the link's hit area fills the 44px bar, not just its text. */
+  .strip a { color: var(--ink); display: inline-block; padding: 15px 0; }
+  .strip a:hover { border-bottom: 1px solid var(--ink); }
+  .strip .here { color: var(--muted-small); }
+  .strip .state { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+
+  /* ── Hero ──────────────────────────────────────────────────────────────
+     Deliberately short. The device below is the argument; this is the label
+     on its front panel. */
+  .hero { padding: clamp(32px, 6vw, 72px) var(--pad-x) clamp(24px, 3.5vw, 40px); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted-small);
+    margin-bottom: clamp(16px, 2.5vw, 32px);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .eyebrow .rule { flex: 0 0 40px; height: 1px; background: var(--hairline-focus); }
+  .hero h1 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(46px, 8.5vw, 100px);
+    line-height: 0.95; letter-spacing: -0.025em;
+    color: var(--paper); max-width: 15ch; text-wrap: balance;
+  }
+  .hero h1 em { font-style: italic; }
+  .hero .standfirst {
+    font-size: clamp(16px, 1.5vw, 19px); line-height: 1.5;
+    color: var(--muted-small); max-width: 48ch;
+    margin-top: clamp(14px, 2vw, 22px); text-wrap: pretty;
+  }
+
+  /* ── Console: the instrument itself ────────────────────────────────────
+     One control, then the readout bank, then the transcripts. The bank sits
+     directly under the control at every width so the measurement is never
+     the thing you have to scroll for. */
+  .console { padding: 0 var(--pad-x) clamp(48px, 7vw, 84px); }
+
+  /* ui.css .ghost, re-pointed for the dark ground: its base already reads
+     --ink and --hairline-focus (both remapped above), only the hover and
+     focus states hard-code light-context colours. */
+  .ghost { min-height: 44px; }
+  .ghost:hover { border-color: var(--paper); color: var(--paper); }
+  .ghost:focus-visible { outline-color: var(--paper); }
+  .example-btn { flex: 0 0 auto; align-self: center; font-size: 12.5px; padding: 8px 14px; min-height: 40px; margin-right: 6px; }
+  @media (max-width: 600px) {
+    .example-btn .example-label-ext { display: none; }   /* "Random" alone on phones */
+    .example-btn { padding: 8px 12px; }
+  }
+
+  /* The one control. No fake prompt glyph: the accent rule at the left edge
+     is the caret cue, and the real text caret is set to full white so the
+     thing you actually type with is the brightest mark on the page. */
+  .field {
+    display: flex; align-items: stretch;
+    background: var(--field-bg);
+    border: 1px solid var(--hairline-focus);
+    border-radius: 29px; overflow: hidden;   /* concentric: 22px go circle + 7px margin */
+    transition: border-color var(--t-deliver) var(--ease-deliver),
+                box-shadow var(--t-deliver) var(--ease-deliver);
+  }
+  .field:focus-within {
+    border-color: var(--paper);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.08);
+  }
+  .field-accent { flex: 0 0 3px; background: var(--hairline-focus); }
+  .field:focus-within .field-accent { background: var(--paper); }
+  @media (prefers-reduced-motion: no-preference) {
+    .field-accent { transition: background var(--t-deliver) var(--ease-deliver); }
+  }
+  .field input {
+    flex: 1; min-width: 0; border: 0; background: transparent;
+    font-family: var(--sans); font-size: 17px; line-height: 1.4;
+    color: var(--ink); padding: 17px 8px 17px 18px;
+    caret-color: var(--paper);
+  }
+  .field input:focus { outline: none; }
+  .field input::placeholder { color: var(--muted); }
+  .go {
+    align-self: center; flex: 0 0 auto; margin: 0 7px;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer;
+    background: var(--paper); color: var(--black); font-size: 21px; line-height: 1;
+    transition: background var(--t-deliver) var(--ease-deliver),
+                transform var(--t-deliver) var(--ease-deliver);
+  }
+  .go:hover { background: var(--ink); }
+  .go:active { transform: scale(0.96); }
+  .go:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
+  .go.stop { background: var(--error); }
+
+  /* ── Readings, integrated into the terminal ─────────────────────────── */
+  .n {
+    font-family: var(--serif); font-weight: 400; line-height: 0.9;
+    letter-spacing: -0.02em; color: var(--paper);
+    font-variant-numeric: tabular-nums; display: block;
+  }
+  .n .unit {
+    font-family: var(--sans); font-size: 12px; letter-spacing: 0;
+    color: var(--muted-small); margin-left: 7px; vertical-align: baseline;
+  }
+  .n.null { color: var(--muted); }
+
+  /* One terminal window, tmux-style: the delta rides the top edge as a badge
+     and each half carries its own count and gauge in the chrome. */
+  .term-wrap { position: relative; margin-top: 34px; scroll-margin-top: 60px; }
+  .delta-chip {
+    position: absolute; top: -19px; left: 50%; transform: translateX(-50%); z-index: 2;
+    background: var(--black); border: 1px solid var(--hairline-focus);
+    border-radius: 999px; padding: 8px 20px;
+  }
+  .delta-chip { display: flex; align-items: baseline; gap: 7px; }
+  .delta-chip .n { font-size: 21px; line-height: 1; }
+  .delta-word {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.14em; color: var(--muted-small);
+  }
+  .delta-word:empty { display: none; }
+  /* Settle stays white; the coral lives only in the one-time ring flash. */
+  .delta-chip.settled { animation: chipPop 0.7s var(--ease-decide); }
+  @keyframes chipPop {
+    0%   { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(217, 119, 87, 0.45); }
+    35%  { transform: translateX(-50%) scale(1.3); }
+    100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 14px rgba(217, 119, 87, 0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .delta-chip.settled { animation: none; }   /* coral stays: the static cue */
+  }
+  @media (min-width: 720px) { .pane { padding-top: clamp(24px, 3vw, 34px); } }
+  .meter { display: flex; align-items: center; gap: 14px; margin: 0 0 14px; }
+  .meter .n { font-size: clamp(24px, 3.4vw, 32px); }
+  .meter .bar { flex: 1; margin-top: 0; }
+
+  /* Live length gauge. Both bars are scaled to the same maximum, so their
+     relative lengths are a true reading at every instant, mid-stream
+     included. The Say Less bar is the bright one: it is the product. */
+  .bar { display: block; height: 4px; border-radius: 2px; background: var(--hairline); overflow: hidden; }
+  .bar-fill { display: block; height: 100%; width: 0; border-radius: 2px; background: var(--muted); }
+  .pane-sayless .bar-fill { background: var(--paper); }
+  @media (prefers-reduced-motion: no-preference) {
+    .bar-fill { transition: width 0.35s var(--ease-deliver); }
+  }
+
+  /* Per-arm stream state. The pulsing dot is the activity signal; two of
+     them pulsing at once is what proves the arms really run in parallel. */
+  .state-line {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted-small);
+    margin-top: 10px; min-height: 14px; font-variant-numeric: tabular-nums;
+  }
+  .state-line.fail { color: var(--error); }
+  .dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; vertical-align: middle; margin-right: 6px;
+    animation: pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .dot { animation: none; opacity: 1; }
+  }
+
+  /* The delta note is the live region, and it is always self-sufficient:
+     it carries the percentage as well as the sentence, so the big numeral
+     above it can stay aria-hidden and screen readers get one clean
+     announcement per meaningful event instead of one per streamed token. */
+  .delta-note {
+    font-size: 14px; line-height: 1.45; color: var(--muted-small);
+    margin-top: 14px; max-width: 60ch; text-wrap: pretty;
+  }
+  .delta-note.err { color: var(--error); }
+
+  /* ── Transcript panes ──────────────────────────────────────────────────
+     Always present, at rest, reading standby: the device shows its face
+     before you touch it. Answers are prose, so they set in --sans; every
+     label and readout around them stays mono. */
+  .panes {
+    display: grid; grid-template-columns: 1fr; gap: 1px;
+    background: var(--hairline); border: 1px solid var(--hairline);
+    border-radius: 12px; overflow: hidden;
+  }
+  @media (min-width: 720px) { .panes { grid-template-columns: 1fr 1fr; } }
+  .pane { background: var(--surface); padding: clamp(16px, 2vw, 22px); min-width: 0; }
+  .pane-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; margin: 0 0 12px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--hairline);
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted-small);
+  }
+  .cdot { color: #d97757; margin-right: 7px; }
+  .term-q {
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    margin-bottom: 12px; overflow-wrap: break-word;
+  }
+  .term-q:empty { display: none; }
+  /* Empty-state ghost lines: the outcome's shape before any words exist. */
+  .ghost-line { display: block; height: 10px; border-radius: 3px; background: var(--hairline); opacity: 0.6; margin: 0 0 9px; }
+  .pane-head .state-line { margin-top: 0; }
+  /* Rendered markdown inside the answers, dark ground. */
+  .pane-body p { margin: 0 0 12px; }
+  .pane-body p:last-child { margin-bottom: 0; }
+  .pane-body .md-h { font-weight: 600; margin: 18px 0 10px; color: var(--paper); }
+  .pane-body .md-h:first-child { margin-top: 0; }
+  .pane-body ul, .pane-body ol { margin: 0 0 12px; padding-inline-start: 22px; }
+  .pane-body li { margin: 4px 0; }
+  .pane-body code {
+    font-family: var(--mono); font-size: 0.85em;
+    background: var(--chassis); border: 1px solid var(--hairline);
+    border-radius: 4px; padding: 1px 5px;
+  }
+  .pane-body .md-code {
+    font-family: var(--mono); font-size: 13px; line-height: 1.55;
+    background: var(--chassis); border: 1px solid var(--hairline);
+    border-radius: 8px; padding: 14px 16px; margin: 0 0 12px;
+    overflow-x: auto; white-space: pre;
+  }
+  .pane-body .md-code code { background: none; border: 0; padding: 0; }
+
+  .pane-body .md-table-wrap { overflow-x: auto; margin: 0 0 12px; }
+  .pane-body .md-table { border-collapse: collapse; font-size: 13.5px; }
+  .pane-body .md-table th, .pane-body .md-table td {
+    border: 1px solid var(--hairline); padding: 6px 10px;
+    text-align: left; vertical-align: top;
+  }
+  .pane-body .md-table th { font-weight: 600; background: var(--chassis); }
+
+
+  /* The long default answer collapses past roughly one screen behind a See
+     more toggle; the short answer always shows whole. */
+  .pane-default .pane-body.collapsed {
+    max-height: min(48vh, 420px); overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
+  }
+  .see-more {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.14em; color: var(--ink);
+    background: none; border: 0; cursor: pointer;
+    min-height: 44px; padding: 0; margin-top: 4px;
+    text-decoration: underline; text-decoration-color: var(--hairline-focus);
+    text-underline-offset: 5px;
+  }
+  .see-more:hover { text-decoration-color: var(--paper); color: var(--paper); }
+  .see-more:focus-visible { outline: 2px solid var(--paper); outline-offset: 4px; }
+  .see-more[hidden] { display: none; }
+  .pane-body {
+    font-size: 15px; line-height: 1.6; color: var(--ink);
+    overflow-wrap: break-word; min-height: 3.5em;
+  }
+  @media (max-width: 719px) {
+    .pane-body { font-size: 16px; }
+  }
+
+  /* ── Install ───────────────────────────────────────────────────────────*/
+  /* ui.css .pill is black-on-black here; invert it for the dark chassis. */
+  .pill { background: var(--paper); color: var(--black); border-color: var(--paper); }
+  .pill:hover { background: var(--ink); }
+  .install-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 22px 0 4px; }
+  .install-actions .ghost .chev { display: inline-block; font-size: 10px; transition: transform var(--t-deliver) var(--ease-deliver); }
+  .install-actions .ghost[aria-expanded="true"] .chev { transform: rotate(180deg); }
+  /* Slide-open disclosure: grid-rows animate 0fr to 1fr, opacity rides
+     along, visibility drops it from the tab order once closed. */
+  .prompt-details {
+    display: grid; grid-template-rows: 0fr;
+    opacity: 0; visibility: hidden;
+    transition: grid-template-rows 0.45s var(--ease-decide),
+                opacity 0.3s var(--ease-decide),
+                visibility 0s linear 0.45s;
+  }
+  .prompt-details.open {
+    grid-template-rows: 1fr; opacity: 1; visibility: visible;
+    transition: grid-template-rows 0.45s var(--ease-decide),
+                opacity 0.35s var(--ease-decide) 0.1s,
+                visibility 0s;
+  }
+  /* Spacing lives on the first child, not inner padding: padding would hold
+     the closed track open by 12px. */
+  .prompt-details-inner { overflow: hidden; min-height: 0; }
+  .prompt-details-inner > :first-child { margin-top: 12px; }
+  .method-nudge { margin-top: 28px; }
+  @media (prefers-reduced-motion: reduce) {
+    .prompt-details, .prompt-details.open { transition: none; }
+  }
+  .method-nudge a, .feedback-line a { border-bottom: 1px solid var(--hairline-focus); }
+  .method-nudge a:hover, .feedback-line a:hover { border-bottom-color: var(--paper); color: var(--paper); }
+  .install { padding: clamp(40px, 6vw, 72px) var(--pad-x); border-top: 1px solid var(--hairline); }
+  .install h2, .spec h2 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(30px, 3.6vw, 42px); line-height: 1;
+    letter-spacing: -0.02em; color: var(--paper); margin-bottom: 18px;
+  }
+  .install p { font-size: 16px; line-height: 1.6; color: var(--ink); margin: 0 0 14px; max-width: 62ch; }
+  .install a { border-bottom: 1px solid var(--hairline-focus); transition: border-color var(--t-deliver) var(--ease-deliver); }
+  .install a:hover { border-bottom-color: var(--paper); }
+  .install p.feedback-line { font-size: 15px; color: var(--muted-small); }
+  /* After .install p, which would otherwise zero this out. */
+  .install p.method-nudge { margin-top: 32px; }
+
+  .codeblock {
+    border: 1px solid var(--hairline); border-radius: 10px;
+    background: var(--surface); margin: 18px 0; overflow: hidden;
+    max-width: 62ch;
+  }
+  .codeblock-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 8px 10px 8px 18px; border-bottom: 1px solid var(--hairline);
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.16em; color: var(--muted-small);
+  }
+  .codeblock pre {
+    margin: 0; padding: 18px; font-family: var(--mono); font-size: 13px;
+    line-height: 1.65; color: var(--ink);
+    white-space: pre-wrap; word-wrap: break-word; overflow-x: auto;
+  }
+  /* ui.css .copy-btn assumes a white ground; only its fill and hover need
+     re-pointing for the dark chassis. */
+  .copy-btn { background: transparent; color: var(--ink); border-color: var(--hairline-focus); }
+  .copy-btn:hover { border-color: var(--paper); color: var(--paper); }
+  .copy-btn:focus-visible { outline-color: var(--paper); }
+  .copy-btn.copied { color: var(--muted); border-color: var(--hairline); }
+
+
+  /* ── Colophon ──────────────────────────────────────────────────────────
+     Verbatim from the house footer. The page is already black, so the
+     separating job that .colophon-dark's background does is done by a rule. */
+  .colophon { padding: 48px var(--pad-x) 40px; border-top: 1px solid var(--hairline); }
+  .colophon-inner { max-width: var(--rig); margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 32px; }
+  .colophon-mark { font-family: var(--serif); font-size: clamp(72px, 15vw, 220px); line-height: 0.85; letter-spacing: -0.04em; color: var(--paper); }
+  .colophon-mark em { font-style: italic; color: var(--muted); }
+  .colophon-links {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    padding-top: 32px; border-top: 1px solid var(--colophon-rule);
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+  }
+  .colophon-links a { color: var(--paper); border-bottom: 1px solid transparent; transition: border-color 0.15s ease; }
+  .colophon-links a:hover { border-bottom-color: var(--paper); }
+  .colophon-sep { color: var(--muted); font-size: 10px; }
+  .colophon-foot {
+    border-top: 1px solid var(--colophon-rule); margin-top: 32px; padding-top: 20px;
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px;
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted);
+  }
+  .colophon-credits { max-width: 48ch; text-align: center; }
+  .colophon-version { color: var(--muted); border-bottom: 1px solid transparent; transition: border-color 0.15s ease; }
+  .colophon-version:hover { border-bottom-color: var(--paper); color: var(--paper); }
+
+  @media (max-width: 420px) {
+    .control-head { gap: 10px; }
+    .example-btn { padding: 10px 13px; font-size: 12.5px; }
+    .strip { letter-spacing: 0.12em; }
+  }
+
+  @media print {
+    body { background: #fff; color: #000; }
+    .strip, .colophon { display: none; }
+    a { color: #000; text-decoration: underline; }
+    .reveal { opacity: 1; transform: none; animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="strip">
+  <span class="nameplate"><a href="/">Mooch</a> &nbsp;/&nbsp; <span class="here">Say Less</span></span>
+  <span class="state">Open beta</span>
+</header>
+
+<main>
+
+<section class="hero">
+  <div class="rig">
+    <p class="eyebrow reveal d1"><span class="rule"></span> Claude Code plugin</p>
+    <h1 class="reveal d2">Make Claude <em>say less</em>.</h1>
+    <p class="standfirst reveal d3">Say Less is a Claude Code plugin that cuts replies by ~71% without cutting reasoning. Free to install.</p>
+  </div>
+</section>
+
+<section class="console" aria-labelledby="console-heading">
+  <div class="rig">
+    <h2 id="console-heading" class="visually-hidden">Live comparison</h2>
+
+    <form id="f" class="reveal d4">
+      <div class="field">
+        <span class="field-accent" aria-hidden="true"></span>
+        <input type="text" id="q" autocomplete="off" maxlength="1200"
+               aria-label="Ask Claude Code anything" placeholder="Ask anything…">
+        <button type="button" class="ghost example-btn" id="exampleBtn">
+          <span class="example-label">Random<span class="example-label-ext"> question</span></span>
+        </button>
+        <button class="go" id="go" type="submit" aria-label="Ask" title="Ask">
+          <span class="go-icon" aria-hidden="true">&rarr;</span>
+        </button>
+      </div>
+    </form>
+
+    <div class="term-wrap">
+      <div class="delta-chip" aria-hidden="true"><span class="n" id="deltaNum">vs</span><span class="delta-word" id="deltaWord"></span></div>
+      <div class="panes">
+        <div class="pane pane-sayless">
+          <div class="pane-head"><span><span class="cdot" aria-hidden="true">&#9679;</span>Claude Code with Say Less</span><span class="state-line" id="hB">Standby</span></div>
+          <div class="meter">
+            <span class="n" id="cB">0<span class="unit">words</span></span>
+            <span class="bar"><span class="bar-fill" id="barB"></span></span>
+          </div>
+          <div class="term-q" id="tqB"></div>
+          <div class="pane-body" id="b"></div>
+        </div>
+        <div class="pane pane-default">
+          <div class="pane-head"><span><span class="cdot" aria-hidden="true">&#9679;</span>Claude Code</span><span class="state-line" id="hA">Standby</span></div>
+          <div class="meter">
+            <span class="n" id="cA">0<span class="unit">words</span></span>
+            <span class="bar"><span class="bar-fill" id="barA"></span></span>
+          </div>
+          <div class="term-q" id="tqA"></div>
+          <div class="pane-body" id="a"></div>
+          <button class="see-more" id="seeMore" type="button" hidden aria-expanded="false" aria-controls="a">See the full answer</button>
+        </div>
+      </div>
+    </div>
+    <p class="delta-note" id="deltaNote" aria-live="polite">Benchmark median: 71% fewer words.</p>
+  </div>
+</section>
+
+<section class="install" aria-labelledby="install-heading">
+  <div class="rig">
+    <h2 id="install-heading">Install Plugin</h2>
+    <p>Copy the prompt, paste it into Claude Code.</p>
+
+    <div class="install-actions">
+      <button class="pill" type="button" data-copy-target="install-prompt">Copy install prompt</button>
+      <button class="ghost" type="button" id="promptToggle" aria-expanded="false" aria-controls="promptDetails">
+        <span class="chev" aria-hidden="true">&#9662;</span> <span class="toggle-label">Show the prompt</span>
+      </button>
+    </div>
+
+    <div class="prompt-details" id="promptDetails">
+      <div class="prompt-details-inner">
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>Prompt</span>
+          <button class="copy-btn" type="button" data-copy-target="install-prompt">Copy</button>
+        </div>
+        <pre id="install-prompt">Install the Say Less plugin:
+
+1. Run `claude plugin marketplace add mooch-agency/say-less`
+2. Run `claude plugin install say-less@say-less`
+3. Verify with `claude plugin list`
+
+When done, tell me to restart my session and ask any question to see the style.</pre>
+      </div>
+      <p>Or run it yourself:</p>
+      <div class="codeblock">
+        <div class="codeblock-head">
+          <span>Shell</span>
+          <button class="copy-btn" type="button" data-copy-target="install-commands">Copy</button>
+        </div>
+        <pre id="install-commands">claude plugin marketplace add mooch-agency/say-less
+claude plugin install say-less@say-less</pre>
+      </div>
+      <p class="feedback-line">Something off, or working well? <a href="mailto:hey@mooch.agency?subject=Say%20Less%20beta%20feedback">hey@mooch.agency</a>.</p>
+      </div>
+    </div>
+
+    <p class="method-nudge">Curious how it works? <a href="https://github.com/mooch-agency/say-less">Check our GitHub</a>.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="colophon colophon-dark">
+  <div class="colophon-inner">
+    <div class="colophon-mark">Mooch<em>.</em></div>
+
+    <div class="colophon-links">
+      <a href="mailto:hey@mooch.agency?subject=A%20project%2C%20an%20idea%2C%20or%20a%20coffee&amp;body=Hi%20guys%2C%0D%0A%0D%0AWhat%20I%27m%20working%20on%3A%0D%0AWhere%20you%20could%20help%3A%0D%0ARough%20timeline%3A">hey@mooch.agency</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://x.com/tahigichigi">X / @tahigichigi</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://moochagency.substack.com">Substack</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://toneofvoice.app">toneofvoice.app</a>
+    </div>
+
+    <div class="colophon-foot">
+      <span>&copy; 2026 Mooch Agency Ltd.</span>
+      <span class="colophon-credits">Set in Instrument Serif &amp; SF Pro. Built by two humans and one MoochBot. Hosted on Vercel because we're not animals.</span>
+      <a href="/privacy" class="colophon-version">Privacy</a>
+      <span class="colophon-version">N&deg; 01</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// [label, prompt]: kept in the same shape as the source page so the two stay
+// diffable. Only the prompt is used here, since the example control loads
+// straight into the field rather than showing a chip.
+const EXAMPLES = [
+  ["Git vs GitHub?", "What's the difference between Git and GitHub?"],
+  ["What's an API?", "Explain what an API is in simple terms."],
+  ["Undo a commit", "How do I undo my last Git commit?"],
+  ["Python or JavaScript?", "Should I learn Python or JavaScript first?"],
+  ["Center a div", "How do I center a div in CSS?"],
+  ["What's a 404?", "What's a 404 error and why does it happen?"],
+  ["Explain recursion", "Explain recursion like I'm new to coding."],
+  ["What's the cloud?", "What actually is the cloud, physically?"],
+  ["Rename a branch", "How do I rename a Git branch?"],
+  ["== vs === ?", "What's the difference between == and === in JavaScript?"],
+  ["Default Postgres port?", "What's the default Postgres port?"],
+  ["Resolve a merge conflict", "How do I resolve a git merge conflict?"],
+];
+
+const f = document.getElementById("f");
+const q = document.getElementById("q");
+const go = document.getElementById("go");
+const goIcon = go.querySelector(".go-icon");
+const termWrap = document.querySelector(".term-wrap");
+const deltaChip = document.querySelector(".delta-chip");
+const deltaWord = document.getElementById("deltaWord");
+const deltaNum = document.getElementById("deltaNum");
+const deltaNote = document.getElementById("deltaNote");
+const lamp = document.getElementById("lamp");
+const statusText = document.getElementById("statusText");
+const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Each arm owns two state lines (bank cell and transcript pane head) so the
+// reading is wherever you happen to be looking.
+const UI = {
+  default: {
+    body: document.getElementById("a"), count: document.getElementById("cA"),
+    bar: document.getElementById("barA"),
+    subs: [document.getElementById("hA")],
+    name: "Claude Code",
+  },
+  sayless: {
+    body: document.getElementById("b"), count: document.getElementById("cB"),
+    bar: document.getElementById("barB"),
+    subs: [document.getElementById("hB")],
+    name: "Claude Code with Say Less",
+  },
+};
+
+// ── The single example control ────────────────────────────────────────────
+// One button, one job: each press drops a different question into the field.
+// A shuffled deck rather than a random pick, so eight presses give eight
+// different questions instead of the same one twice running.
+let deck = [];
+let lastExample = -1;
+function refillDeck() {
+  deck = EXAMPLES.map((_, i) => i);
+  for (let i = deck.length - 1; i > 0; i--) {          // Fisher-Yates
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  // The deck is popped from the end, so if the next one out repeats the last
+  // one shown, swap it to the front and it comes out last instead.
+  if (deck.length > 1 && deck[deck.length - 1] === lastExample) {
+    [deck[0], deck[deck.length - 1]] = [deck[deck.length - 1], deck[0]];
+  }
+}
+document.getElementById("exampleBtn").addEventListener("click", () => {
+  if (!deck.length) refillDeck();
+  lastExample = deck.pop();
+  const text = EXAMPLES[lastExample][1];
+  q.value = text;
+  q.focus();
+  q.setSelectionRange(text.length, text.length);   // caret at the end, ready to edit
+});
+
+// Model replies arrive as markdown. Render the small subset they actually
+// use (headings, bold, inline code, lists, fenced code), safely: the text is
+// HTML-escaped first, so only tags this renderer emits can exist.
+function renderMd(src) {
+  const esc = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const inline = (t) => t
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+    .replace(/\*([^*\s][^*]*)\*/g, "<i>$1</i>");
+  const lines = String(src || "").split("\n");
+  let html = "", para = [], list = null, code = null, table = null;
+  const flushPara = () => { if (para.length) { html += "<p>" + inline(esc(para.join(" "))) + "</p>"; para = []; } };
+  const flushList = () => {
+    if (!list) return;
+    html += "<" + list.tag + ">" + list.items.map((i) => "<li>" + inline(esc(i)) + "</li>").join("") + "</" + list.tag + ">";
+    list = null;
+  };
+  const cells = (line) => line.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map((c) => inline(esc(c.trim())));
+  const flushTable = () => {
+    if (!table) return;
+    let head = null, body = table;
+    // A |---|---| second row marks the first as the header.
+    if (table.length > 1 && /^[\s:|-]+$/.test(table[1]) && table[1].includes("-")) {
+      head = cells(table[0]); body = table.slice(2);
+    }
+    html += '<div class="md-table-wrap"><table class="md-table">';
+    if (head) html += "<thead><tr>" + head.map((c) => "<th>" + c + "</th>").join("") + "</tr></thead>";
+    html += "<tbody>" + body.map((r) => "<tr>" + cells(r).map((c) => "<td>" + c + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>";
+    table = null;
+  };
+  for (const line of lines) {
+    if (code !== null) {
+      if (/^```/.test(line)) { html += '<pre class="md-code">' + esc(code.join("\n")) + "</pre>"; code = null; }
+      else code.push(line);
+      continue;
+    }
+    if (/^```/.test(line)) { flushPara(); flushList(); flushTable(); code = []; continue; }
+    if (/^\s*\|/.test(line)) { flushPara(); flushList(); (table = table || []).push(line); continue; }
+    flushTable();
+    const h = line.match(/^(#{1,4})\s+(.*)/);
+    if (h) { flushPara(); flushList(); html += '<p class="md-h">' + inline(esc(h[2])) + "</p>"; continue; }
+    const li = line.match(/^\s*[-*]\s+(.*)/);
+    if (li) { flushPara(); if (!list || list.tag !== "ul") { flushList(); list = { tag: "ul", items: [] }; } list.items.push(li[1]); continue; }
+    const oli = line.match(/^\s*\d+[.)]\s+(.*)/);
+    if (oli) { flushPara(); if (!list || list.tag !== "ol") { flushList(); list = { tag: "ol", items: [] }; } list.items.push(oli[1]); continue; }
+    if (!line.trim()) { flushPara(); flushList(); continue; }
+    para.push(line.trim());
+  }
+  flushPara(); flushList(); flushTable();
+  // Mid-stream inside an unclosed fence: show it as code so streaming reads right.
+  if (code !== null) html += '<pre class="md-code">' + esc(code.join("\n")) + "</pre>";
+  return html;
+}
+
+// ── Readings ──────────────────────────────────────────────────────────────
+// Every word counts, code included: code is still reading. Matches
+// total_words in the repo benchmark and api/say-less.js, so this page can't
+// quietly drift from the published numbers.
+function countWords(t) {
+  return String(t || "").split(/\s+/).filter((w) => /[0-9A-Za-z]/.test(w)).length;
+}
+
+// The long default answer collapses past roughly one screen, behind a See
+// more toggle, so proving the point never costs five screens of scrolling.
+const seeMore = document.getElementById("seeMore");
+const defBody = document.getElementById("a");
+function collapseDefault() {
+  defBody.classList.add("collapsed");
+  seeMore.hidden = true;      // surfaces when the run settles, if it overflows
+  seeMore.textContent = "See the full answer";
+  seeMore.setAttribute("aria-expanded", "false");
+}
+seeMore.addEventListener("click", () => {
+  const collapsed = defBody.classList.toggle("collapsed");
+  seeMore.textContent = collapsed ? "See the full answer" : "Show less";
+  seeMore.setAttribute("aria-expanded", String(!collapsed));
+});
+
+// Secondary CTA disclosure beside the copy pill.
+const promptToggle = document.getElementById("promptToggle");
+const promptDetails = document.getElementById("promptDetails");
+promptToggle.addEventListener("click", () => {
+  const open = promptToggle.getAttribute("aria-expanded") === "true";
+  promptToggle.setAttribute("aria-expanded", String(!open));
+  promptDetails.classList.toggle("open", !open);
+  promptToggle.querySelector(".toggle-label").textContent = open ? "Show the prompt" : "Hide the prompt";
+});
+
+let es = null, busy = false;
+const arm = {};
+
+function setCount(k, n) {
+  UI[k].count.innerHTML = n + '<span class="unit">' + (n === 1 ? "word" : "words") + '</span>';
+  UI[k].count.classList.toggle("null", n === 0);
+}
+
+// Once an arm has settled its server-sent count is authoritative, so the bar
+// tracks that rather than a re-count of the text: the bar and the numeral
+// above it must never disagree.
+function armWords(k) {
+  if (!arm[k]) return 0;
+  return arm[k].words != null ? arm[k].words : countWords(arm[k].text);
+}
+// Both bars scale to the same maximum, so their relative lengths are true at
+// every instant, part-way through a stream included.
+function renderBars() {
+  const a = armWords("default");
+  const b = armWords("sayless");
+  const max = Math.max(a, b, 1);
+  UI.default.bar.style.width = (a / max * 100) + "%";
+  UI.sayless.bar.style.width = (b / max * 100) + "%";
+}
+
+function setSub(k, html, cls) {
+  for (const el of UI[k].subs) {
+    el.innerHTML = html;
+    el.className = "state-line" + (cls ? " " + cls : "");
+  }
+}
+
+// The note is the live region. It always states the figure in words so the
+// numeral above can stay aria-hidden, and it is only written at events worth
+// announcing (start, settle, failure), never per streamed token.
+function setNote(text, isError, isResult) {
+  deltaNote.textContent = text;                   // server text, never parsed as markup
+  deltaNote.classList.toggle("err", !!isError);
+}
+function setDelta(text, isNull) {
+  deltaNum.textContent = text;
+  deltaNum.classList.toggle("null", !!isNull);
+}
+
+// The strip now carries the beta label; run state lives in the pane heads
+// and the delta chip, so setStatus keeps the API and drops the display.
+function setStatus() {}
+
+// Below this, both answers are barely a sentence in and a percentage would be
+// noise rather than a reading, so the readout stays honestly blank.
+const LIVE_MIN = 12;
+function renderLiveDelta() {
+  const a = armWords("default"), b = armWords("sayless");
+  if (a < LIVE_MIN || b < LIVE_MIN) { setDelta("··", true); return; }
+  setDelta("~" + Math.round(Math.abs(1 - b / a) * 100) + "%");  // tilde: provisional, still streaming
+}
+
+// The submit button doubles as Stop mid-stream: swap the arrow for a square
+// and the label so screen readers and the icon agree on which action is next.
+function setGoState(running) {
+  go.setAttribute("aria-label", running ? "Stop" : "Ask");
+  go.setAttribute("title", running ? "Stop" : "Ask");
+  go.classList.toggle("stop", running);
+  goIcon.textContent = running ? "■" : "→";
+}
+
+// Empty-state ghost lines: the outcome's shape (a long answer next to a
+// short one) before any words exist. reset() overwrites them on the first run.
+(function ghosts() {
+  const seed = (el, widths) => {
+    el.innerHTML = widths.map((w) => '<span class="ghost-line" style="width:' + w + '%"></span>').join("");
+  };
+  seed(document.getElementById("a"), [96, 100, 88, 97, 62, 92, 100, 84, 45]);
+  seed(document.getElementById("b"), [72, 34]);
+})();
+
+function reset() {
+  for (const k of Object.keys(UI)) {
+    arm[k] = { text: "", words: null, done: false, error: null, started: false };
+    UI[k].body.textContent = "";
+    setSub(k, '<span class="dot"></span>starting');
+    setCount(k, 0);
+  }
+  renderBars();
+  setDelta("··", true);
+}
+
+function idle() {
+  busy = false;
+  setGoState(false);
+  if (es) { es.close(); es = null; }
+  // A column that never settled must not keep its pulsing dot: the request is
+  // dead once the stream closes, and a live dot on a dead run is a lie.
+  for (const k of Object.keys(UI)) {
+    if (!arm[k] || arm[k].done || arm[k].error) continue;
+    setSub(k, "stopped");
+  }
+  // See more appears only when the collapsed default actually overflows.
+  seeMore.hidden = !(defBody.classList.contains("collapsed") &&
+                     defBody.scrollHeight > defBody.clientHeight + 24);
+}
+
+function finish() {
+  idle();
+  const failed = Object.keys(UI).filter((k) => arm[k].error);
+  if (failed.length) {
+    setStatus("error");
+    setDelta("··", true);
+    setNote(failed.map((k) => UI[k].name + ": " + arm[k].error).join("  ·  "), true);
+    return;
+  }
+  const a = arm.default.words, b = arm.sayless.words;
+  if (!a || !b) {
+    setStatus("error");
+    setDelta("··", true);
+    setNote("One side came back empty. Try again.", true);
+    return;
+  }
+  setStatus("done");
+  deltaChip.classList.add("settled");
+  if (a === b) {
+    setDelta("0%");
+    setNote("0%: same length.", false, true);
+    return;
+  }
+  const p = Math.round(Math.abs(1 - b / a) * 100);
+  setDelta(p + "%");
+  deltaWord.textContent = b < a ? "shorter" : "longer";
+  setNote(b < a
+    ? p + "% shorter with Say Less."
+    : p + "% longer with Say Less. It happens: the style protects completeness over brevity.",
+    false, true);
+}
+
+f.addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (busy) { idle(); setStatus("stopped"); setNote("Stopped."); return; }  // button doubles as Stop
+  const prompt = q.value.trim();
+  if (!prompt) { q.focus(); return; }
+  // Matches api/say-less.js's own word cap exactly. EventSource can't read a
+  // failed response's body, so without this check a too-long question just
+  // shows "the stream dropped" instead of the real, fixable reason.
+  const promptWords = prompt.split(/\s+/).filter(Boolean).length;
+  if (promptWords > 200) {
+    setNote("Keep it under 200 words. That was " + promptWords + ".", true);
+    q.focus();
+    return;
+  }
+
+  busy = true;
+  setGoState(true);
+  setStatus("running");
+  reset();
+  collapseDefault();
+  deltaChip.classList.remove("settled");
+  deltaWord.textContent = "";
+  document.getElementById("tqA").textContent = "> " + prompt;
+  document.getElementById("tqB").textContent = "> " + prompt;
+  setNote("Both running.");
+  // Only scroll if the bank is actually off-screen. On a phone the readouts
+  // sit below the fold and nothing visibly happens without this; on a desktop
+  // an unconditional scroll would just yank the input out of view.
+  if (termWrap.getBoundingClientRect().bottom > window.innerHeight) {
+    termWrap.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  }
+
+  // The function runs two Anthropic streams concurrently and interleaves
+  // their deltas onto one SSE response, so the columns fill at their real
+  // speeds: same wire contract as the local tool (benchmark/serve_compare.py).
+  es = new EventSource("/api/say-less?q=" + encodeURIComponent(prompt));
+  let settled = 0;
+
+  es.onmessage = (ev) => {
+    let d;
+    try { d = JSON.parse(ev.data); } catch { return; }
+    const a = arm[d.arm];
+    if (!a) return;
+
+    if (d.delta) {
+      if (!a.started) { a.started = true; setSub(d.arm, '<span class="dot"></span>writing'); }
+      a.text += d.delta;
+      UI[d.arm].body.innerHTML = renderMd(a.text);
+      setCount(d.arm, countWords(a.text));
+      renderBars();
+      renderLiveDelta();
+      return;
+    }
+    // One arm failing is not a reason to throw away the other, so the stream
+    // stays open until both have settled either way.
+    if (d.error) { a.error = d.error; setSub(d.arm, "failed", "fail"); }
+    else if (d.done) {
+      a.done = true;
+      setSub(d.arm, "done");
+      a.words = typeof d.words === "number" ? d.words : countWords(a.text);
+      setCount(d.arm, a.words);
+      renderBars();
+    } else return;
+    if (++settled === 2) finish();
+  };
+
+  es.onerror = () => {
+    if (!busy) return;
+    idle();
+    setStatus("error");
+    setDelta("··", true);
+    setNote("The stream dropped, or the demo hit its rate limit. Try again shortly.", true);
+  };
+});
+
+// Targets the data attribute rather than a class, so a copy control can be
+// styled as whatever the block around it needs.
+document.querySelectorAll("[data-copy-target]").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var target = document.getElementById(btn.getAttribute("data-copy-target"));
+    if (!target) return;
+    navigator.clipboard.writeText(target.textContent.trim()).then(function () {
+      var original = btn.textContent;
+      btn.textContent = "Copied";
+      btn.classList.add("copied");
+      setTimeout(function () {
+        btn.textContent = original;
+        btn.classList.remove("copied");
+      }, 2000);
+    });
+  });
+});
+</script>
+
+</body>
+</html>
