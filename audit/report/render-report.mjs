@@ -163,12 +163,20 @@ function findingCards(m) {
           <span class="finding-evidence-label">On ${esc(pathOf(f.url))}</span>
           <blockquote class="finding-quote">${esc(f.quote)}</blockquote>
         </div>
+        ${
+          f.quote2
+            ? `<div class="finding-evidence finding-evidence-vs">
+          <span class="finding-evidence-label">vs, on ${esc(pathOf(f.url2 || f.url))}</span>
+          <blockquote class="finding-quote">${esc(f.quote2)}</blockquote>
+        </div>`
+            : ""
+        }
       </article>`;
     })
     .join("\n");
   return `<section class="block">
     <h2 class="block-title">What we found</h2>
-    <p class="block-lead">Worst first. Every quote is copied verbatim from your live pages, so each one is a find-and-fix.</p>
+    <p class="block-lead">Worst first. Every quote is copied verbatim from your live pages as a signed-out visitor sees them, so each one is a find-and-fix. If you cannot see a quote while logged in, check the page signed out.</p>
     ${cards}
   </section>`;
 }
@@ -276,6 +284,7 @@ th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacin
 .finding-issue{font-family:var(--serif);font-size:22px;line-height:1.25;color:var(--ink);margin-bottom:12px;text-wrap:balance}
 .finding-evidence-label{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px}
 .finding-quote{font-size:14px;line-height:1.5;color:var(--muted-small);padding-left:14px;border-left:2px solid var(--hairline);text-wrap:pretty}
+.finding-evidence-vs{margin-top:10px}
 .link-list{list-style:none;font-family:var(--mono);font-size:13px}
 .link-list li{padding:6px 0;border-bottom:1px solid var(--hairline);word-break:break-all}
 .muted{color:var(--muted)}.small{font-size:12px}

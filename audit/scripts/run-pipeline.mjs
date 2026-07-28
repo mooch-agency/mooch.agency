@@ -30,7 +30,11 @@ async function llmCall({ model, system, prompt, maxTokens, thinking }) {
       ...(system ? { system } : {}),
       messages: [{ role: 'user', content: prompt }],
     });
-    return { text: res.content.filter(b => b.type === 'text').map(b => b.text).join('\n'), usage: res.usage };
+    return {
+      text: res.content.filter(b => b.type === 'text').map(b => b.text).join('\n'),
+      thinking: res.content.filter(b => b.type === 'thinking').map(b => b.thinking).join('\n'),
+      usage: res.usage,
+    };
   }
   // subscription: claude -p, prompt on stdin, JSON envelope out for usage numbers.
   const { spawn } = await import('node:child_process');
@@ -45,7 +49,7 @@ async function llmCall({ model, system, prompt, maxTokens, thinking }) {
       if (code !== 0) return reject(new Error(`claude -p exited ${code}`));
       try {
         const j = JSON.parse(out);
-        resolve({ text: j.result || '', usage: j.usage || { input_tokens: 0, output_tokens: 0 } });
+        resolve({ text: j.result || '', thinking: '', usage: j.usage || { input_tokens: 0, output_tokens: 0 } });
       } catch (e) { reject(new Error(`claude -p output not JSON: ${String(out).slice(0, 200)}`)); }
     });
     child.stdin.end(prompt);
@@ -303,8 +307,9 @@ const SYSTEM = `You are a meticulous website content auditor. You receive the re
 FIND (on and ACROSS pages): pricing inconsistencies; cross-page contradictions (counts, names, claims, hours, dates); naming inconsistencies; spelling/grammar; visible formatting artifacts; stale content; factual errors. Cross-page contradictions are the highest value.
 FACTUAL ERRORS are statements that are demonstrably, verifiably wrong: a cited law/regulation/standard that has been repealed or superseded, a plainly incorrect date or figure, a claim that is impossible or self-refuting. Flag ONLY when you are certain it is wrong from widely established fact; if it depends on the business's private data or you are not sure, do NOT flag it. Never guess. This is the highest-FP-risk category, so hold it to the strictest bar.
 RULES: every finding = exact page URL + VERBATIM quote copied character-for-character from the provided text + severity + category + issue. No paraphrase in the quote. Do NOT flag intentional design, responsive duplicates, HTML-level issues, or anything not quotable verbatim. Pricing: exact figure + billing period. "Including X and Y" = examples, not exhaustive.
+For contradiction, pricing and naming findings, ALSO include "quote2": the OTHER verbatim line it conflicts with (same character-for-character rule), plus "url2" when that line is on a different page. A contradiction you cannot quote from both sides is not a finding.
 ISSUE: one short plain-English sentence naming exactly what is wrong, in your own words. Name the specific problem: the misspelled word, the two figures that disagree, the outdated claim. Concrete enough to get in 3 seconds. For spelling/grammar, include the correction ("sumptous" should be "sumptuous"). For everything else, diagnose only; do not rewrite their copy (that conversation is the engagement).
-END with ONE fenced json block: {"findings":[{"url","quote","evidence_type":"body|title","severity":"critical|high|medium|low","category":"contradiction|pricing|naming|spelling|grammar|stale|formatting|factual","issue":"..."}]}. Empty findings is valid.`;
+END with ONE fenced json block: {"findings":[{"url","quote","quote2","url2","evidence_type":"body|title","severity":"critical|high|medium|low","category":"contradiction|pricing|naming|spelling|grammar|stale|formatting|factual","issue":"..."}]}. quote2/url2 only where required above. Empty findings is valid.`;
 const bundle = pages.map(p => `=== PAGE: ${p.url}\nTITLE: ${p.title}\n\n${p.text}`).join('\n\n');
 const tJudge = Date.now();
 const judge = await llmCall({ model: 'claude-opus-4-8', maxTokens: 16000, thinking: { type: 'adaptive' }, system: SYSTEM, prompt: `Website: ${site}\nAudit these ${pages.length} pages.\n\n${bundle}` });
@@ -316,7 +321,12 @@ const judge_ms = Date.now() - tJudge, judge_cost = cost('claude-opus-4-8', judge
 // STAGE 6: code gate against the same bundle text (verbatim check).
 const norm = (s) => (s || '').normalize('NFC').replace(/[‘’ʼ]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase();
 const bodyByUrl = Object.fromEntries(pages.map(p => [p.url.replace(/\/$/, ''), norm(p.text)]));
-const gated = findings.map(f => { const b = bodyByUrl[(f.url || '').replace(/\/$/, '')]; const pass = b ? b.includes(norm(f.quote)) : Object.values(bodyByUrl).some(x => x.includes(norm(f.quote))); return { ...f, gate: pass ? 'pass' : 'fail' }; });
+// A quote passes if it appears verbatim on its cited page (or, failing a URL
+// match, anywhere in the bundle). A finding with a counter-quote (quote2) must
+// pass on BOTH quotes: a contradiction we can only evidence from one side is
+// not shippable under the near-zero-FP rule.
+const quoteFound = (url, quote) => { const b = bodyByUrl[(url || '').replace(/\/$/, '')]; return b ? b.includes(norm(quote)) : Object.values(bodyByUrl).some(x => x.includes(norm(quote))); };
+const gated = findings.map(f => { const pass = quoteFound(f.url, f.quote) && (!f.quote2 || quoteFound(f.url2 || f.url, f.quote2)); return { ...f, gate: pass ? 'pass' : 'fail' }; });
 
 const total_ms = Date.now() - t0;
 const record = {
@@ -328,6 +338,10 @@ const record = {
   link_check: { checked: softNotFound ? 0 : Math.min(allLinks.length, 60), soft_404: softNotFound, ...(softNotFound ? { note: 'broken-link check skipped: origin returns 404 statuses for pages that still load (soft-404), so status codes are unreliable' } : {}), broken: linkResults, unreachable_not_reported: unreachable },
   findings: gated, n: gated.length, gate_pass: gated.filter(f => f.gate === 'pass').length, gate_fail: gated.filter(f => f.gate === 'fail').length,
   judge_usage: judge.usage,
+  // The judge's raw output + extended thinking, kept so a reviewer can see WHY
+  // each finding was chosen (or what was considered and dropped) without
+  // re-running the audit. Internal only: never rendered into the report.
+  judge_log: { thinking: judge.thinking || '', text: judgeText },
 };
 writeFileSync(`${OUT}${tag}.json`, JSON.stringify(record, null, 2));
 console.log(JSON.stringify({ tag, total_s: record.timing.total_s, cost: record.cost, pages: pages.length, findings: record.n, gate_fail: record.gate_fail, broken_links: linkResults.length, picked }, null, 2));
