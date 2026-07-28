@@ -51,7 +51,25 @@ node scripts/leads.mjs set "<pageId>" "Ready for review" "<one-line coverage not
 then renders the branded report + PDF. Only gate-passed findings appear. If the run
 returns thin, the report is the "good shape" variant automatically (story 13).
 
-**Read the PDF on the row before it can go out.** Good → flip Status to **Send**.
+**Read the PDF on the row before it can go out.** If a finding looks doubtful,
+open the **How the audit reached these findings** toggle on the row page. The
+runner writes it on every run: what the judge compared across the pages, then per
+finding, how it got there, what innocent explanation it tested, what ruled that
+out and why it picked that severity, then what it considered and deliberately did
+not flag. That last list is how you spot a judge gone too keen or too shy.
+Anything the quote gate dropped is listed too, marked as absent from the report.
+
+The toggle replaces itself on a re-run and touches nothing else on the page, so
+your own notes are safe to type alongside it. Contradiction findings also carry
+both conflicting quotes (`quote`/`quote2`), so the report evidences both sides.
+The same summary is in `judge_log` on the row's `.record.json`; the judge's full
+raw reasoning stays on the runner at `scripts/runs/<tag>.judge-raw.txt`.
+
+Running a lead by hand rather than via the batch? Add the log step:
+
+```
+node scripts/leads.mjs log "<pageId>" "report/out/<auditId>.record.json"
+``` Good → flip Status to **Send**.
 Needs changes → comment on the row and flip back to **Approved** (next run regenerates).
 Unusable site / failed run → reply personally and set **Rejected** (never a half report).
 

@@ -143,6 +143,50 @@ function worstOffendersRows(m) {
   return rows.join("\n");
 }
 
+// The page a quote sits on, clickable so the reader lands on the page the quote
+// was taken from (not a neighbouring finding's page).
+function evidenceLabel(url) {
+  return `<span class="finding-evidence-label">On <a href="${safeHref(url)}">${esc(
+    pathOf(url)
+  )}</a></span>`;
+}
+
+function quoteMark(quote) {
+  return `<blockquote class="finding-quote">${esc(quote)}</blockquote>`;
+}
+
+// A contradiction is only legible when both sides sit together, so a finding
+// carrying a counter-quote renders as one paired block: shared rule down the
+// side, "vs" between the two, rather than two loose quotes the reader has to
+// associate. Both lines on one page (the common case) get a single page label;
+// a genuine cross-page contradiction labels each side.
+function evidenceBlock(f) {
+  if (!f.quote2) {
+    return `<div class="finding-evidence">
+          ${evidenceLabel(f.url)}
+          ${quoteMark(f.quote)}
+        </div>`;
+  }
+  const url2 = f.url2 || f.url;
+  const samePage =
+    String(url2).replace(/\/$/, "") === String(f.url).replace(/\/$/, "");
+  if (samePage) {
+    return `<div class="finding-evidence">
+          ${evidenceLabel(f.url)}
+          <div class="finding-evidence-pair">
+            ${quoteMark(f.quote)}
+            <div class="ev-vs"><span>vs</span></div>
+            ${quoteMark(f.quote2)}
+          </div>
+        </div>`;
+  }
+  return `<div class="finding-evidence finding-evidence-pair">
+          <div class="ev">${evidenceLabel(f.url)}${quoteMark(f.quote)}</div>
+          <div class="ev-vs"><span>vs</span></div>
+          <div class="ev">${evidenceLabel(url2)}${quoteMark(f.quote2)}</div>
+        </div>`;
+}
+
 function findingCards(m) {
   if (!m.findings.length) return "";
   const cards = m.findings
@@ -159,16 +203,13 @@ function findingCards(m) {
           )}</span>
         </div>
         <p class="finding-issue">${esc(issue)}</p>
-        <div class="finding-evidence">
-          <span class="finding-evidence-label">On ${esc(pathOf(f.url))}</span>
-          <blockquote class="finding-quote">${esc(f.quote)}</blockquote>
-        </div>
+        ${evidenceBlock(f)}
       </article>`;
     })
     .join("\n");
   return `<section class="block">
     <h2 class="block-title">What we found</h2>
-    <p class="block-lead">Worst first. Every quote is copied verbatim from your live pages, so each one is a find-and-fix.</p>
+    <p class="block-lead">Worst first. Every quote is copied verbatim from your live pages as a signed-out visitor sees them, so each one is a find-and-fix. If you cannot see a quote while logged in, check the page signed out.</p>
     ${cards}
   </section>`;
 }
@@ -246,6 +287,15 @@ const STYLES = `
   --serif:'Instrument Serif','Times New Roman',serif;
   --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  /* ONE measure for every run of prose. Set in px, not ch, on purpose: ch scales
+     with font-size, so a shared ch measure would still wrap the 19px verdict,
+     the 15px lead and the 14px quote at three different right edges. A reader
+     sees the edges, not the character count. Structure (rules, tables) spans the
+     full column; prose sits inside this. ~69ch at the 15px body size. */
+  --measure:520px;
+  /* The closer is a card inset from the column. Its prose subtracts that inset
+     so its rag lands on the same absolute edge as everything above it. */
+  --closer-pad:36px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--sans);font-size:15px;line-height:1.55;color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased}
@@ -255,13 +305,13 @@ a{color:inherit}
 .wordmark{font-family:var(--serif);font-size:34px;line-height:1}
 .wordmark em{font-style:italic}
 .eyebrow{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-top:14px}
-.report-title{font-family:var(--serif);font-size:clamp(30px,5vw,44px);line-height:1.08;margin-top:10px;text-wrap:balance}
+.report-title{font-family:var(--serif);font-size:clamp(30px,5vw,44px);line-height:1.08;margin-top:10px;max-width:var(--measure);text-wrap:balance}
 .report-title em{font-style:italic}
 .report-meta{font-family:var(--mono);font-size:12px;color:var(--muted-small);margin-top:12px}
-.verdict{font-size:19px;line-height:1.5;margin:28px 0 8px;text-wrap:pretty}
+.verdict{font-size:19px;line-height:1.5;margin:28px 0 8px;max-width:var(--measure);text-wrap:pretty}
 .block{margin-top:40px}
-.block-title{font-family:var(--serif);font-size:26px;line-height:1.1;margin-bottom:6px;text-wrap:balance}
-.block-lead{color:var(--muted-small);margin-bottom:18px;max-width:56ch;text-wrap:pretty}
+.block-title{font-family:var(--serif);font-size:26px;line-height:1.1;margin-bottom:6px;max-width:var(--measure);text-wrap:balance}
+.block-lead{color:var(--muted-small);margin-bottom:18px;max-width:var(--measure);text-wrap:pretty}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--hairline);vertical-align:top}
 th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600}
@@ -273,26 +323,39 @@ th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacin
 .finding{padding:20px 0;border-bottom:1px solid var(--hairline)}
 .finding-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .finding-cat{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.finding-issue{font-family:var(--serif);font-size:22px;line-height:1.25;color:var(--ink);margin-bottom:12px;text-wrap:balance}
+.finding-issue{font-family:var(--serif);font-size:22px;line-height:1.25;color:var(--ink);margin-bottom:12px;max-width:var(--measure);text-wrap:balance}
+/* The measure sits on the evidence wrapper, not the quote: the quote is inset by
+   its own rule, so capping the quote would push its right edge past every other
+   block by exactly that inset. Capping the wrapper lands the rag on the measure. */
+.finding-evidence{max-width:var(--measure)}
 .finding-evidence-label{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px}
 .finding-quote{font-size:14px;line-height:1.5;color:var(--muted-small);padding-left:14px;border-left:2px solid var(--hairline);text-wrap:pretty}
-.link-list{list-style:none;font-family:var(--mono);font-size:13px}
+/* Paired evidence (a finding + the line it contradicts): one shared rule down
+   the side so the two quotes read as a single comparison, "vs" between them. */
+.finding-evidence-pair{border-left:2px solid var(--hairline);padding-left:14px}
+.finding-evidence-pair .finding-quote{border-left:none;padding-left:0}
+.ev-vs{display:flex;align-items:center;gap:8px;margin:10px 0;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.ev-vs::after{content:"";flex:1;height:1px;background:var(--hairline)}
+.link-list{list-style:none;font-family:var(--mono);font-size:13px;max-width:var(--measure)}
 .link-list li{padding:6px 0;border-bottom:1px solid var(--hairline);word-break:break-all}
 .muted{color:var(--muted)}.small{font-size:12px}
 .coverage .link-list li{border:none;padding:3px 0}
-.closer{background:var(--surface);border-radius:20px;margin-top:48px;padding:44px 36px}
+.closer{background:var(--surface);border-radius:20px;margin-top:48px;padding:44px var(--closer-pad)}
 .closer-eyebrow{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
-.closer-title{font-family:var(--serif);font-size:32px;line-height:1.1;margin:10px 0 12px;text-wrap:balance}
-.closer-body{color:var(--muted-small);max-width:52ch;margin-bottom:24px;text-wrap:pretty}
+.closer-title{font-family:var(--serif);font-size:32px;line-height:1.1;margin:10px 0 12px;max-width:calc(var(--measure) - var(--closer-pad));text-wrap:balance}
+.closer-body{color:var(--muted-small);max-width:calc(var(--measure) - var(--closer-pad));margin-bottom:24px;text-wrap:pretty}
 .closer-actions{display:flex;flex-wrap:wrap;gap:12px}
 .closer-contact{margin-top:14px;font-size:13px;color:var(--muted-small)}
 .btn{display:inline-block;background:var(--black);color:var(--paper);padding:12px 20px;border-radius:980px;font-size:14px;font-weight:500;border:1px solid var(--black)}
 .colophon{margin-top:26px;font-family:var(--mono);font-size:11px;color:var(--muted)}
 @media print{
   body{font-size:12px}
-  .page{max-width:none;padding:0}
+  /* Match the on-screen column exactly (720 - 2x40 = 640). Without the side
+     padding the PDF column is the full A4 text area (~688px), so the HTML report
+     and the PDF of it broke their lines in different places. */
+  .page{max-width:none;padding:0 24px}
   .closer{background:var(--surface)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;break-inside:avoid}
-  .finding,.closer,tr{break-inside:avoid}
+  .finding,.closer,tr,.finding-evidence-pair{break-inside:avoid}
   .chip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 `;
