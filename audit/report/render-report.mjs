@@ -160,13 +160,13 @@ function findingCards(m) {
         </div>
         <p class="finding-issue">${esc(issue)}</p>
         <div class="finding-evidence">
-          <span class="finding-evidence-label">On ${esc(pathOf(f.url))}</span>
+          <span class="finding-evidence-label">On <a href="${safeHref(f.url)}">${esc(pathOf(f.url))}</a></span>
           <blockquote class="finding-quote">${esc(f.quote)}</blockquote>
         </div>
         ${
           f.quote2
             ? `<div class="finding-evidence finding-evidence-vs">
-          <span class="finding-evidence-label">vs, on ${esc(pathOf(f.url2 || f.url))}</span>
+          <span class="finding-evidence-label">vs, on <a href="${safeHref(f.url2 || f.url)}">${esc(pathOf(f.url2 || f.url))}</a></span>
           <blockquote class="finding-quote">${esc(f.quote2)}</blockquote>
         </div>`
             : ""
