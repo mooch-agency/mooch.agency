@@ -11,7 +11,7 @@
 // Failure policy: one lead failing must not sink the batch; failures are noted
 // on the row (coverage note) and the batch exits non-zero so CI shows red.
 
-import { queryByStatus, setStatus, attachReport, getReportFiles } from "./leads.mjs";
+import { queryByStatus, setStatus, attachReport, getReportFiles, writeJudgeLog } from "./leads.mjs";
 import { runAudit } from "./run-audit.mjs";
 import { sendReport } from "./send-report.mjs";
 import { readFileSync, writeFileSync, mkdtempSync } from "fs";
@@ -29,6 +29,11 @@ for (const lead of approved) {
     if (!/^https?:\/\//.test(lead.url)) throw new Error(`bad url: ${lead.url}`);
     const r = await runAudit({ url: lead.url, auditId, email: lead.email });
     await attachReport(lead.pageId, r.pdfPath, r.recordPath);
+    // Judge reasoning onto the row page body, so review happens where the PDF is.
+    // Never fatal: a failed log must not block a good report from reaching review.
+    await writeJudgeLog(lead.pageId, JSON.parse(readFileSync(r.recordPath, "utf8"))).catch((e) =>
+      console.error(`  (judge log not written: ${String(e.message || e).slice(0, 120)})`)
+    );
     await setStatus(lead.pageId, "Ready for review", r.summary);
     results.ran.push({ url: lead.url, auditId, summary: r.summary });
     console.log(`✓ ran ${lead.url} -> ${r.summary}`);

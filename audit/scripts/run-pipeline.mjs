@@ -309,15 +309,18 @@ FACTUAL ERRORS are statements that are demonstrably, verifiably wrong: a cited l
 RULES: every finding = exact page URL + VERBATIM quote copied character-for-character from the provided text + severity + category + issue. No paraphrase in the quote. Do NOT flag intentional design, responsive duplicates, HTML-level issues, or anything not quotable verbatim. Pricing: exact figure + billing period. "Including X and Y" = examples, not exhaustive.
 For contradiction, pricing and naming findings, ALSO include "quote2": the OTHER verbatim line it conflicts with (same character-for-character rule), plus "url2" when that line is on a different page. A contradiction you cannot quote from both sides is not a finding.
 ISSUE: one short plain-English sentence naming exactly what is wrong, in your own words. Name the specific problem: the misspelled word, the two figures that disagree, the outdated claim. Concrete enough to get in 3 seconds. For spelling/grammar, include the correction ("sumptous" should be "sumptuous"). For everything else, diagnose only; do not rewrite their copy (that conversation is the engagement).
-CHECK: also give each finding a "check": ONE short line, max 15 words, for our internal reviewer only, saying what makes you certain (e.g. "both bullets in the same terms list, one promo"). Not a restatement of the issue.
-REJECTED: list anything you considered and deliberately did NOT flag, as "rejected": an array of one-line strings, max 15 words each, max 6 entries (e.g. "repeated nav labels: template, not a content error"). This is how we spot a judge that is too shy or too keen. Empty array is valid.
-END with ONE fenced json block: {"findings":[{"url","quote","quote2","url2","evidence_type":"body|title","severity":"critical|high|medium|low","category":"contradiction|pricing|naming|spelling|grammar|stale|formatting|factual","issue":"...","check":"..."}],"rejected":["..."]}. quote2/url2 only where required above. Empty findings is valid.`;
+The remaining fields are for OUR internal reviewer, never shown to the client. They exist so a human can audit your judgement without re-reading the site, so do not restate the issue in them. Write them for a colleague who will challenge you.
+CHECK: per finding, ONE line, max 15 words, naming the evidence that makes it certain (e.g. "both bullets in the same terms list, one promo").
+REASONING: per finding, 2 to 4 sentences on HOW you got there. Say what in the page text put you onto it, what innocent explanation you tested (a second promo, a deliberate variant, a regional difference, an intentional repeat) and what in the text rules that explanation out, and why you set that severity rather than one higher or lower. If something is still uncertain, say so plainly and say what you would need to settle it.
+APPROACH: one top-level "approach", 2 to 3 sentences: what you compared across these pages, and anything about the site that limited what you could check (thin pages, duplicated boilerplate, text you could see but could not attribute to a page).
+REJECTED: one top-level "rejected", an array of one-line strings, max 20 words each, max 6 entries, for anything you considered and deliberately did NOT flag, WITH the reason (e.g. "repeated nav labels: template, not a content error"). This is how we spot a judge that is too shy or too keen. Empty array is valid.
+END with ONE fenced json block: {"approach":"...","findings":[{"url","quote","quote2","url2","evidence_type":"body|title","severity":"critical|high|medium|low","category":"contradiction|pricing|naming|spelling|grammar|stale|formatting|factual","issue":"...","check":"...","reasoning":"..."}],"rejected":["..."]}. quote2/url2 only where required above. Empty findings is valid.`;
 const bundle = pages.map(p => `=== PAGE: ${p.url}\nTITLE: ${p.title}\n\n${p.text}`).join('\n\n');
 const tJudge = Date.now();
 const judge = await llmCall({ model: 'claude-opus-4-8', maxTokens: 16000, thinking: { type: 'adaptive' }, system: SYSTEM, prompt: `Website: ${site}\nAudit these ${pages.length} pages.\n\n${bundle}` });
 const judgeText = judge.text;
-let findings = [], rejected = [];
-try { const blocks = [...judgeText.matchAll(/```json\s*([\s\S]*?)```/g)]; for (let i = blocks.length - 1; i >= 0; i--) { const j = JSON.parse(blocks[i][1]); if (Array.isArray(j.findings)) { findings = j.findings; rejected = Array.isArray(j.rejected) ? j.rejected : []; break; } } } catch {}
+let findings = [], rejected = [], approach = '';
+try { const blocks = [...judgeText.matchAll(/```json\s*([\s\S]*?)```/g)]; for (let i = blocks.length - 1; i >= 0; i--) { const j = JSON.parse(blocks[i][1]); if (Array.isArray(j.findings)) { findings = j.findings; rejected = Array.isArray(j.rejected) ? j.rejected : []; approach = typeof j.approach === 'string' ? j.approach : ''; break; } } } catch {}
 const judge_ms = Date.now() - tJudge, judge_cost = cost('claude-opus-4-8', judge.usage);
 
 // STAGE 6: code gate against the same bundle text (verbatim check).
@@ -341,6 +344,7 @@ const pathOnly = (u) => { try { return new URL(u).pathname || '/'; } catch { ret
 const logLine = (f) => `${String(f.severity || 'low').toUpperCase()} ${f.category || 'issue'} ${pathOnly(f.url)}${f.gate === 'fail' ? ' [GATE FAIL, dropped]' : ''}: ${f.check || 'no rationale given'}`;
 const judge_log = {
   summary: `${gated.filter(f => f.gate === 'pass').length} findings kept, ${gated.filter(f => f.gate === 'fail').length} dropped by the quote gate, ${rejected.length} considered and rejected by the judge.`,
+  approach,
   kept: gated.map(logLine),
   rejected,
   raw: `see ${tag}.judge-raw.txt next to this run record (runner disk only)`,
