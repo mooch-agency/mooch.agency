@@ -52,9 +52,14 @@ then renders the branded report + PDF. Only gate-passed findings appear. If the 
 returns thin, the report is the "good shape" variant automatically (story 13).
 
 **Read the PDF on the row before it can go out.** If a finding looks doubtful,
-open the `.record.json` on the row: `judge_log` holds the judge's raw output and
-extended thinking, and contradiction findings carry both conflicting quotes
-(`quote`/`quote2`), so you can establish why it was chosen without re-running. Good → flip Status to **Send**.
+open the `.record.json` on the row and read `judge_log`. It is built to be
+skimmed: a one-line summary, then one line per finding saying why the judge kept
+it (anything the quote gate dropped is marked `[GATE FAIL, dropped]`), then
+`rejected`, what the judge considered and chose not to flag. Those two lists are
+how you spot a judge that has gone too keen or too shy. Contradiction findings
+also carry both conflicting quotes (`quote`/`quote2`), so the report evidences
+both sides. The judge's full reasoning is not in the record: it stays on the
+runner at `scripts/runs/<tag>.judge-raw.txt`. Good → flip Status to **Send**.
 Needs changes → comment on the row and flip back to **Approved** (next run regenerates).
 Unusable site / failed run → reply personally and set **Rejected** (never a half report).
 

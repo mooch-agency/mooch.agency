@@ -143,6 +143,50 @@ function worstOffendersRows(m) {
   return rows.join("\n");
 }
 
+// The page a quote sits on, clickable so the reader lands on the page the quote
+// was taken from (not a neighbouring finding's page).
+function evidenceLabel(url) {
+  return `<span class="finding-evidence-label">On <a href="${safeHref(url)}">${esc(
+    pathOf(url)
+  )}</a></span>`;
+}
+
+function quoteMark(quote) {
+  return `<blockquote class="finding-quote">${esc(quote)}</blockquote>`;
+}
+
+// A contradiction is only legible when both sides sit together, so a finding
+// carrying a counter-quote renders as one paired block: shared rule down the
+// side, "vs" between the two, rather than two loose quotes the reader has to
+// associate. Both lines on one page (the common case) get a single page label;
+// a genuine cross-page contradiction labels each side.
+function evidenceBlock(f) {
+  if (!f.quote2) {
+    return `<div class="finding-evidence">
+          ${evidenceLabel(f.url)}
+          ${quoteMark(f.quote)}
+        </div>`;
+  }
+  const url2 = f.url2 || f.url;
+  const samePage =
+    String(url2).replace(/\/$/, "") === String(f.url).replace(/\/$/, "");
+  if (samePage) {
+    return `<div class="finding-evidence">
+          ${evidenceLabel(f.url)}
+          <div class="finding-evidence-pair">
+            ${quoteMark(f.quote)}
+            <div class="ev-vs"><span>vs</span></div>
+            ${quoteMark(f.quote2)}
+          </div>
+        </div>`;
+  }
+  return `<div class="finding-evidence finding-evidence-pair">
+          <div class="ev">${evidenceLabel(f.url)}${quoteMark(f.quote)}</div>
+          <div class="ev-vs"><span>vs</span></div>
+          <div class="ev">${evidenceLabel(url2)}${quoteMark(f.quote2)}</div>
+        </div>`;
+}
+
 function findingCards(m) {
   if (!m.findings.length) return "";
   const cards = m.findings
@@ -159,18 +203,7 @@ function findingCards(m) {
           )}</span>
         </div>
         <p class="finding-issue">${esc(issue)}</p>
-        <div class="finding-evidence">
-          <span class="finding-evidence-label">On <a href="${safeHref(f.url)}">${esc(pathOf(f.url))}</a></span>
-          <blockquote class="finding-quote">${esc(f.quote)}</blockquote>
-        </div>
-        ${
-          f.quote2
-            ? `<div class="finding-evidence finding-evidence-vs">
-          <span class="finding-evidence-label">vs, on <a href="${safeHref(f.url2 || f.url)}">${esc(pathOf(f.url2 || f.url))}</a></span>
-          <blockquote class="finding-quote">${esc(f.quote2)}</blockquote>
-        </div>`
-            : ""
-        }
+        ${evidenceBlock(f)}
       </article>`;
     })
     .join("\n");
@@ -284,7 +317,12 @@ th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacin
 .finding-issue{font-family:var(--serif);font-size:22px;line-height:1.25;color:var(--ink);margin-bottom:12px;text-wrap:balance}
 .finding-evidence-label{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px}
 .finding-quote{font-size:14px;line-height:1.5;color:var(--muted-small);padding-left:14px;border-left:2px solid var(--hairline);text-wrap:pretty}
-.finding-evidence-vs{margin-top:10px}
+/* Paired evidence (a finding + the line it contradicts): one shared rule down
+   the side so the two quotes read as a single comparison, "vs" between them. */
+.finding-evidence-pair{border-left:2px solid var(--hairline);padding-left:14px}
+.finding-evidence-pair .finding-quote{border-left:none;padding-left:0}
+.ev-vs{display:flex;align-items:center;gap:8px;margin:10px 0;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.ev-vs::after{content:"";flex:1;height:1px;background:var(--hairline)}
 .link-list{list-style:none;font-family:var(--mono);font-size:13px}
 .link-list li{padding:6px 0;border-bottom:1px solid var(--hairline);word-break:break-all}
 .muted{color:var(--muted)}.small{font-size:12px}
@@ -301,7 +339,7 @@ th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacin
   body{font-size:12px}
   .page{max-width:none;padding:0}
   .closer{background:var(--surface)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;break-inside:avoid}
-  .finding,.closer,tr{break-inside:avoid}
+  .finding,.closer,tr,.finding-evidence-pair{break-inside:avoid}
   .chip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 `;

@@ -2,3 +2,8 @@
 
 # Skills are materialised from skills-lock.json per environment, not committed.
 .claude/skills/
+
+# Audit run records, raw judge reasoning and generated client reports.
+# Client data, and this repo is public.
+audit/scripts/runs/
+audit/report/out/
