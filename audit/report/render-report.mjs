@@ -263,7 +263,14 @@ function closerPage(m) {
   return `<section class="closer">
     <div class="closer-inner">
       <p class="closer-eyebrow">From Mooch</p>
-      <h2 class="closer-title">Want these fixed, or the whole site read?</h2>
+      <h2 class="closer-title">${
+        // "these" has no referent on a good-shape report: that variant prints no
+        // findings list. The body below has always branched here, the title had
+        // not, so a clean report closed by asking to fix things it never showed.
+        m.thin
+          ? "Want your whole site read the same way?"
+          : "Want these fixed, or the whole site read?"
+      }</h2>
       <p class="closer-body">${
         m.thin
           ? "Your key pages are clean. The next step up is a whole-site audit and the fixes that follow."
