@@ -49,6 +49,13 @@ function runPipeline(url, auditId) {
         return reject(
           new Error(`UNREADABLE_SITE: no readable pages on ${url}; reply personally and set Rejected (story 13)`)
         );
+      // Exit 4 = the judge ran but we could not parse a verdict out of it. Not a
+      // clean site and not a crash: the lead stays Approved so the next batch
+      // retries it. Never let this fall through to a zero-findings report.
+      if (code === 4)
+        return reject(
+          new Error(`JUDGE_UNPARSEABLE: no readable verdict for ${url}; left Approved to retry, see the runner's .judge-raw.txt`)
+        );
       if (code !== 0) return reject(new Error(`pipeline exited ${code}`));
       const recordPath = join(RUNS, `${pipelineSlug(url)}_pipe_r${auditId}.json`);
       try {

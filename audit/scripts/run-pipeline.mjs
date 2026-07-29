@@ -7,6 +7,7 @@ import puppeteer from 'puppeteer-core';
 import { writeFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { THIN_CHARS, unusable, fetchWithRetry, resolveWithSwaps } from './page-fallback.mjs';
+import { sameSiteFactory, cleanUrl, buildInventory } from './discovery.mjs';
 
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 // fileURLToPath decodes percent-encoding (e.g. a space -> %20); using .pathname
@@ -24,16 +25,24 @@ const anthropic = ENGINE === 'api' ? new Anthropic({ apiKey: process.env.ANTHROP
 
 async function llmCall({ model, system, prompt, maxTokens, thinking }) {
   if (ENGINE === 'api') {
-    const res = await anthropic.messages.create({
+    // Streamed, then reassembled. The SDK refuses a non-streaming request whose
+    // projected duration exceeds 10 minutes, which the judge's token budget now
+    // crosses. finalMessage() gives back the same Message shape, so nothing
+    // downstream changes.
+    const res = await anthropic.messages.stream({
       model, max_tokens: maxTokens,
       ...(thinking ? { thinking } : {}),
       ...(system ? { system } : {}),
       messages: [{ role: 'user', content: prompt }],
-    });
+    }).finalMessage();
     return {
       text: res.content.filter(b => b.type === 'text').map(b => b.text).join('\n'),
       thinking: res.content.filter(b => b.type === 'thinking').map(b => b.thinking).join('\n'),
       usage: res.usage,
+      // 'max_tokens' here means the response was cut off mid-sentence. The judge's
+      // JSON block then has no closing fence and parses to nothing, which used to
+      // look exactly like a clean site.
+      stop_reason: res.stop_reason,
     };
   }
   // subscription: claude -p, prompt on stdin, JSON envelope out for usage numbers.
@@ -78,8 +87,13 @@ async function fetchPage(browser, url) {
     const title = await p.title();
     const text = await p.evaluate(() => document.body.innerText);
     const links = await p.evaluate(() => [...document.querySelectorAll('a[href]')].map(a => ({ href: a.href, label: (a.innerText || '').trim().slice(0, 60) })));
-    await p.close(); return { url, title, text, links };
-  } catch (e) { await p.close(); return { url, title: '', text: '', links: [], error: String(e).slice(0, 150) }; }
+    // Where the page ACTUALLY ended up. An apex -> www redirect (or the reverse)
+    // changes the origin every downstream comparison keys off, so callers need
+    // the landed URL, not the one we asked for. `requested` is kept so a caller
+    // can still tell which pick this page answers.
+    const landed = p.url() || url;
+    await p.close(); return { url: landed, requested: url, title, text, links };
+  } catch (e) { await p.close(); return { url, requested: url, title: '', text: '', links: [], error: String(e).slice(0, 150) }; }
 }
 
 // Thin-text / bot-block fallback lives in its own module so it can be unit-tested
@@ -99,13 +113,9 @@ async function fetchText(u) {
     return r.ok ? await r.text() : '';
   } catch { return ''; }
 }
-// www and non-www are the same site; sitemaps often list the apex while the
-// audited URL is www (or vice-versa), so match on the registrable host.
-function sameSiteFactory(site) {
-  const base = (() => { try { return new URL(site).hostname.replace(/^www\./, ''); } catch { return ''; } })();
-  return (u) => { try { return new URL(u).hostname.replace(/^www\./, '') === base; } catch { return false; } };
-}
-function cleanUrl(u) { const x = new URL(u); return (x.origin + x.pathname).replace(/\/$/, ''); }
+// sameSiteFactory + cleanUrl live in discovery.mjs so the host-matching rules
+// are unit-testable. Sitemaps often list the apex while the audited URL is www
+// (or vice-versa), so everything here matches on the registrable host.
 
 // Fallback 1: parse anchors from the SERVER HTML (a plain fetch, pre-JS). Recovers
 // SSR nav that the headless browser was served without or stripped.
@@ -167,21 +177,15 @@ const fetchOne = (url) => fetchPage(browser, url);
 
 // STAGE 1: homepage fetch + link inventory.
 const tFetch1 = Date.now();
-const origin = new URL(site).origin;
-const buildInventory = (h) => {
-  const inv = []; const seen = new Set();
-  for (const l of h.links) {
-    try {
-      const u = new URL(l.href); if (u.origin !== origin) continue;
-      const clean = (u.origin + u.pathname).replace(/\/$/, '');
-      if (clean === (origin + '').replace(/\/$/, '') || seen.has(clean)) continue;
-      seen.add(clean); inv.push({ url: clean, label: l.label });
-    } catch {}
-  }
-  return inv;
-};
 let home = await fetchPage(browser, site);
-let internal = buildInventory(home);
+// Everything downstream compares hosts: the link inventory, the soft-404 probe
+// and the on-page link check. Key them off where the homepage LANDED, not the
+// URL the lead submitted. An apex -> www redirect otherwise bins every rendered
+// anchor, and the audit collapses to the homepage without saying so.
+const landedUrl = home.url || site;
+const sameSite = sameSiteFactory(landedUrl);
+const homeUrl = cleanUrl(landedUrl);
+let internal = buildInventory(home, landedUrl);
 // Homepage text present but zero internal links means the nav hadn't rendered
 // when we snapshotted (late-hydrating menu). Without this, every picked page is
 // filtered out against an empty inventory and the audit silently degrades to the
@@ -189,11 +193,13 @@ let internal = buildInventory(home);
 let discovery = 'dom';
 if (internal.length === 0 && home.text && home.text.length > 200) {
   const retry = await fetchWithRetry(fetchOne, site);
-  if (retry.links && retry.links.length) { home = retry; internal = buildInventory(home); }
+  if (retry.links && retry.links.length) { home = retry; internal = buildInventory(home, landedUrl); }
 }
 // Discovery fallbacks when the rendered nav is missing: server HTML, then sitemap.
-if (internal.length === 0) { internal = await inventoryFromRawHtml(site); if (internal.length) discovery = 'raw-html'; }
-if (internal.length === 0) { internal = await inventoryFromSitemap(site); if (internal.length) discovery = 'sitemap'; }
+// Both run against the landed URL so a redirecting site resolves its own robots
+// and sitemap, not the pre-redirect origin's.
+if (internal.length === 0) { internal = await inventoryFromRawHtml(landedUrl); if (internal.length) discovery = 'raw-html'; }
+if (internal.length === 0) { internal = await inventoryFromSitemap(landedUrl); if (internal.length) discovery = 'sitemap'; }
 const stage1_ms = Date.now() - tFetch1;
 
 // STAGE 2: picker model chooses up to 4 pages (home is always included as #5).
@@ -225,7 +231,10 @@ const picker_ms = Date.now() - tPick, picker_cost = cost(pickerModel, pick.usage
 // so the report can disclose exactly what was and wasn't read.
 const tFetch2 = Date.now();
 const coverageNotes = [];
-const usedUrls = new Set([site.replace(/\/$/, ''), ...picked]);
+// Seeded with the LANDED homepage: on a redirecting site the submitted URL is a
+// different string, and the homepage would leak back into the fallback pool and
+// get audited twice.
+const usedUrls = new Set([homeUrl, site.replace(/\/$/, ''), ...picked]);
 const fallbackPool = internal.map(l => l.url).filter(u => !usedUrls.has(u));
 // Fast path stays parallel: fetch all picked at once. Only the (rare) unusable
 // ones fall through to sequential swapping, so the common case keeps its speed.
@@ -282,9 +291,9 @@ async function statusOf(u) {
 // successfully read proves the origin soft-404s and disqualifies status-based
 // link checking this run. cleanUrl-normalised so keys align with allLinks (below)
 // and the memoised statusOf dedupes the overlap.
-const auditedSameOrigin = [...new Set(pages.map(p => p.url).filter(u => { try { return new URL(u).origin === origin; } catch { return false; } }).map(cleanUrl))];
+const auditedSameOrigin = [...new Set(pages.map(p => p.url).filter(sameSite).map(cleanUrl))];
 const softNotFound = (await Promise.all(auditedSameOrigin.map(statusOf))).some(s => s === 404 || s === 410);
-const allLinks = [...new Set(pages.flatMap(p => p.links.map(l => { try { const u = new URL(l.href); return u.origin === origin ? (u.origin + u.pathname).replace(/\/$/, '') : null; } catch { return null; } }).filter(Boolean)))];
+const allLinks = [...new Set(pages.flatMap(p => p.links.map(l => { try { return sameSite(l.href) ? cleanUrl(l.href) : null; } catch { return null; } }).filter(Boolean)))];
 const linkResults = []; const unreachable = [];
 // On a soft-404 origin the HTTP status is meaningless, so skip status-based link
 // reporting entirely. Recorded internally via link_check.soft_404 (+ note), never
@@ -317,11 +326,45 @@ REJECTED: one top-level "rejected", an array of one-line strings, max 20 words e
 END with ONE fenced json block: {"approach":"...","findings":[{"url","quote","quote2","url2","evidence_type":"body|title","severity":"critical|high|medium|low","category":"contradiction|pricing|naming|spelling|grammar|stale|formatting|factual","issue":"...","check":"...","reasoning":"..."}],"rejected":["..."]}. quote2/url2 only where required above. Empty findings is valid.`;
 const bundle = pages.map(p => `=== PAGE: ${p.url}\nTITLE: ${p.title}\n\n${p.text}`).join('\n\n');
 const tJudge = Date.now();
-const judge = await llmCall({ model: 'claude-opus-4-8', maxTokens: 16000, thinking: { type: 'adaptive' }, system: SYSTEM, prompt: `Website: ${site}\nAudit these ${pages.length} pages.\n\n${bundle}` });
+// 32k, not 16k: adaptive thinking spends from the same budget, and since the
+// judge started carrying quote2 + reasoning + approach + rejected, a five-page
+// bundle overran 16k and came back cut off mid-JSON.
+const judge = await llmCall({ model: 'claude-opus-4-8', maxTokens: 32000, thinking: { type: 'adaptive' }, system: SYSTEM, prompt: `Website: ${site}\nAudit these ${pages.length} pages.\n\n${bundle}` });
 const judgeText = judge.text;
-let findings = [], rejected = [], approach = '';
-try { const blocks = [...judgeText.matchAll(/```json\s*([\s\S]*?)```/g)]; for (let i = blocks.length - 1; i >= 0; i--) { const j = JSON.parse(blocks[i][1]); if (Array.isArray(j.findings)) { findings = j.findings; rejected = Array.isArray(j.rejected) ? j.rejected : []; approach = typeof j.approach === 'string' ? j.approach : ''; break; } } } catch {}
+let findings = [], rejected = [], approach = '', parsed = false;
+// try/catch INSIDE the loop: one malformed block (a truncated last one, or an
+// illustrative one in the prose) must not stop us reading the good blocks before
+// it. Wrapping the whole loop meant a bad final block threw away valid earlier
+// ones and left the run looking like it found nothing.
+{
+  const blocks = [...judgeText.matchAll(/```json\s*([\s\S]*?)```/g)];
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    try {
+      const j = JSON.parse(blocks[i][1]);
+      if (Array.isArray(j.findings)) {
+        findings = j.findings;
+        rejected = Array.isArray(j.rejected) ? j.rejected : [];
+        approach = typeof j.approach === 'string' ? j.approach : '';
+        parsed = true;
+        break;
+      }
+    } catch {}
+  }
+}
 const judge_ms = Date.now() - tJudge, judge_cost = cost('claude-opus-4-8', judge.usage);
+// Keep the raw reasoning before anything can abort, so a failed run is still
+// diagnosable on the runner.
+writeFileSync(`${OUT}${tag}.judge-raw.txt`, `${judge.thinking || '(no thinking returned)'}\n\n=== OUTPUT ===\n${judgeText}`);
+
+// NEVER A HALF REPORT, same rule as the no-readable-pages abort above. A judge
+// response we could not parse is not a clean site, it is a run with no verdict.
+// Treating it as zero findings sent propstrata a "your site's in good shape"
+// report off a response that was cut off mid-JSON (29 Jul, aud_ms5sy6lmrhf0mu).
+// Exit 4 tells the runner to leave the lead Approved and try again.
+if (!parsed) {
+  console.error(`Judge returned no parseable findings block for ${site} (stop_reason=${judge.stop_reason || 'unknown'}, output_tokens=${judge.usage?.output_tokens ?? '?'}, chars=${judgeText.length}). Refusing to report zero findings off a verdict we could not read. Raw reasoning: ${tag}.judge-raw.txt`);
+  process.exit(4);
+}
 
 // STAGE 6: code gate against the same bundle text (verbatim check).
 const norm = (s) => (s || '').normalize('NFC').replace(/[‘’ʼ]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -349,7 +392,6 @@ const judge_log = {
   rejected,
   raw: `see ${tag}.judge-raw.txt next to this run record (runner disk only)`,
 };
-writeFileSync(`${OUT}${tag}.judge-raw.txt`, `${judge.thinking || '(no thinking returned)'}\n\n=== OUTPUT ===\n${judgeText}`);
 
 const total_ms = Date.now() - t0;
 const record = {
@@ -361,6 +403,7 @@ const record = {
   link_check: { checked: softNotFound ? 0 : Math.min(allLinks.length, 60), soft_404: softNotFound, ...(softNotFound ? { note: 'broken-link check skipped: origin returns 404 statuses for pages that still load (soft-404), so status codes are unreliable' } : {}), broken: linkResults, unreachable_not_reported: unreachable },
   findings: gated, n: gated.length, gate_pass: gated.filter(f => f.gate === 'pass').length, gate_fail: gated.filter(f => f.gate === 'fail').length,
   judge_usage: judge.usage,
+  judge_stop_reason: judge.stop_reason,
   judge_log,
 };
 writeFileSync(`${OUT}${tag}.json`, JSON.stringify(record, null, 2));
