@@ -117,7 +117,10 @@ AUDIT_LLM=subscription node scripts/regression-traps.mjs # live traps, ~3 min, $
 
 Unit tests cover the thin-text / bot-block fallback (`page-fallback.mjs`): the
 retry, the next-priority swap, and the coverage note for a page with no readable
-substitute. The traps are the false-positive tripwires: tability's hidden per-user
+substitute. Plus the discovery host rules (`discovery.mjs`): a site is its
+registrable host, and the inventory is built against where the homepage LANDED,
+not the URL the lead submitted. A site that redirects apex to www used to lose
+every link on the page and get audited on its homepage alone. The traps are the false-positive tripwires: tability's hidden per-user
 price must never surface, stedmansplumbing's "including Prather…" must never be
 flagged as a coverage contradiction, and the hard-404 predicate must catch a 404
 without flagging a 200.

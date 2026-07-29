@@ -7,6 +7,7 @@ import puppeteer from 'puppeteer-core';
 import { writeFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { THIN_CHARS, unusable, fetchWithRetry, resolveWithSwaps } from './page-fallback.mjs';
+import { sameSiteFactory, cleanUrl, buildInventory } from './discovery.mjs';
 
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 // fileURLToPath decodes percent-encoding (e.g. a space -> %20); using .pathname
@@ -78,8 +79,13 @@ async function fetchPage(browser, url) {
     const title = await p.title();
     const text = await p.evaluate(() => document.body.innerText);
     const links = await p.evaluate(() => [...document.querySelectorAll('a[href]')].map(a => ({ href: a.href, label: (a.innerText || '').trim().slice(0, 60) })));
-    await p.close(); return { url, title, text, links };
-  } catch (e) { await p.close(); return { url, title: '', text: '', links: [], error: String(e).slice(0, 150) }; }
+    // Where the page ACTUALLY ended up. An apex -> www redirect (or the reverse)
+    // changes the origin every downstream comparison keys off, so callers need
+    // the landed URL, not the one we asked for. `requested` is kept so a caller
+    // can still tell which pick this page answers.
+    const landed = p.url() || url;
+    await p.close(); return { url: landed, requested: url, title, text, links };
+  } catch (e) { await p.close(); return { url, requested: url, title: '', text: '', links: [], error: String(e).slice(0, 150) }; }
 }
 
 // Thin-text / bot-block fallback lives in its own module so it can be unit-tested
@@ -99,13 +105,9 @@ async function fetchText(u) {
     return r.ok ? await r.text() : '';
   } catch { return ''; }
 }
-// www and non-www are the same site; sitemaps often list the apex while the
-// audited URL is www (or vice-versa), so match on the registrable host.
-function sameSiteFactory(site) {
-  const base = (() => { try { return new URL(site).hostname.replace(/^www\./, ''); } catch { return ''; } })();
-  return (u) => { try { return new URL(u).hostname.replace(/^www\./, '') === base; } catch { return false; } };
-}
-function cleanUrl(u) { const x = new URL(u); return (x.origin + x.pathname).replace(/\/$/, ''); }
+// sameSiteFactory + cleanUrl live in discovery.mjs so the host-matching rules
+// are unit-testable. Sitemaps often list the apex while the audited URL is www
+// (or vice-versa), so everything here matches on the registrable host.
 
 // Fallback 1: parse anchors from the SERVER HTML (a plain fetch, pre-JS). Recovers
 // SSR nav that the headless browser was served without or stripped.
@@ -167,21 +169,15 @@ const fetchOne = (url) => fetchPage(browser, url);
 
 // STAGE 1: homepage fetch + link inventory.
 const tFetch1 = Date.now();
-const origin = new URL(site).origin;
-const buildInventory = (h) => {
-  const inv = []; const seen = new Set();
-  for (const l of h.links) {
-    try {
-      const u = new URL(l.href); if (u.origin !== origin) continue;
-      const clean = (u.origin + u.pathname).replace(/\/$/, '');
-      if (clean === (origin + '').replace(/\/$/, '') || seen.has(clean)) continue;
-      seen.add(clean); inv.push({ url: clean, label: l.label });
-    } catch {}
-  }
-  return inv;
-};
 let home = await fetchPage(browser, site);
-let internal = buildInventory(home);
+// Everything downstream compares hosts: the link inventory, the soft-404 probe
+// and the on-page link check. Key them off where the homepage LANDED, not the
+// URL the lead submitted. An apex -> www redirect otherwise bins every rendered
+// anchor, and the audit collapses to the homepage without saying so.
+const landedUrl = home.url || site;
+const sameSite = sameSiteFactory(landedUrl);
+const homeUrl = cleanUrl(landedUrl);
+let internal = buildInventory(home, landedUrl);
 // Homepage text present but zero internal links means the nav hadn't rendered
 // when we snapshotted (late-hydrating menu). Without this, every picked page is
 // filtered out against an empty inventory and the audit silently degrades to the
@@ -189,11 +185,13 @@ let internal = buildInventory(home);
 let discovery = 'dom';
 if (internal.length === 0 && home.text && home.text.length > 200) {
   const retry = await fetchWithRetry(fetchOne, site);
-  if (retry.links && retry.links.length) { home = retry; internal = buildInventory(home); }
+  if (retry.links && retry.links.length) { home = retry; internal = buildInventory(home, landedUrl); }
 }
 // Discovery fallbacks when the rendered nav is missing: server HTML, then sitemap.
-if (internal.length === 0) { internal = await inventoryFromRawHtml(site); if (internal.length) discovery = 'raw-html'; }
-if (internal.length === 0) { internal = await inventoryFromSitemap(site); if (internal.length) discovery = 'sitemap'; }
+// Both run against the landed URL so a redirecting site resolves its own robots
+// and sitemap, not the pre-redirect origin's.
+if (internal.length === 0) { internal = await inventoryFromRawHtml(landedUrl); if (internal.length) discovery = 'raw-html'; }
+if (internal.length === 0) { internal = await inventoryFromSitemap(landedUrl); if (internal.length) discovery = 'sitemap'; }
 const stage1_ms = Date.now() - tFetch1;
 
 // STAGE 2: picker model chooses up to 4 pages (home is always included as #5).
@@ -225,7 +223,10 @@ const picker_ms = Date.now() - tPick, picker_cost = cost(pickerModel, pick.usage
 // so the report can disclose exactly what was and wasn't read.
 const tFetch2 = Date.now();
 const coverageNotes = [];
-const usedUrls = new Set([site.replace(/\/$/, ''), ...picked]);
+// Seeded with the LANDED homepage: on a redirecting site the submitted URL is a
+// different string, and the homepage would leak back into the fallback pool and
+// get audited twice.
+const usedUrls = new Set([homeUrl, site.replace(/\/$/, ''), ...picked]);
 const fallbackPool = internal.map(l => l.url).filter(u => !usedUrls.has(u));
 // Fast path stays parallel: fetch all picked at once. Only the (rare) unusable
 // ones fall through to sequential swapping, so the common case keeps its speed.
@@ -282,9 +283,9 @@ async function statusOf(u) {
 // successfully read proves the origin soft-404s and disqualifies status-based
 // link checking this run. cleanUrl-normalised so keys align with allLinks (below)
 // and the memoised statusOf dedupes the overlap.
-const auditedSameOrigin = [...new Set(pages.map(p => p.url).filter(u => { try { return new URL(u).origin === origin; } catch { return false; } }).map(cleanUrl))];
+const auditedSameOrigin = [...new Set(pages.map(p => p.url).filter(sameSite).map(cleanUrl))];
 const softNotFound = (await Promise.all(auditedSameOrigin.map(statusOf))).some(s => s === 404 || s === 410);
-const allLinks = [...new Set(pages.flatMap(p => p.links.map(l => { try { const u = new URL(l.href); return u.origin === origin ? (u.origin + u.pathname).replace(/\/$/, '') : null; } catch { return null; } }).filter(Boolean)))];
+const allLinks = [...new Set(pages.flatMap(p => p.links.map(l => { try { return sameSite(l.href) ? cleanUrl(l.href) : null; } catch { return null; } }).filter(Boolean)))];
 const linkResults = []; const unreachable = [];
 // On a soft-404 origin the HTTP status is meaningless, so skip status-based link
 // reporting entirely. Recorded internally via link_check.soft_404 (+ note), never
