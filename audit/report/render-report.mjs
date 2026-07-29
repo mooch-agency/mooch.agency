@@ -89,7 +89,8 @@ function reportModel(record, dateStr) {
     (f) => sev(f).rank <= SEVERITY.high.rank
   );
   const thin = !hasSevere && weight < THIN_FLOOR_WEIGHT;
-  const broken = (record.link_check && record.link_check.broken) || [];
+  const linkCheck = record.link_check || {};
+  const broken = linkCheck.broken || [];
   return {
     site: record.site,
     host: hostOf(record.site),
@@ -99,26 +100,35 @@ function reportModel(record, dateStr) {
     weight,
     thin,
     broken,
+    // An empty `broken` list means "we found none" OR "we never looked": on a
+    // soft-404 origin the check is skipped because the status codes lie. The
+    // report must not read those two states the same way.
+    linkCheckSkipped: Boolean(linkCheck.soft_404),
     coverageNotes: (record.coverage && record.coverage.notes) || [],
   };
 }
 
+// The verdict is the only place the result is stated. Everything below it shows
+// the evidence or the scope, so nothing repeats this line.
 function verdictLine(m) {
   if (m.thin) {
+    // "your key pages", not "your site": we only read the pages listed under
+    // Coverage, and the reader can check that claim against the list.
     return `We audited ${m.pages.length} key pages on <strong>${esc(
       m.host
-    )}</strong> and found no material content issues. Your site is in good shape.`;
+    )}</strong> and found nothing material to fix.`;
   }
   const n = m.findings.length + m.broken.length;
-  const worst = m.findings.length ? sev(m.findings[0]).label.toLowerCase() : "";
-  const lead = worst
-    ? `led by a ${worst}-severity issue`
-    : "all fixable in an afternoon";
+  // Only qualify the count when there's a severity to name. The old fallback
+  // promised the lot was "all fixable in an afternoon", which we cannot know.
+  const worst = m.findings.length
+    ? `, led by a ${sev(m.findings[0]).label.toLowerCase()}-severity issue`
+    : "";
   return `We found <strong>${n} content ${
     n === 1 ? "issue" : "issues"
   }</strong> across ${m.pages.length} key pages on <strong>${esc(
     m.host
-  )}</strong>, ${lead}.`;
+  )}</strong>${worst}.`;
 }
 
 function worstOffendersRows(m) {
@@ -209,7 +219,7 @@ function findingCards(m) {
     .join("\n");
   return `<section class="block">
     <h2 class="block-title">What we found</h2>
-    <p class="block-lead">Worst first. Every quote is copied verbatim from your live pages as a signed-out visitor sees them, so each one is a find-and-fix. If you cannot see a quote while logged in, check the page signed out.</p>
+    <p class="block-lead">Worst first. Every quote is copied verbatim from your live pages as a signed-out visitor sees them, so each one is a find-and-fix. If a quote doesn't show up for you, check the page signed out.</p>
     ${cards}
   </section>`;
 }
@@ -235,9 +245,20 @@ function coverageBlock(m) {
   const pages = m.pages
     .map((p) => `<li><a href="${safeHref(p)}">${esc(pathOf(p))}</a></li>`)
     .join("\n");
-  const notes = (m.coverageNotes || []).length
+  // A skipped link check is a limit on this audit, so it belongs with the other
+  // coverage notes rather than being swallowed. Without it, "no broken links"
+  // and "we could not check the links" look identical to the reader.
+  const allNotes = [
+    ...(m.linkCheckSkipped
+      ? [
+          "We couldn't check your links. This site returns a not-found status for pages that load fine, so the status codes aren't reliable enough to report on.",
+        ]
+      : []),
+    ...(m.coverageNotes || []),
+  ];
+  const notes = allNotes.length
     ? `<p class="block-lead" style="margin-top:16px">Notes on what we could read:</p>
-       <ul class="link-list">${m.coverageNotes
+       <ul class="link-list">${allNotes
          .map((n) => `<li class="muted">${esc(n)}</li>`)
          .join("\n")}</ul>`
     : "";
@@ -246,28 +267,36 @@ function coverageBlock(m) {
     <p class="block-lead">Pages we read for this audit:</p>
     <ul class="link-list">${pages}</ul>
     ${notes}
-    <p class="muted small">Free audits cover your key pages. A paid engagement audits the whole site.</p>
+    <p class="muted small">This free audit covers your key pages.</p>
   </section>`;
 }
 
+// Deliberately just the coverage. The verdict line above already states the
+// result, and the closer already makes the offer, so a block between them could
+// only restate one or the other. It used to do both, and it also claimed "no
+// broken links" on sites where we never checked them.
 function goodShapeBody(m) {
-  return `<section class="block">
-    <h2 class="block-title">Nothing material to fix</h2>
-    <p class="block-lead">We read ${m.pages.length} of your key pages and did not find content issues worth flagging: no cross-page contradictions, no pricing mismatches, no broken links, no stale copy. That is rarer than you would think.</p>
-    <p class="block-lead">This is the free key-page audit. If you want the whole site read the same way, that is where we can help.</p>
-  </section>
-  ${coverageBlock(m)}`;
+  return coverageBlock(m);
 }
 
 function closerPage(m) {
   return `<section class="closer">
     <div class="closer-inner">
-      <p class="closer-eyebrow">From Mooch</p>
-      <h2 class="closer-title">Want these fixed, or the whole site read?</h2>
-      <p class="closer-body">${
+      <h2 class="closer-title">${
+        // "these" has no referent on a good-shape report: that variant prints no
+        // findings list. The body below has always branched here, the title had
+        // not, so a clean report closed by asking to fix things it never showed.
         m.thin
-          ? "Your key pages are clean. The next step up is a whole-site audit and the fixes that follow."
-          : `This is the free taster read. Email ${CONTACT_EMAIL} to talk through the fixes, or book a 20-minute call.`
+          ? "Want your whole site read the same way?"
+          : "Want these fixed, or the whole site read?"
+      }</h2>
+      <p class="closer-body">${
+        // Says what a paid engagement adds, nothing else. It used to restate the
+        // verdict ("your key pages are clean"), restate the scope line in
+        // Coverage, and repeat the two contact routes sitting right below it.
+        m.thin
+          ? "A paid engagement covers every page on the site."
+          : "A paid engagement covers every page, and the fixes that follow."
       }</p>
       <div class="closer-actions">
         <a class="btn" href="${BOOKING_URL}">Book a 20-min call</a>
@@ -341,7 +370,6 @@ th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacin
 .muted{color:var(--muted)}.small{font-size:12px}
 .coverage .link-list li{border:none;padding:3px 0}
 .closer{background:var(--surface);border-radius:20px;margin-top:48px;padding:44px var(--closer-pad)}
-.closer-eyebrow{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
 .closer-title{font-family:var(--serif);font-size:32px;line-height:1.1;margin:10px 0 12px;max-width:calc(var(--measure) - var(--closer-pad));text-wrap:balance}
 .closer-body{color:var(--muted-small);max-width:calc(var(--measure) - var(--closer-pad));margin-bottom:24px;text-wrap:pretty}
 .closer-actions{display:flex;flex-wrap:wrap;gap:12px}
@@ -394,7 +422,7 @@ export function renderReport(record, dateStr) {
     <div class="wordmark"><em>Mooch.</em></div>
     <div class="eyebrow">Free content audit</div>
     <h1 class="report-title">${esc(m.host)}</h1>
-    <div class="report-meta">${esc(m.date)} &middot; ${m.pages.length} key pages read</div>
+    <div class="report-meta">${esc(m.date)}</div>
   </header>
   <p class="verdict">${verdictLine(m)}</p>
   ${body}
