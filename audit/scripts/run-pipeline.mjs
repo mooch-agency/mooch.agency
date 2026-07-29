@@ -35,6 +35,10 @@ async function llmCall({ model, system, prompt, maxTokens, thinking }) {
       text: res.content.filter(b => b.type === 'text').map(b => b.text).join('\n'),
       thinking: res.content.filter(b => b.type === 'thinking').map(b => b.thinking).join('\n'),
       usage: res.usage,
+      // 'max_tokens' here means the response was cut off mid-sentence. The judge's
+      // JSON block then has no closing fence and parses to nothing, which used to
+      // look exactly like a clean site.
+      stop_reason: res.stop_reason,
     };
   }
   // subscription: claude -p, prompt on stdin, JSON envelope out for usage numbers.
@@ -318,11 +322,45 @@ REJECTED: one top-level "rejected", an array of one-line strings, max 20 words e
 END with ONE fenced json block: {"approach":"...","findings":[{"url","quote","quote2","url2","evidence_type":"body|title","severity":"critical|high|medium|low","category":"contradiction|pricing|naming|spelling|grammar|stale|formatting|factual","issue":"...","check":"...","reasoning":"..."}],"rejected":["..."]}. quote2/url2 only where required above. Empty findings is valid.`;
 const bundle = pages.map(p => `=== PAGE: ${p.url}\nTITLE: ${p.title}\n\n${p.text}`).join('\n\n');
 const tJudge = Date.now();
-const judge = await llmCall({ model: 'claude-opus-4-8', maxTokens: 16000, thinking: { type: 'adaptive' }, system: SYSTEM, prompt: `Website: ${site}\nAudit these ${pages.length} pages.\n\n${bundle}` });
+// 32k, not 16k: adaptive thinking spends from the same budget, and since the
+// judge started carrying quote2 + reasoning + approach + rejected, a five-page
+// bundle overran 16k and came back cut off mid-JSON.
+const judge = await llmCall({ model: 'claude-opus-4-8', maxTokens: 32000, thinking: { type: 'adaptive' }, system: SYSTEM, prompt: `Website: ${site}\nAudit these ${pages.length} pages.\n\n${bundle}` });
 const judgeText = judge.text;
-let findings = [], rejected = [], approach = '';
-try { const blocks = [...judgeText.matchAll(/```json\s*([\s\S]*?)```/g)]; for (let i = blocks.length - 1; i >= 0; i--) { const j = JSON.parse(blocks[i][1]); if (Array.isArray(j.findings)) { findings = j.findings; rejected = Array.isArray(j.rejected) ? j.rejected : []; approach = typeof j.approach === 'string' ? j.approach : ''; break; } } } catch {}
+let findings = [], rejected = [], approach = '', parsed = false;
+// try/catch INSIDE the loop: one malformed block (a truncated last one, or an
+// illustrative one in the prose) must not stop us reading the good blocks before
+// it. Wrapping the whole loop meant a bad final block threw away valid earlier
+// ones and left the run looking like it found nothing.
+{
+  const blocks = [...judgeText.matchAll(/```json\s*([\s\S]*?)```/g)];
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    try {
+      const j = JSON.parse(blocks[i][1]);
+      if (Array.isArray(j.findings)) {
+        findings = j.findings;
+        rejected = Array.isArray(j.rejected) ? j.rejected : [];
+        approach = typeof j.approach === 'string' ? j.approach : '';
+        parsed = true;
+        break;
+      }
+    } catch {}
+  }
+}
 const judge_ms = Date.now() - tJudge, judge_cost = cost('claude-opus-4-8', judge.usage);
+// Keep the raw reasoning before anything can abort, so a failed run is still
+// diagnosable on the runner.
+writeFileSync(`${OUT}${tag}.judge-raw.txt`, `${judge.thinking || '(no thinking returned)'}\n\n=== OUTPUT ===\n${judgeText}`);
+
+// NEVER A HALF REPORT, same rule as the no-readable-pages abort above. A judge
+// response we could not parse is not a clean site, it is a run with no verdict.
+// Treating it as zero findings sent propstrata a "your site's in good shape"
+// report off a response that was cut off mid-JSON (29 Jul, aud_ms5sy6lmrhf0mu).
+// Exit 4 tells the runner to leave the lead Approved and try again.
+if (!parsed) {
+  console.error(`Judge returned no parseable findings block for ${site} (stop_reason=${judge.stop_reason || 'unknown'}, output_tokens=${judge.usage?.output_tokens ?? '?'}, chars=${judgeText.length}). Refusing to report zero findings off a verdict we could not read. Raw reasoning: ${tag}.judge-raw.txt`);
+  process.exit(4);
+}
 
 // STAGE 6: code gate against the same bundle text (verbatim check).
 const norm = (s) => (s || '').normalize('NFC').replace(/[‘’ʼ]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -350,7 +388,6 @@ const judge_log = {
   rejected,
   raw: `see ${tag}.judge-raw.txt next to this run record (runner disk only)`,
 };
-writeFileSync(`${OUT}${tag}.judge-raw.txt`, `${judge.thinking || '(no thinking returned)'}\n\n=== OUTPUT ===\n${judgeText}`);
 
 const total_ms = Date.now() - t0;
 const record = {
@@ -362,6 +399,7 @@ const record = {
   link_check: { checked: softNotFound ? 0 : Math.min(allLinks.length, 60), soft_404: softNotFound, ...(softNotFound ? { note: 'broken-link check skipped: origin returns 404 statuses for pages that still load (soft-404), so status codes are unreliable' } : {}), broken: linkResults, unreachable_not_reported: unreachable },
   findings: gated, n: gated.length, gate_pass: gated.filter(f => f.gate === 'pass').length, gate_fail: gated.filter(f => f.gate === 'fail').length,
   judge_usage: judge.usage,
+  judge_stop_reason: judge.stop_reason,
   judge_log,
 };
 writeFileSync(`${OUT}${tag}.json`, JSON.stringify(record, null, 2));
