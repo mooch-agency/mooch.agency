@@ -19,13 +19,13 @@ const finding = (severity) => ({
   gate: 'pass',
 });
 
-const record = (findings) => ({
+const record = (findings, link_check = { broken: [] }) => ({
   site: 'https://example.com/',
   auditId: 'aud_test',
   findings,
   picker: { pages_used: ['https://example.com/', 'https://example.com/pricing'] },
   coverage: { notes: [] },
-  link_check: { broken: [] },
+  link_check,
 });
 
 // Two lows total weight 2, under THIN_FLOOR_WEIGHT, so this is the good-shape
@@ -41,4 +41,36 @@ test('findings report still asks to fix them', () => {
   const out = renderReport(record([finding('high')]), '29 July 2026');
   assert.equal(out.thin, false);
   assert.match(out.html, /Want these fixed, or the whole site read\?/);
+});
+
+// The good-shape body used to restate the verdict, restate the coverage scope
+// line and repeat the upsell, so the same three claims appeared up to four
+// times in about 90 words.
+test('good-shape report states the result once', () => {
+  const out = renderReport(record([finding('low')]), '29 July 2026');
+  const count = (re) => (out.html.match(re) || []).length;
+  assert.equal(out.thin, true);
+  assert.equal(count(/nothing material to fix/gi), 1);
+  assert.equal(count(/whole site/gi), 1);
+  assert.ok(!out.html.includes('rarer than you would think'));
+});
+
+// "No broken links" was asserted unconditionally, including on soft-404 origins
+// where the check never ran (anglianphe, 24 Jul).
+test('a clean report never claims links are fine', () => {
+  const out = renderReport(record([finding('low')]), '29 July 2026');
+  assert.ok(!/no broken links/i.test(out.html));
+});
+
+test('a skipped link check is disclosed to the client', () => {
+  const skipped = record([finding('low')], { broken: [], soft_404: true });
+  assert.match(renderReport(skipped, '29 July 2026').html, /couldn't check your links/i);
+  // ...and stays silent when the check did run and found nothing.
+  assert.ok(!/couldn't check your links/i.test(renderReport(record([finding('low')]), '29 July 2026').html));
+});
+
+// The fallback fired whenever there were broken links but no findings.
+test('the verdict never promises a fix timeline', () => {
+  const withBroken = record([], { broken: [{ url: 'https://example.com/gone', status: 404 }] });
+  assert.ok(!/fixable in an afternoon/i.test(renderReport(withBroken, '29 July 2026').html));
 });
