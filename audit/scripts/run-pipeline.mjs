@@ -363,6 +363,13 @@ writeFileSync(`${OUT}${tag}.judge-raw.txt`, `${judge.thinking || '(no thinking r
 // Exit 4 tells the runner to leave the lead Approved and try again.
 if (!parsed) {
   console.error(`Judge returned no parseable findings block for ${site} (stop_reason=${judge.stop_reason || 'unknown'}, output_tokens=${judge.usage?.output_tokens ?? '?'}, chars=${judgeText.length}). Refusing to report zero findings off a verdict we could not read. Raw reasoning: ${tag}.judge-raw.txt`);
+  // The raw file only ever lived on the runner, and on a CI runner that disk dies
+  // with the container, so the one artefact that explains the failure was
+  // guaranteed to be destroyed. Put the diagnosis in the log itself: what we
+  // asked about, what fences came back, and the head of the actual response.
+  console.error(`  discovery=${discovery} pages_read=${pages.length} picked=${JSON.stringify(picked)}`);
+  console.error(`  fence tags in response: ${JSON.stringify((judgeText.match(/```([A-Za-z]*)/g) || []))}`);
+  console.error(`  ---- judge response, first 2000 chars ----\n${judgeText.slice(0, 2000)}\n  ---- end ----`);
   process.exit(4);
 }
 
