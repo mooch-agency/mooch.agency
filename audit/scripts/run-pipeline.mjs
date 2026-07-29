@@ -25,12 +25,16 @@ const anthropic = ENGINE === 'api' ? new Anthropic({ apiKey: process.env.ANTHROP
 
 async function llmCall({ model, system, prompt, maxTokens, thinking }) {
   if (ENGINE === 'api') {
-    const res = await anthropic.messages.create({
+    // Streamed, then reassembled. The SDK refuses a non-streaming request whose
+    // projected duration exceeds 10 minutes, which the judge's token budget now
+    // crosses. finalMessage() gives back the same Message shape, so nothing
+    // downstream changes.
+    const res = await anthropic.messages.stream({
       model, max_tokens: maxTokens,
       ...(thinking ? { thinking } : {}),
       ...(system ? { system } : {}),
       messages: [{ role: 'user', content: prompt }],
-    });
+    }).finalMessage();
     return {
       text: res.content.filter(b => b.type === 'text').map(b => b.text).join('\n'),
       thinking: res.content.filter(b => b.type === 'thinking').map(b => b.thinking).join('\n'),
