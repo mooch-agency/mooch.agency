@@ -207,13 +207,24 @@ let internal = buildInventory(home, landedUrl);
 // redirect hop is not evidence the PAGE is bad, and letting it look that way is
 // why two runs of one site could read different pages and reach different
 // verdicts on the same evidence.
+//
+// fetchOne is itself wrapped in fetchWithRetry at every call site (a second
+// attempt on the SAME url after a longer settle, for slow-hydrating pages -
+// a different failure class than a bad host). Without altHostFailed, a page
+// unusable on both host and settle grounds would cost 4 raw fetches (raw, alt,
+// then raw, alt again) instead of 2, on exactly the flaky-host sites this exists
+// for. Once the alt host has failed once for a URL, skip it on later calls and
+// let the settle-retry do only what it is actually for: waiting, not re-asking
+// a host that already said no.
+const altHostFailed = new Set();
 async function fetchOne(url) {
   const first = await fetchRaw(url);
   if (!unusable(first)) return first;
   const alt = onLandedHost(url, landedUrl);
-  if (alt === url) return first;
+  if (alt === url || altHostFailed.has(url)) return first;
   const retry = await fetchRaw(alt);
-  return unusable(retry) ? first : retry;
+  if (unusable(retry)) { altHostFailed.add(url); return first; }
+  return retry;
 }
 // Homepage text present but zero internal links means the nav hadn't rendered
 // when we snapshotted (late-hydrating menu). Without this, every picked page is

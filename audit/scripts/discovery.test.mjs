@@ -109,3 +109,35 @@ test('onLandedHost: leaves a different site alone', () => {
 test('onLandedHost: a junk URL comes back unchanged, not thrown', () => {
   assert.equal(onLandedHost('javascript:void(0)', 'https://www.apexvolumetrics.com/'), 'javascript:void(0)');
 });
+
+test('onLandedHost: also rewrites in the reverse direction, www to bare apex', () => {
+  const rewritten = onLandedHost(
+    'https://www.apexvolumetrics.com/refund-policy',
+    'https://apexvolumetrics.com/'
+  );
+  assert.equal(rewritten, 'https://apexvolumetrics.com/refund-policy');
+});
+
+// Same host, different scheme is not "already fine": comparing only .host (no
+// protocol) let an http page on the landed host look identical to the https one
+// and skip the retry that would have fixed it.
+test('onLandedHost: same host but wrong scheme still gets rewritten', () => {
+  const rewritten = onLandedHost(
+    'http://www.apexvolumetrics.com/refund-policy',
+    'https://www.apexvolumetrics.com/'
+  );
+  assert.equal(rewritten, 'https://www.apexvolumetrics.com/refund-policy');
+});
+
+// Mutating u.protocol/u.host in place kept a stale port from the original URL
+// when the landed host had none. Rebuilding from landed.origin doesn't.
+test('onLandedHost: does not carry a stale port onto the landed host', () => {
+  const rewritten = onLandedHost('https://apexvolumetrics.com:8443/faq', 'https://www.apexvolumetrics.com/');
+  assert.equal(rewritten, 'https://www.apexvolumetrics.com/faq');
+});
+
+test('onLandedHost: mailto and tel links pass through untouched', () => {
+  for (const link of ['mailto:miles@sambleinnovations.com', 'tel:+441234567890']) {
+    assert.equal(onLandedHost(link, 'https://www.apexvolumetrics.com/'), link);
+  }
+});
