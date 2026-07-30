@@ -194,7 +194,16 @@ const fetchRaw = (url) => fetchPage(browser, url);
 
 // STAGE 1: homepage fetch + link inventory.
 const tFetch1 = Date.now();
-let home = await fetchPage(browser, site);
+// fetchWithRetry, not a bare fetchPage. Every OTHER page in the run has had a
+// settle-retry for months; the homepage, the one page that is always audited and
+// usually carries the hero, the pricing and the primary CTA, had none. One
+// transient interstitial and the audit lost its most valuable page, kept going,
+// and (before the honesty gate) could still tell the client their site was in
+// good shape. Observed on apexvolumetrics, 30 Jul: 2 runs, both "homepage
+// unreadable", and a third run minutes later read it fine.
+// Longer settle than the default: an anti-bot interstitial takes longer to clear
+// than a slow hydration, and this page is worth the extra seconds.
+let home = await fetchWithRetry((u) => fetchPage(browser, u), site, { settleMs: 6000 });
 // Everything downstream compares hosts: the link inventory, the soft-404 probe
 // and the on-page link check. Key them off where the homepage LANDED, not the
 // URL the lead submitted. An apex -> www redirect otherwise bins every rendered
@@ -281,8 +290,33 @@ if (pinEnv) {
     .map((path) => internal.find((l) => byPath(l.url) === path)?.url)
     .filter(Boolean)
     .slice(0, 4);
-  const missed = wantPaths.filter((path) => !internal.some((l) => byPath(l.url) === path));
-  if (missed.length) console.error(`[picker pinned] not in the inventory, skipped: ${missed.join(', ')}`);
+  // The homepage is always read and is deliberately absent from `internal`
+  // (buildInventory drops it so the picker cannot pick the page it already has),
+  // so pinning "/" is legitimate and must not count as missing. Without this the
+  // hard-fail below rejects every pin list that includes the homepage, which is
+  // most of them: it killed a noise-floor run within minutes of being written.
+  const homePath = byPath(homeUrl);
+  const missed = wantPaths.filter(
+    (path) => path !== homePath && !internal.some((l) => byPath(l.url) === path)
+  );
+  // A PIN THAT CANNOT BE HONOURED IS A FAILED RUN, not a quieter one. This used
+  // to warn on stderr and carry on with whatever did match, which silently
+  // audits a DIFFERENT page set than the one you pinned. On 30 Jul that voided
+  // an apexvolumetrics arm of a prompt experiment (pinned 5 www URLs, read 4
+  // other pages) and the comparison looked valid until the page lists were
+  // diffed by hand. The whole point of pinning is holding evidence constant, so
+  // failing loudly is the only useful behaviour.
+  // AUDIT_PIN_LENIENT=1 restores best-effort matching for exploratory use.
+  if (missed.length && process.env.AUDIT_PIN_LENIENT !== '1') {
+    console.error(`AUDIT_PIN_PAGES could not be honoured: ${missed.length} of ${wantPaths.length} pinned pages are not in this site's inventory.`);
+    console.error(`  missing: ${missed.join(', ')}`);
+    console.error(`  inventory has: ${internal.slice(0, 12).map((l) => byPath(l.url)).join(', ')}${internal.length > 12 ? ', ...' : ''}`);
+    console.error('Auditing a different page set than the one pinned would invalidate whatever this run is measuring.');
+    console.error('Fix the paths, or set AUDIT_PIN_LENIENT=1 to accept a partial match.');
+    await browser.close().catch(() => {});
+    process.exit(4);
+  }
+  if (missed.length) console.error(`[picker pinned, LENIENT] not in the inventory, skipped: ${missed.join(', ')}`);
   console.error(`[picker pinned] ${picked.join(', ') || '(none matched)'}`);
 } else {
   // Thinking OFF, explicitly. On Sonnet 4.6 omitting `thinking` meant no
@@ -330,7 +364,11 @@ const { good, notes: swapNotes } = await resolveWithSwaps({
   fetchOne,
 });
 coverageNotes.push(...swapNotes);
-if (unusable(home)) coverageNotes.push(`the homepage ${site} was unreadable (bot-block or empty); findings may be limited`);
+// The homepage note is deliberately blunt. It is the page most likely to carry
+// the claims an audit is for, so losing it is not a minor coverage caveat: the
+// honesty gate reads these notes and downgrades the whole verdict to
+// inconclusive rather than let a run this incomplete certify a site.
+if (unusable(home)) coverageNotes.push(`the homepage ${site} was unreadable even after a retry (bot-block or empty); this is the page most likely to carry pricing and headline claims, so findings are significantly limited`);
 else if (internal.length === 0) coverageNotes.push(`only the homepage could be read; its navigation links did not load, so deeper pages were not audited`);
 const pages = [home, ...good].filter(p => p.text && p.text.length > THIN_CHARS);
 const stage3_ms = Date.now() - tFetch2;
