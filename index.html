@@ -290,9 +290,15 @@
   /* Two-step disclosure: the URL field is asked for on its own, then the email
      field expands in beside it. The URL field never leaves the row, so there's
      no echo note and nothing to scroll back to. */
-  .audit-fieldrow { display: flex; flex: 1 1 220px; min-width: 0; gap: 12px; }
+  /* Each field is capped at the width it holds once both are on screen, so the
+     URL field never resizes: it just gains a neighbour and the button slides
+     right. Letting it fill the row on load made it shrink on step 2, and a
+     600px box asks for an essay when the answer is "acme.com". */
+  .audit-fieldrow { display: flex; flex: 0 1 auto; min-width: 0; gap: 12px; }
   .audit-fieldcell {
-    flex: 1 1 0;
+    /* 0 0, not 0 1: allowed to shrink, the row sizes to the inputs' intrinsic
+       width (~210px) instead of honouring the cap. */
+    flex: 0 0 300px;
     min-width: 0;
     transition: flex-grow 0.4s var(--ease-deliver), flex-basis 0.4s var(--ease-deliver),
                 opacity 0.3s var(--ease-deliver), margin 0.4s var(--ease-deliver);
@@ -375,15 +381,21 @@
   .audit-sent-body { margin-top: 8px; color: var(--muted-small); max-width: 46ch; }
   .audit-sent-email { color: var(--ink); }
   .audit-band[data-state="validating"] .audit-submit { opacity: 0.5; pointer-events: none; }
+  /* Between the mobile stack and full width there isn't room for two 300px
+     fields plus the button, so the pair narrows rather than wrapping. */
+  @media (max-width: 820px) {
+    .audit-fieldcell { flex-basis: 240px; }
+  }
   @media (max-width: 560px) {
     .audit-fields { flex-direction: column; align-items: stretch; }
     /* In a column flex container the flex-basis (220px) applies to HEIGHT, which
        would make the inputs 220px tall. Reset to content height. */
     .audit-input { flex: 0 0 auto; }
     .audit-submit { width: 100%; }
-    /* The two fields stack too, so the collapse happens on the block axis. */
+    /* The two fields stack too, so the collapse happens on the block axis and
+       the desktop width cap gives way to full width. */
     .audit-fieldrow { flex-direction: column; flex: 0 0 auto; }
-    .audit-fieldcell { flex: 0 0 auto; }
+    .audit-fieldcell { flex: 0 0 auto; width: 100%; }
     .audit-band[data-step="url"] .audit-fieldcell:last-child {
       margin-left: 0;
       margin-top: -12px;   /* swallow the column gap instead */
