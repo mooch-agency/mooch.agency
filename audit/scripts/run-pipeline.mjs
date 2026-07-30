@@ -10,6 +10,7 @@ import { THIN_CHARS, unusable, fetchWithRetry, resolveWithSwaps } from './page-f
 import { sameSiteFactory, sameDomainFactory, cleanUrl, buildInventory, onLandedHost } from './discovery.mjs';
 import { statusOfFactory, REPORTABLE } from './link-check.mjs';
 import { buildBundle } from './bundle.mjs';
+import { mergePasses } from './consensus.mjs';
 import { parseJudge } from './judge-parse.mjs';
 
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -471,13 +472,39 @@ const tJudge = Date.now();
 // subscription, came back with an empty raw log, and the error string below sent
 // the reader to `display` - which was already correct - instead of to the engine.
 // If you need a raw log, run that one site on AUDIT_LLM=api and pay for it.
-const judge = await llmCall({ model: 'claude-opus-4-8', maxTokens: 32000, thinking: { type: 'adaptive', display: 'summarized' }, system: SYSTEM, prompt: `Website: ${site}\nAudit these ${pages.length} pages.\n\n${bundle}` });
+// AUDIT_JUDGE_PASSES=N runs the judge N times over the IDENTICAL bundle and
+// merges by recurrence (see consensus.mjs). Opt-in, default 1, because the
+// default path must stay the measured one until this is benchmarked.
+//
+// Why it exists: the same judge on the same bytes agrees with itself about 13-14%
+// of the time (benchmark/2026-07-30-baseline.md, n=5 lisbon and n=4 r3p), and the
+// finding it dropped half the time on r3p was the best one on the site. Passes are
+// concurrent: they are independent calls over the same input, so N passes cost
+// roughly one pass of wall clock.
+const PASSES = Math.max(1, Number(process.env.AUDIT_JUDGE_PASSES) || 1);
+const judgePrompt = `Website: ${site}\nAudit these ${pages.length} pages.\n\n${bundle}`;
+const judgeRuns = await Promise.all(
+  Array.from({ length: PASSES }, () =>
+    llmCall({ model: 'claude-opus-4-8', maxTokens: 32000, thinking: { type: 'adaptive', display: 'summarized' }, system: SYSTEM, prompt: judgePrompt })
+  )
+);
+const judge = judgeRuns[0];
 const judgeText = judge.text;
 // Accepts a fenced block with any tag, a bare JSON reply, or JSON wrapped in
 // prose. See judge-parse.mjs for why: requiring a lowercase `json` fence threw
 // away three complete verdicts in two days.
-const { parsed, findings, rejected, approach } = parseJudge(judgeText);
-const judge_ms = Date.now() - tJudge, judge_cost = cost('claude-opus-4-8', judge.usage);
+const perPass = judgeRuns.map((r) => parseJudge(r.text));
+// A pass that returned nothing parseable is a failed pass, not a clean one: it
+// must not dilute the recurrence count by voting "absent" on every finding.
+const usable = perPass.filter((p) => p.parsed);
+const { parsed, rejected, approach } = usable[0] || perPass[0];
+const merged = mergePasses(usable.map((p) => p.findings));
+const findings = merged.findings;
+const lowConfidenceDropped = merged.dropped;
+const judge_ms = Date.now() - tJudge;
+// Cost is the SUM across passes: N passes are N billed calls even when they run
+// concurrently. Reporting only the first would understate a multi-pass run by N-1.
+const judge_cost = judgeRuns.reduce((sum, r) => sum + cost('claude-opus-4-8', r.usage), 0);
 // Keep the raw reasoning before anything can abort, so a failed run is still
 // diagnosable on the runner.
 // If thinking is empty here it means the engine returned none, not that the judge
@@ -527,7 +554,7 @@ const gated = findings.map(f => { const pass = quoteFound(f.url, f.quote) && (!f
 const pathOnly = (u) => { try { return new URL(u).pathname || '/'; } catch { return u || '?'; } };
 const logLine = (f) => `${String(f.severity || 'low').toUpperCase()} ${f.category || 'issue'} ${pathOnly(f.url)}${f.gate === 'fail' ? ' [GATE FAIL, dropped]' : ''}: ${f.check || 'no rationale given'}`;
 const judge_log = {
-  summary: `${gated.filter(f => f.gate === 'pass').length} findings kept, ${gated.filter(f => f.gate === 'fail').length} dropped by the quote gate, ${rejected.length} considered and rejected by the judge.`,
+  summary: `${gated.filter(f => f.gate === 'pass').length} findings kept, ${gated.filter(f => f.gate === 'fail').length} dropped by the quote gate, ${rejected.length} considered and rejected by the judge.${PASSES > 1 ? ` Judged ${PASSES}x over the same bundle; ${lowConfidenceDropped.length} one-off low/medium findings held back as uncorroborated.` : ''}`,
   // How we found the pages, for us only, not the client. Two runs of the same
   // site can read different pages (nav vs sitemap, plus unreadable-page swaps),
   // which is the first thing to check when two runs disagree.
@@ -540,6 +567,13 @@ const judge_log = {
   approach,
   kept: gated.map(logLine),
   rejected,
+  // Uncorroborated one-offs: seen in a single pass at low/medium severity, so
+  // they never reach the client, but they are the richest available record of
+  // what the judge is uncertain about. Unlike a `rejected` line (20 words, no
+  // quote, no URL) each carries full evidence and can be re-examined from the
+  // record alone. This is the skip corpus item 5 wanted, built from measurement
+  // rather than from asking the judge to introspect.
+  ...(PASSES > 1 ? { uncorroborated: lowConfidenceDropped.map((f) => `${String(f.severity).toUpperCase()} ${f.category} ${pathOnly(f.url)} [${f.passes}/${f.pass_total} passes]: ${f.issue}`) } : {}),
   raw: `verbatim transcript in the "Judge's full reasoning (raw)" toggle on the lead row, and as the judge-raw artifact on the Actions run`,
 };
 
