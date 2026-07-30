@@ -259,7 +259,38 @@
   .audit-band { background: var(--surface); border-bottom: 1px solid var(--hairline); }
   .audit-band-inner { max-width: var(--col); }
   .audit-form { margin-top: 32px; }
-  .audit-fields { display: flex; flex-wrap: wrap; gap: 12px; }
+  /* flex-end keeps the button on the input's baseline now the fields carry labels. */
+  .audit-fields { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  .audit-label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin-bottom: 8px;
+    white-space: nowrap;
+  }
+  /* Prefix affix: the wrapper carries the border and focus/error states so the
+     "https://" reads as part of the field rather than as typed content. */
+  .audit-affix {
+    display: flex;
+    align-items: center;
+    background: var(--paper);
+    border: 1px solid var(--hairline-focus);
+    border-radius: 12px;
+    padding-left: 16px;
+    transition: border-color 0.15s ease;
+  }
+  .audit-affix:focus-within { border-color: var(--ink); }
+  .audit-affix:has(.audit-input[aria-invalid="true"]) { border-color: var(--error); }
+  .audit-prefix { font-size: 16px; color: var(--muted); user-select: none; }
+  .audit-affix .audit-input {
+    border: none;
+    background: transparent;
+    padding-left: 4px;
+  }
+  .audit-affix .audit-input:focus-visible { border-color: transparent; }
   .audit-input {
     flex: 1 1 220px;
     min-width: 0;
@@ -304,6 +335,7 @@
     border-inline-width: 0;
     transition: padding 0.4s var(--ease-deliver), border-color 0.15s ease;
   }
+  .audit-band[data-step="url"] .audit-fieldcell:last-child .audit-label { opacity: 0; }
   @media (prefers-reduced-motion: reduce) {
     .audit-fieldcell, .audit-fieldcell .audit-input { transition: none; }
   }
@@ -380,7 +412,7 @@
       min-height: 0;
       max-height: 0;
     }
-    .audit-fieldcell { max-height: 60px; transition: max-height 0.4s var(--ease-deliver), margin 0.4s var(--ease-deliver), opacity 0.3s var(--ease-deliver); }
+    .audit-fieldcell { max-height: 110px; transition: max-height 0.4s var(--ease-deliver), margin 0.4s var(--ease-deliver), opacity 0.3s var(--ease-deliver); }
     .audit-band[data-step="url"] .audit-fieldcell:last-child .audit-input {
       padding-block: 0;
       border-block-width: 0;
@@ -893,10 +925,17 @@
         <div class="audit-fields">
           <div class="audit-fieldrow">
             <div class="audit-fieldcell">
-              <input class="audit-input" type="url" name="url" inputmode="url" autocomplete="url" spellcheck="false" placeholder="yoursite.com" aria-label="Your website URL" required>
+              <label class="audit-label" for="audit-url">Your site</label>
+              <!-- The https:// prefix is decoration: the server prepends the
+                   protocol itself, so the field only ever holds the host. -->
+              <div class="audit-affix">
+                <span class="audit-prefix" aria-hidden="true">https://</span>
+                <input id="audit-url" class="audit-input" type="text" name="url" inputmode="url" autocomplete="url" spellcheck="false" placeholder="yoursite.com" required>
+              </div>
             </div>
             <div class="audit-fieldcell">
-              <input class="audit-input" type="email" name="email" autocomplete="email" spellcheck="false" placeholder="you@company.com" aria-label="Your email address" required>
+              <label class="audit-label" for="audit-email">Your email</label>
+              <input id="audit-email" class="audit-input" type="email" name="email" autocomplete="email" spellcheck="false" placeholder="you@company.com" required>
             </div>
           </div>
           <button class="pill audit-submit" type="submit">Start <span class="arrow">&rarr;</span></button>
@@ -934,6 +973,13 @@
   }
 
   function setStep(step) { band.setAttribute("data-step", step); }
+
+  // The field sits behind a visible "https://", so a pasted URL that carries its
+  // own protocol would read as https://https://example.com. Strip it on the way in.
+  urlEl.addEventListener("input", function () {
+    var stripped = urlEl.value.replace(/^\s*https?:\/\//i, "");
+    if (stripped !== urlEl.value) urlEl.value = stripped;
+  });
 
   // Vercel Analytics custom events. window.va is bootstrapped near the insights
   // script at the end of the page; guarded so it no-ops if analytics is blocked.
