@@ -8,6 +8,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { THIN_CHARS, unusable, fetchWithRetry, resolveWithSwaps } from './page-fallback.mjs';
 import { sameSiteFactory, cleanUrl, buildInventory } from './discovery.mjs';
+import { parseJudge } from './judge-parse.mjs';
 
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 // fileURLToPath decodes percent-encoding (e.g. a space -> %20); using .pathname
@@ -331,26 +332,10 @@ const tJudge = Date.now();
 // bundle overran 16k and came back cut off mid-JSON.
 const judge = await llmCall({ model: 'claude-opus-4-8', maxTokens: 32000, thinking: { type: 'adaptive' }, system: SYSTEM, prompt: `Website: ${site}\nAudit these ${pages.length} pages.\n\n${bundle}` });
 const judgeText = judge.text;
-let findings = [], rejected = [], approach = '', parsed = false;
-// try/catch INSIDE the loop: one malformed block (a truncated last one, or an
-// illustrative one in the prose) must not stop us reading the good blocks before
-// it. Wrapping the whole loop meant a bad final block threw away valid earlier
-// ones and left the run looking like it found nothing.
-{
-  const blocks = [...judgeText.matchAll(/```json\s*([\s\S]*?)```/g)];
-  for (let i = blocks.length - 1; i >= 0; i--) {
-    try {
-      const j = JSON.parse(blocks[i][1]);
-      if (Array.isArray(j.findings)) {
-        findings = j.findings;
-        rejected = Array.isArray(j.rejected) ? j.rejected : [];
-        approach = typeof j.approach === 'string' ? j.approach : '';
-        parsed = true;
-        break;
-      }
-    } catch {}
-  }
-}
+// Accepts a fenced block with any tag, a bare JSON reply, or JSON wrapped in
+// prose. See judge-parse.mjs for why: requiring a lowercase `json` fence threw
+// away three complete verdicts in two days.
+const { parsed, findings, rejected, approach } = parseJudge(judgeText);
 const judge_ms = Date.now() - tJudge, judge_cost = cost('claude-opus-4-8', judge.usage);
 // Keep the raw reasoning before anything can abort, so a failed run is still
 // diagnosable on the runner.
