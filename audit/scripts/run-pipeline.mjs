@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import { THIN_CHARS, unusable, fetchWithRetry, resolveWithSwaps } from './page-fallback.mjs';
 import { sameSiteFactory, sameDomainFactory, cleanUrl, buildInventory, onLandedHost } from './discovery.mjs';
 import { statusOfFactory, REPORTABLE } from './link-check.mjs';
+import { buildBundle } from './bundle.mjs';
 import { parseJudge } from './judge-parse.mjs';
 
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -397,6 +398,7 @@ await browser.close().catch(() => {});
 // STAGE 5: single Opus judge call over the bundle.
 const SYSTEM = `You are a meticulous website content auditor. You receive the rendered VISIBLE text of several pages from ONE website. Find real content issues. Near-zero false positives: one wrong finding costs more than five missed ones.
 FIND (on and ACROSS pages): pricing inconsistencies; cross-page contradictions (counts, names, claims, hours, dates); naming inconsistencies; spelling/grammar; visible formatting artifacts; stale content; factual errors. Cross-page contradictions are the highest value.
+Each page may end with a LINKS list (link text -> destination). Use it for link-level content faults: a call to action pointing at a destination marked [BROKEN], the same label pointing to two different destinations across pages, or link text that contradicts where it goes. A [BROKEN] marker is the link checker's own verified result, so you may state it as fact. Never infer a link is broken from the look of its URL, and never treat a section as empty because you cannot see its text: content that opens on click is not missing. For a link finding the "quote" must be the link's TEXT exactly as it appears in the page text above, never the "text -> destination" line; put the destination in "issue".
 FACTUAL ERRORS are statements that are demonstrably, verifiably wrong: a cited law/regulation/standard that has been repealed or superseded, a plainly incorrect date or figure, a claim that is impossible or self-refuting. Flag ONLY when you are certain it is wrong from widely established fact; if it depends on the business's private data or you are not sure, do NOT flag it. Never guess. This is the highest-FP-risk category, so hold it to the strictest bar.
 RULES: every finding = exact page URL + VERBATIM quote copied character-for-character from the provided text + severity + category + issue. No paraphrase in the quote. Do NOT flag intentional design, responsive duplicates, HTML-level issues, or anything not quotable verbatim. Pricing: exact figure + billing period. "Including X and Y" = examples, not exhaustive.
 For contradiction, pricing and naming findings, ALSO include "quote2": the OTHER verbatim line it conflicts with (same character-for-character rule), plus "url2" when that line is on a different page. A contradiction you cannot quote from both sides is not a finding.
@@ -407,7 +409,9 @@ REASONING: per finding, 2 to 4 sentences on HOW you got there. Say what in the p
 APPROACH: one top-level "approach", 2 to 3 sentences: what you compared across these pages, and anything about the site that limited what you could check (thin pages, duplicated boilerplate, text you could see but could not attribute to a page).
 REJECTED: one top-level "rejected", an array of one-line strings, max 20 words each, max 6 entries, for anything you considered and deliberately did NOT flag, WITH the reason (e.g. "repeated nav labels: template, not a content error"). This is how we spot a judge that is too shy or too keen. Empty array is valid.
 END with ONE fenced json block: {"approach":"...","findings":[{"url","quote","quote2","url2","evidence_type":"body|title","severity":"critical|high|medium|low","category":"contradiction|pricing|naming|spelling|grammar|stale|formatting|factual","issue":"...","check":"...","reasoning":"..."}],"rejected":["..."]}. quote2/url2 only where required above. Empty findings is valid.`;
-const bundle = pages.map(p => `=== PAGE: ${p.url}\nTITLE: ${p.title}\n\n${p.text}`).join('\n\n');
+// Item 4: destinations enter the evidence, with the link checker's verdict
+// attached where it has one. See bundle.mjs for what is deliberately NOT added.
+const bundle = buildBundle(pages, linkResults);
 const tJudge = Date.now();
 // 32k, not 16k: adaptive thinking spends from the same budget, and since the
 // judge started carrying quote2 + reasoning + approach + rejected, a five-page

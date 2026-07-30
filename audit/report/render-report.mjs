@@ -96,6 +96,22 @@ function reportModel(record, dateStr) {
   // rendered thin: true, dropped the URL from the HTML entirely, and shipped
   // "found nothing material to fix" (recall-gap ticket, item 1).
   const thin = !hasSevere && weight < THIN_FLOOR_WEIGHT && broken.length === 0;
+  const coverageNotes = (record.coverage && record.coverage.notes) || [];
+  const linkCheckSkipped = Boolean(linkCheck.soft_404);
+  // THE HONESTY GATE. "We found nothing" and "we couldn't look properly" are
+  // different claims, and only the first is ours to make. A thin run whose
+  // coverage was degraded (a page we could not read, a link check we could not
+  // run) is INCONCLUSIVE, not clean.
+  //
+  // apexvolumetrics, 30 Jul: the homepage fetch was bot-blocked, so the audit
+  // never saw the page carrying the hero, the pricing or the primary CTA, and
+  // the report still said "found nothing material to fix. Your site's in good
+  // shape." That is a clean bill of health issued over the most important page
+  // on the site, and it is the exact failure this gate exists to prevent.
+  //
+  // Findings outrank coverage gaps: with something real to show, show it. The
+  // gate stops a false all-clear, it does not bury findings behind a caveat.
+  const inconclusive = thin && (coverageNotes.length > 0 || linkCheckSkipped);
   return {
     site: record.site,
     host: hostOf(record.site),
@@ -104,18 +120,43 @@ function reportModel(record, dateStr) {
     findings: sorted,
     weight,
     thin,
+    inconclusive,
     broken,
     // An empty `broken` list means "we found none" OR "we never looked": on a
     // soft-404 origin the check is skipped because the status codes lie. The
     // report must not read those two states the same way.
-    linkCheckSkipped: Boolean(linkCheck.soft_404),
-    coverageNotes: (record.coverage && record.coverage.notes) || [],
+    linkCheckSkipped,
+    coverageNotes,
   };
+}
+
+// What we could not read, in the client's words rather than the runner's. The
+// coverage notes are written for us ("bot-block or empty", a URL, a hedge); the
+// verdict has to name the gap in a way a reader can act on.
+function unreadSummary(m) {
+  const notes = m.coverageNotes || [];
+  const homepage = notes.some((n) => /homepage/i.test(n));
+  const parts = [];
+  if (homepage) parts.push("your homepage");
+  const others = notes.filter((n) => !/homepage/i.test(n)).length;
+  if (others) parts.push(others === 1 ? "one other page" : `${others} other pages`);
+  if (!parts.length && m.linkCheckSkipped) return "your links";
+  if (!parts.length) return "some of your pages";
+  return parts.join(" and ");
 }
 
 // The verdict is the only place the result is stated. Everything below it shows
 // the evidence or the scope, so nothing repeats this line.
 function verdictLine(m) {
+  // Inconclusive is checked FIRST: it is a thin run too, and the good-shape
+  // sentence below would otherwise certify a site we could not fully read.
+  if (m.inconclusive) {
+    return `We audited ${m.pages.length} key pages on <strong>${esc(
+      m.host
+    )}</strong> and didn't find anything material on them, but we couldn't read ${esc(
+      unreadSummary(m)
+    )}, so this isn't a clean bill of health.`;
+  }
   if (m.thin) {
     // "your key pages", not "your site": we only read the pages listed under
     // Coverage, and the reader can check that claim against the list.
@@ -297,17 +338,24 @@ function closerPage(m) {
         // "these" has no referent on a good-shape report: that variant prints no
         // findings list. The body below has always branched here, the title had
         // not, so a clean report closed by asking to fix things it never showed.
-        m.thin
-          ? "Want your whole site read the same way?"
-          : "Want these fixed, or the whole site read?"
+        // The inconclusive variant asks for the one thing it actually needs,
+        // which is also the most honest offer on the page: we hit something we
+        // could not read from outside, and reading it properly is the service.
+        m.inconclusive
+          ? "Want us to read the pages we couldn't reach?"
+          : m.thin
+            ? "Want your whole site read the same way?"
+            : "Want these fixed, or the whole site read?"
       }</h2>
       <p class="closer-body">${
         // Says what a paid engagement adds, nothing else. It used to restate the
         // verdict ("your key pages are clean"), restate the scope line in
         // Coverage, and repeat the two contact routes sitting right below it.
-        m.thin
-          ? "A paid engagement covers every page on the site."
-          : "A paid engagement covers every page, and the fixes that follow."
+        m.inconclusive
+          ? "A paid engagement covers every page, including the ones an outside crawl can't load."
+          : m.thin
+            ? "A paid engagement covers every page on the site."
+            : "A paid engagement covers every page, and the fixes that follow."
       }</p>
       <div class="closer-actions">
         <a class="btn" href="${BOOKING_URL}">Book a 20-min call</a>
@@ -442,5 +490,5 @@ export function renderReport(record, dateStr) {
 </body>
 </html>`;
 
-  return { html, thin: m.thin, findingCount: m.findings.length, weight: m.weight };
+  return { html, thin: m.thin, inconclusive: m.inconclusive, findingCount: m.findings.length, weight: m.weight };
 }

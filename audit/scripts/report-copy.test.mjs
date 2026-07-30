@@ -109,3 +109,74 @@ test('a dead-domain link is labelled as such, not as a status code', () => {
   assert.match(out.html, /domain doesn't resolve/i);
   assert.ok(!/dead_domain/.test(out.html), 'internal status token must not leak to the client');
 });
+
+// ── The honesty gate ────────────────────────────────────────────────────────
+// Goal: every audit either surfaces something a prospect would act on, or says
+// plainly that it couldn't. The good-shape variant used to claim the second
+// case never happens. apexvolumetrics (30 Jul) shipped "found nothing material
+// to fix. Your site's in good shape." on a run where the homepage was never
+// read at all: a clean bill of health issued over the one page that carries the
+// hero, the pricing and the primary CTA.
+//
+// "We found nothing" and "we couldn't look properly" are different claims and
+// only one of them is ours to make.
+const degraded = (notes, extra = {}) =>
+  record([finding('low')], { broken: [], ...extra.link_check });
+
+test('a thin run with unread pages does not claim the site is in good shape', () => {
+  const rec = record([finding('low')]);
+  rec.coverage = { notes: ['the homepage https://example.com/ was unreadable (bot-block or empty); findings may be limited'] };
+  const out = renderReport(rec, '31 July 2026');
+  assert.ok(!/good shape/i.test(out.html), 'must not certify a site it could not read');
+  assert.ok(!/nothing material to fix/i.test(out.html));
+  assert.match(out.html, /couldn't read/i);
+  assert.equal(out.inconclusive, true);
+});
+
+test('the inconclusive verdict names what it could not read', () => {
+  const rec = record([]);
+  rec.coverage = { notes: ['the homepage https://example.com/ was unreadable (bot-block or empty); findings may be limited'] };
+  const out = renderReport(rec, '31 July 2026');
+  assert.equal(out.inconclusive, true);
+  assert.match(out.html, /homepage/i);
+});
+
+// A skipped link check alone is a coverage limit too: the report already
+// discloses it in the notes, but the verdict used to certify the site anyway.
+test('a skipped link check also blocks the good-shape claim', () => {
+  const out = renderReport(record([finding('low')], { broken: [], soft_404: true }), '31 July 2026');
+  assert.equal(out.inconclusive, true);
+  assert.ok(!/good shape/i.test(out.html));
+});
+
+// The clean case must still read as clean: this gate is not allowed to make
+// every report hedge. Nothing unread, nothing skipped, nothing found.
+test('a genuinely complete thin run still says good shape', () => {
+  const out = renderReport(record([finding('low')]), '31 July 2026');
+  assert.equal(out.inconclusive, false);
+  assert.equal(out.thin, true);
+  assert.match(out.html, /good shape/i);
+});
+
+// Findings outrank coverage gaps: if we have something to show, show it. The
+// gate exists to stop a false all-clear, not to bury real findings behind a
+// caveat.
+test('a run with real findings reports them even when coverage was degraded', () => {
+  const rec = record([finding('high')]);
+  rec.coverage = { notes: ['the homepage was unreadable'] };
+  const out = renderReport(rec, '31 July 2026');
+  assert.equal(out.inconclusive, false);
+  assert.equal(out.thin, false);
+  assert.match(out.html, /Want these fixed/);
+});
+
+// The inconclusive closer asks for the thing it actually needs. A run that
+// couldn't reach a page has a better offer available than "want the whole
+// site?", and it is also the honest one.
+test('the inconclusive closer offers to read what it could not reach', () => {
+  const rec = record([finding('low')]);
+  rec.coverage = { notes: ['the homepage was unreadable'] };
+  const out = renderReport(rec, '31 July 2026');
+  assert.match(out.html, /Want us to read the pages we couldn't reach\?/);
+  assert.ok(!/Want these fixed/.test(out.html), 'no findings list on this variant');
+});
