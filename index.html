@@ -404,10 +404,19 @@
       min-height: 0;
       max-height: 0;
     }
-    .audit-fieldcell { max-height: 110px; transition: max-height 0.4s var(--ease-deliver), margin 0.4s var(--ease-deliver), opacity 0.3s var(--ease-deliver); }
+    /* The cap only gives the collapse an end value to animate to, so it's in em:
+       a fixed px cap would clip the field once a minimum-font-size setting or
+       text zoom pushed the label plus input past it (~72px at default size). */
+    .audit-fieldcell { max-height: 9em; transition: max-height 0.4s var(--ease-deliver), margin 0.4s var(--ease-deliver), opacity 0.3s var(--ease-deliver); }
     .audit-band[data-step="url"] .audit-fieldcell:last-child .audit-input {
       padding-block: 0;
       border-block-width: 0;
+    }
+    /* After the rule above, not with the other reduce block further up: that one
+       targets .audit-fieldcell too, so at equal specificity source order decides
+       and an earlier override would lose to the transition declared here. */
+    @media (prefers-reduced-motion: reduce) {
+      .audit-fieldcell { transition: none; }
     }
   }
   /* Delivery beat: the title leans toward you the instant you point at it */
@@ -912,8 +921,8 @@
       <form class="audit-form" novalidate>
         <!-- Two-step breadcrumb: URL first (zero-cost ask), email second. The email
              step is a gate, not a receipt: nothing runs until it submits.
-             The two fields ride a track that slides sideways inside a fixed-size
-             window, so both stay full width and nothing resizes or jumps. -->
+             Both fields sit side by side; the email one is collapsed to zero
+             width until step 2, so the website field never resizes. -->
         <div class="audit-fields">
           <div class="audit-fieldrow">
             <div class="audit-fieldcell">
@@ -1027,7 +1036,6 @@
     msg.textContent = "";
     setInvalid(urlEl, false);
     setInvalid(emailEl, false);
-    track("audit_submit_attempt", {});
 
     var url = urlEl.value.trim();
     if (!url) return fail("url", urlEl);
@@ -1039,6 +1047,11 @@
       track("audit_step_url_complete", {});
       return;
     }
+
+    // Tracked here, not above the step-1 branch: an attempt means a real
+    // submission, so the band_view -> submit_attempt -> submit_success funnel
+    // stays comparable with the pre-two-step data.
+    track("audit_submit_attempt", {});
 
     var email = emailEl.value.trim().toLowerCase();
     // Client only distinguishes "obviously wrong" (syntax/junk). blocklist and mx
