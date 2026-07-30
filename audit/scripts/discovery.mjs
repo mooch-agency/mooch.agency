@@ -60,3 +60,34 @@ export function buildInventory(page, landedUrl) {
   }
   return inv;
 }
+
+// A URL from the inventory (rendered link, raw HTML, or sitemap), rewritten onto
+// the scheme+host the homepage actually landed on. Path, query and hash pass
+// through untouched; a URL that isn't this site, or already matches that
+// scheme+host, comes back unchanged.
+//
+// The sitemap prints its own idea of the site's origin, which is not
+// necessarily the working one (apexvolumetrics.com, 30 Jul: the apex host 308s
+// to www AND resets the connection outright on some requests). A browser
+// follows that redirect fine almost every time, but the pre-redirect hop is one
+// more thing that can fail on a flaky host. Retrying a failed fetch on the
+// landed origin before writing the page off as unreadable turns that into a
+// retry instead of a different page silently entering the audit.
+//
+// Rebuilt from landed.origin wholesale rather than mutating u.protocol/u.host
+// in place: the WHATWG URL setter for `.host` keeps a stale port from the
+// original URL when the replacement host has none (new URL('https://a:8443/x')
+// with .host = 'b.com' stays on :8443), and comparing only `.host` (no scheme)
+// let an http-vs-https mismatch on the SAME host slip past as "already fine".
+export function onLandedHost(url, landedUrl) {
+  try {
+    const u = new URL(url);
+    const sameSite = sameSiteFactory(landedUrl);
+    if (!sameSite(u.href)) return url;
+    const landed = new URL(landedUrl);
+    if (u.protocol === landed.protocol && u.host === landed.host) return url;
+    return landed.origin + u.pathname + u.search + u.hash;
+  } catch {
+    return url;
+  }
+}

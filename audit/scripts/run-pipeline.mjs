@@ -7,7 +7,7 @@ import puppeteer from 'puppeteer-core';
 import { writeFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { THIN_CHARS, unusable, fetchWithRetry, resolveWithSwaps } from './page-fallback.mjs';
-import { sameSiteFactory, cleanUrl, buildInventory } from './discovery.mjs';
+import { sameSiteFactory, cleanUrl, buildInventory, onLandedHost } from './discovery.mjs';
 import { parseJudge } from './judge-parse.mjs';
 
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -188,7 +188,7 @@ const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new'
 process.on('uncaughtException', async (e) => { console.error(e); try { await browser.close(); } catch {} process.exit(1); });
 process.on('unhandledRejection', async (e) => { console.error(e); try { await browser.close(); } catch {} process.exit(1); });
 // The fallback helpers take an injected fetcher so tests can swap the browser out.
-const fetchOne = (url) => fetchPage(browser, url);
+const fetchRaw = (url) => fetchPage(browser, url);
 
 // STAGE 1: homepage fetch + link inventory.
 const tFetch1 = Date.now();
@@ -201,6 +201,31 @@ const landedUrl = home.url || site;
 const sameSite = sameSiteFactory(landedUrl);
 const homeUrl = cleanUrl(landedUrl);
 let internal = buildInventory(home, landedUrl);
+// If the direct fetch comes back unusable, retry once on the host the homepage
+// actually landed on before this page is written off as unreadable and swapped
+// for a different one (see onLandedHost in discovery.mjs for why). A failed
+// redirect hop is not evidence the PAGE is bad, and letting it look that way is
+// why two runs of one site could read different pages and reach different
+// verdicts on the same evidence.
+//
+// fetchOne is itself wrapped in fetchWithRetry at every call site (a second
+// attempt on the SAME url after a longer settle, for slow-hydrating pages -
+// a different failure class than a bad host). Without altHostFailed, a page
+// unusable on both host and settle grounds would cost 4 raw fetches (raw, alt,
+// then raw, alt again) instead of 2, on exactly the flaky-host sites this exists
+// for. Once the alt host has failed once for a URL, skip it on later calls and
+// let the settle-retry do only what it is actually for: waiting, not re-asking
+// a host that already said no.
+const altHostFailed = new Set();
+async function fetchOne(url) {
+  const first = await fetchRaw(url);
+  if (!unusable(first)) return first;
+  const alt = onLandedHost(url, landedUrl);
+  if (alt === url || altHostFailed.has(url)) return first;
+  const retry = await fetchRaw(alt);
+  if (unusable(retry)) { altHostFailed.add(url); return first; }
+  return retry;
+}
 // Homepage text present but zero internal links means the nav hadn't rendered
 // when we snapshotted (late-hydrating menu). Without this, every picked page is
 // filtered out against an empty inventory and the audit silently degrades to the
@@ -232,28 +257,55 @@ ${internal.map(l => `${l.url} | ${l.label}`).join('\n').slice(0, 8000)}
 
 Pick UP TO 4 links (the homepage is already included). Priority: revenue pages (pricing/shop/services/booking) > trust/conversion (about/contact) > support (FAQ/delivery/terms). For shops/e-commerce, collections and product pages ARE the revenue pages: include at least one. Prefer pages likely to carry claims, prices, or counts that can contradict other pages. Reply with ONLY a JSON array of URLs, e.g. ["https://..","https://.."].`;
 const tPick = Date.now();
-// Thinking OFF, explicitly. On Sonnet 4.6 omitting `thinking` meant no thinking;
-// on Sonnet 5 the same call runs adaptive, and thinking spends from the same 500
-// tokens as the answer. A picker that thinks would truncate its own JSON array
-// and hand back picked: [], which is the failure we chased for two days.
-// Effort low because choosing 4 links off a labelled list is not hard.
-// Temperature would be the obvious way to pin this down, but Sonnet 5 rejects a
-// non-default temperature with a 400, so the picks stay model-chosen: the
-// remedy for a bad pick is the judge log, not a sampling parameter.
-const pick = await llmCall({
-  model: pickerModel, prompt: pickerInput, maxTokens: 500,
-  thinking: { type: 'disabled' },
-  ...(PRICE[pickerModel].effort ? { effort: 'low' } : {}),
-});
-const pickText = pick.text;
-if (process.env.AUDIT_DEBUG) console.error('[picker raw]', JSON.stringify(pickText));
-let picked = [];
-try { picked = JSON.parse(pickText.match(/\[[\s\S]*\]/)[0]).slice(0, 4); } catch {}
+// AUDIT_PIN_PAGES=/refund-policy,/terms,/data-integrity (bare paths or full
+// URLs, comma-separated) bypasses the picker LLM call and reads these pages
+// instead. Matched by pathname, not exact URL, so a pin survives the inventory
+// carrying a different host form than the one you typed.
+//
+// This exists to isolate a pipeline fix from picker variance: run the same page
+// set before and after a fix and any difference in findings is attributable to
+// the fix, not to the picker choosing differently between runs. A debugging aid
+// for verifying a specific fix, not the steady state - unset it once satisfied
+// and let the picker choose normally again.
+const pinEnv = process.env.AUDIT_PIN_PAGES;
+let picked, pick, pinned = false;
+if (pinEnv) {
+  pinned = true;
+  const wantPaths = pinEnv.split(',').map((s) => s.trim()).filter(Boolean).map((s) => {
+    try { return new URL(s, site).pathname.replace(/\/$/, '') || '/'; } catch { return s; }
+  });
+  const byPath = (u) => { try { return new URL(u).pathname.replace(/\/$/, '') || '/'; } catch { return u; } };
+  picked = wantPaths
+    .map((path) => internal.find((l) => byPath(l.url) === path)?.url)
+    .filter(Boolean)
+    .slice(0, 4);
+  const missed = wantPaths.filter((path) => !internal.some((l) => byPath(l.url) === path));
+  if (missed.length) console.error(`[picker pinned] not in the inventory, skipped: ${missed.join(', ')}`);
+  console.error(`[picker pinned] ${picked.join(', ') || '(none matched)'}`);
+} else {
+  // Thinking OFF, explicitly. On Sonnet 4.6 omitting `thinking` meant no
+  // thinking; on Sonnet 5 the same call runs adaptive, and thinking spends from
+  // the same 500 tokens as the answer. A picker that thinks would truncate its
+  // own JSON array and hand back picked: [], which is the failure we chased for
+  // two days. Effort low because choosing 4 links off a labelled list is not
+  // hard. Temperature would be the obvious way to pin this down, but Sonnet 5
+  // rejects a non-default temperature with a 400, so the picks stay
+  // model-chosen: the remedy for a bad pick is the judge log, not a sampling
+  // parameter.
+  pick = await llmCall({
+    model: pickerModel, prompt: pickerInput, maxTokens: 500,
+    thinking: { type: 'disabled' },
+    ...(PRICE[pickerModel].effort ? { effort: 'low' } : {}),
+  });
+  const pickText = pick.text;
+  if (process.env.AUDIT_DEBUG) console.error('[picker raw]', JSON.stringify(pickText));
+  try { picked = JSON.parse(pickText.match(/\[[\s\S]*\]/)[0]).slice(0, 4); } catch { picked = []; }
+}
 // Only fetch picks that exist in the homepage's internal-link inventory: blocks hallucinated or
 // page-injected URLs from entering the judge context, and guarantees same-origin.
 const allowed = new Set(internal.map(l => l.url));
 picked = picked.map(u => String(u).replace(/\/$/, '')).filter(u => allowed.has(u));
-const picker_ms = Date.now() - tPick, picker_cost = cost(pickerModel, pick.usage);
+const picker_ms = Date.now() - tPick, picker_cost = pinned ? 0 : cost(pickerModel, pick.usage);
 
 // STAGE 3: fetch picked pages, with a thin-text / bot-block fallback. A page that
 // stays unusable after a longer-settle retry is swapped for the next-priority
@@ -411,7 +463,7 @@ const judge_log = {
   // How we found the pages, for us only, not the client. Two runs of the same
   // site can read different pages (nav vs sitemap, plus unreadable-page swaps),
   // which is the first thing to check when two runs disagree.
-  discovery: `${{
+  discovery: `${pinned ? 'Pages were PINNED via AUDIT_PIN_PAGES, not picked by the model. ' : ''}${{
     dom: "Pages found via the site's rendered navigation.",
     'raw-html': 'Pages found in the server HTML; the rendered navigation was empty.',
     sitemap: 'Pages found via the sitemap; no navigation links were found.',
