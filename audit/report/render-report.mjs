@@ -116,7 +116,7 @@ function verdictLine(m) {
     // Coverage, and the reader can check that claim against the list.
     return `We audited ${m.pages.length} key pages on <strong>${esc(
       m.host
-    )}</strong> and found nothing material to fix.`;
+    )}</strong> and found nothing material to fix. Your site's in good shape.`;
   }
   const n = m.findings.length + m.broken.length;
   // Only qualify the count when there's a severity to name. The old fallback
