@@ -8,6 +8,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { THIN_CHARS, unusable, fetchWithRetry, resolveWithSwaps } from './page-fallback.mjs';
 import { sameSiteFactory, cleanUrl, buildInventory } from './discovery.mjs';
+import { parseJudge } from './judge-parse.mjs';
 
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 // fileURLToPath decodes percent-encoding (e.g. a space -> %20); using .pathname
@@ -23,15 +24,19 @@ mkdirSync(OUT, { recursive: true });
 const ENGINE = (process.env.AUDIT_LLM || 'api').toLowerCase();
 const anthropic = ENGINE === 'api' ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) : null;
 
-async function llmCall({ model, system, prompt, maxTokens, thinking }) {
+async function llmCall({ model, system, prompt, maxTokens, thinking, effort }) {
   if (ENGINE === 'api') {
     // Streamed, then reassembled. The SDK refuses a non-streaming request whose
     // projected duration exceeds 10 minutes, which the judge's token budget now
     // crosses. finalMessage() gives back the same Message shape, so nothing
     // downstream changes.
+    //
+    // No temperature anywhere: Sonnet 5 and Opus 4.8 both reject a non-default
+    // temperature/top_p/top_k with a 400. Steer these calls by prompt only.
     const res = await anthropic.messages.stream({
       model, max_tokens: maxTokens,
       ...(thinking ? { thinking } : {}),
+      ...(effort ? { output_config: { effort } } : {}),
       ...(system ? { system } : {}),
       messages: [{ role: 'user', content: prompt }],
     }).finalMessage();
@@ -66,9 +71,19 @@ async function llmCall({ model, system, prompt, maxTokens, thinking }) {
 }
 
 const t0 = Date.now();
-const PRICE = { 'claude-haiku-4-5': { in: 1, out: 5 }, 'claude-sonnet-4-6': { in: 3, out: 15 }, 'claude-opus-4-8': { in: 5, out: 25 } };
+// Standard list rates. Sonnet 5 has introductory pricing ($2/$10) through
+// 2026-08-31; we bill ourselves at the standard rate so the numbers on a record
+// don't quietly rise when the intro period ends.
+// `effort` marks models that accept output_config.effort. Haiku 4.5 rejects it
+// with a 400, so the picker must not send it when running on Haiku.
+const PRICE = {
+  'claude-haiku-4-5': { in: 1, out: 5, effort: false },
+  'claude-sonnet-4-6': { in: 3, out: 15, effort: true },
+  'claude-sonnet-5': { in: 3, out: 15, effort: true },
+  'claude-opus-4-8': { in: 5, out: 25, effort: true },
+};
 const PRICE_KEYS = Object.keys(PRICE);
-const [site, runId = '1', pickerModel = 'claude-sonnet-4-6'] = process.argv.slice(2);
+const [site, runId = '1', pickerModel = 'claude-sonnet-5'] = process.argv.slice(2);
 if (!site || !/^https?:\/\//.test(site)) { console.error('usage: node run-pipeline.mjs <site_url> [run_id] [picker_model]'); process.exit(2); }
 if (!PRICE_KEYS.includes(pickerModel)) { console.error(`unknown picker model ${pickerModel}; known: ${PRICE_KEYS.join(', ')}`); process.exit(2); }
 const slug = site.replace(/https?:\/\/(www\.)?/, '').split(/[/.]/)[0];
@@ -200,6 +215,9 @@ if (internal.length === 0 && home.text && home.text.length > 200) {
 // and sitemap, not the pre-redirect origin's.
 if (internal.length === 0) { internal = await inventoryFromRawHtml(landedUrl); if (internal.length) discovery = 'raw-html'; }
 if (internal.length === 0) { internal = await inventoryFromSitemap(landedUrl); if (internal.length) discovery = 'sitemap'; }
+// Nothing found anywhere. Say so, rather than leaving 'dom' to claim the
+// rendered navigation supplied pages on precisely the runs where it supplied none.
+if (internal.length === 0) discovery = 'none';
 const stage1_ms = Date.now() - tFetch1;
 
 // STAGE 2: picker model chooses up to 4 pages (home is always included as #5).
@@ -214,7 +232,19 @@ ${internal.map(l => `${l.url} | ${l.label}`).join('\n').slice(0, 8000)}
 
 Pick UP TO 4 links (the homepage is already included). Priority: revenue pages (pricing/shop/services/booking) > trust/conversion (about/contact) > support (FAQ/delivery/terms). For shops/e-commerce, collections and product pages ARE the revenue pages: include at least one. Prefer pages likely to carry claims, prices, or counts that can contradict other pages. Reply with ONLY a JSON array of URLs, e.g. ["https://..","https://.."].`;
 const tPick = Date.now();
-const pick = await llmCall({ model: pickerModel, prompt: pickerInput, maxTokens: 500 });
+// Thinking OFF, explicitly. On Sonnet 4.6 omitting `thinking` meant no thinking;
+// on Sonnet 5 the same call runs adaptive, and thinking spends from the same 500
+// tokens as the answer. A picker that thinks would truncate its own JSON array
+// and hand back picked: [], which is the failure we chased for two days.
+// Effort low because choosing 4 links off a labelled list is not hard.
+// Temperature would be the obvious way to pin this down, but Sonnet 5 rejects a
+// non-default temperature with a 400, so the picks stay model-chosen: the
+// remedy for a bad pick is the judge log, not a sampling parameter.
+const pick = await llmCall({
+  model: pickerModel, prompt: pickerInput, maxTokens: 500,
+  thinking: { type: 'disabled' },
+  ...(PRICE[pickerModel].effort ? { effort: 'low' } : {}),
+});
 const pickText = pick.text;
 if (process.env.AUDIT_DEBUG) console.error('[picker raw]', JSON.stringify(pickText));
 let picked = [];
@@ -331,26 +361,10 @@ const tJudge = Date.now();
 // bundle overran 16k and came back cut off mid-JSON.
 const judge = await llmCall({ model: 'claude-opus-4-8', maxTokens: 32000, thinking: { type: 'adaptive' }, system: SYSTEM, prompt: `Website: ${site}\nAudit these ${pages.length} pages.\n\n${bundle}` });
 const judgeText = judge.text;
-let findings = [], rejected = [], approach = '', parsed = false;
-// try/catch INSIDE the loop: one malformed block (a truncated last one, or an
-// illustrative one in the prose) must not stop us reading the good blocks before
-// it. Wrapping the whole loop meant a bad final block threw away valid earlier
-// ones and left the run looking like it found nothing.
-{
-  const blocks = [...judgeText.matchAll(/```json\s*([\s\S]*?)```/g)];
-  for (let i = blocks.length - 1; i >= 0; i--) {
-    try {
-      const j = JSON.parse(blocks[i][1]);
-      if (Array.isArray(j.findings)) {
-        findings = j.findings;
-        rejected = Array.isArray(j.rejected) ? j.rejected : [];
-        approach = typeof j.approach === 'string' ? j.approach : '';
-        parsed = true;
-        break;
-      }
-    } catch {}
-  }
-}
+// Accepts a fenced block with any tag, a bare JSON reply, or JSON wrapped in
+// prose. See judge-parse.mjs for why: requiring a lowercase `json` fence threw
+// away three complete verdicts in two days.
+const { parsed, findings, rejected, approach } = parseJudge(judgeText);
 const judge_ms = Date.now() - tJudge, judge_cost = cost('claude-opus-4-8', judge.usage);
 // Keep the raw reasoning before anything can abort, so a failed run is still
 // diagnosable on the runner.
@@ -363,6 +377,13 @@ writeFileSync(`${OUT}${tag}.judge-raw.txt`, `${judge.thinking || '(no thinking r
 // Exit 4 tells the runner to leave the lead Approved and try again.
 if (!parsed) {
   console.error(`Judge returned no parseable findings block for ${site} (stop_reason=${judge.stop_reason || 'unknown'}, output_tokens=${judge.usage?.output_tokens ?? '?'}, chars=${judgeText.length}). Refusing to report zero findings off a verdict we could not read. Raw reasoning: ${tag}.judge-raw.txt`);
+  // The raw file only ever lived on the runner, and on a CI runner that disk dies
+  // with the container, so the one artefact that explains the failure was
+  // guaranteed to be destroyed. Put the diagnosis in the log itself: what we
+  // asked about, what fences came back, and the head of the actual response.
+  console.error(`  discovery=${discovery} pages_read=${pages.length} picked=${JSON.stringify(picked)}`);
+  console.error(`  fence tags in response: ${JSON.stringify((judgeText.match(/```([A-Za-z]*)/g) || []))}`);
+  console.error(`  ---- judge response, first 2000 chars ----\n${judgeText.slice(0, 2000)}\n  ---- end ----`);
   process.exit(4);
 }
 
@@ -387,6 +408,15 @@ const pathOnly = (u) => { try { return new URL(u).pathname || '/'; } catch { ret
 const logLine = (f) => `${String(f.severity || 'low').toUpperCase()} ${f.category || 'issue'} ${pathOnly(f.url)}${f.gate === 'fail' ? ' [GATE FAIL, dropped]' : ''}: ${f.check || 'no rationale given'}`;
 const judge_log = {
   summary: `${gated.filter(f => f.gate === 'pass').length} findings kept, ${gated.filter(f => f.gate === 'fail').length} dropped by the quote gate, ${rejected.length} considered and rejected by the judge.`,
+  // How we found the pages, for us only, not the client. Two runs of the same
+  // site can read different pages (nav vs sitemap, plus unreadable-page swaps),
+  // which is the first thing to check when two runs disagree.
+  discovery: `${{
+    dom: "Pages found via the site's rendered navigation.",
+    'raw-html': 'Pages found in the server HTML; the rendered navigation was empty.',
+    sitemap: 'Pages found via the sitemap; no navigation links were found.',
+    none: 'No internal links found at all: not in the rendered page, the server HTML, or a sitemap. The homepage was the only page available to read.',
+  }[discovery] || `Page discovery mode: ${discovery}.`} Read: ${pages.map(p => pathOnly(p.url)).join(', ')}.`,
   approach,
   kept: gated.map(logLine),
   rejected,

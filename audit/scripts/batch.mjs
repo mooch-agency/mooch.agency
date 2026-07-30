@@ -79,5 +79,23 @@ for (const lead of toSend) {
   }
 }
 
+// A single exit code for "something failed" made a red batch unreadable: three
+// reports emailed fine and one audit failed, and it looked like everything broke
+// (29 Jul). Separate the two halves, in the log and in the exit code, because
+// they mean opposite things: a failed send means a lead did not get their report,
+// a failed run means a lead stays Approved and the next batch retries it.
+const sendFailures = results.failed.filter((f) => f.stage === "send");
+const runFailures = results.failed.filter((f) => f.stage === "run");
 console.log(`\nBatch done: ${results.ran.length} run, ${results.sent.length} sent, ${results.failed.length} failed.`);
-if (results.failed.length) process.exit(1);
+if (results.failed.length) {
+  const parts = [];
+  if (sendFailures.length) parts.push(`${sendFailures.length} send${sendFailures.length > 1 ? "s" : ""} failed (a lead did not get their report)`);
+  if (runFailures.length) parts.push(`${runFailures.length} audit run${runFailures.length > 1 ? "s" : ""} failed (left Approved, next batch retries)`);
+  console.log(`  ${parts.join("; ")}.`);
+  // Only when sends actually happened: "every send succeeded" with zero Send
+  // leads is a reassurance about work nobody did.
+  if (!sendFailures.length && results.sent.length) console.log(`  Every send succeeded.`);
+}
+// 0 clean · 1 a send failed (worst: someone is missing their report) · 2 only
+// audit runs failed, all sends fine.
+process.exit(sendFailures.length ? 1 : runFailures.length ? 2 : 0);

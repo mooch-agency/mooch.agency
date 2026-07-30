@@ -95,3 +95,21 @@ test('stays inside Notion block and rich_text limits', () => {
     }
   }
 });
+
+// Discovery is internal only: it never reaches the client report, but two runs of
+// one site can read different pages, so the reviewer needs to see which and how.
+test('renders the discovery line when the record carries one', () => {
+  const withDiscovery = record({
+    judge_log: {
+      summary: 'nothing to report',
+      discovery: 'Pages found via the sitemap (no nav links found). Read: /, /faq.',
+    },
+  });
+  const t = allText(judgeLogBlocks(withDiscovery));
+  assert.match(t, /How we found the pages/);
+  assert.match(t, /via the sitemap/);
+});
+
+test('omits the discovery heading on an older record that has none', () => {
+  assert.ok(!/How we found the pages/.test(allText(judgeLogBlocks(record()))));
+});
