@@ -57,7 +57,7 @@ async function llmCall({ model, system, prompt, maxTokens, thinking, effort }) {
   const { spawn } = await import('node:child_process');
   const args = ['-p', '--model', model, '--output-format', 'json'];
   if (system) args.push('--append-system-prompt', system);
-  return new Promise((resolve, reject) => {
+  const once = () => new Promise((resolve, reject) => {
     const child = spawn('claude', args, { stdio: ['pipe', 'pipe', 'inherit'] });
     let out = '';
     child.stdout.on('data', d => (out += d));
@@ -71,6 +71,30 @@ async function llmCall({ model, system, prompt, maxTokens, thinking, effort }) {
     });
     child.stdin.end(prompt);
   });
+  // Retry with backoff. A non-zero exit from `claude -p` is usually transient: a
+  // rate limit, a dropped connection, a CLI hiccup. Without this the whole audit
+  // dies on one blip, and it did: a lisbon run vanished mid-benchmark on 31 Jul
+  // and succeeded on a plain retry minutes later.
+  //
+  // AUDIT_JUDGE_PASSES makes this load-bearing rather than nice-to-have, because
+  // N concurrent passes multiply the request rate against the same subscription.
+  // Multi-pass cannot become the default until a blip stops costing a whole run.
+  // Jittered so N passes that fail together do not retry in lockstep and collide
+  // again, which is how a rate limit turns into a thundering herd.
+  const DELAYS = [2000, 6000, 15000];
+  let lastErr;
+  for (let attempt = 0; attempt <= DELAYS.length; attempt++) {
+    try {
+      return await once();
+    } catch (e) {
+      lastErr = e;
+      if (attempt === DELAYS.length) break;
+      const wait = DELAYS[attempt] + Math.floor(Math.random() * 1000);
+      console.error(`[llm] ${String(e.message).slice(0, 80)} - retry ${attempt + 1}/${DELAYS.length} in ${wait}ms`);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+  throw lastErr;
 }
 
 const t0 = Date.now();
