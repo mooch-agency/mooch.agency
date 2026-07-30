@@ -109,6 +109,12 @@
     max-width: 1320px;
     margin: 0 auto;
   }
+  /* Serif italic accents ("design", "automations"), echoing the h1's italic "Mooch." */
+  .hero-deck .deck-serif {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.08em; /* serif runs optically smaller at the same size */
+  }
   .hero-deck {
     font-family: var(--sans);
     font-size: clamp(20px, 2.4vw, 28px);
@@ -687,21 +693,6 @@
     .deck-break { display: none; }
   }
 
-  /* AI tease (see ai-tease.js). The deck's last word reveals AS "skynet." in the
-     same sans as the sentence, sits a beat, then does a fast guilty flip back to
-     "AI." like someone covering up a typo. Never hinted at elsewhere. No-JS and
-     reduced-motion visitors only ever see "AI." (the real markup). */
-  /* The crossfade lives on the wrapper, not .word: .word already carries the
-     entrance animation (fill-mode both), and an animated property always wins
-     over a transition on the same element, so a transition placed on .word
-     itself would never visibly run. See motion.css's .rise/.in note for the
-     same gotcha elsewhere. Timing is quick: the correction is meant to feel hasty. */
-  .ai-tease { transition: opacity 0.1s var(--ease-deliver), filter 0.14s var(--ease-deliver); }
-  .ai-tease.tease-swap { opacity: 0; filter: blur(5px); }
-  @media (prefers-reduced-motion: reduce) {
-    .ai-tease { transition: none; }
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .marquee-track { animation: none; }
   }
@@ -733,7 +724,7 @@
     <h1 class="reveal-words" data-stagger="0.2">Hey, we're <em>Mooch.</em></h1>
   </div>
   <div class="hero-meta">
-    <div class="hero-deck reveal-words" data-stagger><span class="deck-lead">We find out what your customers really want,<br class="deck-break"> then build and scale it with <span class="ai-tease">AI.</span></span></div>
+    <div class="hero-deck reveal-words" data-stagger><span class="deck-lead">We <em class="deck-serif">design</em> products people want to use,<br class="deck-break"> and AI <em class="deck-serif">automations</em> they can't live without.</span></div>
     <div class="hero-actions reveal d4">
       <a class="pill" href="#work">Read our work <span class="arrow">&rarr;</span></a>
       <a class="ghost" href="#contact">Get in touch</a>
@@ -1189,7 +1180,6 @@
 </footer>
 
 <script src="/motion.js"></script>
-<script src="/ai-tease.js" defer></script>
 
 <!-- Vercel Web Analytics (static-site install). Activates once Web Analytics is
      enabled on the mooch.agency Vercel project; script served at /_vercel/insights/script.js -->
