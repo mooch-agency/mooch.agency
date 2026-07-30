@@ -276,11 +276,45 @@
   .audit-input:focus-visible { outline: none; border-color: var(--ink); }
   .audit-input[aria-invalid="true"] { border-color: var(--error); }
   .audit-submit { flex: 0 0 auto; }
-  /* Two-step disclosure: only the current step's field is visible. */
-  .audit-band[data-step="url"] .audit-input[name="email"] { display: none; }
-  .audit-band[data-step="email"] .audit-input[name="url"] { display: none; }
-  .audit-step-note { display: none; font-size: 14px; color: var(--muted); margin: 0 0 12px; }
-  .audit-band[data-step="email"] .audit-step-note { display: block; }
+  /* Two-step disclosure. Fields collapse/expand in place (width + opacity) so
+     the row never jumps; the step note unrolls via the grid-rows trick, same as
+     the comparison slide-out. Two variants, keyed on data-variant:
+       slide — the URL field collapses as the email field expands (carousel feel)
+       grow  — the URL field stays put and the email field expands beside it */
+  /* Carousel window: one field's worth of space, clipped. The track is 2 slides
+     wide and translates by half its width to bring the email field into view.
+     Both fields keep their full width the whole way, so nothing squashes. */
+  .audit-window { flex: 1 1 220px; min-width: 0; overflow: hidden; }
+  .audit-track {
+    display: flex;
+    width: 200%;
+    transition: transform 0.4s var(--ease-deliver);
+  }
+  .audit-slide { width: 50%; padding: 2px; } /* padding keeps focus rings from clipping */
+  .audit-slide .audit-input { width: 100%; flex: none; }
+  .audit-band[data-step="email"] .audit-track { transform: translateX(-50%); }
+  /* The off-screen field leaves the tab order, so keyboard users can't land in
+     a field they can't see. Delayed on exit so it stays visible while sliding. */
+  .audit-band[data-step="url"] .audit-slide:last-child,
+  .audit-band[data-step="email"] .audit-slide:first-child {
+    visibility: hidden;
+    transition: visibility 0s linear 0.4s;
+  }
+  .audit-slide { transition: visibility 0s; }
+  .audit-step-note {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 12px 0 0;
+    min-height: 1.3em;      /* reserved on both steps: revealing it never shifts the band */
+    opacity: 0;
+    transition: opacity 0.25s var(--ease-deliver) 0.2s;
+  }
+  .audit-band[data-step="email"] .audit-step-note { opacity: 1; }
+  .audit-band[data-step="url"] .audit-step-note { pointer-events: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .audit-track { transition: none; }
+    .audit-step-note { transition: none; }
+  }
   .audit-step-note .audit-url-echo { color: var(--ink); font-weight: 500; }
   .audit-url-edit {
     background: none; border: none; padding: 0;
@@ -350,6 +384,7 @@
     /* In a column flex container the flex-basis (220px) applies to HEIGHT, which
        would make the inputs 220px tall. Reset to content height. */
     .audit-input { flex: 0 0 auto; }
+    .audit-window { flex: 0 0 auto; }
     .audit-submit { width: 100%; }
   }
   /* Delivery beat: the title leans toward you the instant you point at it */
@@ -853,14 +888,26 @@
 
       <form class="audit-form" novalidate>
         <!-- Two-step breadcrumb: URL first (zero-cost ask), email second. The email
-             step is a gate, not a receipt: nothing runs until it submits. -->
-        <p class="audit-step-note">Last step: where should we send the report for <strong class="audit-url-echo"></strong>?
-          <button type="button" class="audit-url-edit">Change site</button></p>
+             step is a gate, not a receipt: nothing runs until it submits.
+             The two fields ride a track that slides sideways inside a fixed-size
+             window, so both stay full width and nothing resizes or jumps. -->
         <div class="audit-fields">
-          <input class="audit-input" type="url" name="url" inputmode="url" autocomplete="url" spellcheck="false" placeholder="yoursite.com" aria-label="Your website URL" required>
-          <input class="audit-input" type="email" name="email" autocomplete="email" spellcheck="false" placeholder="you@company.com" aria-label="Your email address" required>
+          <div class="audit-window">
+            <div class="audit-track">
+              <div class="audit-slide">
+                <input class="audit-input" type="url" name="url" inputmode="url" autocomplete="url" spellcheck="false" placeholder="yoursite.com" aria-label="Your website URL" required>
+              </div>
+              <div class="audit-slide">
+                <input class="audit-input" type="email" name="email" autocomplete="email" spellcheck="false" placeholder="you@company.com" aria-label="Your email address" required>
+              </div>
+            </div>
+          </div>
           <button class="pill audit-submit" type="submit">Check my site <span class="arrow">&rarr;</span></button>
         </div>
+        <!-- Height is reserved on both steps so revealing the note never shifts
+             the band; only its contents cross-fade. -->
+        <p class="audit-step-note" inert aria-hidden="true">Last step: where should we send the report for <strong class="audit-url-echo"></strong>?
+          <button type="button" class="audit-url-edit">Change site</button></p>
         <p class="audit-msg" role="alert" aria-live="assertive"></p>
       </form>
 
@@ -887,6 +934,19 @@
   var sentEmail = band.querySelector(".audit-sent-email");
   var urlEcho = form.querySelector(".audit-url-echo");
   var urlEdit = form.querySelector(".audit-url-edit");
+  var note = form.querySelector(".audit-step-note");
+
+  // Focusing a field that's still off-screen makes the clipped window scroll
+  // sideways, which stacks on top of the track's transform and throws the slide
+  // out of view. Focus without scrolling, and pin the window back if it ever does.
+  var auditWindow = form.querySelector(".audit-window");
+  if (auditWindow) {
+    auditWindow.addEventListener("scroll", function () { auditWindow.scrollLeft = 0; });
+  }
+  function focusField(el) {
+    try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+    if (auditWindow) auditWindow.scrollLeft = 0;
+  }
 
   // Per-step button labels; fail() restores the current step's label.
   var LABELS = {
@@ -896,6 +956,13 @@
   function setStep(step) {
     band.setAttribute("data-step", step);
     submit.innerHTML = LABELS[step];
+    // The note's text stays in the layout at all times (that's what stops the
+    // band jumping), so on step 1 it has to be hidden from AT and taken out of
+    // the tab order too, or "Change site" is reachable while invisible.
+    if (note) {
+      note.toggleAttribute("inert", step === "url");
+      note.setAttribute("aria-hidden", step === "url" ? "true" : "false");
+    }
   }
 
   // Vercel Analytics custom events. window.va is bootstrapped near the insights
@@ -954,7 +1021,7 @@
     if (focusEl === urlEl) setStep("url");
     else submit.innerHTML = LABELS[band.getAttribute("data-step")];
     msg.textContent = VALIDATION_COPY[reason] || VALIDATION_COPY.store;
-    if (focusEl) { setInvalid(focusEl, true); focusEl.focus(); }
+    if (focusEl) { setInvalid(focusEl, true); focusField(focusEl); }
     track("audit_validation_fail", { reason: reason });
   }
 
@@ -963,7 +1030,7 @@
     urlEdit.addEventListener("click", function () {
       msg.textContent = "";
       setStep("url");
-      urlEl.focus();
+      focusField(urlEl);
     });
   }
 
@@ -984,7 +1051,7 @@
     if (band.getAttribute("data-step") === "url") {
       urlEcho.textContent = url;
       setStep("email");
-      emailEl.focus();
+      focusField(emailEl);
       track("audit_step_url_complete", {});
       return;
     }
