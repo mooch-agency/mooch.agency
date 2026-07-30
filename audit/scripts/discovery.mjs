@@ -60,3 +60,30 @@ export function buildInventory(page, landedUrl) {
   }
   return inv;
 }
+
+// A URL from the inventory (rendered link, raw HTML, or sitemap), rewritten onto
+// the host the homepage actually landed on. Only the host changes; path, query
+// and hash pass through untouched, and a URL that isn't this site or is already
+// on the landed host comes back unchanged.
+//
+// The sitemap prints its own idea of the site's host, which is not necessarily
+// the working one (apexvolumetrics.com, 30 Jul: the apex host 308s to www AND
+// resets the connection outright on some requests). A browser follows that
+// redirect fine almost every time, but the pre-redirect hop is one more thing
+// that can fail on a flaky host. Retrying a failed fetch on the landed host
+// before writing the page off as unreadable turns that into a retry instead of
+// a different page silently entering the audit.
+export function onLandedHost(url, landedUrl) {
+  try {
+    const u = new URL(url);
+    const sameSite = sameSiteFactory(landedUrl);
+    if (!sameSite(u.href)) return url;
+    const landed = new URL(landedUrl);
+    if (u.host === landed.host) return url;
+    u.protocol = landed.protocol;
+    u.host = landed.host;
+    return u.href;
+  } catch {
+    return url;
+  }
+}

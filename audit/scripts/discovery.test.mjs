@@ -8,7 +8,7 @@
 // looked in good shape.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sameSiteFactory, cleanUrl, buildInventory } from './discovery.mjs';
+import { sameSiteFactory, cleanUrl, buildInventory, onLandedHost } from './discovery.mjs';
 
 const page = (...hrefs) => ({ links: hrefs.map((href) => ({ href, label: 'L' })) });
 
@@ -73,4 +73,39 @@ test('buildInventory: survives junk hrefs and a page with no links', () => {
   assert.deepEqual(buildInventory(page('javascript:void(0)', 'tel:+441234'), 'https://x.com/'), []);
   assert.deepEqual(buildInventory({ links: [] }, 'https://x.com/'), []);
   assert.deepEqual(buildInventory(undefined, 'https://x.com/'), []);
+});
+
+// onLandedHost: the regression is apexvolumetrics.com (30 Jul). The sitemap
+// lists the apex host; the apex host 308s to www and, on some requests, resets
+// the connection outright. Two runs of the same site read different pages and
+// reached opposite verdicts because a failed redirect hop silently swapped the
+// page for a different one instead of being retried.
+test('onLandedHost: rewrites a sitemap URL onto the host the homepage landed on', () => {
+  const rewritten = onLandedHost(
+    'https://apexvolumetrics.com/refund-policy',
+    'https://www.apexvolumetrics.com/'
+  );
+  assert.equal(rewritten, 'https://www.apexvolumetrics.com/refund-policy');
+});
+
+test('onLandedHost: preserves query and hash', () => {
+  const rewritten = onLandedHost(
+    'https://apexvolumetrics.com/faq?ref=nav#section',
+    'https://www.apexvolumetrics.com/'
+  );
+  assert.equal(rewritten, 'https://www.apexvolumetrics.com/faq?ref=nav#section');
+});
+
+test('onLandedHost: already on the landed host is a no-op', () => {
+  const url = 'https://www.apexvolumetrics.com/terms';
+  assert.equal(onLandedHost(url, 'https://www.apexvolumetrics.com/'), url);
+});
+
+test('onLandedHost: leaves a different site alone', () => {
+  const url = 'https://cal.com/samble-innovations/freeconsultation';
+  assert.equal(onLandedHost(url, 'https://www.apexvolumetrics.com/'), url);
+});
+
+test('onLandedHost: a junk URL comes back unchanged, not thrown', () => {
+  assert.equal(onLandedHost('javascript:void(0)', 'https://www.apexvolumetrics.com/'), 'javascript:void(0)');
 });

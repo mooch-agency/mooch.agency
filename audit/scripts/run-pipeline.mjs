@@ -7,7 +7,7 @@ import puppeteer from 'puppeteer-core';
 import { writeFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { THIN_CHARS, unusable, fetchWithRetry, resolveWithSwaps } from './page-fallback.mjs';
-import { sameSiteFactory, cleanUrl, buildInventory } from './discovery.mjs';
+import { sameSiteFactory, cleanUrl, buildInventory, onLandedHost } from './discovery.mjs';
 import { parseJudge } from './judge-parse.mjs';
 
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -188,7 +188,7 @@ const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new'
 process.on('uncaughtException', async (e) => { console.error(e); try { await browser.close(); } catch {} process.exit(1); });
 process.on('unhandledRejection', async (e) => { console.error(e); try { await browser.close(); } catch {} process.exit(1); });
 // The fallback helpers take an injected fetcher so tests can swap the browser out.
-const fetchOne = (url) => fetchPage(browser, url);
+const fetchRaw = (url) => fetchPage(browser, url);
 
 // STAGE 1: homepage fetch + link inventory.
 const tFetch1 = Date.now();
@@ -201,6 +201,20 @@ const landedUrl = home.url || site;
 const sameSite = sameSiteFactory(landedUrl);
 const homeUrl = cleanUrl(landedUrl);
 let internal = buildInventory(home, landedUrl);
+// If the direct fetch comes back unusable, retry once on the host the homepage
+// actually landed on before this page is written off as unreadable and swapped
+// for a different one (see onLandedHost in discovery.mjs for why). A failed
+// redirect hop is not evidence the PAGE is bad, and letting it look that way is
+// why two runs of one site could read different pages and reach different
+// verdicts on the same evidence.
+async function fetchOne(url) {
+  const first = await fetchRaw(url);
+  if (!unusable(first)) return first;
+  const alt = onLandedHost(url, landedUrl);
+  if (alt === url) return first;
+  const retry = await fetchRaw(alt);
+  return unusable(retry) ? first : retry;
+}
 // Homepage text present but zero internal links means the nav hadn't rendered
 // when we snapshotted (late-hydrating menu). Without this, every picked page is
 // filtered out against an empty inventory and the audit silently degrades to the
