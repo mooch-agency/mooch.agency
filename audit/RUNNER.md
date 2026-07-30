@@ -43,6 +43,44 @@ judge behaves differently on pages you picked by hand. It is a debugging lever,
 not part of the daily flow. Empty is falsy, so the default is normal picking, and
 the workflow input defaults to empty: nothing to unset between runs.
 
+**A pin that cannot be honoured exits 4.** If a pinned path is not in the site's
+inventory the run stops rather than quietly auditing whatever did match, which
+would silently change the evidence an experiment is holding constant. Pinning the
+homepage (`/`) is fine: it is always read, and is deliberately absent from the
+inventory. `AUDIT_PIN_LENIENT=1` restores best-effort matching for exploratory use.
+
+### `AUDIT_JUDGE_PASSES` — judge N times, ship what recurs
+
+Default 1. Set higher to run the judge N times over the **identical** bundle and
+merge by recurrence:
+
+| Seen in | Severity | Outcome |
+|---|---|---|
+| ≥2 passes | any | ships |
+| 1 pass | high/critical | ships anyway |
+| 1 pass | low/medium | `judge_log.uncorroborated` only |
+
+```
+AUDIT_JUDGE_PASSES=3 node scripts/run-pipeline.mjs https://example.com/ myrun
+```
+
+Why: the judge agrees with itself about 13-14% of the time run to run
+(`benchmark/2026-07-30-baseline.md`), and on r3p the finding it dropped half the
+time was the best one on the site. Recurrence is a measured confidence signal,
+unlike asking the judge how sure it is.
+
+Passes run concurrently, so 3 passes cost roughly 1.8x wall clock on the judge
+stage, and $0 marginal on the subscription engine. Each shipped finding carries
+`passes`, `pass_total` and `confidence`.
+
+### `AUDIT_LLM=subscription` — and what it costs you
+
+$0 marginal, but **no raw judge reasoning**. That path shells out to `claude -p`,
+which emits no thinking blocks at any effort or display setting, so
+`<tag>.judge-raw.txt` will only ever hold the final output. If you need the
+reasoning, run that one site on `AUDIT_LLM=api` and pay for it. This is not a
+config problem; do not go looking at `thinking.display` again.
+
 ## Daily flow
 
 ### 1. Run every Approved lead
