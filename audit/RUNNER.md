@@ -28,6 +28,21 @@ Run everything from `audit/`. Required in the environment:
 
 `AUDIT_LEADS_DS_ID` defaults to the live data source; override only for a test DB.
 
+### `AUDIT_PIN_PAGES` — skip the picker
+
+Comma-separated paths or full URLs. When set, the pipeline reads exactly those
+pages and the picker never runs, so `picker_cost` is 0 and the judge log says the
+pages were pinned rather than chosen.
+
+```
+AUDIT_PIN_PAGES=/pricing,/refund-policy,/terms node scripts/run-audit.mjs …
+```
+
+Use it to re-read a specific set: reproducing a verdict, or checking whether the
+judge behaves differently on pages you picked by hand. It is a debugging lever,
+not part of the daily flow. Empty is falsy, so the default is normal picking, and
+the workflow input defaults to empty: nothing to unset between runs.
+
 ## Daily flow
 
 ### 1. Run every Approved lead
