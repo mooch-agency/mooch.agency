@@ -293,10 +293,37 @@
   .audit-slide { width: 50%; padding: 2px; } /* padding keeps focus rings from clipping */
   .audit-slide .audit-input { width: 100%; flex: none; }
   .audit-band[data-step="email"] .audit-track { transform: translateX(-50%); }
+  /* Variant B ("grow"): no carousel. The window opens up so both slides sit side
+     by side; the URL field stays on screen and the email field expands in beside
+     it. Toggle with ?variant=grow. */
+  .audit-band[data-variant="grow"] .audit-window { overflow: visible; }
+  .audit-band[data-variant="grow"] .audit-track { width: 100%; transform: none; gap: 12px; }
+  .audit-band[data-variant="grow"] .audit-slide {
+    width: auto;
+    flex: 1 1 0;
+    transition: flex-grow 0.4s var(--ease-deliver), flex-basis 0.4s var(--ease-deliver),
+                opacity 0.3s var(--ease-deliver), margin 0.4s var(--ease-deliver);
+  }
+  .audit-band[data-variant="grow"][data-step="url"] .audit-slide:last-child {
+    flex: 0 0 0;
+    opacity: 0;
+    padding: 0;
+    margin-left: -12px; /* swallow the track gap while collapsed */
+    overflow: hidden;
+  }
+  /* The input's own padding and border would keep it ~34px wide at flex-basis 0,
+     so they collapse with it. */
+  .audit-band[data-variant="grow"][data-step="url"] .audit-slide:last-child .audit-input {
+    padding-inline: 0;
+    border-inline-width: 0;
+    transition: padding 0.4s var(--ease-deliver), border-color 0.15s ease;
+  }
+  /* The echo note is for the carousel only: in grow the URL never leaves view. */
+  .audit-band[data-variant="grow"] .audit-step-note { display: none; }
   /* The off-screen field leaves the tab order, so keyboard users can't land in
      a field they can't see. Delayed on exit so it stays visible while sliding. */
   .audit-band[data-step="url"] .audit-slide:last-child,
-  .audit-band[data-step="email"] .audit-slide:first-child {
+  .audit-band:not([data-variant="grow"])[data-step="email"] .audit-slide:first-child {
     visibility: hidden;
     transition: visibility 0s linear 0.4s;
   }
@@ -926,6 +953,10 @@
 (function () {
   var band = document.getElementById("audit");
   if (!band) return;
+  // Exploration toggle: ?variant=grow swaps the carousel for the
+  // second-field-appears-alongside treatment. Default is the carousel.
+  var variant = new URLSearchParams(location.search).get("variant");
+  if (variant === "grow") band.setAttribute("data-variant", "grow");
   var form = band.querySelector(".audit-form");
   var urlEl = form.querySelector('input[name="url"]');
   var emailEl = form.querySelector('input[name="email"]');
