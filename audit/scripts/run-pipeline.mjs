@@ -246,28 +246,55 @@ ${internal.map(l => `${l.url} | ${l.label}`).join('\n').slice(0, 8000)}
 
 Pick UP TO 4 links (the homepage is already included). Priority: revenue pages (pricing/shop/services/booking) > trust/conversion (about/contact) > support (FAQ/delivery/terms). For shops/e-commerce, collections and product pages ARE the revenue pages: include at least one. Prefer pages likely to carry claims, prices, or counts that can contradict other pages. Reply with ONLY a JSON array of URLs, e.g. ["https://..","https://.."].`;
 const tPick = Date.now();
-// Thinking OFF, explicitly. On Sonnet 4.6 omitting `thinking` meant no thinking;
-// on Sonnet 5 the same call runs adaptive, and thinking spends from the same 500
-// tokens as the answer. A picker that thinks would truncate its own JSON array
-// and hand back picked: [], which is the failure we chased for two days.
-// Effort low because choosing 4 links off a labelled list is not hard.
-// Temperature would be the obvious way to pin this down, but Sonnet 5 rejects a
-// non-default temperature with a 400, so the picks stay model-chosen: the
-// remedy for a bad pick is the judge log, not a sampling parameter.
-const pick = await llmCall({
-  model: pickerModel, prompt: pickerInput, maxTokens: 500,
-  thinking: { type: 'disabled' },
-  ...(PRICE[pickerModel].effort ? { effort: 'low' } : {}),
-});
-const pickText = pick.text;
-if (process.env.AUDIT_DEBUG) console.error('[picker raw]', JSON.stringify(pickText));
-let picked = [];
-try { picked = JSON.parse(pickText.match(/\[[\s\S]*\]/)[0]).slice(0, 4); } catch {}
+// AUDIT_PIN_PAGES=/refund-policy,/terms,/data-integrity (bare paths or full
+// URLs, comma-separated) bypasses the picker LLM call and reads these pages
+// instead. Matched by pathname, not exact URL, so a pin survives the inventory
+// carrying a different host form than the one you typed.
+//
+// This exists to isolate a pipeline fix from picker variance: run the same page
+// set before and after a fix and any difference in findings is attributable to
+// the fix, not to the picker choosing differently between runs. A debugging aid
+// for verifying a specific fix, not the steady state - unset it once satisfied
+// and let the picker choose normally again.
+const pinEnv = process.env.AUDIT_PIN_PAGES;
+let picked, pick, pinned = false;
+if (pinEnv) {
+  pinned = true;
+  const wantPaths = pinEnv.split(',').map((s) => s.trim()).filter(Boolean).map((s) => {
+    try { return new URL(s, site).pathname.replace(/\/$/, '') || '/'; } catch { return s; }
+  });
+  const byPath = (u) => { try { return new URL(u).pathname.replace(/\/$/, '') || '/'; } catch { return u; } };
+  picked = wantPaths
+    .map((path) => internal.find((l) => byPath(l.url) === path)?.url)
+    .filter(Boolean)
+    .slice(0, 4);
+  const missed = wantPaths.filter((path) => !internal.some((l) => byPath(l.url) === path));
+  if (missed.length) console.error(`[picker pinned] not in the inventory, skipped: ${missed.join(', ')}`);
+  console.error(`[picker pinned] ${picked.join(', ') || '(none matched)'}`);
+} else {
+  // Thinking OFF, explicitly. On Sonnet 4.6 omitting `thinking` meant no
+  // thinking; on Sonnet 5 the same call runs adaptive, and thinking spends from
+  // the same 500 tokens as the answer. A picker that thinks would truncate its
+  // own JSON array and hand back picked: [], which is the failure we chased for
+  // two days. Effort low because choosing 4 links off a labelled list is not
+  // hard. Temperature would be the obvious way to pin this down, but Sonnet 5
+  // rejects a non-default temperature with a 400, so the picks stay
+  // model-chosen: the remedy for a bad pick is the judge log, not a sampling
+  // parameter.
+  pick = await llmCall({
+    model: pickerModel, prompt: pickerInput, maxTokens: 500,
+    thinking: { type: 'disabled' },
+    ...(PRICE[pickerModel].effort ? { effort: 'low' } : {}),
+  });
+  const pickText = pick.text;
+  if (process.env.AUDIT_DEBUG) console.error('[picker raw]', JSON.stringify(pickText));
+  try { picked = JSON.parse(pickText.match(/\[[\s\S]*\]/)[0]).slice(0, 4); } catch { picked = []; }
+}
 // Only fetch picks that exist in the homepage's internal-link inventory: blocks hallucinated or
 // page-injected URLs from entering the judge context, and guarantees same-origin.
 const allowed = new Set(internal.map(l => l.url));
 picked = picked.map(u => String(u).replace(/\/$/, '')).filter(u => allowed.has(u));
-const picker_ms = Date.now() - tPick, picker_cost = cost(pickerModel, pick.usage);
+const picker_ms = Date.now() - tPick, picker_cost = pinned ? 0 : cost(pickerModel, pick.usage);
 
 // STAGE 3: fetch picked pages, with a thin-text / bot-block fallback. A page that
 // stays unusable after a longer-settle retry is swapped for the next-priority
@@ -425,7 +452,7 @@ const judge_log = {
   // How we found the pages, for us only, not the client. Two runs of the same
   // site can read different pages (nav vs sitemap, plus unreadable-page swaps),
   // which is the first thing to check when two runs disagree.
-  discovery: `${{
+  discovery: `${pinned ? 'Pages were PINNED via AUDIT_PIN_PAGES, not picked by the model. ' : ''}${{
     dom: "Pages found via the site's rendered navigation.",
     'raw-html': 'Pages found in the server HTML; the rendered navigation was empty.',
     sitemap: 'Pages found via the sitemap; no navigation links were found.',
