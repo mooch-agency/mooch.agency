@@ -24,6 +24,9 @@
 .pill:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .pill .arrow { transition: transform var(--t-deliver) var(--ease-deliver); }
 .pill:hover .arrow { transform: translateX(3px); }
+/* Ghost arrows point down (in-page anchors), so the hover nudge goes down too. */
+.ghost .arrow { transition: transform var(--t-deliver) var(--ease-deliver); }
+.ghost:hover .arrow { transform: translateY(3px); }
 /* aria-disabled keeps the button in the tab order while reading as inert. */
 .pill[aria-disabled="true"] { opacity: 0.35; cursor: not-allowed; transform: none; }
 .pill[aria-disabled="true"]:hover { background: var(--black); }
