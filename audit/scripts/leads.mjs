@@ -12,8 +12,8 @@
 //   node leads.mjs log <pageId> <recordPath>  # judge reasoning onto the row page body
 
 import { readFileSync } from "fs";
-import { basename } from "path";
-import { pathToFileURL } from "url";
+import { basename, dirname, join } from "path";
+import { fileURLToPath, pathToFileURL } from "url";
 
 const NOTION_VERSION = "2026-03-11";
 const DS_ID = process.env.AUDIT_LEADS_DS_ID || "fd9fd4d9-944a-4b94-b3ff-7c753be81605";
@@ -141,10 +141,16 @@ export async function attachReport(pageId, pdfPath, recordPath) {
 // a human typed on the page survive. Deliberately not a property: properties are
 // single-line and this is paragraphs.
 const JUDGE_LOG_MARKER = "How the audit reached these findings";
+const JUDGE_RAW_MARKER = "Judge's full reasoning (raw)";
 
 // Notion caps a rich_text content string at 2000 chars.
 const rt = (s) => [{ type: "text", text: { content: String(s ?? "").slice(0, 1900) } }];
 const para = (s) => ({ object: "block", type: "paragraph", paragraph: { rich_text: rt(s) } });
+const codeBlock = (s) => ({
+  object: "block",
+  type: "code",
+  code: { rich_text: rt(s), language: "plain text" },
+});
 const h3 = (s) => ({ object: "block", type: "heading_3", heading_3: { rich_text: rt(s) } });
 const bullet = (s) => ({
   object: "block",
@@ -197,21 +203,72 @@ export function judgeLogBlocks(record) {
         record.judge_model || "claude-opus-4-8"
       }, picker ${record.pickerModel || "?"}. ${
         (record.picker?.pages_used || []).length
-      } pages read. Full reasoning stays on the runner as ${record.tag || "?"}.judge-raw.txt.`
+      } pages read. The judge's full reasoning is in the "${JUDGE_RAW_MARKER}" toggle below.`
     )
   );
   // A toggle takes at most 100 children in one request.
   return blocks.slice(0, 100);
 }
 
-// Writes (or replaces) the judge-reasoning toggle on the lead row's page body.
-export async function writeJudgeLog(pageId, record) {
-  if (!record || !record.judge_log) return { skipped: "no judge_log on record" };
-  // Replace only our own toggle. Anything else on the page is a human's.
+// ── Raw judge reasoning on the row page ─────────────────────────────────────
+// The judge's full reasoning used to exist only as a file on the runner. On a CI
+// runner that disk dies with the container, so for every audit run through
+// GitHub Actions the reasoning was gone before anyone could read the summary
+// pointing at it. It now goes on the row, in its own toggle, so the deep dive
+// into what the judge skips has something to read.
+//
+// Notion caps a rich_text string at 2000 chars and a toggle at 100 children per
+// request, so the transcript is chunked. Chunks break on a newline where one is
+// available, so a paragraph of reasoning is not sliced mid-sentence.
+const RAW_CHUNK = 1900;
+const RAW_MAX_BLOCKS = 95; // under Notion's 100, leaving room for the header/footer
+
+export function chunkRaw(text, size = RAW_CHUNK) {
+  const out = [];
+  let rest = String(text ?? "");
+  while (rest.length > size) {
+    // Prefer the last newline in the window; fall back to a hard cut for a
+    // single unbroken run (minified JSON, one long line).
+    const window = rest.slice(0, size);
+    const brk = window.lastIndexOf("\n");
+    const at = brk > size * 0.5 ? brk + 1 : size;
+    out.push(rest.slice(0, at));
+    rest = rest.slice(at);
+  }
+  if (rest.length) out.push(rest);
+  return out;
+}
+
+// raw transcript -> the toggle's child blocks. Pure, so it can be unit-tested.
+export function judgeRawBlocks(raw, tag) {
+  const text = String(raw ?? "").trim();
+  if (!text) return [para("No raw reasoning was captured for this run.")];
+  const chunks = chunkRaw(text);
+  const kept = chunks.slice(0, RAW_MAX_BLOCKS);
+  const blocks = [
+    para(
+      `Verbatim transcript of the judge's thinking and its output for ${tag || "this run"}. Internal only: none of this is in the client's report.`
+    ),
+    ...kept.map(codeBlock),
+  ];
+  // Never silently truncate: say what was dropped and where the whole thing is.
+  if (chunks.length > kept.length) {
+    blocks.push(
+      para(
+        `Truncated: ${kept.length} of ${chunks.length} parts shown (Notion caps a toggle at 100 blocks). The complete file is the "judge-raw" artifact on the Actions run.`
+      )
+    );
+  }
+  return blocks;
+}
+
+// Deletes our own toggle by title, so a re-run replaces it and leaves anything a
+// human typed on the page alone.
+async function replaceToggle(pageId, marker, children) {
   const existing = await notion(`blocks/${pageId}/children?page_size=100`);
   for (const b of existing.results || []) {
     const title = (b.toggle?.rich_text || []).map((t) => t.plain_text).join("");
-    if (b.type === "toggle" && title === JUDGE_LOG_MARKER) {
+    if (b.type === "toggle" && title === marker) {
       await notion(`blocks/${b.id}`, { method: "DELETE" });
     }
   }
@@ -219,14 +276,30 @@ export async function writeJudgeLog(pageId, record) {
     method: "PATCH",
     body: JSON.stringify({
       children: [
-        {
-          object: "block",
-          type: "toggle",
-          toggle: { rich_text: rt(JUDGE_LOG_MARKER), children: judgeLogBlocks(record) },
-        },
+        { object: "block", type: "toggle", toggle: { rich_text: rt(marker), children } },
       ],
     }),
   });
+}
+
+// Writes (or replaces) the judge-reasoning toggle on the lead row's page body.
+export async function writeJudgeLog(pageId, record) {
+  if (!record || !record.judge_log) return { skipped: "no judge_log on record" };
+  return replaceToggle(pageId, JUDGE_LOG_MARKER, judgeLogBlocks(record));
+}
+
+// Writes (or replaces) the raw-reasoning toggle from the runner's .judge-raw.txt.
+// Takes a path rather than the text so the caller does not have to hold a large
+// transcript in memory just to hand it over.
+export async function writeJudgeRaw(pageId, rawPath, tag) {
+  if (!rawPath) return { skipped: "no raw reasoning path" };
+  let raw;
+  try {
+    raw = readFileSync(rawPath, "utf8");
+  } catch (e) {
+    return { skipped: `raw reasoning not readable at ${rawPath}` };
+  }
+  return replaceToggle(pageId, JUDGE_RAW_MARKER, judgeRawBlocks(raw, tag));
 }
 
 // Returns the row's Report files as [{name, url}] (urls are time-limited).
@@ -252,6 +325,15 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       const record = JSON.parse(readFileSync(args[1], "utf8"));
       const res = await writeJudgeLog(args[0], record);
       console.log(res.skipped ? `skipped: ${res.skipped}` : `wrote judge reasoning to ${args[0]}`);
+      // The raw transcript sits next to the run record, keyed by tag. Copy it in
+      // the same step so a hand-run lead gets the same two toggles as a batch one.
+      if (record.tag) {
+        // fileURLToPath, not .pathname: the latter leaves percent-encoding in
+        // place, so a path with a space becomes a literal "%20" nobody can read.
+        const rawPath = join(dirname(fileURLToPath(import.meta.url)), "runs", `${record.tag}.judge-raw.txt`);
+        const rawRes = await writeJudgeRaw(args[0], rawPath, record.tag);
+        console.log(rawRes.skipped ? `raw skipped: ${rawRes.skipped}` : `wrote raw reasoning to ${args[0]}`);
+      }
     } else {
       console.error("usage: node leads.mjs list|set|attach|log ...");
       process.exit(2);

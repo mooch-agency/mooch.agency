@@ -73,9 +73,9 @@ async function llmCall({ model, system, prompt, maxTokens, thinking, effort }) {
 const t0 = Date.now();
 // Standard list rates. Sonnet 5 has introductory pricing ($2/$10) through
 // 2026-08-31; we bill ourselves at the standard rate so the numbers on a record
-// don't quietly rise when the intro period ends.
-// `effort` marks models that accept output_config.effort. Haiku 4.5 rejects it
-// with a 400, so the picker must not send it when running on Haiku.
+// don't quietly rise when the intro period ends. `effort` marks models that accept
+// output_config.effort: Haiku 4.5 rejects it with a 400, so the picker must not
+// send it when running on Haiku.
 const PRICE = {
   'claude-haiku-4-5': { in: 1, out: 5, effort: false },
   'claude-sonnet-4-6': { in: 3, out: 15, effort: true },
@@ -420,7 +420,7 @@ const judge_log = {
   approach,
   kept: gated.map(logLine),
   rejected,
-  raw: `see ${tag}.judge-raw.txt next to this run record (runner disk only)`,
+  raw: `verbatim transcript in the "Judge's full reasoning (raw)" toggle on the lead row, and as the judge-raw artifact on the Actions run`,
 };
 
 const total_ms = Date.now() - t0;

@@ -62,8 +62,14 @@ Anything the quote gate dropped is listed too, marked as absent from the report.
 The toggle replaces itself on a re-run and touches nothing else on the page, so
 your own notes are safe to type alongside it. Contradiction findings also carry
 both conflicting quotes (`quote`/`quote2`), so the report evidences both sides.
-The same summary is in `judge_log` on the row's `.record.json`; the judge's full
-raw reasoning stays on the runner at `scripts/runs/<tag>.judge-raw.txt`.
+The same summary is in `judge_log` on the row's `.record.json`. The judge's
+**verbatim reasoning** goes on the row too, in a second toggle, **Judge's full
+reasoning (raw)**: thinking then output, chunked because Notion caps a block at
+2000 chars. It is written from `scripts/runs/<tag>.judge-raw.txt` during the run,
+because on a CI runner that file is destroyed when the job ends. The same files
+are also uploaded as the `judge-raw` artifact on every Actions run, including
+failed ones, which is the only copy when a run aborts before it has a row to
+write to.
 
 Running a lead by hand rather than via the batch? Add the log step:
 

@@ -11,7 +11,7 @@
 // Failure policy: one lead failing must not sink the batch; failures are noted
 // on the row (coverage note) and the batch exits non-zero so CI shows red.
 
-import { queryByStatus, setStatus, attachReport, getReportFiles, writeJudgeLog } from "./leads.mjs";
+import { queryByStatus, setStatus, attachReport, getReportFiles, writeJudgeLog, writeJudgeRaw } from "./leads.mjs";
 import { runAudit } from "./run-audit.mjs";
 import { sendReport } from "./send-report.mjs";
 import { readFileSync, writeFileSync, mkdtempSync } from "fs";
@@ -33,6 +33,11 @@ for (const lead of approved) {
     // Never fatal: a failed log must not block a good report from reaching review.
     await writeJudgeLog(lead.pageId, JSON.parse(readFileSync(r.recordPath, "utf8"))).catch((e) =>
       console.error(`  (judge log not written: ${String(e.message || e).slice(0, 120)})`)
+    );
+    // The raw reasoning has to be copied now: the file lives on the runner, and
+    // on CI that disk is destroyed when the job ends. Never fatal either.
+    await writeJudgeRaw(lead.pageId, r.rawPath, r.tag).catch((e) =>
+      console.error(`  (raw reasoning not written: ${String(e.message || e).slice(0, 120)})`)
     );
     await setStatus(lead.pageId, "Ready for review", r.summary);
     results.ran.push({ url: lead.url, auditId, summary: r.summary });
