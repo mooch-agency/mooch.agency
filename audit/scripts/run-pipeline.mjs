@@ -24,15 +24,19 @@ mkdirSync(OUT, { recursive: true });
 const ENGINE = (process.env.AUDIT_LLM || 'api').toLowerCase();
 const anthropic = ENGINE === 'api' ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) : null;
 
-async function llmCall({ model, system, prompt, maxTokens, thinking }) {
+async function llmCall({ model, system, prompt, maxTokens, thinking, effort }) {
   if (ENGINE === 'api') {
     // Streamed, then reassembled. The SDK refuses a non-streaming request whose
     // projected duration exceeds 10 minutes, which the judge's token budget now
     // crosses. finalMessage() gives back the same Message shape, so nothing
     // downstream changes.
+    //
+    // No temperature anywhere: Sonnet 5 and Opus 4.8 both reject a non-default
+    // temperature/top_p/top_k with a 400. Steer these calls by prompt only.
     const res = await anthropic.messages.stream({
       model, max_tokens: maxTokens,
       ...(thinking ? { thinking } : {}),
+      ...(effort ? { output_config: { effort } } : {}),
       ...(system ? { system } : {}),
       messages: [{ role: 'user', content: prompt }],
     }).finalMessage();
@@ -67,9 +71,12 @@ async function llmCall({ model, system, prompt, maxTokens, thinking }) {
 }
 
 const t0 = Date.now();
-const PRICE = { 'claude-haiku-4-5': { in: 1, out: 5 }, 'claude-sonnet-4-6': { in: 3, out: 15 }, 'claude-opus-4-8': { in: 5, out: 25 } };
+// Standard list rates. Sonnet 5 has introductory pricing ($2/$10) through
+// 2026-08-31; we bill ourselves at the standard rate so the numbers on a record
+// don't quietly rise when the intro period ends.
+const PRICE = { 'claude-haiku-4-5': { in: 1, out: 5 }, 'claude-sonnet-4-6': { in: 3, out: 15 }, 'claude-sonnet-5': { in: 3, out: 15 }, 'claude-opus-4-8': { in: 5, out: 25 } };
 const PRICE_KEYS = Object.keys(PRICE);
-const [site, runId = '1', pickerModel = 'claude-sonnet-4-6'] = process.argv.slice(2);
+const [site, runId = '1', pickerModel = 'claude-sonnet-5'] = process.argv.slice(2);
 if (!site || !/^https?:\/\//.test(site)) { console.error('usage: node run-pipeline.mjs <site_url> [run_id] [picker_model]'); process.exit(2); }
 if (!PRICE_KEYS.includes(pickerModel)) { console.error(`unknown picker model ${pickerModel}; known: ${PRICE_KEYS.join(', ')}`); process.exit(2); }
 const slug = site.replace(/https?:\/\/(www\.)?/, '').split(/[/.]/)[0];
@@ -215,7 +222,18 @@ ${internal.map(l => `${l.url} | ${l.label}`).join('\n').slice(0, 8000)}
 
 Pick UP TO 4 links (the homepage is already included). Priority: revenue pages (pricing/shop/services/booking) > trust/conversion (about/contact) > support (FAQ/delivery/terms). For shops/e-commerce, collections and product pages ARE the revenue pages: include at least one. Prefer pages likely to carry claims, prices, or counts that can contradict other pages. Reply with ONLY a JSON array of URLs, e.g. ["https://..","https://.."].`;
 const tPick = Date.now();
-const pick = await llmCall({ model: pickerModel, prompt: pickerInput, maxTokens: 500 });
+// Thinking OFF, explicitly. On Sonnet 4.6 omitting `thinking` meant no thinking;
+// on Sonnet 5 the same call runs adaptive, and thinking spends from the same 500
+// tokens as the answer. A picker that thinks would truncate its own JSON array
+// and hand back picked: [], which is the failure we chased for two days.
+// Effort low because choosing 4 links off a labelled list is not hard.
+// Temperature would be the obvious way to pin this down, but Sonnet 5 rejects a
+// non-default temperature with a 400, so the picks stay model-chosen: the
+// remedy for a bad pick is the judge log, not a sampling parameter.
+const pick = await llmCall({
+  model: pickerModel, prompt: pickerInput, maxTokens: 500,
+  thinking: { type: 'disabled' }, effort: 'low',
+});
 const pickText = pick.text;
 if (process.env.AUDIT_DEBUG) console.error('[picker raw]', JSON.stringify(pickText));
 let picked = [];
@@ -379,6 +397,10 @@ const pathOnly = (u) => { try { return new URL(u).pathname || '/'; } catch { ret
 const logLine = (f) => `${String(f.severity || 'low').toUpperCase()} ${f.category || 'issue'} ${pathOnly(f.url)}${f.gate === 'fail' ? ' [GATE FAIL, dropped]' : ''}: ${f.check || 'no rationale given'}`;
 const judge_log = {
   summary: `${gated.filter(f => f.gate === 'pass').length} findings kept, ${gated.filter(f => f.gate === 'fail').length} dropped by the quote gate, ${rejected.length} considered and rejected by the judge.`,
+  // How we found the pages, for us only, not the client. Two runs of the same
+  // site can read different pages (nav vs sitemap, plus unreadable-page swaps),
+  // which is the first thing to check when two runs disagree.
+  discovery: `Pages found via ${discovery === 'dom' ? "the site's rendered navigation" : discovery === 'raw-html' ? "the server HTML (rendered nav was empty)" : 'the sitemap (no nav links found)'}. Read: ${pages.map(p => pathOnly(p.url)).join(', ')}.`,
   approach,
   kept: gated.map(logLine),
   rejected,

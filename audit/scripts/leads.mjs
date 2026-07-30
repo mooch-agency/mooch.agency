@@ -166,6 +166,9 @@ export function judgeLogBlocks(record) {
   const log = record.judge_log || {};
   const findings = record.findings || [];
   const blocks = [para(log.summary || "No summary recorded for this run.")];
+  // Internal only. Two runs of one site can read different pages, so which pages
+  // we found and how is the first thing to check when two runs disagree.
+  if (log.discovery) blocks.push(h3("How we found the pages"), para(log.discovery));
   if (log.approach) blocks.push(h3("What the judge compared"), para(log.approach));
 
   if (findings.length) blocks.push(h3("Why each finding was kept"));
