@@ -276,6 +276,19 @@
   .audit-input:focus-visible { outline: none; border-color: var(--ink); }
   .audit-input[aria-invalid="true"] { border-color: var(--error); }
   .audit-submit { flex: 0 0 auto; }
+  /* Two-step disclosure: only the current step's field is visible. */
+  .audit-band[data-step="url"] .audit-input[name="email"] { display: none; }
+  .audit-band[data-step="email"] .audit-input[name="url"] { display: none; }
+  .audit-step-note { display: none; font-size: 14px; color: var(--muted); margin: 0 0 12px; }
+  .audit-band[data-step="email"] .audit-step-note { display: block; }
+  .audit-step-note .audit-url-echo { color: var(--ink); font-weight: 500; }
+  .audit-url-edit {
+    background: none; border: none; padding: 0;
+    font: inherit; color: var(--muted);
+    text-decoration: underline; text-underline-offset: 2px;
+    cursor: pointer;
+  }
+  .audit-url-edit:hover { color: var(--ink); }
   .audit-msg { margin-top: 12px; font-size: 14px; color: var(--error); min-height: 1.2em; }
   .audit-msg:empty { margin-top: 0; min-height: 0; }
   /* Comparison slide-out (Q9 Treatment A): trigger + grid-rows disclosure. */
@@ -807,7 +820,7 @@
      Products. Morphs in place through 3 honest states via [data-state]:
      input -> validating -> sent. The audit runs later (manual-first, R2); this
      only captures the lead. See v1 audit ticket, Phase 1. -->
-<section class="section audit-band" id="audit" data-state="input">
+<section class="section audit-band" id="audit" data-state="input" data-step="url">
   <div class="section-inner">
     <div class="audit-band-inner" data-reveal="child: :scope > *; cap: 6">
       <div class="section-num"><strong>&#9733;</strong> No account, no catch <span class="rule"></span></div>
@@ -839,10 +852,14 @@
       </div>
 
       <form class="audit-form" novalidate>
+        <!-- Two-step breadcrumb: URL first (zero-cost ask), email second. The email
+             step is a gate, not a receipt: nothing runs until it submits. -->
+        <p class="audit-step-note">Last step: where should we send the report for <strong class="audit-url-echo"></strong>?
+          <button type="button" class="audit-url-edit">Change site</button></p>
         <div class="audit-fields">
           <input class="audit-input" type="url" name="url" inputmode="url" autocomplete="url" spellcheck="false" placeholder="yoursite.com" aria-label="Your website URL" required>
           <input class="audit-input" type="email" name="email" autocomplete="email" spellcheck="false" placeholder="you@company.com" aria-label="Your email address" required>
-          <button class="pill audit-submit" type="submit">Get my audit <span class="arrow">&rarr;</span></button>
+          <button class="pill audit-submit" type="submit">Check my site <span class="arrow">&rarr;</span></button>
         </div>
         <p class="audit-msg" role="alert" aria-live="assertive"></p>
       </form>
@@ -867,8 +884,19 @@
   var emailEl = form.querySelector('input[name="email"]');
   var msg = form.querySelector(".audit-msg");
   var submit = form.querySelector(".audit-submit");
-  var submitHTML = submit.innerHTML; // preserve label + arrow for restore
   var sentEmail = band.querySelector(".audit-sent-email");
+  var urlEcho = form.querySelector(".audit-url-echo");
+  var urlEdit = form.querySelector(".audit-url-edit");
+
+  // Per-step button labels; fail() restores the current step's label.
+  var LABELS = {
+    url: 'Check my site <span class="arrow">&rarr;</span>',
+    email: 'Send my audit <span class="arrow">&rarr;</span>',
+  };
+  function setStep(step) {
+    band.setAttribute("data-step", step);
+    submit.innerHTML = LABELS[step];
+  }
 
   // Vercel Analytics custom events. window.va is bootstrapped near the insights
   // script at the end of the page; guarded so it no-ops if analytics is blocked.
@@ -922,10 +950,21 @@
   function setInvalid(el, on) { if (el) el.setAttribute("aria-invalid", on ? "true" : "false"); }
   function fail(reason, focusEl) {
     band.setAttribute("data-state", "input");
-    submit.innerHTML = submitHTML; // restore label after a failed attempt
+    // A server-rejected URL sends the user back to the URL step to fix it.
+    if (focusEl === urlEl) setStep("url");
+    else submit.innerHTML = LABELS[band.getAttribute("data-step")];
     msg.textContent = VALIDATION_COPY[reason] || VALIDATION_COPY.store;
     if (focusEl) { setInvalid(focusEl, true); focusEl.focus(); }
     track("audit_validation_fail", { reason: reason });
+  }
+
+  // "Change site" on the email step returns to the URL step.
+  if (urlEdit) {
+    urlEdit.addEventListener("click", function () {
+      msg.textContent = "";
+      setStep("url");
+      urlEl.focus();
+    });
   }
 
   form.addEventListener("submit", async function (e) {
@@ -939,8 +978,18 @@
     track("audit_submit_attempt", {});
 
     var url = urlEl.value.trim();
-    var email = emailEl.value.trim().toLowerCase();
     if (!url) return fail("url", urlEl);
+
+    // Step 1 only advances to the email step; nothing is submitted or run yet.
+    if (band.getAttribute("data-step") === "url") {
+      urlEcho.textContent = url;
+      setStep("email");
+      emailEl.focus();
+      track("audit_step_url_complete", {});
+      return;
+    }
+
+    var email = emailEl.value.trim().toLowerCase();
     // Client only distinguishes "obviously wrong" (syntax/junk). blocklist and mx
     // are the server's verdicts, returned as data.reason on a 400.
     if (!emailLooksReal(email)) return fail("syntax", emailEl);
