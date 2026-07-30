@@ -141,3 +141,37 @@ test('onLandedHost: mailto and tel links pass through untouched', () => {
     assert.equal(onLandedHost(link, 'https://www.apexvolumetrics.com/'), link);
   }
 });
+
+// ── Item 2 (recall-gap ticket): the link checker sees subdomains ────────────
+// sameSiteFactory stays strict on purpose: page DISCOVERY must not wander onto
+// quiz.example.com and audit it. sameDomainFactory is the link-check filter,
+// where a subdomain of the client's own domain is the client's own link.
+// The apexvolumetrics case: the hero CTA pointed at www.quiz.apexvolumetrics.com,
+// which sameSiteFactory reduced to a third-party host, so the dead link was
+// never even probed.
+import { sameDomainFactory } from './discovery.mjs';
+
+test('sameDomainFactory: a subdomain of the audited domain is same-domain', () => {
+  const sameDomain = sameDomainFactory('https://apexvolumetrics.com/');
+  assert.equal(sameDomain('https://quiz.apexvolumetrics.com/x'), true);
+  assert.equal(sameDomain('https://www.quiz.apexvolumetrics.com//default'), true);
+  assert.equal(sameDomain('https://www.apexvolumetrics.com/faq'), true);
+  assert.equal(sameDomain('https://apexvolumetrics.com/'), true);
+});
+
+test('sameDomainFactory: lookalike and third-party hosts are not', () => {
+  const sameDomain = sameDomainFactory('https://apexvolumetrics.com/');
+  assert.equal(sameDomain('https://evilapexvolumetrics.com/'), false);
+  assert.equal(sameDomain('https://apexvolumetrics.com.evil.example/'), false);
+  assert.equal(sameDomain('https://example.com/'), false);
+  assert.equal(sameDomain('not a url'), false);
+});
+
+// When the audited site is itself a subdomain, its own children count but its
+// parent does not: lisbon.amplify.eu was sold as the site, amplify.eu was not.
+test('sameDomainFactory: children of a subdomain site count, the parent does not', () => {
+  const sameDomain = sameDomainFactory('https://lisbon.amplify.eu/');
+  assert.equal(sameDomain('https://book.lisbon.amplify.eu/'), true);
+  assert.equal(sameDomain('https://amplify.eu/'), false);
+  assert.equal(sameDomain('https://porto.amplify.eu/'), false);
+});

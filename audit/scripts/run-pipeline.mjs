@@ -7,7 +7,8 @@ import puppeteer from 'puppeteer-core';
 import { writeFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { THIN_CHARS, unusable, fetchWithRetry, resolveWithSwaps } from './page-fallback.mjs';
-import { sameSiteFactory, cleanUrl, buildInventory, onLandedHost } from './discovery.mjs';
+import { sameSiteFactory, sameDomainFactory, cleanUrl, buildInventory, onLandedHost } from './discovery.mjs';
+import { statusOfFactory, REPORTABLE } from './link-check.mjs';
 import { parseJudge } from './judge-parse.mjs';
 
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -357,35 +358,35 @@ if (pages.length === 0) {
 const tLinks = Date.now();
 const LINK_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)';
 // Memoised so a URL probed as an audited page isn't re-fetched when it also shows
-// up in the on-page link inventory below.
-const statusCache = new Map();
-async function statusOf(u) {
-  if (statusCache.has(u)) return statusCache.get(u);
-  let s;
-  try {
-    const r = await fetch(u, { method: 'GET', redirect: 'follow', headers: { 'user-agent': LINK_UA }, signal: AbortSignal.timeout(10000) });
-    s = r.status;
-  } catch { s = 'error'; }
-  statusCache.set(u, s);
-  return s;
-}
+// up in the on-page link inventory below. Classification (dead_domain vs
+// transient error, one DNS retry) lives in link-check.mjs where it is
+// unit-tested; this only supplies the real fetch.
+const statusOf = statusOfFactory((u) =>
+  fetch(u, { method: 'GET', redirect: 'follow', headers: { 'user-agent': LINK_UA }, signal: AbortSignal.timeout(10000) })
+);
 // Probe the audited pages first, in parallel. A not-found status on a page we
 // successfully read proves the origin soft-404s and disqualifies status-based
 // link checking this run. cleanUrl-normalised so keys align with allLinks (below)
 // and the memoised statusOf dedupes the overlap.
 const auditedSameOrigin = [...new Set(pages.map(p => p.url).filter(sameSite).map(cleanUrl))];
 const softNotFound = (await Promise.all(auditedSameOrigin.map(statusOf))).some(s => s === 404 || s === 410);
-const allLinks = [...new Set(pages.flatMap(p => p.links.map(l => { try { return sameSite(l.href) ? cleanUrl(l.href) : null; } catch { return null; } }).filter(Boolean)))];
+// sameDomain, not sameSite: the link CHECK covers subdomains of the client's
+// domain (a dead quiz.example.com CTA is the client's own broken link), while
+// page discovery stays strict. Item 2 of the recall-gap ticket.
+const sameDomain = sameDomainFactory(pages[0]?.url || site);
+const allLinks = [...new Set(pages.flatMap(p => p.links.map(l => { try { return sameDomain(l.href) ? cleanUrl(l.href) : null; } catch { return null; } }).filter(Boolean)))];
 const linkResults = []; const unreachable = [];
 // On a soft-404 origin the HTTP status is meaningless, so skip status-based link
 // reporting entirely. Recorded internally via link_check.soft_404 (+ note), never
 // surfaced to the client. Otherwise check each on-page link.
+// Note dead_domain is NOT gated by soft-404: a soft-404 origin lies with HTTP
+// statuses, but NXDOMAIN is a DNS answer, which the origin cannot fake.
 if (!softNotFound) {
   for (const u of allLinks.slice(0, 60)) {
     const s = await statusOf(u);
-    // Only definitive not-found statuses are reportable. 403/429/5xx are often bot-blocks or blips:
-    // recording them as broken would violate the near-zero-FP rule, so they are logged, never reported.
-    if (s === 404 || s === 410) linkResults.push({ url: u, status: s });
+    // Only REPORTABLE statuses (404/410/dead_domain) reach the client. 403/429/5xx
+    // are often bot-blocks or blips: logged, never reported (near-zero-FP rule).
+    if (REPORTABLE.has(s)) linkResults.push({ url: u, status: s });
     else if (typeof s === 'number' && s >= 400) unreachable.push({ url: u, status: s });
     else if (s === 'error') unreachable.push({ url: u, status: 'timeout/error' });
   }

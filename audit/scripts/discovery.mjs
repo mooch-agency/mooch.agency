@@ -30,6 +30,35 @@ export function sameSiteFactory(site) {
   };
 }
 
+// Same DOMAIN, subdomains included: the link-check filter, NOT the discovery
+// filter. sameSiteFactory above stays strict so the picker never wanders onto
+// quiz.example.com and audits it; this one exists because a link to a subdomain
+// of the client's own domain is the client's own link and must be probed. The
+// apexvolumetrics case (30 Jul): the hero CTA pointed at
+// www.quiz.apexvolumetrics.com (NXDOMAIN), sameSiteFactory reduced it to a
+// third-party host, and the dead primary CTA was never checked at all.
+// The base is the audited host itself, not its registrable parent:
+// lisbon.amplify.eu's children count, amplify.eu and porto.amplify.eu do not,
+// because the site the lead submitted is the site we make claims about.
+export function sameDomainFactory(site) {
+  const base = (() => {
+    try {
+      return new URL(site).hostname.replace(/^www\./, '');
+    } catch {
+      return '';
+    }
+  })();
+  return (u) => {
+    if (!base) return false;
+    try {
+      const h = new URL(u).hostname.replace(/^www\./, '');
+      return h === base || h.endsWith('.' + base);
+    } catch {
+      return false;
+    }
+  };
+}
+
 // Origin + path, no query, no hash, no trailing slash. Two links to the same
 // page in different forms collapse to one inventory entry.
 export function cleanUrl(u) {

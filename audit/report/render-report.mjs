@@ -88,9 +88,14 @@ function reportModel(record, dateStr) {
   const hasSevere = passed.some(
     (f) => sev(f).rank <= SEVERITY.high.rank
   );
-  const thin = !hasSevere && weight < THIN_FLOOR_WEIGHT;
   const linkCheck = record.link_check || {};
   const broken = linkCheck.broken || [];
+  // A verified broken link defeats the good-shape variant on its own. It is the
+  // most objectively checkable finding the pipeline produces, and before this it
+  // was the most suppressed: the apexvolumetrics record carried a dead hero CTA,
+  // rendered thin: true, dropped the URL from the HTML entirely, and shipped
+  // "found nothing material to fix" (recall-gap ticket, item 1).
+  const thin = !hasSevere && weight < THIN_FLOOR_WEIGHT && broken.length === 0;
   return {
     site: record.site,
     host: hostOf(record.site),
@@ -143,10 +148,12 @@ function worstOffendersRows(m) {
     </tr>`);
   }
   // Broken links fill remaining rows (they are always worst-offender material).
+  // 'dead_domain' is an internal token; the client reads what it means.
   for (const b of m.broken.slice(0, Math.max(0, 6 - rows.length))) {
+    const label = b.status === "dead_domain" ? "domain doesn't resolve" : String(b.status);
     rows.push(`<tr>
       <td><span class="chip chip-high">High</span></td>
-      <td>Broken link (${esc(String(b.status))})</td>
+      <td>Broken link (${esc(label)})</td>
       <td><a href="${safeHref(b.url)}">${esc(pathOf(b.url))}</a></td>
     </tr>`);
   }
@@ -226,17 +233,21 @@ function findingCards(m) {
 
 function brokenLinksBlock(m) {
   if (!m.broken.length) return "";
+  // 'dead_domain' is an internal token (link-check.mjs); the client reads what
+  // it means, not what we call it.
+  const statusLabel = (s) =>
+    s === "dead_domain" ? "the domain doesn't resolve" : String(s);
   const rows = m.broken
     .map(
       (b) =>
         `<li><a href="${safeHref(b.url)}">${esc(
           b.url
-        )}</a> <span class="muted">(${esc(String(b.status))})</span></li>`
+        )}</a> <span class="muted">(${esc(statusLabel(b.status))})</span></li>`
     )
     .join("\n");
   return `<section class="block">
     <h2 class="block-title">Broken links</h2>
-    <p class="block-lead">These returned a not-found status when we checked them.</p>
+    <p class="block-lead">These didn't lead anywhere when we checked them.</p>
     <ul class="link-list">${rows}</ul>
   </section>`;
 }

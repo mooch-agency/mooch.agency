@@ -74,3 +74,38 @@ test('the verdict never promises a fix timeline', () => {
   const withBroken = record([], { broken: [{ url: 'https://example.com/gone', status: 404 }] });
   assert.ok(!/fixable in an afternoon/i.test(renderReport(withBroken, '29 July 2026').html));
 });
+
+// ── Item 1 (recall-gap ticket): broken links defeat the thin floor ──────────
+// The apexvolumetrics case: zero findings above the floor, but the hero CTA is
+// dead. That record used to render thin: true, drop the URL entirely, and say
+// "found nothing material to fix". A verified broken link IS material.
+test('a broken link alone defeats the good-shape variant', () => {
+  const out = renderReport(
+    record([], { broken: [{ url: 'https://example.com/quiz', status: 404 }] }),
+    '30 July 2026'
+  );
+  assert.equal(out.thin, false);
+  assert.match(out.html, /example\.com\/quiz/);
+  assert.match(out.html, /1 content issue/);
+});
+
+test('low findings under the floor plus a broken link still render in full', () => {
+  const out = renderReport(
+    record([finding('low')], { broken: [{ url: 'https://example.com/gone', status: 410 }] }),
+    '30 July 2026'
+  );
+  assert.equal(out.thin, false);
+  assert.match(out.html, /example\.com\/gone/);
+});
+
+// A dead domain reads differently from a 404 in the client-facing list: "the
+// page is gone" vs "the domain doesn't exist".
+test('a dead-domain link is labelled as such, not as a status code', () => {
+  const out = renderReport(
+    record([], { broken: [{ url: 'https://www.quiz.example.com//default', status: 'dead_domain' }] }),
+    '30 July 2026'
+  );
+  assert.equal(out.thin, false);
+  assert.match(out.html, /domain doesn't resolve/i);
+  assert.ok(!/dead_domain/.test(out.html), 'internal status token must not leak to the client');
+});
