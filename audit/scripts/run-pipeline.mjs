@@ -74,7 +74,14 @@ const t0 = Date.now();
 // Standard list rates. Sonnet 5 has introductory pricing ($2/$10) through
 // 2026-08-31; we bill ourselves at the standard rate so the numbers on a record
 // don't quietly rise when the intro period ends.
-const PRICE = { 'claude-haiku-4-5': { in: 1, out: 5 }, 'claude-sonnet-4-6': { in: 3, out: 15 }, 'claude-sonnet-5': { in: 3, out: 15 }, 'claude-opus-4-8': { in: 5, out: 25 } };
+// `effort` marks models that accept output_config.effort. Haiku 4.5 rejects it
+// with a 400, so the picker must not send it when running on Haiku.
+const PRICE = {
+  'claude-haiku-4-5': { in: 1, out: 5, effort: false },
+  'claude-sonnet-4-6': { in: 3, out: 15, effort: true },
+  'claude-sonnet-5': { in: 3, out: 15, effort: true },
+  'claude-opus-4-8': { in: 5, out: 25, effort: true },
+};
 const PRICE_KEYS = Object.keys(PRICE);
 const [site, runId = '1', pickerModel = 'claude-sonnet-5'] = process.argv.slice(2);
 if (!site || !/^https?:\/\//.test(site)) { console.error('usage: node run-pipeline.mjs <site_url> [run_id] [picker_model]'); process.exit(2); }
@@ -208,6 +215,9 @@ if (internal.length === 0 && home.text && home.text.length > 200) {
 // and sitemap, not the pre-redirect origin's.
 if (internal.length === 0) { internal = await inventoryFromRawHtml(landedUrl); if (internal.length) discovery = 'raw-html'; }
 if (internal.length === 0) { internal = await inventoryFromSitemap(landedUrl); if (internal.length) discovery = 'sitemap'; }
+// Nothing found anywhere. Say so, rather than leaving 'dom' to claim the
+// rendered navigation supplied pages on precisely the runs where it supplied none.
+if (internal.length === 0) discovery = 'none';
 const stage1_ms = Date.now() - tFetch1;
 
 // STAGE 2: picker model chooses up to 4 pages (home is always included as #5).
@@ -232,7 +242,8 @@ const tPick = Date.now();
 // remedy for a bad pick is the judge log, not a sampling parameter.
 const pick = await llmCall({
   model: pickerModel, prompt: pickerInput, maxTokens: 500,
-  thinking: { type: 'disabled' }, effort: 'low',
+  thinking: { type: 'disabled' },
+  ...(PRICE[pickerModel].effort ? { effort: 'low' } : {}),
 });
 const pickText = pick.text;
 if (process.env.AUDIT_DEBUG) console.error('[picker raw]', JSON.stringify(pickText));
@@ -400,7 +411,12 @@ const judge_log = {
   // How we found the pages, for us only, not the client. Two runs of the same
   // site can read different pages (nav vs sitemap, plus unreadable-page swaps),
   // which is the first thing to check when two runs disagree.
-  discovery: `Pages found via ${discovery === 'dom' ? "the site's rendered navigation" : discovery === 'raw-html' ? "the server HTML (rendered nav was empty)" : 'the sitemap (no nav links found)'}. Read: ${pages.map(p => pathOnly(p.url)).join(', ')}.`,
+  discovery: `${{
+    dom: "Pages found via the site's rendered navigation.",
+    'raw-html': 'Pages found in the server HTML; the rendered navigation was empty.',
+    sitemap: 'Pages found via the sitemap; no navigation links were found.',
+    none: 'No internal links found at all: not in the rendered page, the server HTML, or a sitemap. The homepage was the only page available to read.',
+  }[discovery] || `Page discovery mode: ${discovery}.`} Read: ${pages.map(p => pathOnly(p.url)).join(', ')}.`,
   approach,
   kept: gated.map(logLine),
   rejected,

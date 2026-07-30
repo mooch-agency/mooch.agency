@@ -77,3 +77,25 @@ test('no verdict at all stays unparsed', () => {
     assert.equal(parseJudge(t).parsed, false, `should not parse: ${String(t).slice(0, 40)}`);
   }
 });
+
+// The system prompt shows the judge a schema object. A judge that echoes that
+// schema and then emits its real verdict produces two top-level objects; one
+// first-{-to-last-} slice spans both and parses as nothing.
+test('a verdict after an echoed schema still parses', () => {
+  const schema = '{"approach":"...","findings":[{"url","quote"}],"rejected":["..."]}';
+  const r = parseJudge(`I will follow this shape: ${schema}\n\nHere it is:\n${body}`);
+  assert.equal(r.parsed, true);
+  assert.equal(r.findings.length, 1);
+  assert.equal(r.approach, 'Compared the three legal pages.');
+});
+
+test('a brace inside a quoted value does not end the span', () => {
+  const tricky = JSON.stringify({
+    approach: 'The page literally prints "{unrendered_token}" in its copy.',
+    findings: [{ url: 'https://x.com/a', quote: 'a {token} here', severity: 'low', category: 'formatting' }],
+    rejected: [],
+  });
+  const r = parseJudge(`Findings below.\n${tricky}\nThat is all.`);
+  assert.equal(r.parsed, true);
+  assert.match(r.approach, /unrendered_token/);
+});

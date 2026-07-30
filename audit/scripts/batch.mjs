@@ -92,7 +92,9 @@ if (results.failed.length) {
   if (sendFailures.length) parts.push(`${sendFailures.length} send${sendFailures.length > 1 ? "s" : ""} failed (a lead did not get their report)`);
   if (runFailures.length) parts.push(`${runFailures.length} audit run${runFailures.length > 1 ? "s" : ""} failed (left Approved, next batch retries)`);
   console.log(`  ${parts.join("; ")}.`);
-  if (!sendFailures.length) console.log(`  Every send succeeded.`);
+  // Only when sends actually happened: "every send succeeded" with zero Send
+  // leads is a reassurance about work nobody did.
+  if (!sendFailures.length && results.sent.length) console.log(`  Every send succeeded.`);
 }
 // 0 clean · 1 a send failed (worst: someone is missing their report) · 2 only
 // audit runs failed, all sends fine.

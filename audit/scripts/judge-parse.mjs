@@ -11,6 +11,37 @@
 // So: accept every shape the verdict can arrive in, and reserve failure for a
 // response that genuinely has no findings array anywhere in it.
 
+// Every balanced top-level {...} span, in order. Brace- and string-aware, so a
+// brace inside a quoted value does not end a span.
+//
+// One first-{-to-last-} slice is not enough. The system prompt shows the judge a
+// schema object, so a judge that echoes that schema and THEN emits its real
+// verdict produces two top-level objects; a single span across both parses as
+// nothing, which is exactly the failure this module exists to prevent.
+function braceSpans(text) {
+  const spans = [];
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== "{") continue;
+    let depth = 0;
+    let inStr = false;
+    let esc = false;
+    for (let j = i; j < text.length; j++) {
+      const c = text[j];
+      if (esc) { esc = false; continue; }
+      if (c === "\\") { if (inStr) esc = true; continue; }
+      if (c === '"') { inStr = !inStr; continue; }
+      if (inStr) continue;
+      if (c === "{") depth++;
+      else if (c === "}" && --depth === 0) {
+        spans.push(text.slice(i, j + 1));
+        i = j; // skip the nested opens; this span already covers them
+        break;
+      }
+    }
+  }
+  return spans;
+}
+
 // Candidate JSON strings, best guess first.
 function candidates(text) {
   const out = [];
@@ -20,10 +51,10 @@ function candidates(text) {
   for (let i = fenced.length - 1; i >= 0; i--) out.push(fenced[i]);
   // 2. The whole response, for a reply that is nothing but JSON.
   out.push(text);
-  // 3. The outermost brace span, for JSON wrapped in a sentence of prose.
-  const first = text.indexOf("{");
-  const last = text.lastIndexOf("}");
-  if (first !== -1 && last > first) out.push(text.slice(first, last + 1));
+  // 3. Each balanced brace span, last first: JSON in prose, or a verdict that
+  //    trails an echoed schema.
+  const spans = braceSpans(text);
+  for (let i = spans.length - 1; i >= 0; i--) out.push(spans[i]);
   return out;
 }
 
