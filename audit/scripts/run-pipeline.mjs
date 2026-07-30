@@ -411,15 +411,23 @@ const tJudge = Date.now();
 // 32k, not 16k: adaptive thinking spends from the same budget, and since the
 // judge started carrying quote2 + reasoning + approach + rejected, a five-page
 // bundle overran 16k and came back cut off mid-JSON.
-// display: 'summarized' is load-bearing, not decoration. On Opus 4.8 `display`
-// defaults to 'omitted', which still returns thinking blocks but with EMPTY
-// text - so every judge-raw.txt written before this said "(no thinking
-// returned)" and the raw-reasoning toggle captured nothing beyond the JSON we
-// already had (apexvolumetrics, 30 Jul: a 1,336-byte artifact for what should
-// have been tens of KB). Thinking happened and was billed either way; we just
-// were not asking to see it. Note this is a readable SUMMARY - the raw chain of
-// thought is never returned on this model - which is still the difference
-// between being able to answer "why did the judge skip that?" and not.
+// display: 'summarized' is load-bearing on the API path, not decoration. On Opus
+// 4.8 `display` defaults to 'omitted', which still returns thinking blocks but
+// with EMPTY text. Note this is a readable SUMMARY - the raw chain of thought is
+// never returned on this model.
+//
+// IT ONLY APPLIES TO ENGINE=api. The `thinking` argument below is dropped on the
+// floor when AUDIT_LLM=subscription, because that path shells out to `claude -p`,
+// which has no thinking parameter and emits no thinking blocks. Verified 30 Jul
+// on claude-opus-4-8: --output-format json carries no thinking field, and
+// stream-json --include-partial-messages --effort high produces zero
+// thinking_delta events and zero thinking content blocks. So a subscription run
+// CANNOT produce a raw reasoning log, at any display setting.
+//
+// This cost a diagnostic cycle on 30 Jul: the baseline benchmark ran on
+// subscription, came back with an empty raw log, and the error string below sent
+// the reader to `display` - which was already correct - instead of to the engine.
+// If you need a raw log, run that one site on AUDIT_LLM=api and pay for it.
 const judge = await llmCall({ model: 'claude-opus-4-8', maxTokens: 32000, thinking: { type: 'adaptive', display: 'summarized' }, system: SYSTEM, prompt: `Website: ${site}\nAudit these ${pages.length} pages.\n\n${bundle}` });
 const judgeText = judge.text;
 // Accepts a fenced block with any tag, a bare JSON reply, or JSON wrapped in
@@ -429,11 +437,15 @@ const { parsed, findings, rejected, approach } = parseJudge(judgeText);
 const judge_ms = Date.now() - tJudge, judge_cost = cost('claude-opus-4-8', judge.usage);
 // Keep the raw reasoning before anything can abort, so a failed run is still
 // diagnosable on the runner.
-// If thinking is empty here it means the API returned none, not that the judge
+// If thinking is empty here it means the engine returned none, not that the judge
 // did not think: say which, so nobody reads an empty section as "the judge
-// answered off the cuff". The usual cause is a missing display:'summarized' on
-// the thinking config.
-writeFileSync(`${OUT}${tag}.judge-raw.txt`, `${judge.thinking || '(no thinking text returned by the API for this run: thinking still happened and was billed, it just was not sent back. Check display:"summarized" on the judge call.)'}\n\n=== OUTPUT ===\n${judgeText}`);
+// answered off the cuff". Name the actual cause per engine - pointing a
+// subscription run at the `display` setting wastes a cycle, since no display
+// setting can make `claude -p` emit thinking.
+const noThinking = ENGINE === 'api'
+  ? '(no thinking text returned by the API for this run: thinking still happened and was billed, it just was not sent back. Check display:"summarized" on the judge call.)'
+  : '(no thinking text: this run used AUDIT_LLM=subscription, which shells out to `claude -p`. That path emits no thinking blocks at any effort or display setting, so a raw reasoning log is not obtainable here. Re-run this site on AUDIT_LLM=api if you need one. Thinking still happened; it was never sent back.)';
+writeFileSync(`${OUT}${tag}.judge-raw.txt`, `${judge.thinking || noThinking}\n\n=== OUTPUT ===\n${judgeText}`);
 
 // NEVER A HALF REPORT, same rule as the no-readable-pages abort above. A judge
 // response we could not parse is not a clean site, it is a run with no verdict.
