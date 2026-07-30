@@ -271,26 +271,6 @@
     margin-bottom: 8px;
     white-space: nowrap;
   }
-  /* Prefix affix: the wrapper carries the border and focus/error states so the
-     "https://" reads as part of the field rather than as typed content. */
-  .audit-affix {
-    display: flex;
-    align-items: center;
-    background: var(--paper);
-    border: 1px solid var(--hairline-focus);
-    border-radius: 12px;
-    padding-left: 16px;
-    transition: border-color 0.15s ease;
-  }
-  .audit-affix:focus-within { border-color: var(--ink); }
-  .audit-affix:has(.audit-input[aria-invalid="true"]) { border-color: var(--error); }
-  .audit-prefix { font-size: 16px; color: var(--muted); user-select: none; }
-  .audit-affix .audit-input {
-    border: none;
-    background: transparent;
-    padding-left: 4px;
-  }
-  .audit-affix .audit-input:focus-visible { border-color: transparent; }
   .audit-input {
     flex: 1 1 220px;
     min-width: 0;
@@ -890,7 +870,7 @@
   <div class="section-inner">
     <div class="audit-band-inner" data-reveal="child: :scope > *; cap: 6">
       <div class="section-num"><strong>&#9733;</strong> No account, no catch <span class="rule"></span></div>
-      <h2 class="section-title">Get a free <em>content audit</em>.</h2>
+      <h2 class="section-title">Run a free <em>content audit</em>.</h2>
       <p class="section-lead">We'll read up to five key pages and show you where the issues are.</p>
 
       <!-- Q9 comparison slide-out (Treatment A from the explorations page).
@@ -925,17 +905,12 @@
         <div class="audit-fields">
           <div class="audit-fieldrow">
             <div class="audit-fieldcell">
-              <label class="audit-label" for="audit-url">Your site</label>
-              <!-- The https:// prefix is decoration: the server prepends the
-                   protocol itself, so the field only ever holds the host. -->
-              <div class="audit-affix">
-                <span class="audit-prefix" aria-hidden="true">https://</span>
-                <input id="audit-url" class="audit-input" type="text" name="url" inputmode="url" autocomplete="url" spellcheck="false" placeholder="yoursite.com" required>
-              </div>
+              <label class="audit-label" for="audit-url">Website</label>
+              <input id="audit-url" class="audit-input" type="url" name="url" inputmode="url" autocomplete="url" spellcheck="false" placeholder="acme.com" required>
             </div>
             <div class="audit-fieldcell">
-              <label class="audit-label" for="audit-email">Your email</label>
-              <input id="audit-email" class="audit-input" type="email" name="email" autocomplete="email" spellcheck="false" placeholder="you@company.com" required>
+              <label class="audit-label" for="audit-email">Email</label>
+              <input id="audit-email" class="audit-input" type="email" name="email" autocomplete="email" spellcheck="false" placeholder="you@acme.com" required>
             </div>
           </div>
           <button class="pill audit-submit" type="submit">Start <span class="arrow">&rarr;</span></button>
@@ -973,13 +948,6 @@
   }
 
   function setStep(step) { band.setAttribute("data-step", step); }
-
-  // The field sits behind a visible "https://", so a pasted URL that carries its
-  // own protocol would read as https://https://example.com. Strip it on the way in.
-  urlEl.addEventListener("input", function () {
-    var stripped = urlEl.value.replace(/^\s*https?:\/\//i, "");
-    if (stripped !== urlEl.value) urlEl.value = stripped;
-  });
 
   // Vercel Analytics custom events. window.va is bootstrapped near the insights
   // script at the end of the page; guarded so it no-ops if analytics is blocked.
