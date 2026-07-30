@@ -89,10 +89,16 @@ export async function runAudit({ url, auditId, email }) {
   // Observability: one LangSmith run per audit. Never fatal to the audit.
   await logRun(record).catch(() => {});
   const broken = (record.link_check && record.link_check.broken) || [];
+  // Where the pipeline left the judge's verbatim reasoning. Same container, so
+  // it is readable now; on CI it stops existing when the job ends, which is why
+  // the caller copies it onto the Notion row while it still can.
+  const rawPath = record.tag ? join(RUNS, `${record.tag}.judge-raw.txt`) : null;
   return {
     recordPath,
     htmlPath,
     pdfPath,
+    rawPath,
+    tag: record.tag,
     thin,
     findingCount,
     summary: `${findingCount} findings${

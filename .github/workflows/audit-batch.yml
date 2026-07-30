@@ -52,3 +52,17 @@ jobs:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
           AUDIT_LLM: api
         run: node scripts/batch.mjs
+
+      # The judge's verbatim reasoning is written to the runner's disk, which dies
+      # with the container. Successful runs copy it onto the Notion row, but a run
+      # that aborts before that (JUDGE_UNPARSEABLE, a crash) has no row to write
+      # to, so keep the file here too. `always()` is the point: the failed runs are
+      # the ones worth reading.
+      - name: Keep the judge's raw reasoning
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: judge-raw
+          path: audit/scripts/runs/*.judge-raw.txt
+          retention-days: 30
+          if-no-files-found: ignore
