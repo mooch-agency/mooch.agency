@@ -9,6 +9,11 @@ name: Audit batch
 
 on:
   workflow_dispatch:
+    inputs:
+      pin_pages:
+        description: 'AUDIT_PIN_PAGES override: comma-separated paths/URLs to read instead of letting the picker choose. Leave empty for normal behaviour.'
+        required: false
+        default: ''
 
 concurrency:
   group: audit-batch
@@ -51,6 +56,7 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
           AUDIT_LLM: api
+          AUDIT_PIN_PAGES: ${{ inputs.pin_pages }}
         run: node scripts/batch.mjs
 
       # The judge's verbatim reasoning is written to the runner's disk, which dies
