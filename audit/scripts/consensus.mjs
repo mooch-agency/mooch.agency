@@ -12,16 +12,24 @@
 // judge N times over the identical bundle, then use how often each finding
 // recurred to decide what ships.
 //
-//   seen in >= 2 passes          -> corroborated, ships
-//   seen once, high/critical     -> ships anyway (a wow-grade finding is worth
-//                                   more than the FP risk; this is the whole
-//                                   point of the exercise)
-//   seen once, low/medium        -> judge log only, never the client
+//   seen in >= 2 passes             -> corroborated, ships
+//   seen once, medium/high/critical -> ships anyway
+//   seen once, LOW                  -> judge log only, never the client
 //
 // That rule is deliberately asymmetric. Recall matters most exactly where the
 // stakes are highest, and the near-zero-FP rule is best defended where the
 // finding is marginal anyway. Union alone would inflate every thin report with
 // one-off trivia; intersection alone would drop the Huang finding half the time.
+//
+// THE CUT IS AT LOW, AND THAT WAS MEASURED, NOT GUESSED. It was first written at
+// high/critical, and a 3-pass propstrata run immediately showed that too strict:
+// it held back "/blog shows only 'Loading tags...' and no posts" at 1/3 medium,
+// which is verified real (checked in a browser: still empty after hydration) and
+// is the best finding on that site. Meanwhile every one-off the noise floor
+// produced as junk was `low`: all 4 held on r3p (em-dash spacing, two missing
+// articles, a unicode escape) and the lisbon volatiles too. So `low` is where
+// the noise lives and `medium` is where real findings live, and the threshold
+// belongs between them.
 //
 // COST: N judge calls per audit, $0 marginal on the subscription engine, about
 // +70s of wall clock per extra pass. Opt-in via AUDIT_JUDGE_PASSES so the
@@ -57,13 +65,13 @@ function consensusSeverity(variants) {
 export function shipDecision({ passes, total, severity }) {
   if (total <= 1) return true; // single-pass runs behave exactly as before
   if (passes >= 2) return true;
-  return rank(severity) <= rank('high'); // lone high/critical still ships
+  return rank(severity) <= rank('medium'); // a lone medium+ still ships; only `low` is held
 }
 
 // passes: array of findings-arrays, one per judge pass, all over the SAME bundle.
 // Returns { findings, dropped }: `findings` carry consensus severity plus
-// `passes`/`pass_total`/`confidence`, `dropped` are the one-off low/medium calls
-// that stay in the judge log.
+// `passes`/`pass_total`/`confidence`, `dropped` are the one-off `low` calls that
+// stay in the judge log.
 export function mergePasses(passes) {
   const total = passes.length;
   const byKey = new Map();

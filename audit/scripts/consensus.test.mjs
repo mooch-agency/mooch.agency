@@ -37,8 +37,19 @@ test('a one-off low finding does not ship, it goes to the judge log', () => {
 });
 
 // Deliberately asymmetric: recall matters most where the stakes are highest, so
-// a lone high or critical still reaches the client. Dropping a wow-grade finding
-// to protect against a marginal FP is the wrong trade for this product.
+// a lone medium, high or critical still reaches the client. Dropping a real
+// finding to protect against a marginal FP is the wrong trade for this product.
+//
+// The cut sits at `low` because a 3-pass propstrata run measured it there: the
+// first version held at high/critical and suppressed "/blog shows only 'Loading
+// tags...' and no posts" at 1/3 medium, which is verified real in a browser and
+// the best finding on that site.
+test('a one-off MEDIUM finding ships: this is the propstrata /blog case', () => {
+  const { findings } = mergePasses([[f({ severity: 'medium', quote: 'Loading tags...' })], [], []]);
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].confidence, 'low');
+});
+
 test('a one-off HIGH finding still ships', () => {
   const { findings } = mergePasses([[f({ severity: 'high' })], [], []]);
   assert.equal(findings.length, 1);
@@ -91,7 +102,7 @@ test('shipDecision is the whole policy, in one place', () => {
   assert.equal(shipDecision({ passes: 1, total: 1, severity: 'low' }), true);
   assert.equal(shipDecision({ passes: 2, total: 3, severity: 'low' }), true);
   assert.equal(shipDecision({ passes: 1, total: 3, severity: 'low' }), false);
-  assert.equal(shipDecision({ passes: 1, total: 3, severity: 'medium' }), false);
+  assert.equal(shipDecision({ passes: 1, total: 3, severity: 'medium' }), true);
   assert.equal(shipDecision({ passes: 1, total: 3, severity: 'high' }), true);
   assert.equal(shipDecision({ passes: 1, total: 3, severity: 'critical' }), true);
 });
