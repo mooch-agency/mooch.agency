@@ -156,6 +156,7 @@ export async function runAudit({ url, auditId, email }) {
     pdfPath,
     rawPath,
     tag: record.tag,
+    method: record.method,
     thin,
     findingCount,
     summary: `${findingCount} findings${

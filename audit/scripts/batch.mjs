@@ -36,7 +36,7 @@ for (const lead of approved) {
     );
     // The raw reasoning has to be copied now: the file lives on the runner, and
     // on CI that disk is destroyed when the job ends. Never fatal either.
-    await writeJudgeRaw(lead.pageId, r.rawPath, r.tag).catch((e) =>
+    await writeJudgeRaw(lead.pageId, r.rawPath, r.tag, r.method).catch((e) =>
       console.error(`  (raw reasoning not written: ${String(e.message || e).slice(0, 120)})`)
     );
     await setStatus(lead.pageId, "Ready for review", r.summary);

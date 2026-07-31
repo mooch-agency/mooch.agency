@@ -60,3 +60,18 @@ test('judgeRawBlocks: stays under Notion 100-children cap and says what it dropp
 test('judgeRawBlocks: an empty transcript says so instead of rendering nothing', () => {
   assert.match(textOf(judgeRawBlocks('   ', 't')[0]), /No raw reasoning was captured/);
 });
+
+// The label depends on which engine ran: a websearch record has one model doing
+// discovery, reading and judging in a single pass, so "the judge" mislabels
+// what's actually inside the toggle. A pipeline run keeps the old wording, and
+// an unspecified method (an older record shape) defaults to it too.
+test('judgeRawBlocks: labels the transcript "auditor" for a websearch method, "judge" otherwise', () => {
+  const websearch = judgeRawBlocks('reasoning...', 'trueshot_wsn_r1', 'notion-shape');
+  assert.match(textOf(websearch[0]), /auditor's thinking/);
+
+  const pipeline = judgeRawBlocks('reasoning...', 'apex_pipe_r1', 'pipeline');
+  assert.match(textOf(pipeline[0]), /judge's thinking/);
+
+  const unspecified = judgeRawBlocks('reasoning...', 'apex_pipe_r1');
+  assert.match(textOf(unspecified[0]), /judge's thinking/);
+});

@@ -141,7 +141,17 @@ export async function attachReport(pageId, pdfPath, recordPath) {
 // a human typed on the page survive. Deliberately not a property: properties are
 // single-line and this is paragraphs.
 const JUDGE_LOG_MARKER = "How the audit reached these findings";
-const JUDGE_RAW_MARKER = "Judge's full reasoning (raw)";
+// The raw-transcript toggle's title depends on which engine ran. A pipeline
+// record has a genuine separate judge call; a websearch record has one model
+// doing discovery, reading and judging in a single pass, so calling it "the
+// judge" mislabels what a reader is about to open. Both titles are kept in
+// RAW_MARKERS so replaceToggle recognises either as the same toggle: a lead
+// switching engine between runs (rare, but AUDIT_METHOD is a batch-wide
+// setting, not a per-lead one) replaces its old toggle instead of leaving a
+// second, stale one with the wrong label sitting on the row.
+const rawMarkerFor = (method) =>
+  method && method !== "pipeline" ? "Auditor's full reasoning (raw)" : "Judge's full reasoning (raw)";
+const RAW_MARKERS = ["Judge's full reasoning (raw)", "Auditor's full reasoning (raw)"];
 
 // Notion caps a rich_text content string at 2000 chars.
 const rt = (s) => [{ type: "text", text: { content: String(s ?? "").slice(0, 1900) } }];
@@ -202,14 +212,16 @@ export function judgeLogBlocks(record) {
   // judge model (one model does discovery, reading and judging), so printing
   // the pipeline's fields on it produced "picker ?" on every row. `record.method`
   // is present on both record shapes and says which one actually ran.
-  const engineLine = record.method && record.method !== "pipeline"
+  const isWebsearch = record.method && record.method !== "pipeline";
+  const engineLine = isWebsearch
     ? `Method ${record.method}, model ${record.model || "?"}.`
     : `Judge ${record.judge_model || "claude-opus-4-8"}, picker ${record.pickerModel || "?"}.`;
+  const rawMarker = rawMarkerFor(record.method);
   blocks.push(
     para(
       `Run ${record.auditId || record.tag || "?"}. ${engineLine} ${
         (record.picker?.pages_used || []).length
-      } pages read. The judge's full reasoning is in the "${JUDGE_RAW_MARKER}" toggle below.`
+      } pages read. The ${isWebsearch ? "auditor's" : "judge's"} full reasoning is in the "${rawMarker}" toggle below.`
     )
   );
   // A toggle takes at most 100 children in one request.
@@ -246,14 +258,15 @@ export function chunkRaw(text, size = RAW_CHUNK) {
 }
 
 // raw transcript -> the toggle's child blocks. Pure, so it can be unit-tested.
-export function judgeRawBlocks(raw, tag) {
+export function judgeRawBlocks(raw, tag, method) {
   const text = String(raw ?? "").trim();
   if (!text) return [para("No raw reasoning was captured for this run.")];
   const chunks = chunkRaw(text);
   const kept = chunks.slice(0, RAW_MAX_BLOCKS);
+  const who = method && method !== "pipeline" ? "auditor's" : "judge's";
   const blocks = [
     para(
-      `Verbatim transcript of the judge's thinking and its output for ${tag || "this run"}. Internal only: none of this is in the client's report.`
+      `Verbatim transcript of the ${who} thinking and its output for ${tag || "this run"}. Internal only: none of this is in the client's report.`
     ),
     ...kept.map(codeBlock),
   ];
@@ -270,11 +283,15 @@ export function judgeRawBlocks(raw, tag) {
 
 // Deletes our own toggle by title, so a re-run replaces it and leaves anything a
 // human typed on the page alone.
-async function replaceToggle(pageId, marker, children) {
+// `marker` is the title this write uses; `staleMarkers` (defaults to just
+// `marker`) is every title that should be treated as "the same toggle" for
+// deletion, so a label change (e.g. engine switch) replaces in place rather
+// than accumulating a second toggle under the old name.
+async function replaceToggle(pageId, marker, children, staleMarkers = [marker]) {
   const existing = await notion(`blocks/${pageId}/children?page_size=100`);
   for (const b of existing.results || []) {
     const title = (b.toggle?.rich_text || []).map((t) => t.plain_text).join("");
-    if (b.type === "toggle" && title === marker) {
+    if (b.type === "toggle" && staleMarkers.includes(title)) {
       await notion(`blocks/${b.id}`, { method: "DELETE" });
     }
   }
@@ -296,8 +313,9 @@ export async function writeJudgeLog(pageId, record) {
 
 // Writes (or replaces) the raw-reasoning toggle from the runner's .judge-raw.txt.
 // Takes a path rather than the text so the caller does not have to hold a large
-// transcript in memory just to hand it over.
-export async function writeJudgeRaw(pageId, rawPath, tag) {
+// transcript in memory just to hand it over. `method` picks the title
+// ("Judge's" vs "Auditor's"); omit it to default to the pipeline's wording.
+export async function writeJudgeRaw(pageId, rawPath, tag, method) {
   if (!rawPath) return { skipped: "no raw reasoning path" };
   let raw;
   try {
@@ -305,7 +323,7 @@ export async function writeJudgeRaw(pageId, rawPath, tag) {
   } catch (e) {
     return { skipped: `raw reasoning not readable at ${rawPath}` };
   }
-  return replaceToggle(pageId, JUDGE_RAW_MARKER, judgeRawBlocks(raw, tag));
+  return replaceToggle(pageId, rawMarkerFor(method), judgeRawBlocks(raw, tag, method), RAW_MARKERS);
 }
 
 // Returns the row's Report files as [{name, url}] (urls are time-limited).
