@@ -239,3 +239,55 @@ the method.
 Advisor (`--advisor opus`, `WSA_ADVISOR=1`) is wired but untested: it is Anthropic-API
 only, and `ANTHROPIC_BASE_URL` is set on this machine, so it depends on the gateway
 forwarding the request intact.
+
+---
+
+## Result 5: arm N re-run after the two fixes
+
+Both fixes landed first (`capture.mjs`, `absence-check.mjs`), then all six sites re-run
+unchanged in every other respect. Pipeline column is the 31 Jul single-pass baseline.
+
+| Site | Pipeline | Arm N (before fixes) | Arm N (after fixes) |
+|---|---|---|---|
+| apexvolumetrics.com | INCONCLUSIVE · 0 · 204s | REPORT · 2 (w7) [C,M] · 217s | REPORT · 2 (w5) [H,M] · 227s |
+| lisbon.amplify.eu | REPORT · 3 (w4) [M,L,L] · 97s | REPORT · 3 (w8) [C,M,L] · 210s | REPORT · 2 (w4) [H,L] · 172s |
+| sambleinnovations.com | good-shape · 0 · 55s | INCONCLUSIVE · 0 · 196s | **REPORT · 1 (w3) [H]** · 156s |
+| propstrata.com | good-shape · 2 (w2) [L,L] · 82s | INCONCLUSIVE · 0 · 319s | **REPORT · 2 (w8) [C,H]** · 205s |
+| r3p.xyz | REPORT · 2 (w3) [M,L] · 131s | REPORT · 1 (w3) [H] · 324s | REPORT · 1 (w3) [H] · 332s |
+| jackpotter.com | REPORT · 3 (w5) [M,M,L] · 112s | REPORT · 1 (w5) [C] · 174s | **REPORT · 3 (w9) [C,H,L]** · 195s |
+
+| Arm | Findings | Weight | Critical+High | REPORTs | Gate drops | Median |
+|---|---|---|---|---|---|---|
+| Pipeline | 10 | 14 | **0** | 3 of 6 | 1 | 112s |
+| Arm N before | 7 | 23 | 4 | 4 of 6 | 2 | 217s |
+| **Arm N after** | **11** | **32** | **8** | **6 of 6** | **0** | 205s |
+
+Read the Critical+High column first. Across six real inbound leads the pipeline produced
+**zero** critical or high findings; all ten were medium or low. Arm N after the fixes
+produced **eight**, and shipped an actionable report on every site, with the quote gate
+dropping nothing at all.
+
+Against the stated goal — "every audit either surfaces at least one finding a prospect
+would act on, or says plainly that it couldn't" — that is 6 of 6, up from 3 of 6.
+
+The fixes are worth about as much as the method change: arm N went from 7 findings and 4
+severe to 11 and 8 without a single prompt edit. The two sites that flipped from
+INCONCLUSIVE to REPORT (samble, propstrata) are exactly the two whose real findings were
+absence claims the quote gate could not express.
+
+Cost: roughly 1.8x the pipeline's wall clock, $0 marginal on the subscription engine.
+
+### Caveats, stated plainly
+
+- **Severity moved down on two sites** (apex C→H, lisbon C→M) and that is the fixes
+  working, not a regression: the settled capture removed evidence the earlier run had
+  over-read. Weight fell on those two and rose far more elsewhere.
+- **n=1 per site.** The 30 Jul noise-floor work measured this judge agreeing with itself
+  13-14% of the time run to run. Nothing here is a single-run-reliable number, and the
+  pipeline's own answer to that was multi-pass consensus, which arm N does not have.
+- **Verified independently, not by either tool**: apex's CCPA contradiction, samble's
+  missing privacy policy, propstrata's `/blog`. The rest are gate-passed but not
+  hand-checked.
+- **`AUDIT_JUDGE_PASSES=3` is not in this comparison.** The pipeline's 3-pass mode found
+  propstrata's high-severity Terms issue that single-pass never did, so the fair next
+  comparison is arm N against 3-pass, not against the single-pass column above.
