@@ -180,3 +180,59 @@ test('the inconclusive closer offers to read what it could not reach', () => {
   assert.match(out.html, /Want us to read the pages we couldn't reach\?/);
   assert.ok(!/Want these fixed/.test(out.html), 'no findings list on this variant');
 });
+
+// --- websearch method (31 Jul) -------------------------------------------------
+//
+// These three guard the wiring that lets the websearch auditor drive the client
+// report. Each one is a live false-statement risk, not a style preference.
+
+// A scope note says how thoroughly we looked. A coverage note says what we failed
+// to see. Only the second may withhold a clean bill of health. Conflating them
+// made every websearch audit permanently inconclusive AND told clients with
+// perfectly healthy links that we "couldn't read your links".
+test('a link-check scope note does not block the good-shape claim', () => {
+  const out = renderReport(
+    record([], { broken: [], soft_404: false, scope_note: 'We opened your links rather than sweeping every status code.' }),
+    '31 July 2026',
+  );
+  assert.match(out.html, /found nothing material to fix/);
+  assert.doesNotMatch(out.html, /isn't a clean bill of health/);
+  // Disclosed anyway: the reader still learns how far the link check went.
+  assert.match(out.html, /rather than sweeping every status code/);
+});
+
+// The honesty gate must still fire for a REAL coverage gap on a websearch record,
+// which is the whole reason the record carries coverage.notes at all.
+test('an unread page still blocks the good-shape claim on a websearch record', () => {
+  const out = renderReport(
+    {
+      ...record([], { broken: [], soft_404: false, scope_note: 'spot check' }),
+      coverage: { notes: ['the homepage https://example.com/ was unreadable (bot-block or empty)'] },
+    },
+    '31 July 2026',
+  );
+  assert.match(out.html, /isn't a clean bill of health/);
+  assert.match(out.html, /couldn't read your homepage/);
+  assert.doesNotMatch(out.html, /found nothing material to fix\. Your site/);
+});
+
+// An absence finding has no quote. Rendering its observed state inside quotation
+// marks would tell the client we are quoting their page when we are describing it.
+test('an absence finding renders as an observation, never as a quotation', () => {
+  const out = renderReport(
+    record([{
+      url: 'https://example.com/contact',
+      severity: 'critical',
+      category: 'broken-link',
+      absence_claim: 'empty',
+      evidence_note: 'Renders only the navigation and footer, with no contact form.',
+      issue: 'The demo-request destination is empty.',
+      gate: 'pass',
+    }]),
+    '31 July 2026',
+  );
+  assert.match(out.html, /Renders only the navigation and footer/);
+  // The observation must not be wrapped in the quote treatment used for verbatim
+  // page text: that block is reserved for things we actually copied off the page.
+  assert.doesNotMatch(out.html, /<blockquote class="finding-quote">Renders only/);
+});

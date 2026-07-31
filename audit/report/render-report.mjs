@@ -26,6 +26,10 @@ const SEVERITY = {
 // Below this total weight, with no critical/high, send the good-shape variant.
 const THIN_FLOOR_WEIGHT = 3;
 
+// Default skip wording: the soft-404 case, where the site's own status codes lie.
+const SOFT_404_NOTE =
+  "We couldn't check your links. This site returns a not-found status for pages that load fine, so the status codes aren't reliable enough to report on.";
+
 // Human labels for the judge's category codes.
 const CATEGORY_LABEL = {
   contradiction: "Cross-page contradiction",
@@ -126,6 +130,15 @@ function reportModel(record, dateStr) {
     // soft-404 origin the check is skipped because the status codes lie. The
     // report must not read those two states the same way.
     linkCheckSkipped,
+    linkCheckSkipNote: linkCheck.skip_note || null,
+    // A SCOPE note is not a COVERAGE GAP, and the difference decides whether a
+    // clean site can be told it is clean. "We opened your links rather than
+    // sweeping every status code" describes how thoroughly we looked; "we could
+    // not read your homepage" describes something we failed to see. Only the
+    // second may block a clean bill of health. Feeding scope notes into
+    // coverageNotes would make every audit permanently inconclusive, and telling a
+    // client with a healthy site that we "couldn't read your links" is false.
+    scopeNotes: linkCheck.scope_note ? [linkCheck.scope_note] : [],
     coverageNotes,
   };
 }
@@ -219,6 +232,17 @@ function quoteMark(quote) {
 // associate. Both lines on one page (the common case) get a single page label;
 // a genuine cross-page contradiction labels each side.
 function evidenceBlock(f) {
+  // An absence finding has nothing to quote: its claim is that the page renders
+  // nothing, or renders the wrong thing. Presenting the observed state inside
+  // quotation marks would tell the client we are quoting their page when we are
+  // describing it, so it renders as a plain observation instead. The claim itself
+  // is verified by the 404-control probe in absence-check.mjs, not by a quote.
+  if (f.absence_claim) {
+    return `<div class="finding-evidence">
+          ${evidenceLabel(f.url)}
+          <p class="muted">${esc(f.evidence_note || "This page does not render the content it should.")}</p>
+        </div>`;
+  }
   if (!f.quote2) {
     return `<div class="finding-evidence">
           ${evidenceLabel(f.url)}
@@ -300,13 +324,15 @@ function coverageBlock(m) {
   // A skipped link check is a limit on this audit, so it belongs with the other
   // coverage notes rather than being swallowed. Without it, "no broken links"
   // and "we could not check the links" look identical to the reader.
+  // The wording depends on WHY the check was skipped, and there is now more than
+  // one reason. The soft-404 case is a property of the audited site; the websearch
+  // method simply does not run a programmatic status sweep. Telling a client their
+  // status codes are unreliable when they are fine would be a false statement about
+  // their site, so the reason travels with the record.
   const allNotes = [
-    ...(m.linkCheckSkipped
-      ? [
-          "We couldn't check your links. This site returns a not-found status for pages that load fine, so the status codes aren't reliable enough to report on.",
-        ]
-      : []),
+    ...(m.linkCheckSkipped ? [m.linkCheckSkipNote || SOFT_404_NOTE] : []),
     ...(m.coverageNotes || []),
+    ...(m.scopeNotes || []),
   ];
   const notes = allNotes.length
     ? `<p class="block-lead" style="margin-top:16px">Notes on what we could read:</p>
