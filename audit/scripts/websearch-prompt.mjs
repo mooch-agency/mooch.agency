@@ -26,7 +26,18 @@
 // the auditor and the gate share an instrument, so the gate stops being an
 // independent check and degrades to a hallucination check.
 
-export function buildPrompt({ site, pages = 5, render = false, renderCmd = '' }) {
+// `notionShape` is the faithful reproduction and the one that matters: WebSearch for
+// discovery, a rendering reader for pages, and no WebFetch anywhere.
+//
+// WebFetch was a mistake in arms A and B. The brief said "using websearch", headless
+// `claude -p` offers WebSearch and WebFetch, and WebFetch got drafted as the page
+// reader without being checked against `web.loadPage`. They are not the same
+// instrument and are close to opposites: `web.loadPage` returns rendered text and
+// explicitly no raw HTML, while WebFetch returns raw HTML converted to markdown and
+// then passed through a summarising model. So WebFetch sees hidden markup the user
+// never sees, cannot see anything JavaScript renders, and rewrites the quotes that
+// are the entire deliverable. Arm A shipped 0 findings across 6 sites on that.
+export function buildPrompt({ site, pages = 5, render = false, renderCmd = '', notionShape = false }) {
   return `Run a content audit on ${site}. You are auditing a real prospect's live website; the report goes to them.
 
 ## The goal
@@ -37,7 +48,21 @@ A missed finding that would have made them call is the expensive failure. A fals
 
 ## Tools
 
-${render
+${notionShape
+  ? `Two, mirroring the Notion skill's \`web.search\` + \`web.loadPage\` exactly.
+
+**WebSearch** for discovery. It returns snippets (URL, title, extract). It never loads a page.
+
+**The page reader**, for everything you actually audit:
+
+\`\`\`
+${renderCmd} "<url>"
+\`\`\`
+
+That is \`web.loadPage\` with \`fast_mode: false\`: the page's visible text after JavaScript has run, exactly as a real user sees it. Slow, 5-15s a page. It is the only reader you have and the only shell command that will run.
+
+Like \`web.loadPage\`, it gives you **no raw HTML**. You cannot see meta tags, alt text, headings, structured data, or anything \`display:none\`. That is a feature: you only ever see what a user sees, so you cannot invent a finding out of hidden markup. Do not audit anything HTML-level; you have no view of it.`
+  : render
   ? `WebSearch and WebFetch for the first pass, plus one shell command for the second:
 
 \`\`\`
@@ -56,21 +81,29 @@ Run 2-3 searches to build a page inventory:
 
 From the results, pick the pages yourself. Priority: homepage → the page where money is made (pricing / services / shop / booking) → trust or conversion page (about / contact / terms / donate) → FAQ or support → a location or product page. Judgement beats the list: take the pages most likely to hold something a prospect would act on.
 
-### Reading (WebFetch)
+### Reading (${notionShape ? "the page reader" : "WebFetch"})
 
 **Budget: the homepage plus up to ${pages - 1} more pages, ${pages} total.** Read them all before you judge anything. Cross-page comparison is the product; you are holding all ${pages} pages at once and nothing else can do that.
 
-You may additionally WebFetch a handful of internal link destinations to check where they actually land. Those do not count against the ${pages}-page budget, but keep it to about 8 and only for links whose destination is in question.
+You may additionally ${notionShape ? 'read' : 'WebFetch'} a handful of internal link destinations to check where they actually land. Those do not count against the ${pages}-page budget, but keep it to about 8 and only for links whose destination is in question.
+${notionShape ? `
+## The one trap in a rendered reader
 
-## What WebFetch gives you, and the two traps in it
+You see what a user sees, which removes the hidden-markup problem entirely. What it does not remove is **content that only appears on interaction**: accordion answers that mount on click, inactive tabs, modals, anything behind a control you cannot press. Your reader loads and scrolls; it does not click.
 
-WebFetch converts the page's raw HTML to markdown. It does not run JavaScript and it does not know what is visible.
+So a thin-looking FAQ is not an empty FAQ, and a section you cannot find is not a missing section. Before reporting that anything is absent, missing, empty or broken, establish what that site's genuine "not found" state looks like — fetch a URL you invented, see what comes back, and compare. Absence is reportable here, but only against a control.
 
-**Trap 1 — hidden content.** Text that is \`display:none\`, inside a collapsed accordion, in a hidden modal, or in an inactive tab arrives in your fetch looking exactly like body copy. Real users never see it. Flagging it is the single most common way this method produces a false positive. If a price, a claim or a heading only makes sense as part of a widget, a calculator, a toggle or an alternate tab state, treat it as invisible and do not flag it.
+Also: if a number is animating, a testimonial is rotating, or a feed is live, whatever your reader caught is one frame of it, not a fact. Do not quote it.
+` : `
+## What WebFetch gives you, and the two traps in it`}
 
-**Trap 2 — absence.** You cannot see anything rendered by JavaScript after load: accordion answers that mount on click, tag lists, feeds, counters, carousels, anything hydrated client-side. So a WebFetch reading can never establish that content is missing, empty, broken, blank, "still loading" or "not implemented".
+${notionShape ? '' : `WebFetch converts the page's raw HTML to markdown. It does not run JavaScript and it does not know what is visible.`}
 
-${render
+${notionShape ? "" : `**Trap 1 — hidden content.** Text that is \`display:none\`, inside a collapsed accordion, in a hidden modal, or in an inactive tab arrives in your fetch looking exactly like body copy. Real users never see it. Flagging it is the single most common way this method produces a false positive. If a price, a claim or a heading only makes sense as part of a widget, a calculator, a toggle or an alternate tab state, treat it as invisible and do not flag it.`}
+
+${notionShape ? "" : `**Trap 2 — absence.** You cannot see anything rendered by JavaScript after load: accordion answers that mount on click, tag lists, feeds, counters, carousels, anything hydrated client-side. So a WebFetch reading can never establish that content is missing, empty, broken, blank, "still loading" or "not implemented".`}
+
+${notionShape ? "" : render
   ? `Both traps are what the second pass is for. Do not resolve either one from WebFetch alone.`
   : `**Do not report any finding whose claim is that something is absent.** If a page looks thin, that is your reader's limit, not the site's defect. Say so in the coverage note instead.
 
@@ -103,7 +136,7 @@ Specific declines, all learned from real false positives:
 - If you are unsure whether a real user can see it, you already have your answer: do not report it.
 
 One wrong finding costs more trust than five missed ones. But a report of nothing costs the whole audit, so do not use that as cover for timidity: it is a bar for evidence, not a bar for boldness.
-${render ? `
+${(render && !notionShape) ? `
 ## Second pass: render, then reconcile
 
 Do this after you have a draft list of findings and before you write anything. It is not optional and it is the part of this method that earns its keep.
@@ -159,7 +192,7 @@ A fenced \`json\` block, last thing in your reply:
 {"findings": [{"url": "https://…", "severity": "critical|high|medium|low", "type": "broken-link|pricing|contradiction|factual|naming|grammar|formatting|stale", "quote": "…", "quote2": "…", "url2": "https://…", "why": "one line"}]}
 \`\`\`
 
-\`quote\` must be copied character for character from ${render ? `the **rendered** reading of \`url\` — the second pass's output, not WebFetch's` : '`the text WebFetch returned for `url`'}. Not paraphrased, not tidied, not re-punctuated. \`quote2\`/\`url2\` only on contradictions, carrying the other side.
+\`quote\` must be copied character for character from ${notionShape ? `the page reader's output for \`url\`` : render ? `the **rendered** reading of \`url\` — the second pass's output, not WebFetch's` : `the text WebFetch returned for \`url\``}. Not paraphrased, not tidied, not re-punctuated. \`quote2\`/\`url2\` only on contradictions, carrying the other side.
 
 **Every quote is checked by code against the page as a real browser renders it.** A quote that does not appear there is dropped, whether it was hallucinated, silently reworded, or lifted from hidden markup. Copy exactly, and quote only text a user can actually see.
 

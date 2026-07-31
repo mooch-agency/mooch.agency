@@ -49,18 +49,25 @@ const RENDER = process.env.WSA_RENDER === '1';
 // the page to stop moving, and a gate that captures twice so an animating value
 // cannot be quoted at a client. Implies RENDER.
 const STABLE = process.env.WSA_STABLE === '1';
+// Arm N: the faithful reproduction of the Notion skill. WebSearch for discovery, a
+// rendering reader for pages, and NO WebFetch at all — WebFetch is not `web.loadPage`
+// and is close to its opposite (raw HTML plus a summarising model, versus rendered
+// text and explicitly no raw HTML). Arms A and B carried it on a bad assumption.
+// Keeps the settle-aware reader and the stability gate: those fix the instrument
+// being honest, which is orthogonal to which method is under test.
+const NOTION = process.env.WSA_NOTION === '1';
 const TIMEOUT = Number(process.env.WSA_TIMEOUT || 900_000);
 
 // The exact string the agent is told to run and the exact prefix the permission
 // layer will allow. They are built from one constant so they cannot drift: if the
 // allowlist prefix stops matching the documented command, every render call is
 // denied and the arm silently degrades into arm A.
-const READ_BIN = STABLE ? READER_SETTLE : READER;
+const READ_BIN = (STABLE || NOTION) ? READER_SETTLE : READER;
 const RENDER_CMD = `node ${READ_BIN}`;
-const USE_RENDER = RENDER || STABLE;
+const USE_RENDER = RENDER || STABLE || NOTION;
 
 const slug = site.replace(/https?:\/\/(www\.)?/, '').split(/[/.]/)[0];
-const tag = `${slug}_ws${STABLE ? 's' : USE_RENDER ? 'r' : ''}_r${runId}`;
+const tag = `${slug}_ws${NOTION ? 'n' : STABLE ? 's' : USE_RENDER ? 'r' : ''}_r${runId}`;
 const t0 = Date.now();
 
 // ---------------------------------------------------------------- the auditor
@@ -79,12 +86,16 @@ function runAuditor(prompt) {
     ? [
         '-p',
         '--model', MODEL,
-        '--tools', 'WebSearch,WebFetch,Bash',
+        // Arm N withholds WebFetch at the tool layer, not in the prompt. The
+        // mooch-content-audit rule: tool list is enforcement, prompt is suggestion.
+        // Leaving it available and asking nicely is how it creeps back in.
+        '--tools', NOTION ? 'WebSearch,Bash' : 'WebSearch,WebFetch,Bash',
         // Both spellings. The repo path contains a space, so the agent may or may
         // not quote it, and Bash permissions match on the literal command prefix.
         // One spelling would let a legitimate render call be denied, and a denied
         // render is indistinguishable on the record from a page that would not load.
-        '--allowedTools', 'WebSearch', 'WebFetch', `Bash(${RENDER_CMD}:*)`, `Bash(node "${READER}":*)`,
+        '--allowedTools', ...(NOTION ? ['WebSearch'] : ['WebSearch', 'WebFetch']),
+        `Bash(${RENDER_CMD}:*)`, `Bash(node "${READ_BIN}":*)`,
         '--output-format', 'json',
       ]
     : [
@@ -188,7 +199,7 @@ function runGate(entries) {
   const tmp = `${OUT}${tag}.gate-in.json`;
   writeFileSync(tmp, JSON.stringify({ findings: entries }, null, 2));
   return new Promise((resolve, reject) => {
-    const child = spawn('node', [STABLE ? GATE_STABLE : GATE, tmp], { stdio: ['ignore', 'pipe', 'inherit'] });
+    const child = spawn('node', [(STABLE || NOTION) ? GATE_STABLE : GATE, tmp], { stdio: ['ignore', 'pipe', 'inherit'] });
     let out = '';
     child.stdout.on('data', d => (out += d));
     child.on('error', reject);
@@ -206,7 +217,7 @@ function runGate(entries) {
 
 // ---------------------------------------------------------------- run
 
-const prompt = buildPrompt({ site, pages: PAGES, render: USE_RENDER, renderCmd: RENDER_CMD });
+const prompt = buildPrompt({ site, pages: PAGES, render: USE_RENDER, renderCmd: RENDER_CMD, notionShape: NOTION });
 console.error(`[wsa] ${site} -> ${tag}  model=${MODEL} pages=${PAGES}${USE_RENDER ? " render" : ''}${ADVISOR ? ' advisor' : ''}`);
 
 // Ground truth for the render pass: read-url.mjs appends every URL it is asked for.
@@ -263,7 +274,7 @@ if (USE_RENDER) {
 const record = {
   tag,
   site,
-  method: STABLE ? "websearch+render+stable" : USE_RENDER ? 'websearch+render' : 'websearch',
+  method: NOTION ? 'notion-shape' : STABLE ? 'websearch+render+stable' : USE_RENDER ? 'websearch+render' : 'websearch',
   model: MODEL,
   advisor: ADVISOR,
   render_pass: USE_RENDER,
