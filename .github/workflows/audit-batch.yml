@@ -11,15 +11,15 @@ on:
   workflow_dispatch:
     inputs:
       pin_pages:
-        description: 'AUDIT_PIN_PAGES override: comma-separated paths/URLs to read instead of letting the picker choose. Leave empty for normal behaviour. Ignored when method=websearch, which picks its own pages.'
+        description: 'AUDIT_PIN_PAGES override: comma-separated paths/URLs to read instead of letting the picker choose. Leave empty for normal behaviour. Only applies to method=pipeline; websearch picks its own pages.'
         required: false
         default: ''
       method:
-        description: 'Audit engine. pipeline = picker + prefetch + judge (incumbent). websearch = search for pages, read them rendered, gate after (31 Jul benchmark: 8 critical/high vs 0, reported on 6 of 6 sites vs 3 of 6).'
+        description: 'Audit engine. websearch (default) = search for pages, read them rendered, gate after. pipeline = the previous picker + prefetch + judge engine, kept as a fallback. 31 Jul benchmark: websearch 8 critical/high vs pipeline 0, reported on 6 of 6 sites vs 3 of 6.'
         required: false
-        default: pipeline
+        default: websearch
         type: choice
-        options: [pipeline, websearch]
+        options: [websearch, pipeline]
 
 concurrency:
   group: audit-batch

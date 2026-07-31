@@ -40,9 +40,12 @@ function pipelineSlug(url) {
 // shipped 8, reporting on 6 of 6 sites against 3 of 6. See
 // benchmark/2026-07-31-websearch-method.md.
 //
-// Default stays `pipeline` so merging this cannot silently change what clients
-// receive; flipping the default is a separate, deliberate commit.
-const METHOD = (process.env.AUDIT_METHOD || "pipeline").toLowerCase();
+// Default flipped to `websearch` on 31 Jul, deliberately and in its own commit.
+// `pipeline` is kept and still works: AUDIT_METHOD=pipeline (or the workflow
+// dropdown) switches back with no other change, which is the point of leaving it
+// in rather than deleting it. Revert the default if the live runs disagree with
+// the benchmark.
+const METHOD = (process.env.AUDIT_METHOD || "websearch").toLowerCase();
 
 // Runs the websearch auditor as a child and returns the report-shaped record it
 // wrote. websearch-audit.mjs already emits picker.pages_used, coverage.notes and
