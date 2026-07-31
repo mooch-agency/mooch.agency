@@ -32,6 +32,58 @@ function pipelineSlug(url) {
   return url.replace(/https?:\/\/(www\.)?/, "").split(/[/.]/)[0];
 }
 
+// AUDIT_METHOD picks the engine. `pipeline` (default) is the incumbent
+// picker -> prefetch -> judge -> gate. `websearch` is the method benchmarked on
+// 31 Jul: the auditor searches for its own pages, reads them with the rendering
+// reader, and the gate verifies quotes and absence claims after the fact. On the
+// six-site benchmark the pipeline shipped 0 critical/high findings and websearch
+// shipped 8, reporting on 6 of 6 sites against 3 of 6. See
+// benchmark/2026-07-31-websearch-method.md.
+//
+// Default stays `pipeline` so merging this cannot silently change what clients
+// receive; flipping the default is a separate, deliberate commit.
+const METHOD = (process.env.AUDIT_METHOD || "pipeline").toLowerCase();
+
+// Runs the websearch auditor as a child and returns the report-shaped record it
+// wrote. websearch-audit.mjs already emits picker.pages_used, coverage.notes and
+// link_check, so the report renderer and the honesty gate work unchanged.
+function runWebsearch(url, auditId) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(
+      process.execPath,
+      [join(HERE, "websearch-audit.mjs"), url, auditId],
+      { stdio: ["ignore", "inherit", "inherit"], env: { ...process.env, WSA_NOTION: "1" } }
+    );
+    child.on("error", reject);
+    child.on("exit", (code) => {
+      if (code !== 0) return reject(new Error(`websearch audit exited ${code}`));
+      const slug = pipelineSlug(url);
+      const recordPath = join(RUNS, `${slug}_wsn_r${auditId}.json`);
+      let record;
+      try {
+        record = JSON.parse(readFileSync(recordPath, "utf8"));
+      } catch (e) {
+        return reject(new Error(`websearch record not found at ${recordPath}: ${e.message}`));
+      }
+      // Same story-13 contract as the pipeline. A run that read nothing is a
+      // personal-reply case, never a report: without this the renderer would be
+      // handed zero pages and zero findings and would print a clean bill of health
+      // for a site we never saw.
+      if (!(record.picker?.pages_used || []).length)
+        return reject(
+          new Error(`UNREADABLE_SITE: no readable pages on ${url}; reply personally and set Rejected (story 13)`)
+        );
+      // No parseable findings block is the websearch equivalent of
+      // JUDGE_UNPARSEABLE: it looks exactly like a clean site and must not ship.
+      if (record.parse_error)
+        return reject(
+          new Error(`JUDGE_UNPARSEABLE: ${record.parse_error} for ${url}; left Approved to retry, see the runner's .audit-raw.txt`)
+        );
+      resolve(record);
+    });
+  });
+}
+
 // Runs run-pipeline.mjs as a child, returns the record it wrote. The pipeline
 // keys its output file by <slug>_pipe_r<runId>, so we pass auditId as runId.
 function runPipeline(url, auditId) {
@@ -73,7 +125,9 @@ export async function runAudit({ url, auditId, email }) {
   const fixture = process.env.AUDIT_RECORD_FIXTURE;
   const record = fixture
     ? JSON.parse(readFileSync(fixture, "utf8"))
-    : await runPipeline(url, auditId);
+    : METHOD === "websearch"
+      ? await runWebsearch(url, auditId)
+      : await runPipeline(url, auditId);
 
   // Stamp the lead's identity onto the record so downstream steps are self-contained.
   record.auditId = auditId;

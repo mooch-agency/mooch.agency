@@ -11,9 +11,15 @@ on:
   workflow_dispatch:
     inputs:
       pin_pages:
-        description: 'AUDIT_PIN_PAGES override: comma-separated paths/URLs to read instead of letting the picker choose. Leave empty for normal behaviour.'
+        description: 'AUDIT_PIN_PAGES override: comma-separated paths/URLs to read instead of letting the picker choose. Leave empty for normal behaviour. Ignored when method=websearch, which picks its own pages.'
         required: false
         default: ''
+      method:
+        description: 'Audit engine. pipeline = picker + prefetch + judge (incumbent). websearch = search for pages, read them rendered, gate after (31 Jul benchmark: 8 critical/high vs 0, reported on 6 of 6 sites vs 3 of 6).'
+        required: false
+        default: pipeline
+        type: choice
+        options: [pipeline, websearch]
 
 concurrency:
   group: audit-batch
@@ -22,7 +28,12 @@ concurrency:
 jobs:
   batch:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 45, not 30. The shared capture routine now scrolls slowly enough for
+    # IntersectionObserver content to fire and then waits for the text to settle,
+    # so a page read costs seconds rather than milliseconds. A batch of several
+    # leads was already close to the old ceiling; being killed mid-batch leaves
+    # rows half-processed with no signal about which ones ran.
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: audit
@@ -56,6 +67,7 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
           AUDIT_LLM: api
+          AUDIT_METHOD: ${{ inputs.method }}
           AUDIT_PIN_PAGES: ${{ inputs.pin_pages }}
         run: node scripts/batch.mjs
 
@@ -69,6 +81,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: judge-raw
-          path: audit/scripts/runs/*.judge-raw.txt
+          path: |
+            audit/scripts/runs/*.judge-raw.txt
+            audit/scripts/runs/*.audit-raw.txt
           retention-days: 30
           if-no-files-found: ignore

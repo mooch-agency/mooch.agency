@@ -35,17 +35,26 @@ import { loadAndCapture, norm } from './capture.mjs';
 // "identical to the control", which does most of the work.
 const THIN_CHARS = Number(process.env.ABSENCE_THIN_CHARS || 900);
 
-// Two pages "match" when one contains almost all of the other's lines. Comparing
-// whole strings is too brittle: a 404 fallback often carries the requested path in
-// a heading, so two 404s are never byte-identical.
-function similarity(a, b) {
-  if (!a || !b) return 0;
+// How much of the TARGET is accounted for by the reference page. Comparing whole
+// strings is too brittle: a 404 fallback often carries the requested path in a
+// heading, so two 404s are never byte-identical.
+//
+// The denominator is target-size, and it must not be min(target, reference). A 404
+// shell is small and every real page on the site repeats its nav and footer, so a
+// min denominator measures "how much of the shell appears in this page", which is
+// ~1.0 for every page on the site. Measured on sambleinnovations: full content
+// pages of 2950-4820 chars scored 0.80 against the control under a min denominator,
+// against a 0.85 threshold. Five points from classifying every rendered page as
+// "missing" and rubber-stamping a false absence claim. Target-size denominator
+// scores those same pages 0.10-0.16, which is the real answer.
+function similarity(target, reference) {
+  if (!target || !reference) return 0;
   const linesOf = (s) => new Set(norm(s).split(/(?<=[.!?|])\s+|\n+/).map(l => l.trim()).filter(l => l.length > 3));
-  const A = linesOf(a), B = linesOf(b);
+  const A = linesOf(target), B = linesOf(reference);
   if (!A.size || !B.size) return 0;
   let shared = 0;
   for (const l of A) if (B.has(l)) shared++;
-  return shared / Math.min(A.size, B.size);
+  return shared / A.size;
 }
 
 const MATCH = 0.85;
@@ -55,6 +64,10 @@ const MATCH = 0.85;
 export const controlUrlFor = (siteUrl) =>
   new URL('/mooch-audit-control-404-do-not-create', siteUrl).toString();
 
+// Origin of a URL, or null if it will not parse. Used to decide whether the caller's
+// site URL is usable as the homepage sample for this finding.
+const safeOrigin = (u) => { try { return new URL(u).origin; } catch { return null; } };
+
 /**
  * @param browser         a live puppeteer browser
  * @param siteUrl         the audited site's origin
@@ -62,7 +75,18 @@ export const controlUrlFor = (siteUrl) =>
  * @returns { verdict, actual, detail }  verdict: PASS | FAIL | UNVERIFIABLE
  */
 export async function checkAbsence(browser, siteUrl, finding, cache = {}) {
-  const controlUrl = controlUrlFor(siteUrl);
+  // Derive the control and homepage from the FINDING's own origin, not the site URL
+  // the run was started with. A lead submitted as apex that redirects to www (or the
+  // reverse) otherwise gets its baseline from a different host: propstrata's findings
+  // are on www.propstrata.com while the run is invoked with propstrata.com. It
+  // happened to work there because the apex redirects, but on a site that serves
+  // apex and www differently the control would describe the wrong site. This is the
+  // same landed-host rule discovery.mjs already enforces for the pipeline.
+  let origin;
+  try { origin = new URL(finding.url).origin; }
+  catch { return { verdict: 'UNVERIFIABLE', detail: `finding URL is not a URL: ${finding.url}` }; }
+  const homeUrl = siteUrl && safeOrigin(siteUrl) === origin ? siteUrl : origin;
+  const controlUrl = controlUrlFor(origin);
 
   if (!(controlUrl in cache)) cache[controlUrl] = await loadAndCapture(browser, controlUrl);
   const control = cache[controlUrl];
@@ -74,8 +98,8 @@ export async function checkAbsence(browser, siteUrl, finding, cache = {}) {
   const target = cache[finding.url];
   if (!target) return { verdict: 'UNVERIFIABLE', detail: 'target page would not load' };
 
-  if (!(siteUrl in cache)) cache[siteUrl] = await loadAndCapture(browser, siteUrl);
-  const home = cache[siteUrl];
+  if (!(homeUrl in cache)) cache[homeUrl] = await loadAndCapture(browser, homeUrl);
+  const home = cache[homeUrl];
 
   const vsControl = similarity(target.text, control.text);
   const vsHome = home ? similarity(target.text, home.text) : 0;

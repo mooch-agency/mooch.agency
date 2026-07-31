@@ -92,7 +92,10 @@ export async function buildReport(record, outDir) {
 
 // CLI entrypoint. pathToFileURL handles spaces in the path (percent-encoding),
 // which a raw `file://${argv[1]}` comparison would miss.
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+// argv[1] is undefined when this module is imported from `node -e` or an eval
+// context, and pathToFileURL(undefined) throws at import time, taking down any
+// embedder that never intended to use the CLI path at all.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [recordPath, outDir = dirname(process.argv[1]) + "/out"] =
     process.argv.slice(2);
   if (!recordPath) {

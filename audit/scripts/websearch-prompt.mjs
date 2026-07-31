@@ -178,9 +178,13 @@ A fenced block tagged \`summary\` containing JSON with exactly these keys:
   "kept": ["SEVERITY type /page: the innocent explanation you tested and what ruled it out", "..."],
   "rejected": ["what you considered and did not flag, and the one-line reason", "..."],${render ? `
   "verified": ["what the render pass changed: each finding it dropped, re-quoted, or newly revealed, and which rule decided it", "..."],` : ''}
-  "coverage": "pages read, pages you could not read and why"
+  "coverage": "pages read, pages you could not read and why",
+  "pages_read": ["https://…", "…"],
+  "unread": [{"url": "https://…", "why": "one line: bot challenge, timeout, empty render"}]
 }
 \`\`\`
+
+\`pages_read\` and \`unread\` are machine-read, not prose, and they decide what the client is told about scope. \`pages_read\` lists only pages you actually loaded and audited, full URLs, excluding link-destination checks. \`unread\` is every page you tried and failed to read; leave it \`[]\` if there were none. **If you could not read a page, it MUST appear in \`unread\`.** A report that says "we found nothing" when a page went unread is the single worst output this audit can produce, and that list is the only thing preventing it.
 
 \`rejected\` is not optional and is not decoration. It is read by a human to spot an auditor gone too keen or too shy, so every non-obvious thing you looked at and let go belongs there.
 
@@ -201,12 +205,14 @@ Findings come in two shapes, and using the wrong one is how a real finding gets 
 **Shape 2 — something that should be there isn't.** A page with no content, a policy that doesn't exist, a nav link to nothing. Use \`absence_claim\` and **no quote**:
 
 \`\`\`json
-{"url": "https://…", "severity": "…", "type": "broken-link", "absence_claim": "missing|empty|wrong_page", "why": "one line"}
+{"url": "https://…", "severity": "…", "type": "broken-link", "absence_claim": "missing|empty|wrong_page", "evidence_note": "one plain sentence describing what the page actually renders", "why": "one line"}
 \`\`\`
 
 - \`missing\` — the URL doesn't exist; it serves the site's not-found state.
 - \`empty\` — the page exists and renders no real content (shell, nav and footer only, or stuck loading).
 - \`wrong_page\` — it renders a real page, but not the one the link promised.
+
+\`evidence_note\` is shown to the client in place of a quotation, so write it as an observation of what is there ("Renders only the navigation and footer, with no contact form"), never as a quote.
 
 Pick the right one. Code checks which it actually is, by requesting a URL that cannot exist to learn this site's genuine not-found state and comparing. Claiming \`missing\` for a page that really renders the product page is a fail even though something is genuinely broken.
 

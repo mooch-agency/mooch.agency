@@ -136,7 +136,9 @@ async function fetchPage(browser, url) {
     // can still tell which pick this page answers.
     const landed = p.url() || url;
     await p.close(); return { url: landed, requested: url, title, text, links, settled };
-  } catch (e) { await p.close(); return { url, requested: url, title: '', text: '', links: [], error: String(e).slice(0, 150) }; }
+  // settled:false on the error path, not undefined: a caller asking "was this page
+  // stable?" about a page that never loaded must get a falsy answer, not a missing key.
+  } catch (e) { await p.close(); return { url, requested: url, title: '', text: '', links: [], settled: false, error: String(e).slice(0, 150) }; }
 }
 
 // Thin-text / bot-block fallback lives in its own module so it can be unit-tested

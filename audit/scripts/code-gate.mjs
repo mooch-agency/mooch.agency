@@ -40,6 +40,7 @@ for (const url of [...new Set(findings.filter(f => !isAbsence(f)).map(f => f.url
 }
 
 let pass = 0, fail = 0, unver = 0;
+try {
 for (const f of findings) {
   const tag = f.label ? ` [${f.label}]` : '';
   if (isAbsence(f)) {
@@ -57,5 +58,13 @@ for (const f of findings) {
   else { fail++; console.log(`FAIL${tag} | ${f.url} | ${f.quote.slice(0, 55)}`); }
 }
 
-await browser.close();
+} finally {
+  // Always close. A throw anywhere above (a malformed finding URL, a puppeteer
+  // protocol error) otherwise leaves headless Chrome running and the runner hanging,
+  // which on the daily batch means one bad lead stalls every lead behind it.
+  await browser.close();
+}
 console.log(`\ngate result: ${pass} pass, ${fail} fail, ${unver} unverifiable of ${findings.length}`);
+// Non-zero exit when a quote or absence claim did not hold, so a caller that
+// shells out can branch on it rather than parsing stdout.
+if (fail > 0) process.exitCode = 1;

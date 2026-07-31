@@ -263,6 +263,60 @@ if (USE_RENDER) {
   if (!renderedUrls.length) console.error('[wsa] WARN render arm but the reader log is empty: the second pass did not run');
 }
 
+// ---------------------------------------------------- report-compatible record
+//
+// render-report.mjs was written against the pipeline's record shape and reads five
+// things this method does not natively produce. Emitting them is not cosmetic:
+// `coverage.notes` is what drives the HONESTY GATE, and a record without it can
+// never render INCONCLUSIVE, so an audit that failed to read the homepage would
+// ship "your site's in good shape" over a page it never saw. That is exactly the
+// false all-clear the 31 Jul work removed, and it would come straight back.
+//
+//   findings[].category  <- our `type`
+//   findings[].issue     <- our `why`
+//   picker.pages_used    <- pages actually rendered, ground-truthed against the
+//                           reader log rather than trusting the model's self-report
+//   coverage.notes       <- the auditor's declared unread pages
+//   link_check           <- marked skipped WITH ITS OWN REASON. This method checks
+//                           link destinations by opening them, not by sweeping
+//                           status codes, so the soft-404 wording ("your status
+//                           codes aren't reliable") would be a false claim about
+//                           the client's site.
+function toReportRecord(rec, judgeLog, renderedUrls) {
+  const rendered = new Set(renderedUrls.map((u) => u.replace(/\/$/, '')));
+  const declared = Array.isArray(judgeLog?.pages_read) ? judgeLog.pages_read : [];
+  // Trust the reader log over the model. A page the auditor says it read but never
+  // actually rendered must not be counted as coverage: the report prints this list
+  // under "pages we audited" and a client can check it.
+  const pagesUsed = declared.filter((u) => rendered.has(String(u).replace(/\/$/, '')));
+  const unread = Array.isArray(judgeLog?.unread) ? judgeLog.unread : [];
+  const notes = unread
+    .map((u) => (typeof u === 'string' ? u : `${u.url || 'a page'} could not be read: ${u.why || 'no reason given'}`))
+    .filter(Boolean);
+
+  return {
+    ...rec,
+    picker: { pages_used: pagesUsed.length ? pagesUsed : renderedUrls, discovery: 'websearch' },
+    coverage: { notes },
+    // NOT soft_404. This method genuinely checks link destinations by opening
+    // them; it just does not sweep every status code. Marking it skipped would
+    // tell a client with healthy links that we could not read them, and would
+    // make every thin run permanently INCONCLUSIVE. It is a scope statement, so
+    // it renders in the coverage appendix without touching the honesty gate.
+    link_check: {
+      broken: [],
+      soft_404: false,
+      scope_note:
+        "We checked where your links go by opening them rather than sweeping every status code, so treat the link findings as a spot check, not a full link audit.",
+    },
+    findings: (rec.findings || []).map((f) => ({
+      ...f,
+      category: f.category || f.type,
+      issue: f.issue || f.why,
+    })),
+  };
+}
+
 const record = {
   tag,
   site,
@@ -289,6 +343,7 @@ const record = {
   report_md: report,
 };
 
-writeFileSync(`${OUT}${tag}.json`, JSON.stringify(record, null, 2));
+const reportRecord = toReportRecord(record, judgeLog, renderedUrls);
+writeFileSync(`${OUT}${tag}.json`, JSON.stringify(reportRecord, null, 2));
 console.error(`[wsa] ${tag}: ${kept.length}/${findings.length} kept (weight ${weight}), gate fail ${record.gate_fail}, unver ${record.gate_unverifiable}, ${(record.timing.total_ms / 1000).toFixed(1)}s total`);
 console.log(JSON.stringify({ tag, n: kept.length, weight, gate_fail: record.gate_fail, total_ms: record.timing.total_ms }));
