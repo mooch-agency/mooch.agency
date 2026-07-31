@@ -556,7 +556,7 @@ When it's done, tell me to run `/reload-plugins`, then test by asking "What's th
         <pre id="install-commands">/plugin marketplace add mooch-agency/say-less
 /plugin install say-less@say-less</pre>
       </div>
-      <p class="feedback-line">Something off, or working well? <a href="mailto:hey@mooch.agency?subject=Say%20Less%20beta%20feedback">hey@mooch.agency</a>.</p>
+      <p class="feedback-line">Something off, or working well? <a id="feedbackLink" href="mailto:hey@mooch.agency?subject=Say%20Less%20beta%20feedback">hey@mooch.agency</a>.</p>
       </div>
     </div>
 
@@ -610,6 +610,12 @@ const EXAMPLES = [
   ["Resolve a merge conflict", "How do I resolve a git merge conflict?"],
 ];
 
+// Vercel Analytics custom events. window.va is bootstrapped near the insights
+// script at the end of the page; guarded so it no-ops if analytics is blocked.
+function track(name, data) {
+  try { if (window.va) window.va("event", Object.assign({ name: name }, data || {})); } catch (e) {}
+}
+
 const f = document.getElementById("f");
 const q = document.getElementById("q");
 const go = document.getElementById("go");
@@ -658,6 +664,9 @@ function refillDeck() {
     [deck[0], deck[deck.length - 1]] = [deck[deck.length - 1], deck[0]];
   }
 }
+let askSource = "typed";     // flips to "random" on the chip below, back on manual edit
+q.addEventListener("input", () => { askSource = "typed"; });
+
 document.getElementById("exampleBtn").addEventListener("click", () => {
   if (!deck.length) refillDeck();
   lastExample = deck.pop();
@@ -665,6 +674,8 @@ document.getElementById("exampleBtn").addEventListener("click", () => {
   q.value = text;
   q.focus();
   q.setSelectionRange(text.length, text.length);   // caret at the end, ready to edit
+  askSource = "random";
+  track("sayless_random_question", { example: EXAMPLES[lastExample][0] });
 });
 
 // Model replies arrive as markdown. Render the small subset they actually
@@ -753,6 +764,7 @@ promptToggle.addEventListener("click", () => {
   promptToggle.setAttribute("aria-expanded", String(!open));
   promptDetails.classList.toggle("open", !open);
   promptToggle.querySelector(".toggle-label").textContent = open ? "Show the prompt" : "Hide the prompt";
+  track("sayless_show_prompt", { opening: !open });
 });
 
 let es = null, busy = false;
@@ -864,6 +876,7 @@ function finish() {
     setStatus("error");
     setDelta("··", true);
     setNote(failed.map((k) => UI[k].name + ": " + arm[k].error).join("  ·  "), true);
+    track("sayless_error", { reason: "arm_error" });
     return;
   }
   const a = arm.default.words, b = arm.sayless.words;
@@ -871,6 +884,7 @@ function finish() {
     setStatus("error");
     setDelta("··", true);
     setNote("One side came back empty. Try again.", true);
+    track("sayless_error", { reason: "empty" });
     return;
   }
   setStatus("done");
@@ -878,6 +892,7 @@ function finish() {
   if (a === b) {
     setDelta("0%");
     setNote("0%: same length.", false, true);
+    track("sayless_result", { default_words: a, sayless_words: b, pct: 0 });
     return;
   }
   const p = Math.round(Math.abs(1 - b / a) * 100);
@@ -887,6 +902,7 @@ function finish() {
     ? p + "% shorter with Say Less."
     : p + "% longer with Say Less. It happens: the style protects completeness over brevity.",
     false, true);
+  track("sayless_result", { default_words: a, sayless_words: b, pct: p });
 }
 
 f.addEventListener("submit", (e) => {
@@ -904,6 +920,7 @@ f.addEventListener("submit", (e) => {
     return;
   }
 
+  track("sayless_ask", { prompt_words: promptWords, source: askSource });
   busy = true;
   setGoState(true);
   setStatus("running");
@@ -968,8 +985,10 @@ f.addEventListener("submit", (e) => {
 // styled as whatever the block around it needs.
 document.querySelectorAll("[data-copy-target]").forEach(function (btn) {
   btn.addEventListener("click", function () {
-    var target = document.getElementById(btn.getAttribute("data-copy-target"));
+    var targetId = btn.getAttribute("data-copy-target");
+    var target = document.getElementById(targetId);
     if (!target) return;
+    track(targetId === "install-commands" ? "sayless_copy_commands" : "sayless_copy_prompt");
     navigator.clipboard.writeText(target.textContent.trim()).then(function () {
       var original = btn.textContent;
       btn.textContent = "Copied";
@@ -981,7 +1000,25 @@ document.querySelectorAll("[data-copy-target]").forEach(function (btn) {
     });
   });
 });
+
+var feedbackLink = document.getElementById("feedbackLink");
+if (feedbackLink) {
+  feedbackLink.addEventListener("click", function () {
+    track("sayless_feedback_click");
+  });
+}
 </script>
+
+<!-- Vercel Web Analytics (static-site install). Activates once Web Analytics is
+     enabled on the mooch.agency Vercel project; script served at /_vercel/insights/script.js -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+
+<!-- Vercel Speed Insights (static-site install). Activates once Speed Insights is
+     enabled on the project; script served at /_vercel/speed-insights/script.js -->
+<script defer src="/_vercel/speed-insights/script.js"></script>
 
 </body>
 </html>
