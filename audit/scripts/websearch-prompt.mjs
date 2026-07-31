@@ -188,11 +188,29 @@ A fenced block tagged \`summary\` containing JSON with exactly these keys:
 
 A fenced \`json\` block, last thing in your reply:
 
+Findings come in two shapes, and using the wrong one is how a real finding gets thrown away.
+
+**Shape 1 — something on the page is wrong.** The default. Evidence is a quote.
+
 \`\`\`json
 {"findings": [{"url": "https://…", "severity": "critical|high|medium|low", "type": "broken-link|pricing|contradiction|factual|naming|grammar|formatting|stale", "quote": "…", "quote2": "…", "url2": "https://…", "why": "one line"}]}
 \`\`\`
 
 \`quote\` must be copied character for character from ${notionShape ? `the page reader's output for \`url\`` : render ? `the **rendered** reading of \`url\` — the second pass's output, not WebFetch's` : `the text WebFetch returned for \`url\``}. Not paraphrased, not tidied, not re-punctuated. \`quote2\`/\`url2\` only on contradictions, carrying the other side.
+
+**Shape 2 — something that should be there isn't.** A page with no content, a policy that doesn't exist, a nav link to nothing. Use \`absence_claim\` and **no quote**:
+
+\`\`\`json
+{"url": "https://…", "severity": "…", "type": "broken-link", "absence_claim": "missing|empty|wrong_page", "why": "one line"}
+\`\`\`
+
+- \`missing\` — the URL doesn't exist; it serves the site's not-found state.
+- \`empty\` — the page exists and renders no real content (shell, nav and footer only, or stuck loading).
+- \`wrong_page\` — it renders a real page, but not the one the link promised.
+
+Pick the right one. Code checks which it actually is, by requesting a URL that cannot exist to learn this site's genuine not-found state and comparing. Claiming \`missing\` for a page that really renders the product page is a fail even though something is genuinely broken.
+
+**Never prove an absence with a quote.** The tempting move is to quote the loading message ("Loading tags..."). Don't: a loading message is by definition a thing that goes away, so it is not stable evidence and the check will drop the whole finding. Use \`absence_claim\` and let the code establish it.
 
 **Every quote is checked by code against the page as a real browser renders it.** A quote that does not appear there is dropped, whether it was hallucinated, silently reworded, or lifted from hidden markup. Copy exactly, and quote only text a user can actually see.
 

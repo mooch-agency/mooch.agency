@@ -30,9 +30,7 @@ import { buildPrompt } from './websearch-prompt.mjs';
 
 const OUT = fileURLToPath(new URL('./runs/', import.meta.url));
 const GATE = fileURLToPath(new URL('./code-gate.mjs', import.meta.url));
-const GATE_STABLE = fileURLToPath(new URL('./code-gate-stable.mjs', import.meta.url));
 const READER = fileURLToPath(new URL('./read-url.mjs', import.meta.url));
-const READER_SETTLE = fileURLToPath(new URL('./render-read.mjs', import.meta.url));
 mkdirSync(OUT, { recursive: true });
 
 const [site, runId = '1'] = process.argv.slice(2);
@@ -45,10 +43,6 @@ const MODEL = process.env.WSA_MODEL || 'claude-sonnet-5';
 const PAGES = Number(process.env.WSA_PAGES || 5);
 const ADVISOR = process.env.WSA_ADVISOR === '1';
 const RENDER = process.env.WSA_RENDER === '1';
-// Arm C: the render arm with both diagnosed bugs fixed — a reader that waits for
-// the page to stop moving, and a gate that captures twice so an animating value
-// cannot be quoted at a client. Implies RENDER.
-const STABLE = process.env.WSA_STABLE === '1';
 // Arm N: the faithful reproduction of the Notion skill. WebSearch for discovery, a
 // rendering reader for pages, and NO WebFetch at all — WebFetch is not `web.loadPage`
 // and is close to its opposite (raw HTML plus a summarising model, versus rendered
@@ -62,12 +56,12 @@ const TIMEOUT = Number(process.env.WSA_TIMEOUT || 900_000);
 // layer will allow. They are built from one constant so they cannot drift: if the
 // allowlist prefix stops matching the documented command, every render call is
 // denied and the arm silently degrades into arm A.
-const READ_BIN = (STABLE || NOTION) ? READER_SETTLE : READER;
+const READ_BIN = READER;
 const RENDER_CMD = `node ${READ_BIN}`;
-const USE_RENDER = RENDER || STABLE || NOTION;
+const USE_RENDER = RENDER || NOTION;
 
 const slug = site.replace(/https?:\/\/(www\.)?/, '').split(/[/.]/)[0];
-const tag = `${slug}_ws${NOTION ? 'n' : STABLE ? 's' : USE_RENDER ? 'r' : ''}_r${runId}`;
+const tag = `${slug}_ws${NOTION ? 'n' : USE_RENDER ? 'r' : ''}_r${runId}`;
 const t0 = Date.now();
 
 // ---------------------------------------------------------------- the auditor
@@ -187,6 +181,10 @@ function parseOutput(text) {
 function gateEntries(findings) {
   const entries = [];
   findings.forEach((f, i) => {
+    // Absence findings have no quote by design; the gate classifies them against a
+    // 404 control probe instead. Sending one through the quote path would fail it
+    // for having no quote, which is how propstrata's real critical was lost.
+    if (f.absence_claim) { entries.push({ url: f.url, absence_claim: f.absence_claim, label: `${i}:a` }); return; }
     if (f.url && f.quote) entries.push({ url: f.url, quote: f.quote, label: `${i}:a` });
     if (f.url2 && f.quote2) entries.push({ url: f.url2, quote: f.quote2, label: `${i}:b` });
     else if (f.quote2 && f.url) entries.push({ url: f.url, quote: f.quote2, label: `${i}:b` });
@@ -199,7 +197,7 @@ function runGate(entries) {
   const tmp = `${OUT}${tag}.gate-in.json`;
   writeFileSync(tmp, JSON.stringify({ findings: entries }, null, 2));
   return new Promise((resolve, reject) => {
-    const child = spawn('node', [(STABLE || NOTION) ? GATE_STABLE : GATE, tmp], { stdio: ['ignore', 'pipe', 'inherit'] });
+    const child = spawn('node', [GATE, tmp, site], { stdio: ['ignore', 'pipe', 'inherit'] });
     let out = '';
     child.stdout.on('data', d => (out += d));
     child.on('error', reject);
@@ -249,13 +247,7 @@ const scored = findings.map((f, i) => {
   const a = verdicts[`${i}:a`] || 'MISSING';
   const b = (f.quote2 ? verdicts[`${i}:b`] : null);
   const all = [a, ...(b ? [b] : [])];
-  // UNSTABLE is its own outcome, not a fail: the quote was really on the page in
-  // one capture. But the value moved between two loads seconds apart, so it is a
-  // counter, a ticker or a rotator, and a client report cannot stand on it. Held
-  // out of the report, kept on the record, because it is the single most useful
-  // signal this experiment produced.
   const gate = all.includes('FAIL') ? 'fail'
-    : all.includes('UNSTABLE') ? 'unstable'
     : all.includes('UNVERIFIABLE') || all.includes('MISSING') ? 'unverifiable'
     : 'pass';
   return { ...f, gate };
@@ -274,11 +266,10 @@ if (USE_RENDER) {
 const record = {
   tag,
   site,
-  method: NOTION ? 'notion-shape' : STABLE ? 'websearch+render+stable' : USE_RENDER ? 'websearch+render' : 'websearch',
+  method: NOTION ? 'notion-shape' : USE_RENDER ? 'websearch+render' : 'websearch',
   model: MODEL,
   advisor: ADVISOR,
   render_pass: USE_RENDER,
-  stable_gate: STABLE,
   rendered_urls: renderedUrls,
   pages_budget: PAGES,
   timing: { audit_ms: auditMs, gate_ms: gateMs, total_ms: Date.now() - t0 },
@@ -292,7 +283,6 @@ const record = {
   weight,
   gate_pass: kept.length,
   gate_fail: scored.filter(f => f.gate === 'fail').length,
-  gate_unstable: scored.filter(f => f.gate === 'unstable').length,
   gate_unverifiable: scored.filter(f => f.gate === 'unverifiable').length,
   judge_log: judgeLog,
   gate_stdout: gateOut,

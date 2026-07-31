@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import { THIN_CHARS, unusable, fetchWithRetry, resolveWithSwaps } from './page-fallback.mjs';
 import { sameSiteFactory, sameDomainFactory, cleanUrl, buildInventory, onLandedHost } from './discovery.mjs';
 import { statusOfFactory, REPORTABLE } from './link-check.mjs';
+import { captureText, preparePage } from './capture.mjs';
 import { buildBundle } from './bundle.mjs';
 import { mergePasses } from './consensus.mjs';
 import { parseJudge } from './judge-parse.mjs';
@@ -120,21 +121,21 @@ const cost = (model, u) => ENGINE !== 'api' ? 0 : ((u.input_tokens * PRICE[model
 
 async function fetchPage(browser, url) {
   const p = await browser.newPage();
-  await p.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36');
-  await p.setViewport({ width: 1280, height: 800 });
+  await preparePage(p);
   try {
     await p.goto(url, { waitUntil: 'networkidle2', timeout: 45000 });
-    await p.evaluate(async () => { await new Promise(r => { let t = 0; const i = setInterval(() => { window.scrollBy(0, 600); t += 600; if (t >= document.body.scrollHeight) { clearInterval(i); r(); } }, 80); }); window.scrollTo(0, 0); });
-    await new Promise(r => setTimeout(r, 700));
+    // Shared capture (capture.mjs): slow scroll so IntersectionObservers fire, then
+    // wait for the text to settle. Was a local copy of a 600px/80ms scroll that read
+    // scroll-animated values before they started; see capture.mjs for the measurement.
+    const { text, settled } = await captureText(p);
     const title = await p.title();
-    const text = await p.evaluate(() => document.body.innerText);
     const links = await p.evaluate(() => [...document.querySelectorAll('a[href]')].map(a => ({ href: a.href, label: (a.innerText || '').trim().slice(0, 60) })));
     // Where the page ACTUALLY ended up. An apex -> www redirect (or the reverse)
     // changes the origin every downstream comparison keys off, so callers need
     // the landed URL, not the one we asked for. `requested` is kept so a caller
     // can still tell which pick this page answers.
     const landed = p.url() || url;
-    await p.close(); return { url: landed, requested: url, title, text, links };
+    await p.close(); return { url: landed, requested: url, title, text, links, settled };
   } catch (e) { await p.close(); return { url, requested: url, title: '', text: '', links: [], error: String(e).slice(0, 150) }; }
 }
 
