@@ -291,7 +291,7 @@ function findingCards(m) {
     .join("\n");
   return `<section class="block">
     <h2 class="block-title">What we found</h2>
-    <p class="block-lead">Worst first. Every quote is copied verbatim from your live pages as a signed-out visitor sees them, so each one is a find-and-fix. If a quote doesn't show up for you, check the page signed out.</p>
+    <p class="block-lead">Every quote is copied verbatim from your live pages.</p>
     ${cards}
   </section>`;
 }
@@ -335,9 +335,8 @@ function coverageBlock(m) {
     ...(m.scopeNotes || []),
   ];
   const notes = allNotes.length
-    ? `<p class="block-lead" style="margin-top:16px">Notes on what we could read:</p>
-       <ul class="link-list">${allNotes
-         .map((n) => `<li class="muted">${esc(n)}</li>`)
+    ? `<ul class="notes-list muted" style="margin-top:16px">${allNotes
+         .map((n) => `<li>${esc(n)}</li>`)
          .join("\n")}</ul>`
     : "";
   return `<section class="block coverage">
@@ -345,7 +344,7 @@ function coverageBlock(m) {
     <p class="block-lead">Pages we read for this audit:</p>
     <ul class="link-list">${pages}</ul>
     ${notes}
-    <p class="muted small">This free audit covers your key pages.</p>
+    <p class="scope-note"><strong>This free audit only covers your key pages.</strong></p>
   </section>`;
 }
 
@@ -454,6 +453,15 @@ th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacin
 .link-list li{padding:6px 0;border-bottom:1px solid var(--hairline);word-break:break-all}
 .muted{color:var(--muted)}.small{font-size:12px}
 .coverage .link-list li{border:none;padding:3px 0}
+/* Prose, not URLs: break-all is for URLs that have nowhere else to wrap. Applied
+   to a sentence it snaps mid-word ("sweep-ing your links") wherever a line hits
+   the container edge. Sentences get the sans font and ordinary word wrapping. */
+.notes-list{list-style:none;font-family:var(--sans);font-size:13px;max-width:var(--measure)}
+.notes-list li{padding:3px 0;overflow-wrap:break-word;word-break:normal}
+/* Scope reminder, set apart from the coverage-gap list above it: nothing failed
+   to load here, it is a boundary of the free audit, and it should read that way
+   on a skim, not sit lost in a paragraph of small print. */
+.scope-note{border-left:2px solid var(--ink);padding-left:14px;margin-top:20px;font-size:14px}
 .closer{background:var(--surface);border-radius:20px;margin-top:48px;padding:44px var(--closer-pad)}
 .closer-title{font-family:var(--serif);font-size:32px;line-height:1.1;margin:10px 0 12px;max-width:calc(var(--measure) - var(--closer-pad));text-wrap:balance}
 .closer-body{color:var(--muted-small);max-width:calc(var(--measure) - var(--closer-pad));margin-bottom:24px;text-wrap:pretty}

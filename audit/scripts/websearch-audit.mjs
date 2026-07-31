@@ -230,7 +230,7 @@ const res = await runAuditor(prompt);
 const auditMs = Date.now() - tAudit0;
 
 const text = res.result || '';
-writeFileSync(`${OUT}${tag}.audit-raw.txt`, text);
+writeFileSync(`${OUT}${tag}.judge-raw.txt`, text);
 
 const { findings, judgeLog, report, parseError } = parseOutput(text);
 if (parseError) console.error(`[wsa] WARN ${parseError}`);

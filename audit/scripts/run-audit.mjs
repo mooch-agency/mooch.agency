@@ -80,7 +80,7 @@ function runWebsearch(url, auditId) {
       // JUDGE_UNPARSEABLE: it looks exactly like a clean site and must not ship.
       if (record.parse_error)
         return reject(
-          new Error(`JUDGE_UNPARSEABLE: ${record.parse_error} for ${url}; left Approved to retry, see the runner's .audit-raw.txt`)
+          new Error(`JUDGE_UNPARSEABLE: ${record.parse_error} for ${url}; left Approved to retry, see the runner's .judge-raw.txt`)
         );
       resolve(record);
     });

@@ -197,11 +197,17 @@ export function judgeLogBlocks(record) {
     blocks.push(...rejected.map(bullet));
   }
 
+  // The engine line reads different fields depending on which method ran. A
+  // websearch record has no picker (it finds its own pages) and no separate
+  // judge model (one model does discovery, reading and judging), so printing
+  // the pipeline's fields on it produced "picker ?" on every row. `record.method`
+  // is present on both record shapes and says which one actually ran.
+  const engineLine = record.method && record.method !== "pipeline"
+    ? `Method ${record.method}, model ${record.model || "?"}.`
+    : `Judge ${record.judge_model || "claude-opus-4-8"}, picker ${record.pickerModel || "?"}.`;
   blocks.push(
     para(
-      `Run ${record.auditId || record.tag || "?"}. Judge ${
-        record.judge_model || "claude-opus-4-8"
-      }, picker ${record.pickerModel || "?"}. ${
+      `Run ${record.auditId || record.tag || "?"}. ${engineLine} ${
         (record.picker?.pages_used || []).length
       } pages read. The judge's full reasoning is in the "${JUDGE_RAW_MARKER}" toggle below.`
     )
@@ -309,7 +315,10 @@ export async function getReportFiles(pageId) {
   return files.map((f) => ({ name: f.name, url: f.file?.url || f.external?.url || "" }));
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+// argv[1] is undefined when this module is imported rather than run as a CLI
+// (node -e, an eval context), and pathToFileURL(undefined) throws at import
+// time, so any embedder that only wanted judgeLogBlocks/chunkRaw would crash.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [cmd, ...args] = process.argv.slice(2);
   const run = async () => {
     if (cmd === "list") {
