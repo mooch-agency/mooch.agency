@@ -250,8 +250,13 @@ function evidenceBlock(f) {
         </div>`;
   }
   const url2 = f.url2 || f.url;
-  const samePage =
-    String(url2).replace(/\/$/, "") === String(f.url).replace(/\/$/, "");
+  // Compare at the same granularity the label actually displays. A raw-string
+  // comparison disagreed with pathOf() whenever two quotes shared a page but
+  // differed by query string or hash (?ref=x, #annual vs #monthly): "cross-page"
+  // layout fired, and both sides rendered the identical label ("On /pricing",
+  // "On /pricing") stacked as if they were different sources. Comparing pathnames
+  // makes the layout decision agree with what the reader is shown.
+  const samePage = pathOf(url2) === pathOf(f.url);
   if (samePage) {
     return `<div class="finding-evidence">
           ${evidenceLabel(f.url)}
@@ -272,11 +277,12 @@ function evidenceBlock(f) {
 function findingCards(m) {
   if (!m.findings.length) return "";
   const cards = m.findings
-    .map((f) => {
+    .map((f, i) => {
       const s = sev(f);
       const issue = f.issue || CATEGORY_LABEL[f.category] || f.category || "Issue";
       return `<article class="finding">
         <div class="finding-head">
+          <span class="finding-num">${i + 1}</span>
           <span class="chip chip-${esc((f.severity || "low").toLowerCase())}">${esc(
         s.label
       )}</span>
@@ -435,18 +441,32 @@ th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacin
 .chip-low{background:var(--low-bg);color:var(--low)}
 .finding{padding:20px 0;border-bottom:1px solid var(--hairline)}
 .finding-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.finding-num{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:16px}
 .finding-cat{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.finding-issue{font-family:var(--serif);font-size:22px;line-height:1.25;color:var(--ink);margin-bottom:12px;max-width:var(--measure);text-wrap:balance}
+/* Sans, not serif, and a size down from the 30 Jul original. The serif is now
+   reserved for headlines (.block-title, .report-title): a finding statement is
+   read fast, under stress (the client is here because something's wrong), and
+   is closer to body copy than to editorial prose. */
+/* text-wrap:balance is for headlines: 2-3 near-equal lines. On a 3-line finding
+   statement it evens every line to ~80% of the measure instead of filling
+   naturally, leaving visible slack on every line — the "strange break" the serif
+   original never had. pretty avoids orphans without forcing that even-out. */
+.finding-issue{font-family:var(--sans);font-size:18px;line-height:1.4;font-weight:400;color:var(--ink);margin-bottom:12px;max-width:var(--measure);text-wrap:pretty}
 /* The measure sits on the evidence wrapper, not the quote: the quote is inset by
    its own rule, so capping the quote would push its right edge past every other
    block by exactly that inset. Capping the wrapper lands the rag on the measure. */
 .finding-evidence{max-width:var(--measure)}
 .finding-evidence-label{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px}
-.finding-quote{font-size:14px;line-height:1.5;color:var(--muted-small);padding-left:14px;border-left:2px solid var(--hairline);text-wrap:pretty}
-/* Paired evidence (a finding + the line it contradicts): one shared rule down
-   the side so the two quotes read as a single comparison, "vs" between them. */
-.finding-evidence-pair{border-left:2px solid var(--hairline);padding-left:14px}
-.finding-evidence-pair .finding-quote{border-left:none;padding-left:0}
+/* Monospace, bordered evidence block, not prose styling: a quote here is data
+   lifted verbatim off a screen, not something anyone wrote as a sentence, and
+   the mono face reads that way at a glance without literal quote-mark glyphs
+   competing with the vs divider below. */
+.finding-quote{font-family:var(--mono);font-size:12.5px;line-height:1.6;color:var(--muted-small);background:var(--surface);border:1px solid var(--hairline);border-radius:6px;padding:12px 14px;text-wrap:pretty}
+/* Paired evidence (a finding + the line it contradicts): each box is already a
+   self-contained bordered block, so the pair needs no extra shared rule down
+   the side — that would double up against each box's own border. The "vs"
+   divider alone carries the pairing. */
+.finding-evidence-pair{display:flex;flex-direction:column;gap:2px}
 .ev-vs{display:flex;align-items:center;gap:8px;margin:10px 0;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
 .ev-vs::after{content:"";flex:1;height:1px;background:var(--hairline)}
 .link-list{list-style:none;font-family:var(--mono);font-size:13px;max-width:var(--measure)}

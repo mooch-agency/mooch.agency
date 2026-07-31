@@ -236,3 +236,66 @@ test('an absence finding renders as an observation, never as a quotation', () =>
   // page text: that block is reserved for things we actually copied off the page.
   assert.doesNotMatch(out.html, /<blockquote class="finding-quote">Renders only/);
 });
+
+// samePage used to compare raw URL strings while the label only ever shows the
+// pathname (pathOf strips query/hash). Two quotes on one page that differ only by
+// query string or hash therefore rendered as "cross-page" evidence: two identical
+// "On /pricing" labels stacked, looking like two sources when there was one.
+test('two quotes on the same page, different query string, render as one page', () => {
+  const out = renderReport(
+    record([{
+      url: 'https://example.com/pricing?ref=homepage',
+      url2: 'https://example.com/pricing',
+      quote: 'Plans from £19 a month',
+      quote2: 'Plans from £29 a month',
+      severity: 'high',
+      category: 'pricing',
+      issue: 'Two different prices on the same pricing page.',
+      gate: 'pass',
+    }]),
+    '31 July 2026',
+  );
+  const labels = [...out.html.matchAll(/On <a[^>]*>([^<]*)<\/a>/g)].map((m) => m[1]);
+  assert.deepEqual(labels, ['/pricing']);
+});
+
+// Same real bug, real shape: a lead audited at the apex domain whose pages render
+// under www (or the reverse). Two quotes on what is genuinely one page must not
+// render as two identical-looking sources.
+test('the same page under an apex/www variant still renders as one page', () => {
+  const out = renderReport(
+    record([{
+      url: 'https://apexvolumetrics.com/refund-policy',
+      url2: 'https://www.apexvolumetrics.com/refund-policy',
+      quote: 'VIP group, signals, and related content',
+      quote2: 'Telegram Username',
+      severity: 'high',
+      category: 'naming',
+      issue: "'VIP group' branding appears only in the legal pages.",
+      gate: 'pass',
+    }]),
+    '31 July 2026',
+  );
+  const labels = [...out.html.matchAll(/On <a[^>]*>([^<]*)<\/a>/g)].map((m) => m[1]);
+  assert.deepEqual(labels, ['/refund-policy']);
+});
+
+// The genuine cross-page case must still split: this is the finding class the
+// user asked about, apex's CCPA contradiction between the homepage and /privacy.
+test('a genuine cross-page contradiction labels each side with its own page', () => {
+  const out = renderReport(
+    record([{
+      url: 'https://apexvolumetrics.com/',
+      url2: 'https://apexvolumetrics.com/privacy',
+      quote: 'We never share your information',
+      quote2: 'shared with advertising and analytics partners such as Meta and Google',
+      severity: 'critical',
+      category: 'contradiction',
+      issue: 'Homepage privacy claim contradicts the Privacy Policy.',
+      gate: 'pass',
+    }]),
+    '31 July 2026',
+  );
+  const labels = [...out.html.matchAll(/On <a[^>]*>([^<]*)<\/a>/g)].map((m) => m[1]);
+  assert.deepEqual(labels, ['/ (homepage)', '/privacy']);
+});
