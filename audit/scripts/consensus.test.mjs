@@ -114,3 +114,24 @@ test('findings come back worst-first, then best-corroborated', () => {
   ]);
   assert.equal(findings[0].severity, 'high');
 });
+
+// The merged severity and the merged REASONING have to agree, or a reviewer
+// reads a finding shipped as `high` whose own rationale argues for medium.
+// Found on the live propstrata run: two passes split high/medium, the tie broke
+// to high, and the kept variant was the medium one, so the record shipped
+// "high" alongside the sentence "Medium rather than low because...".
+test('the kept variant matches the consensus severity, so reasoning agrees with it', () => {
+  const hi = f({ severity: 'high', reasoning: 'High because a liability clause is binding.' });
+  const med = f({ severity: 'medium', quote2: 'defined elsewhere', reasoning: 'Medium rather than low because meaning is recoverable.' });
+  const { findings } = mergePasses([[hi], [med]]);
+  assert.equal(findings[0].severity, 'high');
+  assert.match(findings[0].reasoning, /^High because/, 'must not keep a medium rationale on a high finding');
+});
+
+// ...but evidence still wins among variants that DO match the consensus.
+test('among matching-severity variants, the best-evidenced one still wins', () => {
+  const thin = f({ severity: 'high', reasoning: 'short' });
+  const rich = f({ severity: 'high', quote2: 'the other side', url2: 'https://example.com/x', reasoning: 'much longer rationale' });
+  const { findings } = mergePasses([[thin], [rich]]);
+  assert.equal(findings[0].quote2, 'the other side');
+});

@@ -90,10 +90,18 @@ export function mergePasses(passes) {
   for (const [, e] of byKey) {
     const n = e.seenIn.size;
     const severity = consensusSeverity(e.variants);
-    // Keep the fullest-evidenced variant: a pass that supplied quote2/url2 gives
-    // a reviewer more to check than one that did not.
+    // Keep the fullest-evidenced variant, but ONLY from among the passes that
+    // agreed with the consensus severity. Evidence alone is the wrong sort key:
+    // on the live propstrata run two passes split high/medium, the tie broke to
+    // high, and the better-evidenced variant was the medium one, so the record
+    // shipped `severity: high` next to the sentence "Medium rather than low
+    // because...". A reviewer reading that cannot tell which number to trust.
+    // Severity match first, then evidence among the ones that match.
     const best = [...e.variants].sort(
-      (a, b) => (b.quote2 ? 1 : 0) - (a.quote2 ? 1 : 0) || (b.reasoning || '').length - (a.reasoning || '').length
+      (a, b) =>
+        (b.severity === severity ? 1 : 0) - (a.severity === severity ? 1 : 0) ||
+        (b.quote2 ? 1 : 0) - (a.quote2 ? 1 : 0) ||
+        (b.reasoning || '').length - (a.reasoning || '').length
     )[0];
     const merged = {
       ...best,
