@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Say Less intercept: three design options | Mooch</title>
+<title>Say Less intercept: five design options | Mooch</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <meta name="robots" content="noindex, nofollow">
@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="/ui.css">
 <style>
   /* Internal preview, not a public page: deliberately out of sitemap.xml and
-     llms.txt, noindex. Three candidate designs for the Say Less adoption
+     llms.txt, noindex. Five candidate designs for the Say Less adoption
      intercept, mounted on a replica of /say-less so they can be compared in
      situ. Delete once the design is chosen and built. */
 
@@ -105,7 +105,9 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Status strip ───────────────────────────────────────────────────────*/
 .strip {
-  position: sticky; top: 57px; z-index: 50;
+  /* The real page pins this to 0. Here it clears the preview bar, whose
+     height changes when the tabs wrap, so the offset is measured not guessed. */
+  position: sticky; top: var(--pv-h, 57px); z-index: 50;
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   min-height: 44px; padding: 0 var(--pad-x);
   background: var(--black); border-bottom: 1px solid var(--hairline);
@@ -262,7 +264,9 @@ a { color: inherit; text-decoration: none; }
 .ix { display: none; }
 body[data-option="1"] .ix-1,
 body[data-option="2"] .ix-2,
-body[data-option="3"] .ix-3 { display: block; }
+body[data-option="3"] .ix-3,
+body[data-option="4"] .ix-4,
+body[data-option="5"] .ix-5 { display: block; }
 .ix[data-state="idle"] { display: none !important; }
 
 /* The question label: the page's existing mono small-caps label style. */
@@ -360,6 +364,65 @@ body[data-option="3"] .ix-3 { display: block; }
 .ix-3 .ix-actions .pill, .ix-3 .ix-actions .ghost { flex: 1 1 0; padding: 10px 14px; min-height: 40px; }
 .ix-3 .ix-reasons { flex-direction: column; align-items: stretch; }
 .ix-3 .ix-reason { text-align: left; }
+
+/* ── Option 4: run gate ─────────────────────────────────────────────────
+   The question takes the control's place. The trigger is already a second
+   run, so this asks at the exact moment intent is proven, and the thing it
+   stands in front of is the thing they came back for. One tap either way,
+   and Skip still runs the query, so nobody is trapped. */
+body.gated #f { display: none; }
+.ix-4 { margin-bottom: 4px; }
+.ix-4 .gate {
+  background: var(--field-bg); border: 1px solid var(--paper);
+  border-radius: 24px; padding: clamp(20px, 2.6vw, 28px);
+}
+.ix-4 .gate-q {
+  font-family: var(--serif); font-weight: 400; font-size: clamp(24px, 2.8vw, 34px);
+  line-height: 1.05; letter-spacing: -0.02em; color: var(--paper); margin: 0;
+}
+.ix-4 .ix-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
+.ix-4 .gate-skip {
+  font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--muted-small); background: none; border: 0; cursor: pointer;
+  min-height: 44px; padding: 0 6px; margin-left: 6px;
+  text-decoration: underline; text-decoration-color: var(--hairline-focus); text-underline-offset: 5px;
+}
+.ix-4 .gate-skip:hover { color: var(--ink); text-decoration-color: var(--paper); }
+.ix-4 .gate-skip:focus-visible { outline: 2px solid var(--paper); outline-offset: 4px; }
+
+/* ── Option 5: dialog ───────────────────────────────────────────────────
+   The blunt instrument. Nothing else is reachable until it's answered or
+   closed, so it gets the highest answer rate and costs the most goodwill.
+   Built as a real dialog: Escape closes, focus starts on Yes and returns to
+   where it was, the page behind is inert. */
+.ix-5 {
+  position: fixed; inset: 0; z-index: 80;
+  align-items: center; justify-content: center; padding: var(--pad-x);
+}
+body[data-option="5"] .ix-5 { display: flex; }
+body[data-option="5"] .ix-5[data-state="idle"] { display: none !important; }
+.ix-5 .scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.75); }
+.ix-5 .card {
+  position: relative; width: min(440px, 100%);
+  background: var(--surface); border: 1px solid var(--hairline-focus);
+  border-radius: 16px; padding: clamp(22px, 3vw, 30px);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+}
+@media (prefers-reduced-motion: no-preference) {
+  body[data-option="5"] .ix-5:not([data-state="idle"]) .card { animation: cardIn 0.4s var(--ease-decide); }
+  body[data-option="5"] .ix-5:not([data-state="idle"]) .scrim { animation: ixFade 0.3s var(--ease-decide); }
+}
+@keyframes cardIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes ixFade { from { opacity: 0; } to { opacity: 1; } }
+.ix-5 .ix-top { display: flex; align-items: flex-start; gap: 12px; }
+.ix-5 h2 {
+  font-family: var(--serif); font-weight: 400; font-size: clamp(24px, 2.6vw, 30px);
+  line-height: 1.05; letter-spacing: -0.02em; color: var(--paper); margin: 0;
+}
+.ix-5 .ix-x { margin-left: auto; margin-top: -8px; margin-right: -10px; }
+.ix-5 .ix-actions { display: flex; gap: 8px; margin-top: 20px; }
+.ix-5 .ix-actions .pill, .ix-5 .ix-actions .ghost { flex: 1 1 0; }
+.ix-5 .ix-reasons { flex-direction: column; align-items: stretch; margin-top: 16px; }
 </style>
 </head>
 <body>
@@ -369,6 +432,8 @@ body[data-option="3"] .ix-3 { display: block; }
     <button class="pv-tab" type="button" data-opt="1" aria-pressed="true">1 · Inline continuation</button>
     <button class="pv-tab" type="button" data-opt="2" aria-pressed="false">2 · Bridge banner</button>
     <button class="pv-tab" type="button" data-opt="3" aria-pressed="false">3 · Corner nudge</button>
+    <button class="pv-tab" type="button" data-opt="4" aria-pressed="false">4 · Run gate</button>
+    <button class="pv-tab" type="button" data-opt="5" aria-pressed="false">5 · Dialog</button>
   </div>
   <span class="pv-spacer"></span>
   <button class="pv-tab" type="button" id="pvReplay">Replay trigger</button>
@@ -402,6 +467,27 @@ body[data-option="3"] .ix-3 { display: block; }
         <button class="go" type="submit" aria-label="Ask"><span aria-hidden="true">&rarr;</span></button>
       </div>
     </form>
+
+    <!-- ══ OPTION 4: run gate ═════════════════════════════════════════════ -->
+    <div class="ix ix-4" data-ix="4" data-state="idle" data-focus>
+      <div class="gate">
+        <div class="ix-step on" data-step="ask">
+          <p class="gate-q" id="ix4-q">Before the next run: would you install this?</p>
+          <div class="ix-actions">
+            <button class="pill" type="button" data-answer="yes" aria-describedby="ix4-q">Yes</button>
+            <button class="ghost" type="button" data-answer="no" aria-describedby="ix4-q">No</button>
+            <button class="gate-skip" type="button" data-dismiss>Skip, just run it</button>
+          </div>
+        </div>
+        <div class="ix-step" data-step="reasons">
+          <p class="gate-q">What's stopping you?</p>
+          <div class="ix-reasons" data-reasons></div>
+          <div class="ix-other"><input type="text" data-other-input placeholder="What's stopping you?" aria-label="What's stopping you?" maxlength="300"><button class="ghost" type="button" data-other-send>Send</button></div>
+          <div class="ix-actions"><button class="gate-skip" type="button" data-dismiss style="margin-left:0">Skip, just run it</button></div>
+        </div>
+        <div class="ix-step" data-step="thanks"><p class="ix-thanks" data-thanks>Thanks. That's useful.</p></div>
+      </div>
+    </div>
 
     <div class="term-wrap">
       <div class="delta-chip" aria-hidden="true"><span class="n" id="deltaNum">71%</span><span class="delta-word">shorter</span></div>
@@ -540,6 +626,34 @@ body[data-option="3"] .ix-3 { display: block; }
   </div>
 </aside>
 
+<!-- ══ OPTION 5: dialog ══════════════════════════════════════════════════ -->
+<div class="ix ix-5" data-ix="5" data-state="idle" data-focus role="dialog" aria-modal="true" aria-labelledby="ix5-q">
+  <div class="scrim" aria-hidden="true"></div>
+  <div class="card">
+    <div class="ix-step on" data-step="ask">
+      <div class="ix-top">
+        <h2 id="ix5-q">Would you install this?</h2>
+        <button class="ix-x" type="button" data-dismiss aria-label="Close">&times;</button>
+      </div>
+      <div class="ix-actions">
+        <button class="pill" type="button" data-answer="yes">Yes</button>
+        <button class="ghost" type="button" data-answer="no">No</button>
+      </div>
+    </div>
+    <div class="ix-step" data-step="reasons">
+      <div class="ix-top">
+        <h2>What's stopping you?</h2>
+        <button class="ix-x" type="button" data-dismiss aria-label="Close">&times;</button>
+      </div>
+      <div class="ix-reasons" data-reasons></div>
+      <div class="ix-other"><input type="text" data-other-input placeholder="What's stopping you?" aria-label="What's stopping you?" maxlength="300"><button class="ghost" type="button" data-other-send>Send</button></div>
+    </div>
+    <div class="ix-step" data-step="thanks">
+      <div class="ix-top"><p class="ix-thanks" data-thanks>Thanks. That's useful.</p><button class="ix-x" type="button" data-dismiss aria-label="Close">&times;</button></div>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ── Readings ──────────────────────────────────────────────────────────────
    The counts, bars and delta are computed from the answers actually on the
@@ -611,9 +725,43 @@ function log(event, data) {
   document.getElementById("pvNote").innerHTML = "<b>Would be recorded:</b> " + line;
 }
 
+/* The two forcing options take the keyboard as well as the screen: focus
+   starts on Yes and, for the dialog, comes back to whatever had it before. */
+var returnFocus = null;
 function show(ix) {
   step(ix, "ask");
-  log("shown", { response_id: "r_" + Math.random().toString(36).slice(2, 10), trigger: "dwell", product: "Say Less" });
+  /* The run gate stands where the control was, so the control goes away
+     while it's up. Skip and both answers give it straight back. */
+  document.body.classList.toggle("gated", ix.dataset.ix === "4");
+  log("shown", { response_id: "r_" + Math.random().toString(36).slice(2, 10), trigger: "second_run", product: "Say Less" });
+  if (ix.hasAttribute("data-focus")) {
+    returnFocus = document.activeElement;
+    var first = ix.querySelector('.ix-step.on [data-answer="yes"]');
+    if (first) first.focus({ preventScroll: ix.dataset.ix === "5" });
+  }
+}
+
+function close(ix) {
+  ix.dataset.state = "idle";
+  document.body.classList.remove("gated");
+  if (returnFocus && document.contains(returnFocus)) returnFocus.focus();
+  returnFocus = null;
+}
+
+/* Escape closes the dialog. Anything that traps the keyboard has to have a
+   way out, forcing an answer or not. */
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Escape") return;
+  var ix = document.querySelector('.ix-5[data-state]:not([data-state="idle"])');
+  if (ix && document.body.dataset.option === "5") { log("dismissed", { at: ix.querySelector(".ix-step.on").dataset.step }); close(ix); }
+});
+
+/* Answered means done: the two forcing options get out of the way on their
+   own rather than making you close them as well. */
+function thanks(ix, text) {
+  ix.querySelector("[data-thanks]").textContent = text || "Thanks. That's useful.";
+  step(ix, "thanks");
+  if (ix.dataset.ix === "4" || ix.dataset.ix === "5") setTimeout(function () { close(ix); }, 1600);
 }
 
 document.querySelectorAll(".ix").forEach(function (ix) {
@@ -621,12 +769,12 @@ document.querySelectorAll(".ix").forEach(function (ix) {
     var t = e.target.closest("button");
     if (!t) return;
 
-    if (t.hasAttribute("data-dismiss")) { ix.dataset.state = "idle"; log("dismissed", { at: ix.querySelector(".ix-step.on").dataset.step }); return; }
+    if (t.hasAttribute("data-dismiss")) { log("dismissed", { at: ix.querySelector(".ix-step.on").dataset.step }); close(ix); return; }
 
     if (t.dataset.answer === "yes") {
       log("answered", { would_install: "Yes" });
-      step(ix, "thanks");
-      ix.querySelector("[data-thanks]").textContent = "Thanks. Install is just below.";
+      document.body.classList.remove("gated");   /* answered: hand the control back */
+      thanks(ix, "Thanks. Install is just below.");
       /* Yes routes to the existing install surface rather than duplicating it. */
       var install = document.getElementById("install");
       install.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -646,16 +794,14 @@ document.querySelectorAll(".ix").forEach(function (ix) {
         return;
       }
       log("answered", { would_install: "No", reason: t.dataset.reason });
-      ix.querySelector("[data-thanks]").textContent = "Thanks. That's useful.";
-      step(ix, "thanks");
+      thanks(ix);
       return;
     }
 
     if (t.hasAttribute("data-other-send")) {
       var input = ix.querySelector("[data-other-input]");
       log("answered", { would_install: "No", reason: "Something else", note: input.value.trim() });
-      ix.querySelector("[data-thanks]").textContent = "Thanks. That's useful.";
-      step(ix, "thanks");
+      thanks(ix);
     }
   });
 });
@@ -664,21 +810,44 @@ document.querySelectorAll(".ix").forEach(function (ix) {
    Live, the trigger is a second run, or a scaled dwell after the first run's
    output finishes streaming (floor ~8s, per-word allowance, capped ~20s).
    Here it's a button, so all three can be compared without waiting. */
+(function pvHeight() {
+  var pv = document.querySelector(".pv");
+  var apply = function () {
+    var h = Math.round(pv.getBoundingClientRect().height);
+    document.documentElement.style.setProperty("--pv-h", h + "px");
+    document.documentElement.style.scrollPaddingTop = (h + 44) + "px";
+  };
+  if (window.ResizeObserver) new ResizeObserver(apply).observe(pv);
+  window.addEventListener("resize", apply);
+  apply();
+})();
+
 var NOTES = {
   "1": "Sits in the readout, under the delta note. Lowest cost to the page, easiest to scroll straight past.",
   "2": "A band between the answer and Install. Unmissable on the way down, adds a section to the scroll.",
-  "3": "Fixed bottom-right, over the page. Never moves the content, and it's the only one that follows you."
+  "3": "Fixed bottom-right, over the page. Never moves the content, and it's the only one that follows you.",
+  "4": "Takes the ask field's place on the second run. Answer, or press Skip and it runs anyway. Hard to miss, nothing is blocked for long.",
+  "5": "Stops everything until it's answered or closed. Highest answer rate, highest cost. Escape closes it."
 };
 function setOption(n) {
   document.body.dataset.option = n;
   document.querySelectorAll(".pv-tab[data-opt]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.opt === n)); });
   document.querySelectorAll(".ix").forEach(function (ix) { ix.dataset.state = "idle"; });
+  document.body.classList.remove("gated");
   document.getElementById("pvNote").innerHTML = NOTES[n];
   var ix = document.querySelector(".ix-" + n);
   setTimeout(function () { show(ix); }, 400);
 }
 document.querySelectorAll(".pv-tab[data-opt]").forEach(function (b) {
   b.addEventListener("click", function () { setOption(b.dataset.opt); });
+});
+/* The run gate's real trigger is pressing Ask a second time, so the ask
+   control fires it here too. */
+document.getElementById("f").addEventListener("submit", function (e) {
+  e.preventDefault();
+  if (document.body.dataset.option !== "4") return;
+  var ix = document.querySelector(".ix-4");
+  if (ix.dataset.state === "idle") show(ix);
 });
 document.getElementById("pvReplay").addEventListener("click", function () {
   var ix = document.querySelector(".ix-" + document.body.dataset.option);
