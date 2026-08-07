@@ -340,6 +340,7 @@ body[data-option="5"] .ix-5 { display: block; }
 .ix-2 h2 {
   font-family: var(--serif); font-weight: 400; font-size: clamp(24px, 2.6vw, 32px);
   line-height: 1.05; letter-spacing: -0.02em; color: var(--paper); margin: 0;
+  text-wrap: balance;
 }
 .ix-2 .ix-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .ix-2 .ix-x { margin-left: auto; }
@@ -381,6 +382,7 @@ body.gated #f { display: none; }
 .ix-4 .gate-q {
   font-family: var(--serif); font-weight: 400; font-size: clamp(24px, 2.8vw, 34px);
   line-height: 1.05; letter-spacing: -0.02em; color: var(--paper); margin: 0;
+  text-wrap: balance;
 }
 .ix-4 .ix-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
 .ix-4 .gate-skip {
@@ -420,6 +422,7 @@ body[data-option="5"] .ix-5[data-state="idle"] { display: none !important; }
 .ix-5 h2 {
   font-family: var(--serif); font-weight: 400; font-size: clamp(24px, 2.6vw, 30px);
   line-height: 1.05; letter-spacing: -0.02em; color: var(--paper); margin: 0;
+  text-wrap: balance;
 }
 .ix-5 .ix-x { margin-left: auto; margin-top: -8px; margin-right: -10px; }
 .ix-5 .ix-actions { display: flex; gap: 8px; margin-top: 20px; }
@@ -474,7 +477,7 @@ body[data-option="5"] .ix-5[data-state="idle"] { display: none !important; }
     <div class="ix ix-4" data-ix="4" data-state="idle" data-focus>
       <div class="gate">
         <div class="ix-step on" data-step="ask">
-          <p class="gate-q" id="ix4-q">Before the next run: would you install this?</p>
+          <p class="gate-q" id="ix4-q">Would you use this in Claude Code?</p>
           <div class="ix-actions">
             <button class="pill" type="button" data-answer="yes" aria-describedby="ix4-q">Yes</button>
             <button class="ghost" type="button" data-answer="no" aria-describedby="ix4-q">No</button>
@@ -530,7 +533,7 @@ body[data-option="5"] .ix-5[data-state="idle"] { display: none !important; }
     <div class="ix ix-1" data-ix="1" data-state="idle">
       <div class="ix-step on" data-step="ask">
         <div class="ix-row">
-          <span class="ix-q" id="ix1-q">Would you install this?</span>
+          <span class="ix-q" id="ix1-q">Would you use this in Claude Code?</span>
           <span class="ix-links">
             <button class="ix-link" type="button" data-answer="yes" aria-describedby="ix1-q">Yes</button>
             <button class="ix-link" type="button" data-answer="no" aria-describedby="ix1-q">No</button>
@@ -549,11 +552,11 @@ body[data-option="5"] .ix-5[data-state="idle"] { display: none !important; }
 </section>
 
 <!-- ══ OPTION 2: bridge banner ═══════════════════════════════════════════ -->
-<section class="ix ix-2" data-ix="2" data-state="idle" aria-label="Install intent">
+<section class="ix ix-2" data-ix="2" data-state="idle" aria-label="Would you use this">
   <div class="ix-inner">
     <div class="ix-step on" data-step="ask">
       <div class="ix-head">
-        <h2 id="ix2-q">Would you install this?</h2>
+        <h2 id="ix2-q">Would you use this in Claude Code?</h2>
         <div class="ix-actions">
           <button class="pill" type="button" data-answer="yes" aria-describedby="ix2-q">Yes</button>
           <button class="ghost" type="button" data-answer="no" aria-describedby="ix2-q">No</button>
@@ -579,11 +582,11 @@ body[data-option="5"] .ix-5[data-state="idle"] { display: none !important; }
      keyboard and screen reader users arrive where the scroll went. -->
 <section class="install" id="install" tabindex="-1" aria-labelledby="install-heading">
   <div class="rig">
-    <h2 id="install-heading">Install Plugin</h2>
-    <p>Copy the prompt, paste it into Claude Code.</p>
+    <h2 id="install-heading">Add to Claude Code</h2>
+    <p>Copy the prompt, paste it in.</p>
 
     <div class="install-actions">
-      <button class="pill" type="button" id="copyPill">Copy install prompt</button>
+      <button class="pill" type="button" id="copyPill">Copy the prompt</button>
       <button class="ghost" type="button" id="promptToggle" aria-expanded="false">
         <span class="chev" aria-hidden="true">&#9662;</span> <span class="toggle-label">Show the prompt</span>
       </button>
@@ -606,10 +609,10 @@ body[data-option="5"] .ix-5[data-state="idle"] { display: none !important; }
 </footer>
 
 <!-- ══ OPTION 3: sticky corner nudge ═════════════════════════════════════ -->
-<aside class="ix ix-3" data-ix="3" data-state="idle" aria-label="Install intent">
+<aside class="ix ix-3" data-ix="3" data-state="idle" aria-label="Would you use this">
   <div class="ix-step on" data-step="ask">
     <div class="ix-top">
-      <span class="ix-q" id="ix3-q">Would you install this?</span>
+      <span class="ix-q" id="ix3-q">Would you use this in Claude Code?</span>
       <button class="ix-x" type="button" data-dismiss aria-label="Dismiss">&times;</button>
     </div>
     <div class="ix-actions">
@@ -636,7 +639,7 @@ body[data-option="5"] .ix-5[data-state="idle"] { display: none !important; }
   <div class="card">
     <div class="ix-step on" data-step="ask">
       <div class="ix-top">
-        <h2 id="ix5-q">Would you install this?</h2>
+        <h2 id="ix5-q">Would you use this in Claude Code?</h2>
         <button class="ix-x" type="button" data-dismiss aria-label="Close">&times;</button>
       </div>
       <div class="ix-actions">
@@ -697,8 +700,8 @@ document.getElementById("promptToggle").addEventListener("click", function () {
 /* Ordered by likelihood, comprehension last: by the time this fires the
    tester has already run the tool at least once. */
 var REASONS = [
-  "I'd install, but not right now",
-  "Installing feels like effort right now",
+  "I'd add it, but not right now",
+  "Setting it up feels like effort right now",
   "I'm worried it'll mess things up",
   "I don't understand what it does",
   "Something else"
@@ -722,7 +725,7 @@ function step(ix, name) {
 }
 
 /* Live, this is where the row is written to the Feedback database: on show,
-   with Would install and Reason blank, carrying a client-generated response
+   with Would use and Reason blank, carrying a client-generated response
    ID so the answer patches the same row. */
 function log(event, data) {
   var line = "[" + event + "] " + JSON.stringify(data || {});
@@ -780,7 +783,7 @@ document.querySelectorAll(".ix").forEach(function (ix) {
        Install. Being taken there is the acknowledgement, and a message would
        only stand between them and the thing they just said yes to. */
     if (t.dataset.answer === "yes") {
-      log("answered", { would_install: "Yes" });
+      log("answered", { would_use: "Yes" });
       var install = document.getElementById("install");
       close(ix, install);
       install.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -789,7 +792,7 @@ document.querySelectorAll(".ix").forEach(function (ix) {
       install.classList.add("install-hi");
       return;
     }
-    if (t.dataset.answer === "no") { log("answered", { would_install: "No" }); step(ix, "reasons"); return; }
+    if (t.dataset.answer === "no") { log("answered", { would_use: "No" }); step(ix, "reasons"); return; }
 
     if (t.dataset.reason) {
       var other = ix.querySelector(".ix-other");
@@ -799,14 +802,14 @@ document.querySelectorAll(".ix").forEach(function (ix) {
         other.querySelector("input").focus();
         return;
       }
-      log("answered", { would_install: "No", reason: t.dataset.reason });
+      log("answered", { would_use: "No", reason: t.dataset.reason });
       thanks(ix);
       return;
     }
 
     if (t.hasAttribute("data-other-send")) {
       var input = ix.querySelector("[data-other-input]");
-      log("answered", { would_install: "No", reason: "Something else", note: input.value.trim() });
+      log("answered", { would_use: "No", reason: "Something else", note: input.value.trim() });
       thanks(ix);
     }
   });
