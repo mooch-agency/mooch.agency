@@ -385,6 +385,9 @@
   .method-nudge a, .feedback-line a { border-bottom: 1px solid var(--hairline-focus); }
   .method-nudge a:hover, .feedback-line a:hover { border-bottom-color: var(--paper); color: var(--paper); }
   .install { padding: clamp(40px, 6vw, 72px) var(--pad-x); border-top: 1px solid var(--hairline); }
+  /* Focused only programmatically, when the intercept's Yes routes here; the
+     ring would be noise on an ordinary click or scroll. */
+  .install:focus { outline: none; }
   .install h2, .spec h2 {
     font-family: var(--serif); font-weight: 400;
     font-size: clamp(30px, 3.6vw, 42px); line-height: 1;
@@ -420,6 +423,89 @@
   .copy-btn:focus-visible { outline-color: var(--paper); }
   .copy-btn.copied { color: var(--muted); border-color: var(--hairline); }
 
+  /* ── Adoption intercept ───────────────────────────────────────────────
+     One question, asked once, after intent is proven: a second run, or a
+     scaled dwell after the first run's output finishes streaming. A modal
+     because the ticket calls for something almost impossible to miss;
+     everything in it reuses the page's own tokens and button styles, no
+     new visual pattern. Yes routes to the existing Install section rather
+     than duplicating it; No reveals one follow-up, the reason. */
+  .intercept {
+    position: fixed; inset: 0; z-index: 80;
+    display: none; align-items: center; justify-content: center;
+    padding: var(--pad-x);
+  }
+  .intercept.open { display: flex; }
+  .intercept-scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.75); }
+  .intercept-card {
+    position: relative; width: min(440px, 100%);
+    background: var(--surface); border: 1px solid var(--hairline-focus);
+    border-radius: 16px; padding: clamp(22px, 3vw, 30px);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .intercept.open .intercept-card { animation: interceptIn 0.4s var(--ease-decide); }
+    .intercept.open .intercept-scrim { animation: interceptFade 0.3s var(--ease-decide); }
+  }
+  @keyframes interceptIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+  @keyframes interceptFade { from { opacity: 0; } to { opacity: 1; } }
+  .intercept-top { display: flex; align-items: flex-start; gap: 12px; }
+  .intercept-card h2 {
+    font-family: var(--serif); font-weight: 400; font-size: clamp(24px, 2.6vw, 30px);
+    line-height: 1.05; letter-spacing: -0.02em; color: var(--paper); margin: 0;
+    text-wrap: balance;
+  }
+  .intercept-x {
+    margin-left: auto; margin-top: -8px; margin-right: -10px;
+    background: none; border: 0; cursor: pointer; color: var(--muted);
+    font-family: var(--mono); font-size: 14px; line-height: 1;
+    padding: 10px; min-width: 40px; min-height: 40px;
+  }
+  .intercept-x:hover { color: var(--ink); }
+  .intercept-actions { display: flex; gap: 8px; margin-top: 20px; }
+  .intercept-actions .pill, .intercept-actions .ghost { flex: 1 1 0; }
+  .intercept-reasons { display: flex; flex-direction: column; align-items: stretch; gap: 8px; margin-top: 16px; }
+  .intercept-reason {
+    font-family: var(--sans); font-size: 13.5px; font-weight: 400; text-align: left;
+    background: transparent; color: var(--ink);
+    border: 1px solid var(--hairline); border-radius: 980px;
+    padding: 9px 15px; min-height: 40px; cursor: pointer;
+    transition: border-color var(--t-deliver) var(--ease-deliver), color var(--t-deliver) var(--ease-deliver);
+  }
+  .intercept-reason:hover { border-color: var(--paper); color: var(--paper); }
+  .intercept-reason:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+  .intercept-reason[aria-pressed="true"] { border-color: var(--paper); color: var(--paper); }
+  .intercept-other { display: none; gap: 8px; margin-top: 10px; }
+  .intercept-other.on { display: flex; }
+  .intercept-other input {
+    flex: 1 1 auto; min-width: 0; background: var(--field-bg);
+    border: 1px solid var(--hairline-focus); border-radius: 980px;
+    font-family: var(--sans); font-size: 14px; color: var(--ink);
+    padding: 11px 16px; min-height: 40px; caret-color: var(--paper);
+  }
+  .intercept-other input:focus { outline: none; border-color: var(--paper); }
+  .intercept-other input::placeholder { color: var(--muted); }
+  .intercept-thanks {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.16em; color: var(--muted-small);
+  }
+  .intercept-step { display: none; }
+  .intercept-step.on { display: block; }
+  @media (prefers-reduced-motion: no-preference) {
+    .intercept-step.on { animation: interceptStepIn 0.45s var(--ease-decide); }
+  }
+  @keyframes interceptStepIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  /* Yes-path highlight on the existing install surface: a brief ring, no
+     second install surface. */
+  .install-hi { animation: installHi 2.4s var(--ease-decide); }
+  @keyframes installHi {
+    0%   { box-shadow: inset 0 0 0 1px rgba(217,119,87,0.9); }
+    70%  { box-shadow: inset 0 0 0 1px rgba(217,119,87,0.9); }
+    100% { box-shadow: inset 0 0 0 1px rgba(217,119,87,0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .install-hi { animation: none; box-shadow: inset 0 0 0 1px rgba(217,119,87,0.9); }
+  }
 
   /* ── Colophon ──────────────────────────────────────────────────────────
      Verbatim from the house footer. The page is already black, so the
@@ -472,7 +558,7 @@
   <div class="rig">
     <p class="eyebrow reveal d1"><span class="rule"></span> Claude Code plugin</p>
     <h1 class="reveal d2">Make Claude <em>say less</em>.</h1>
-    <p class="standfirst reveal d3">Say Less is a Claude Code plugin that cuts replies by ~71% without cutting reasoning. Free to install.</p>
+    <p class="standfirst reveal d3">Say Less is a Claude Code plugin that cuts replies by ~71% without cutting reasoning. Free.</p>
   </div>
 </section>
 
@@ -522,13 +608,46 @@
   </div>
 </section>
 
-<section class="install" aria-labelledby="install-heading">
+<!-- Adoption intercept: asked once, after a second run or a scaled dwell.
+     A real dialog: Escape closes it, focus starts on Yes and returns to
+     wherever it came from, the page behind is inert while it's open. -->
+<div class="intercept" id="intercept" role="dialog" aria-modal="true" aria-labelledby="interceptQ">
+  <div class="intercept-scrim" aria-hidden="true"></div>
+  <div class="intercept-card">
+    <div class="intercept-step on" data-step="ask">
+      <div class="intercept-top">
+        <h2 id="interceptQ">Would you use this in Claude Code?</h2>
+        <button class="intercept-x" type="button" data-dismiss aria-label="Close">&times;</button>
+      </div>
+      <div class="intercept-actions">
+        <button class="pill" type="button" data-answer="yes">Yes</button>
+        <button class="ghost" type="button" data-answer="no">No</button>
+      </div>
+    </div>
+    <div class="intercept-step" data-step="reasons">
+      <div class="intercept-top">
+        <h2>What's stopping you?</h2>
+        <button class="intercept-x" type="button" data-dismiss aria-label="Close">&times;</button>
+      </div>
+      <div class="intercept-reasons" id="interceptReasons"></div>
+      <div class="intercept-other" id="interceptOther">
+        <input type="text" id="interceptOtherInput" placeholder="What's stopping you?" aria-label="What's stopping you?" maxlength="300">
+        <button class="ghost" type="button" id="interceptOtherSend">Send</button>
+      </div>
+    </div>
+    <div class="intercept-step" data-step="thanks">
+      <p class="intercept-thanks" id="interceptThanks">Thanks. That's useful.</p>
+    </div>
+  </div>
+</div>
+
+<section class="install" id="install" tabindex="-1" aria-labelledby="install-heading">
   <div class="rig">
-    <h2 id="install-heading">Install Plugin</h2>
+    <h2 id="install-heading">Add to Claude Code</h2>
     <p>Copy the prompt, paste it into Claude Code.</p>
 
     <div class="install-actions">
-      <button class="pill" type="button" data-copy-target="install-prompt">Copy install prompt</button>
+      <button class="pill" type="button" data-copy-target="install-prompt">Copy the prompt</button>
       <button class="ghost" type="button" id="promptToggle" aria-expanded="false" aria-controls="promptDetails">
         <span class="chev" aria-hidden="true">&#9662;</span> <span class="toggle-label">Show the prompt</span>
       </button>
@@ -889,6 +1008,9 @@ function finish() {
   }
   setStatus("done");
   deltaChip.classList.add("settled");
+  // Intent is proven now, not before: schedule the intercept's dwell timer
+  // off the first successful run's real word counts, not the second run.
+  if (runCount === 1) scheduleDwell(a, b);
   if (a === b) {
     setDelta("0%");
     setNote("0%: same length.", false, true);
@@ -904,6 +1026,156 @@ function finish() {
     false, true);
   track("sayless_result", { default_words: a, sayless_words: b, pct: p });
 }
+
+// ── Adoption intercept ───────────────────────────────────────────────────
+// One question, asked once: on the second run, or a scaled dwell after the
+// first run's output finishes streaming (floor ~8s, per-word allowance,
+// capped ~20s), whichever comes first. Never instantly on completion.
+// Reused vocabulary throughout: the same tokens and button styles as the
+// rest of the page, no new visual pattern.
+
+// Order locked with Tahi: comprehension first, then effort, then risk, then
+// timing, with the open option last. Matches the Feedback database's Reason
+// select options exactly; api/feedback.js rejects anything outside this set.
+const REASONS = [
+  "I don't understand what it does",
+  "Setting it up feels like effort right now",
+  "I'm worried it'll mess things up",
+  "I'd add it but not right now",
+  "Something else",
+];
+
+const intercept = document.getElementById("intercept");
+const interceptReasons = document.getElementById("interceptReasons");
+REASONS.forEach((r) => {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "intercept-reason";
+  btn.setAttribute("aria-pressed", "false");
+  btn.dataset.reason = r;
+  btn.textContent = r;
+  interceptReasons.appendChild(btn);
+});
+
+let runCount = 0;
+let dwellTimer = null;
+let interceptTriggered = false;   // fired once, by whichever condition wins
+let interceptShown = false;       // the dialog has actually opened
+let interceptReturnFocus = null;
+let responseId = null;            // the Feedback row's Notion page id, held client-side only
+
+const DWELL_FLOOR_MS = 8000;
+const DWELL_CAP_MS = 20000;
+const DWELL_PER_WORD_MS = 40;
+
+// Best-effort: a failed write shouldn't block or interrupt the intercept
+// itself, which is why every call here is fire-and-forget.
+function feedbackPost(body) {
+  return fetch("/api/feedback", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  }).then((r) => r.json()).catch(() => null);
+}
+
+function scheduleDwell(a, b) {
+  if (interceptTriggered) return;
+  const words = Math.max(a || 0, b || 0);
+  const delay = Math.min(DWELL_CAP_MS, DWELL_FLOOR_MS + words * DWELL_PER_WORD_MS);
+  clearTimeout(dwellTimer);
+  dwellTimer = setTimeout(() => interceptFire("dwell"), delay);
+}
+
+function interceptFire(trigger) {
+  if (interceptTriggered) return;
+  interceptTriggered = true;
+  clearTimeout(dwellTimer);
+  showIntercept(trigger);
+}
+
+function interceptStep(name) {
+  intercept.querySelectorAll(".intercept-step").forEach((s) => s.classList.toggle("on", s.dataset.step === name));
+}
+
+function showIntercept(trigger) {
+  if (interceptShown) return;
+  interceptShown = true;
+  interceptStep("ask");
+  intercept.classList.add("open");
+  interceptReturnFocus = document.activeElement;
+  const yesBtn = intercept.querySelector('[data-answer="yes"]');
+  if (yesBtn) yesBtn.focus({ preventScroll: true });
+  track("sayless_intercept_shown", { trigger });
+  feedbackPost({ event: "shown", trigger }).then((d) => { if (d && d.id) responseId = d.id; });
+}
+
+function closeIntercept(focusEl) {
+  intercept.classList.remove("open");
+  const to = focusEl || interceptReturnFocus;
+  if (to && document.contains(to)) to.focus({ preventScroll: !!focusEl });
+  interceptReturnFocus = null;
+}
+
+function feedbackAnswer(wouldUse, reason, note) {
+  track("sayless_intercept_answer", { would_use: wouldUse, reason: reason || null });
+  if (!responseId) return;
+  const body = { event: "answered", id: responseId, would_use: wouldUse };
+  if (reason) body.reason = reason;
+  if (note) body.note = note;
+  feedbackPost(body);
+}
+
+// Answered means done: the dialog closes itself after a beat rather than
+// making someone dismiss it as a second action.
+function interceptThanksAndClose(text) {
+  document.getElementById("interceptThanks").textContent = text || "Thanks. That's useful.";
+  interceptStep("thanks");
+  setTimeout(() => closeIntercept(), 1600);
+}
+
+intercept.addEventListener("click", (e) => {
+  const t = e.target.closest("button");
+  if (!t) return;
+
+  if (t.hasAttribute("data-dismiss")) { closeIntercept(); return; }
+
+  // Yes gets no thank-you: the answer is recorded and the page moves to
+  // Add to Claude Code. Being taken there is the acknowledgement.
+  if (t.dataset.answer === "yes") {
+    feedbackAnswer("Yes");
+    const install = document.getElementById("install");
+    closeIntercept(install);
+    install.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    install.classList.remove("install-hi");
+    void install.offsetWidth;
+    install.classList.add("install-hi");
+    return;
+  }
+  if (t.dataset.answer === "no") { interceptStep("reasons"); return; }
+
+  if (t.dataset.reason) {
+    intercept.querySelectorAll(".intercept-reason").forEach((b) => b.setAttribute("aria-pressed", String(b === t)));
+    if (t.dataset.reason === "Something else") {
+      document.getElementById("interceptOther").classList.add("on");
+      document.getElementById("interceptOtherInput").focus();
+      return;
+    }
+    feedbackAnswer("No", t.dataset.reason);
+    interceptThanksAndClose();
+    return;
+  }
+
+  if (t.id === "interceptOtherSend") {
+    const input = document.getElementById("interceptOtherInput");
+    feedbackAnswer("No", "Something else", input.value.trim());
+    interceptThanksAndClose();
+  }
+});
+
+// Escape closes it like any dialog; only relevant while it's actually open.
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && intercept.classList.contains("open")) closeIntercept();
+});
 
 f.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -921,6 +1193,11 @@ f.addEventListener("submit", (e) => {
   }
 
   track("sayless_ask", { prompt_words: promptWords, source: askSource });
+  runCount++;
+  // Reaching for Ask a second time is proof enough on its own; it doesn't
+  // wait for this run to finish, and it preempts a dwell timer still running
+  // from the first.
+  if (runCount === 2) interceptFire("second_run");
   busy = true;
   setGoState(true);
   setStatus("running");
