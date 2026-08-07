@@ -697,13 +697,13 @@ document.getElementById("promptToggle").addEventListener("click", function () {
    One controller for all three mounts: the options differ in where they sit
    and what they're made of, never in what they ask or what they record. */
 
-/* Ordered by likelihood, comprehension last: by the time this fires the
-   tester has already run the tool at least once. */
+/* Order locked with Tahi: comprehension first, then effort, then risk,
+   then timing, with the open option last. */
 var REASONS = [
-  "I'd add it, but not right now",
+  "I don't understand what it does",
   "Setting it up feels like effort right now",
   "I'm worried it'll mess things up",
-  "I don't understand what it does",
+  "I'd add it but not right now",
   "Something else"
 ];
 
