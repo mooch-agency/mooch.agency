@@ -16,8 +16,8 @@
 <style>
   /* Internal preview, not a public page: deliberately out of sitemap.xml and
      llms.txt, noindex. Five candidate designs for the Say Less adoption
-     intercept, mounted on a replica of /say-less so they can be compared in
-     situ. Delete once the design is chosen and built. */
+     intercept, mounted on a replica of /say-less. Option 5 is the chosen
+     one and opens first; the rest stay for comparison. Delete once it ships. */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Preview harness for the Say Less adoption intercept.
@@ -216,6 +216,8 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Install ────────────────────────────────────────────────────────────*/
 .install { padding: clamp(40px, 6vw, 72px) var(--pad-x); border-top: 1px solid var(--hairline); }
+/* Focused only programmatically, on the Yes path; the ring would be noise. */
+.install:focus { outline: none; }
 .install h2 {
   font-family: var(--serif); font-weight: 400; font-size: clamp(30px, 3.6vw, 42px);
   line-height: 1; letter-spacing: -0.02em; color: var(--paper); margin-bottom: 18px;
@@ -433,7 +435,7 @@ body[data-option="5"] .ix-5[data-state="idle"] { display: none !important; }
     <button class="pv-tab" type="button" data-opt="2" aria-pressed="false">2 · Bridge banner</button>
     <button class="pv-tab" type="button" data-opt="3" aria-pressed="false">3 · Corner nudge</button>
     <button class="pv-tab" type="button" data-opt="4" aria-pressed="false">4 · Run gate</button>
-    <button class="pv-tab" type="button" data-opt="5" aria-pressed="false">5 · Dialog</button>
+    <button class="pv-tab" type="button" data-opt="5" aria-pressed="false">5 · Dialog &nbsp;· chosen</button>
   </div>
   <span class="pv-spacer"></span>
   <button class="pv-tab" type="button" id="pvReplay">Replay trigger</button>
@@ -573,7 +575,9 @@ body[data-option="5"] .ix-5[data-state="idle"] { display: none !important; }
   </div>
 </section>
 
-<section class="install" id="install" aria-labelledby="install-heading">
+<!-- tabindex="-1" so the Yes path can move focus here, not just the viewport:
+     keyboard and screen reader users arrive where the scroll went. -->
+<section class="install" id="install" tabindex="-1" aria-labelledby="install-heading">
   <div class="rig">
     <h2 id="install-heading">Install Plugin</h2>
     <p>Copy the prompt, paste it into Claude Code.</p>
@@ -741,10 +745,11 @@ function show(ix) {
   }
 }
 
-function close(ix) {
+function close(ix, focusEl) {
   ix.dataset.state = "idle";
   document.body.classList.remove("gated");
-  if (returnFocus && document.contains(returnFocus)) returnFocus.focus();
+  var to = focusEl || returnFocus;
+  if (to && document.contains(to)) to.focus({ preventScroll: !!focusEl });
   returnFocus = null;
 }
 
@@ -771,12 +776,13 @@ document.querySelectorAll(".ix").forEach(function (ix) {
 
     if (t.hasAttribute("data-dismiss")) { log("dismissed", { at: ix.querySelector(".ix-step.on").dataset.step }); close(ix); return; }
 
+    /* Yes gets no thank-you: the answer is recorded and the page moves to
+       Install. Being taken there is the acknowledgement, and a message would
+       only stand between them and the thing they just said yes to. */
     if (t.dataset.answer === "yes") {
       log("answered", { would_install: "Yes" });
-      document.body.classList.remove("gated");   /* answered: hand the control back */
-      thanks(ix, "Thanks. Install is just below.");
-      /* Yes routes to the existing install surface rather than duplicating it. */
       var install = document.getElementById("install");
+      close(ix, install);
       install.scrollIntoView({ behavior: "smooth", block: "start" });
       install.classList.remove("install-hi");
       void install.offsetWidth;
@@ -854,7 +860,7 @@ document.getElementById("pvReplay").addEventListener("click", function () {
   ix.dataset.state = "idle";
   setTimeout(function () { show(ix); }, 300);
 });
-setOption("1");
+setOption("5");   /* the chosen one opens first; the rest stay for comparison */
 </script>
 </body>
 </html>
