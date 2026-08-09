@@ -7,3 +7,6 @@
 # Client data, and this repo is public.
 audit/scripts/runs/
 audit/report/out/
+
+# Wayfinder maps and scratch planning. Local only, repo is public.
+.scratch/
