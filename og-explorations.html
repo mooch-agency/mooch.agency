@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-180.png">
+<meta name="description" content="Every mooch.agency share card, generated from one template. Internal review.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Share cards: one template, every page">
+<meta property="og:description" content="Every mooch.agency share card, generated from one template. Internal review.">
+<meta property="og:image" content="https://mooch.agency/og-image.png">
+<meta property="og:url" content="https://mooch.agency/og-explorations">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Share cards: one template, every page">
+<meta name="twitter:description" content="Every mooch.agency share card, generated from one template. Internal review.">
+<meta name="twitter:image" content="https://mooch.agency/og-image.png">
+<title>Share cards: one template, every page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  /* Internal review page. Same chrome as portfolio-explorations.html. The cards
+     are the content, so the page stays plain and never competes with them. */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+  body { font-family: var(--sans); font-size: 16px; color: var(--ink); background: var(--paper); line-height: 1.5; }
+
+  .page-header { padding: 40px clamp(20px, 5vw, 56px) 32px; border-bottom: 1px solid var(--hairline); }
+  .page-header h1 { font-family: var(--serif); font-size: 30px; letter-spacing: -0.02em; text-wrap: balance; }
+  .page-header h1 em { font-style: italic; }
+  .page-header p { color: var(--muted); font-size: 14px; margin-top: 8px; max-width: 660px; text-wrap: pretty; }
+  .page-header a { color: var(--ink); }
+
+  /* The template's four fixed parts, so a reviewer knows what should never
+     vary between cards. */
+  .anatomy { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .anatomy span {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.14em; color: var(--muted);
+    border: 1px solid var(--hairline); border-radius: 100px; padding: 5px 11px;
+  }
+
+  .group { padding: 44px clamp(20px, 5vw, 56px); border-bottom: 1px solid var(--hairline); }
+  .group-num {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.18em; color: var(--muted); font-weight: 600;
+    display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+  }
+  .group-num strong { color: var(--ink); }
+  .group-num .rule { flex: 1; height: 1px; background: var(--hairline); }
+  .group-title { font-family: var(--serif); font-size: clamp(26px, 4vw, 34px); line-height: 1.05; letter-spacing: -0.02em; text-wrap: balance; }
+  .group-title em { font-style: italic; }
+  .group-lead { font-size: 14px; color: var(--muted); margin-top: 6px; max-width: 620px; margin-bottom: 30px; text-wrap: pretty; }
+
+  /* Two up on desktop, one up on a phone. Cards are 1200x630. */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 34px 28px; }
+
+  figure { margin: 0; }
+  figure img {
+    display: block; width: 100%; height: auto;
+    border: 1px solid var(--hairline); border-radius: 6px;
+  }
+  figcaption {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+    margin-top: 10px;
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.14em; color: var(--muted);
+  }
+  figcaption a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--hairline); }
+  figcaption a:hover { border-color: var(--ink); }
+  figcaption .note { text-transform: none; letter-spacing: 0.02em; font-family: var(--sans); font-size: 12px; text-align: right; }
+
+  .recipe {
+    font-family: var(--mono); font-size: 11px; line-height: 1.7; color: var(--muted);
+    background: var(--surface); border: 1px solid var(--hairline); border-radius: 6px;
+    padding: 14px 16px; margin-top: 8px; overflow-x: auto; white-space: pre;
+  }
+  .foot { padding: 40px clamp(20px, 5vw, 56px) 72px; color: var(--muted); font-size: 13px; max-width: 700px; text-wrap: pretty; }
+  .foot a { color: var(--ink); }
+  .foot p + p { margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<main>
+<div class="page-header">
+  <h1>Share cards: <em>one template</em>, every page</h1>
+  <p>The homepage card is the template. Every other card is generated from it by <code>mooch-cards</code>, so the set stays consistent and a new page is one command. All 1200&times;630. Regenerate the lot with <code>./og-site.sh</code>.</p>
+  <div class="anatomy">
+    <span>Hairline frame</span>
+    <span>Mono eyebrow + tick</span>
+    <span>Instrument Serif display</span>
+    <span>Context left / domain right</span>
+  </div>
+</div>
+
+<div class="group">
+  <div class="group-num"><strong>01</strong> Brand <span class="rule"></span></div>
+  <div class="group-title">The <em>template</em>.</div>
+  <div class="group-lead">Everything below inherits from this card. The subtitle is now the homepage hero deck verbatim, so the card and the page say the same thing.</div>
+  <div class="grid">
+    <figure>
+      <img src="og-explorations/home.png" alt="Mooch. We design products people want to use, and AI automations they can't live without. London / Lisbon." width="1200" height="630" decoding="async">
+      <figcaption><a href="index.html">index.html</a> <span class="note">Was the old og.jpg description</span></figcaption>
+    </figure>
+  </div>
+</div>
+
+<div class="group">
+  <div class="group-num"><strong>02</strong> Playthings &amp; tools <span class="rule"></span></div>
+  <div class="group-title">Things you can <em>try</em>.</div>
+  <div class="group-lead">Category word as the eyebrow (Prompt, Plaything), full path as the domain, London / Lisbon bottom-left like every card. Say Less runs black to match its landing page.</div>
+  <div class="grid">
+    <figure>
+      <img src="og-explorations/say-less.png" alt="Make Claude say less. Cut Claude Code replies by ~71%." width="1200" height="630" loading="lazy" decoding="async">
+      <figcaption><a href="say-less.html">say-less.html</a> <span class="note">Shipped</span></figcaption>
+    </figure>
+    <figure>
+      <img src="og-explorations/paulgraham.png" alt="Write like Paul Graham. Write articles as clearly as Paul Graham." width="1200" height="630" loading="lazy" decoding="async">
+      <figcaption><a href="paulgraham.html">paulgraham.html</a> <span class="note">Replaces the hand-made card</span></figcaption>
+    </figure>
+  </div>
+</div>
+
+<div class="group">
+  <div class="group-num"><strong>03</strong> Selected work <span class="rule"></span></div>
+  <div class="group-title">Case <em>studies</em>.</div>
+  <div class="group-lead">Client name as the display, the work in one line, the discipline bottom-left. Footers stop at <code>mooch.agency</code>: the deep path crowded the rule and nobody types a case-study URL. All seven currently share the generic card.</div>
+  <div class="grid">
+    <figure>
+      <img src="og-explorations/gov-uk.png" alt="GOV.UK. Accessibility audits and service design for services millions rely on." width="1200" height="630" loading="lazy" decoding="async">
+      <figcaption><a href="gov-uk.html">gov-uk.html</a> <span class="note">Accessibility, service design</span></figcaption>
+    </figure>
+    <figure>
+      <img src="og-explorations/british-airways.png" alt="British Airways. UX research across BA's digital products." width="1200" height="630" loading="lazy" decoding="async">
+      <figcaption><a href="british-airways.html">british-airways.html</a> <span class="note">UX research</span></figcaption>
+    </figure>
+    <figure>
+      <img src="og-explorations/ethereum.png" alt="Ethereum Foundation. Rewriting ethereum.org in plain English." width="1200" height="630" loading="lazy" decoding="async">
+      <figcaption><a href="ethereum.html">ethereum.html</a> <span class="note">Content design</span></figcaption>
+    </figure>
+    <figure>
+      <img src="og-explorations/zksync.png" alt="zkSync. UX research for an Ethereum Layer 2." width="1200" height="630" loading="lazy" decoding="async">
+      <figcaption><a href="zksync.html">zksync.html</a> <span class="note">UX research</span></figcaption>
+    </figure>
+    <figure>
+      <img src="og-explorations/octant.png" alt="Octant. UX research and product strategy for public goods funding." width="1200" height="630" loading="lazy" decoding="async">
+      <figcaption><a href="octant.html">octant.html</a> <span class="note">UX research, strategy</span></figcaption>
+    </figure>
+    <figure>
+      <img src="og-explorations/big-debate-club.png" alt="Big Debate Club. Brand, product and growth strategy for a youth debate platform." width="1200" height="630" loading="lazy" decoding="async">
+      <figcaption><a href="big-debate-club.html">big-debate-club.html</a> <span class="note">Brand, product</span></figcaption>
+    </figure>
+    <figure>
+      <img src="og-explorations/lisbon-restaurant-group.png" alt="Lisbon Restaurant Group. AI review automation." width="1200" height="630" loading="lazy" decoding="async">
+      <figcaption><a href="lisbon-restaurant-group.html">lisbon-restaurant-group.html</a> <span class="note">AI automation</span></figcaption>
+    </figure>
+  </div>
+</div>
+
+<div class="group">
+  <div class="group-num"><strong>04</strong> The recipe <span class="rule"></span></div>
+  <div class="group-title">How any of these get <em>remade</em>.</div>
+  <div class="group-lead">One command per card. Change the template once and every card follows.</div>
+  <div class="recipe">npm run hero -- \
+  --eyebrow "Prompt" \
+  --title "Make Claude *say less.*" \
+  --subtitle "Cut Claude Code replies by ~71%." \
+  --format og --frame --dark --no-watermark \
+  --meta "London / Lisbon" \
+  --domain "mooch.agency/say-less" \
+  --scale 1.15</div>
+</div>
+
+<div class="foot">
+  <p><strong>Still to decide.</strong> Only Say Less is wired up so far. The other ten are generated but not yet referenced by their pages, so nothing changes for them until you say go.</p>
+  <p>Cards generated with <code>mooch-cards</code>. Internal page, noindex. Back to <a href="say-less.html">/say-less</a>.</p>
+</div>
+</main>
+
+</body>
+</html>
