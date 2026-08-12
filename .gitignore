@@ -10,3 +10,7 @@ audit/report/out/
 
 # Wayfinder maps and scratch planning. Local only, repo is public.
 .scratch/
+
+# Local dev-server config and Lighthouse CI artifacts.
+.claude/
+.lighthouseci/

@@ -7,17 +7,16 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
-<meta name="description" content="A prompt to remove the red flags of AI writing. 13 rules, one pass, clean draft. Free from Mooch.">
-<meta name="robots" content="noindex">
+<meta name="description" content="A prompt to remove the red flags of AI writing. Free from Mooch.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://mooch.agency/prompts/deslop">
 <link rel="canonical" href="https://mooch.agency/prompts/deslop">
 <meta property="og:title" content="/deslop - Prompt - Mooch">
-<meta property="og:description" content="A prompt to remove the red flags of AI writing. 13 rules, one pass, clean draft. Free from Mooch.">
+<meta property="og:description" content="A prompt to remove the red flags of AI writing. Free from Mooch.">
 <meta property="og:image" content="https://mooch.agency/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="/deslop - Prompt - Mooch">
-<meta name="twitter:description" content="A prompt to remove the red flags of AI writing. 13 rules, one pass, clean draft. Free from Mooch.">
+<meta name="twitter:description" content="A prompt to remove the red flags of AI writing. Free from Mooch.">
 <meta name="twitter:image" content="https://mooch.agency/og-image.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -84,6 +83,7 @@
     color: var(--black);
     margin-bottom: clamp(28px, 4vw, 48px);
     max-width: 16ch;
+    text-wrap: balance;
   }
   .case-hero h1 em { font-style: italic; }
   .case-hero .standfirst {
@@ -95,7 +95,27 @@
     color: var(--ink);
     max-width: 36ch;
     margin-bottom: clamp(40px, 6vw, 64px);
+    text-wrap: pretty;
   }
+
+  /* Hero shortcut for return visitors who just want the deliverable,
+     now that the prompt sits last on the page. */
+  .jump-link {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink);
+    min-height: 44px;
+    margin-bottom: clamp(24px, 4vw, 40px);
+    text-decoration: underline;
+    text-decoration-color: var(--hairline-focus);
+    text-underline-offset: 5px;
+    transition: text-decoration-color var(--t-deliver) var(--ease-deliver);
+  }
+  .jump-link:hover { text-decoration-color: var(--ink); }
+  .jump-link:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
 
   .case-meta {
     display: grid;
@@ -134,6 +154,7 @@
     margin-top: clamp(64px, 8vw, 112px);
     margin-bottom: 28px;
     scroll-margin-top: 40px;
+    text-wrap: balance;
   }
   .case-body h2 em { font-style: italic; }
   .case-body h2:first-child { margin-top: 0; }
@@ -157,7 +178,7 @@
     margin-top: 40px;
     margin-bottom: 14px;
   }
-  .case-body p { margin-bottom: 1.1em; hanging-punctuation: first last; }
+  .case-body p { margin-bottom: 1.1em; hanging-punctuation: first last; text-wrap: pretty; }
   .case-body p strong { font-weight: 600; color: var(--black); }
   .case-body p em { font-style: italic; }
   .case-body a { border-bottom: 1px solid var(--hairline); transition: border-color 0.15s ease; }
@@ -165,34 +186,102 @@
   .case-body ul, .case-body ol { margin: 0 0 1.4em 0; padding-left: 1.4em; }
   .case-body li { margin-bottom: 0.6em; }
 
-  .case-body .lead-stat {
-    font-family: var(--serif);
-    font-size: clamp(28px, 4vw, 44px);
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    color: var(--black);
-    margin: 8px 0 24px;
-    max-width: 38ch;
+  /* The three steps, numbered with the same mono numerals as the § headings
+     so the section reads as one system rather than a new component. */
+  .steps {
+    list-style: none;
+    counter-reset: step;
+    margin: 24px 0 8px;
+    padding: 0;
   }
-  .case-body .lead-stat strong { font-weight: 400; font-style: italic; }
+  .steps li {
+    counter-increment: step;
+    position: relative;
+    padding: 16px 0 16px 44px;
+    border-top: 1px solid var(--hairline);
+    text-wrap: pretty;
+  }
+  .steps li:last-child { border-bottom: 1px solid var(--hairline); }
+  .steps li::before {
+    content: "0" counter(step);
+    position: absolute;
+    left: 0;
+    top: 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+  }
+  .steps li strong { font-weight: 600; color: var(--black); }
 
-  .user-need {
-    border-left: 2px solid var(--black);
-    padding: 14px 0 14px 20px;
-    margin: 32px 0 40px;
-    font-family: var(--sans);
-    font-size: 18px;
-    line-height: 1.55;
-    color: var(--ink);
+  /* The 13 tells, three parallel columns numbered 01-13. The numbers are the
+     rule numbers from the prompt, so a changelog entry like "[8]" is already
+     legible against this list. */
+  .tell-list {
+    margin: 24px 0 8px;
+    display: grid;
+    grid-template-columns: 1fr;
+    border-top: 1px solid var(--hairline);
   }
-  .user-need .qual { color: var(--muted); }
+  @media (min-width: 720px) { .tell-list { grid-template-columns: repeat(3, 1fr); } }
+  .tell-list > div {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  @media (min-width: 720px) {
+    .tell-list > div {
+      padding: 22px 22px 22px 0;
+      border-bottom: none;
+      border-right: 1px solid var(--hairline);
+    }
+    .tell-list > div:last-child { border-right: none; padding-right: 0; }
+    .tell-list > div:not(:first-child) { padding-left: 22px; }
+  }
+  .tell-list dt {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .tell-list dd { margin: 0; }
+  .tell-list ol { list-style: none; margin: 0; padding: 0; }
+  .tell-list li {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 6px 0;
+    font-size: 15.5px;
+    line-height: 1.35;
+    text-wrap: pretty;
+  }
+  .tell-list .n {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    flex: 0 0 16px;
+  }
+
+  /* Slop flags in the "before" column: a pale wash behind each offending
+     phrase, tinted from --error so it reads as a flag rather than a
+     highlighter. Kept light enough to hold AA contrast for the ink on top. */
+  .ba-col mark.flag {
+    background: color-mix(in srgb, var(--error) 10%, transparent);
+    color: inherit;
+    padding: 1px 3px;
+    margin: 0 -1px;
+    border-radius: 3px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
 
   .prompt-box {
-    border: 1px solid var(--hairline);
     border-radius: 10px;
     background: var(--surface);
     margin: 24px 0 40px;
     overflow: hidden;
+    box-shadow: var(--shadow-border);
   }
   .prompt-box-head {
     display: flex;
@@ -207,6 +296,18 @@
     letter-spacing: 0.14em;
     color: var(--muted);
   }
+  /* ui.css .copy-btn assumes a bare border; here it sits on --surface inside
+     a card that already carries the shadow-border ring, so switch the chip
+     to the same shadow language instead of doubling up on borders. */
+  .prompt-box-head .copy-btn {
+    border: none;
+    box-shadow: var(--shadow-border);
+    transition-property: box-shadow, color, transform;
+    transition-duration: 0.15s;
+    transition-timing-function: ease-out;
+  }
+  .prompt-box-head .copy-btn:hover { box-shadow: var(--shadow-border-hover); }
+  .prompt-box-head .copy-btn:active { transform: scale(0.96); }
   .prompt-box pre {
     margin: 0;
     padding: 22px 20px;
@@ -218,6 +319,7 @@
     word-wrap: break-word;
     overflow-x: auto;
   }
+  .prompt-box-foot { padding: 4px 20px 18px; }
 
   .ba-grid {
     display: grid;
@@ -227,10 +329,10 @@
   }
   @media (min-width: 720px) { .ba-grid { grid-template-columns: 1fr 1fr; } }
   .ba-col {
-    border: 1px solid var(--hairline);
     border-radius: 10px;
     padding: 20px;
     background: var(--paper);
+    box-shadow: var(--shadow-border);
   }
   .ba-col .ba-label {
     font-family: var(--mono);
@@ -241,8 +343,54 @@
     margin-bottom: 12px;
   }
   .ba-col.after { background: var(--surface); }
-  .ba-col p { font-size: 16px; line-height: 1.6; margin-bottom: 0.8em; }
+  .ba-col p { font-size: 16px; line-height: 1.6; margin-bottom: 0.8em; text-wrap: pretty; }
   .ba-col p:last-child { margin-bottom: 0; }
+
+  /* Progressive disclosure, reused for both the messy "before" draft and the
+     full prompt: collapse to a fixed height, fade the cut edge, reveal on
+     demand. A real transition (not a snap) since this is an interactive
+     toggle, not a one-shot entrance: CSS transitions retarget cleanly if
+     someone clicks again mid-animation. The fade is a bottom gradient overlay
+     rather than mask-image, so it can crossfade in step with the height
+     change instead of cutting abruptly. --disclosure-bg matches whatever
+     surface the content sits on, so the fade blends into it. */
+  .disclosure {
+    position: relative;
+    overflow: hidden;
+    max-height: var(--disclosure-max, 220px);
+    transition: max-height 0.4s var(--ease-decide);
+  }
+  .disclosure::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 64px;
+    background: linear-gradient(to bottom, transparent, var(--disclosure-bg, var(--paper)));
+    opacity: 1;
+    transition: opacity 0.25s var(--ease-decide);
+    pointer-events: none;
+  }
+  /* The open height is set inline by the toggle JS from the measured
+     scrollHeight, so long content (the full prompt is well over 2000px)
+     never clips; this rule is just the no-JS fallback. */
+  .disclosure.open {
+    max-height: var(--disclosure-max-open, 6000px);
+  }
+  .disclosure.open::after { opacity: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .disclosure, .disclosure::after { transition: none; }
+  }
+  .disclosure-toggle {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.14em; color: var(--ink);
+    background: none; border: 0; cursor: pointer;
+    min-height: 44px; padding: 0; margin-top: 4px;
+    text-decoration: underline; text-decoration-color: var(--hairline);
+    text-underline-offset: 5px;
+  }
+  .disclosure-toggle:hover { text-decoration-color: var(--ink); }
+  .disclosure-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+  .disclosure-toggle[hidden] { display: none; }
 
   .case-next {
     padding: var(--rhythm) var(--pad-x);
@@ -277,6 +425,7 @@
     line-height: 1;
     letter-spacing: -0.02em;
     color: var(--black);
+    text-wrap: balance;
   }
   .case-next a.next-card h3 em { font-style: italic; }
   .case-next a.next-card p {
@@ -284,6 +433,7 @@
     color: var(--muted);
     margin-top: 8px;
     max-width: 56ch;
+    text-wrap: pretty;
   }
   .case-next a.next-card .arrow {
     font-family: var(--serif);
@@ -371,9 +521,10 @@
 
 <section class="case-hero">
   <div class="case-hero-inner">
-    <div class="eyebrow reveal d1"><span class="rule"></span> <strong>Prompt</strong> · Steal it · Free</div>
+    <div class="eyebrow reveal d1"><span class="rule"></span> <strong>Prompt</strong> · Free</div>
     <h1 class="reveal d2">/de<em>slop</em></h1>
-    <p class="standfirst reveal d3">Remove the red flags of AI writing. 13 rules, one pass, clean draft back. Draft first, de-slop second.</p>
+    <p class="standfirst reveal d3">Remove the red flags of AI writing.</p>
+    <p class="reveal d3"><a class="jump-link" href="#prompt">Skip to the prompt <span aria-hidden="true">&darr;</span></a></p>
     <dl class="case-meta reveal d4">
       <div><dt>Use case</dt><dd>AI writing cleanup</dd></div>
       <div><dt>Works with</dt><dd>Claude, ChatGPT, Gemini</dd></div>
@@ -388,20 +539,70 @@
   <div class="case-body-inner">
 
     <h2><span class="num">&sect; 01</span>What it does</h2>
-    <p class="lead-stat"><strong>Catches the 13 tells that make writing sound like AI.</strong></p>
-    <p>Paste any draft and the prompt strips out the patterns readers have learned to recognise as machine-generated: the em dashes, the staccato rhythms, the "let's dive in" openers, the gift-wrapped conclusions. You get a clean version back with a numbered changelog of what it fixed and why.</p>
-    <div class="user-need">
-      <span class="qual">Use this when</span> your AI-drafted text reads like every other AI-drafted text<br>
-      <span class="qual">so that you can</span> publish something that doesn't trip a reader's "this was written by ChatGPT" instinct
+    <p>Catches and kills the 13 tells of AI writing, without changing your voice or intent.</p>
+
+    <dl class="tell-list">
+      <div>
+        <dt>Phrasing</dt>
+        <dd><ol>
+          <li><span class="n">01</span> Em dashes</li>
+          <li><span class="n">02</span> Corrective antithesis</li>
+          <li><span class="n">03</span> Dramatic pivots</li>
+          <li><span class="n">04</span> Soft hedging</li>
+        </ol></dd>
+      </div>
+      <div>
+        <dt>Rhythm</dt>
+        <dd><ol>
+          <li><span class="n">05</span> Staccato sentences</li>
+          <li><span class="n">06</span> Cookie-cutter paragraphs</li>
+          <li><span class="n">07</span> Gift-wrapped endings</li>
+          <li><span class="n">08</span> Throat-clearing intros</li>
+        </ol></dd>
+      </div>
+      <div>
+        <dt>Authenticity</dt>
+        <dd><ol>
+          <li><span class="n">09</span> Perfect punctuation</li>
+          <li><span class="n">10</span> Copy-paste metaphors</li>
+          <li><span class="n">11</span> Overexplaining</li>
+          <li><span class="n">12</span> Generic examples</li>
+          <li><span class="n">13</span> Passive voice</li>
+        </ol></dd>
+      </div>
+    </dl>
+
+    <h2><span class="num">&sect; 02</span>How it works</h2>
+    <p>Three steps to a clean draft.</p>
+    <ol class="steps">
+      <li><strong>Copy the prompt</strong> into any AI chat: Claude, ChatGPT, Gemini.</li>
+      <li><strong>Paste your draft</strong> in the next message.</li>
+      <li><strong>Get your draft back, de-slopped</strong>, with a numbered changelog of every fix.</li>
+    </ol>
+
+    <h2><span class="num">&sect; 03</span>Before / after</h2>
+    <p>One /deslop pass on a blog intro. The flagged phrases are highlighted.</p>
+    <div class="ba-grid">
+      <div class="ba-col before">
+        <div class="ba-label">Before (AI draft)</div>
+        <p><mark class="flag">Let's dive into</mark> something that's been on everyone's mind lately. Remote work isn't just a trend<mark class="flag">&mdash;</mark>it's a revolution. <mark class="flag">It's changing everything.</mark> <mark class="flag">But here's the thing:</mark> most companies are getting it wrong.</p>
+        <p><mark class="flag">It's worth noting that</mark> the data tells a compelling story. <mark class="flag">This is where async communication really shines.</mark> <mark class="flag">It removes friction. It respects focus. It builds trust.</mark> <mark class="flag">In this article, we'll explore why.</mark></p>
+      </div>
+      <div class="ba-col after">
+        <div class="ba-label">After (/deslop)</div>
+        <p>Remote work has changed how companies operate, and most of them are getting it wrong.</p>
+        <p>The data backs this up. Async communication is what makes remote teams work, because it cuts friction and protects focus.</p>
+      </div>
     </div>
 
-    <h2><span class="num">&sect; 02</span>The prompt</h2>
-    <p>Copy the full prompt below and paste it into any AI chat. Then paste your draft in the next message. The model returns a cleaned version plus a changelog.</p>
+    <h2 id="prompt"><span class="num">&sect; 04</span>The prompt</h2>
+    <p>Free to copy and edit.</p>
     <div class="prompt-box">
       <div class="prompt-box-head">
         <span>Prompt &middot; v1.2</span>
         <button class="copy-btn" type="button" data-copy-target="prompt-text">Copy</button>
       </div>
+      <div class="disclosure" id="promptDisclosure" style="--disclosure-bg: var(--surface); --disclosure-max: min(46vh, 400px);">
       <pre id="prompt-text">You are a writing editor. Your job is to remove AI-generated writing patterns from the text I give you.
 
 Do not rewrite. Do not add ideas. Do not change my meaning or voice. Just clean up the slop.
@@ -471,23 +672,22 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
 
 **Changelog**
 - [Rule #] What changed and why (one line per change)</pre>
-    </div>
-
-    <h2><span class="num">&sect; 03</span>Before / after</h2>
-    <p>The opening paragraph of a blog post about remote work, before and after one /deslop pass.</p>
-    <div class="ba-grid">
-      <div class="ba-col before">
-        <div class="ba-label">Before (AI draft)</div>
-        <p>Let's dive into something that's been on everyone's mind lately. Remote work isn't just a trend. It's a revolution. It's changing everything. But here's the thing: most companies are getting it wrong. It's worth noting that the data tells a compelling story. In this article, we'll explore why.</p>
       </div>
-      <div class="ba-col after">
-        <div class="ba-label">After (/deslop)</div>
-        <p>Most companies still treat remote work like an office with longer commute times. They replicate the same meetings, the same check-ins, the same presenteeism, just over Zoom. The data on this is pretty damning.</p>
+      <div class="prompt-box-foot">
+        <button class="disclosure-toggle" type="button" hidden aria-expanded="false" aria-controls="promptDisclosure">See the full prompt</button>
       </div>
     </div>
 
-    <h2><span class="num">&sect; 04</span>How it works</h2>
-    <p>AI models have reliable writing habits: runs of short sentences, pivot phrases for fake drama, hedging language that adds nothing, endings that gift-wrap the whole piece in a bow. Readers have learned to spot these patterns even if they can't name them. The 13 rules target the specific tells, organised into phrasing, rhythm, and authenticity. The model fixes each one it finds and skips the rest, so the edit is proportional to how much slop was actually in the draft.</p>
+    <h3>Using Claude Code?</h3>
+    <p>Install /deslop once and it auto-updates. No copying each time.</p>
+    <div class="prompt-box">
+      <div class="prompt-box-head">
+        <span>Claude Code</span>
+        <button class="copy-btn" type="button" data-copy-target="install-commands">Copy</button>
+      </div>
+      <pre id="install-commands">/plugin marketplace add mooch-agency/skills
+/plugin install skills@mooch-agency</pre>
+    </div>
 
   </div>
 </article>
@@ -548,6 +748,25 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
           btn.classList.remove('copied');
         }, 2000);
       });
+    });
+  });
+
+  // Progressive disclosure, shared by the "before" draft and the full
+  // prompt: only surface a toggle if its collapsed fade is actually hiding
+  // content, and label each toggle from its own controlled element.
+  document.querySelectorAll('.disclosure-toggle[aria-controls]').forEach(function (btn) {
+    var body = document.getElementById(btn.getAttribute('aria-controls'));
+    if (!body) return;
+    var openLabel = 'Show less';
+    var closedLabel = btn.textContent.trim();
+    btn.hidden = body.scrollHeight <= body.clientHeight + 24;
+    btn.addEventListener('click', function () {
+      var open = body.classList.toggle('open');
+      // Animate to the real content height, not a guessed cap: the full
+      // prompt is taller than any fixed max would safely allow.
+      body.style.maxHeight = open ? body.scrollHeight + 'px' : '';
+      btn.textContent = open ? openLabel : closedLabel;
+      btn.setAttribute('aria-expanded', String(open));
     });
   });
 </script>

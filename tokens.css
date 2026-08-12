@@ -30,6 +30,13 @@
   --hairline-dark: #2a2a2c;   /* Hairline rule for dark-footer (.colophon-dark) context */
   --error: #b00020;
 
+  /* Elevation. Shadow-as-border: a 1px ring plus two soft lift layers,
+     for cards/buttons that currently fake depth with a solid border.
+     Shadows adapt to any background; solid border colours don't. Light-mode
+     only, since the site has no dark theme outside the one-off dark footer. */
+  --shadow-border: 0px 0px 0px 1px rgba(0, 0, 0, 0.06), 0px 1px 2px -1px rgba(0, 0, 0, 0.06), 0px 2px 4px 0px rgba(0, 0, 0, 0.04);
+  --shadow-border-hover: 0px 0px 0px 1px rgba(0, 0, 0, 0.08), 0px 1px 2px -1px rgba(0, 0, 0, 0.08), 0px 2px 4px 0px rgba(0, 0, 0, 0.06);
+
   /* Type families */
   --serif: 'Instrument Serif', 'Instrument Serif Fallback', 'Times New Roman', serif;
   --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
