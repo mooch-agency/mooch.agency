@@ -136,9 +136,10 @@
     text-align: center;
     padding: clamp(32px, 6vw, 72px) var(--pad-x) clamp(24px, 3.5vw, 40px);
   }
-  @media (prefers-reduced-motion: no-preference) {
-    .hero { transition: grid-template-rows var(--t-stage) var(--ease-decide), min-height var(--t-stage) var(--ease-decide); }
-  }
+  /* No CSS transition on the collapse: animating fr tracks + min-height is
+     a full-page main-thread layout animation and it visibly stutters. The
+     layout snaps in one frame and the JS FLIP in the submit handler glides
+     .rig from its old position with a compositor-friendly transform. */
   body.asked .hero { grid-template-rows: minmax(0, 0fr) auto minmax(0, 0fr); min-height: 0; }
   /* grid-row: 2 pins the content to the middle track explicitly, so the
      spacer rows above and below stay empty tracks in the template (no
@@ -193,8 +194,10 @@
   }
   @media (prefers-reduced-motion: no-preference) {
     /* riseIn + --rise-dur come from motion.css (linked in the head): the
-       console's entrance is the house scroll-reveal, not a bespoke copy. */
-    body.asked .term-wrap { animation: riseIn var(--rise-dur) var(--ease-decide) both; }
+       console's entrance is the house scroll-reveal, not a bespoke copy.
+       The short delay lets the FLIP'd hero content land first, so the
+       panes rise into space the rig has already vacated. */
+    body.asked .term-wrap { animation: riseIn var(--rise-dur) var(--ease-decide) 0.12s both; }
   }
 
   /* ui.css .ghost, re-pointed for the dark ground: its base already reads
@@ -281,7 +284,9 @@
   .go:hover { background: var(--ink); }
   .go:active { transform: scale(0.96); }
   .go:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
-  .go.stop { background: var(--error); }
+  /* Stop state keeps the white button and only swaps the glyph to a square
+     (the ChatGPT/Claude convention): a red fill reads as an error, not a
+     control state, and fights the page's monochrome instrument face. */
 
   /* ── Readings, integrated into the terminal ─────────────────────────── */
   .n {
@@ -315,22 +320,29 @@
     .bar-fill { transition: width 0.35s var(--ease-deliver); }
   }
 
-  /* Per-arm stream state. The pulsing dot is the activity signal; two of
-     them pulsing at once is what proves the arms really run in parallel. */
+  /* Per-arm stream state. The dot is the one status signal, present in
+     every state so nothing jumps: grey and static at rest, coral and
+     pulsing while that arm is actually running (two pulsing at once is
+     what proves the arms really run in parallel), red on failure via the
+     same currentColor .fail already sets on the text. */
   .state-line {
     font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
     text-transform: uppercase; color: var(--muted-small);
     margin-top: 10px; min-height: 14px; font-variant-numeric: tabular-nums;
   }
   .state-line.fail { color: var(--error); }
+  .state-line.running { color: #d97757; }
+  @media (prefers-reduced-motion: no-preference) {
+    .state-line { transition: color var(--t-deliver) var(--ease-deliver); }
+  }
   .dot {
     display: inline-block; width: 6px; height: 6px; border-radius: 50%;
     background: currentColor; vertical-align: middle; margin-right: 6px;
-    animation: pulse 1s ease-in-out infinite;
   }
+  .state-line.running .dot { animation: pulse 1s ease-in-out infinite; }
   @keyframes pulse { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
   @media (prefers-reduced-motion: reduce) {
-    .dot { animation: none; opacity: 1; }
+    .state-line.running .dot { animation: none; opacity: 1; }
   }
 
   /* The delta note is the live region, and it is always self-sufficient:
@@ -360,7 +372,6 @@
     font-family: var(--mono); font-size: 10px;
     text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted-small);
   }
-  .cdot { color: #d97757; margin-right: 7px; }
   .pane-head .state-line { margin-top: 0; }
   /* Rendered markdown inside the answers, dark ground. */
   .pane-body p { margin: 0 0 12px; }
@@ -647,7 +658,7 @@
     <div class="term-wrap">
       <div class="panes">
         <div class="pane pane-sayless">
-          <div class="pane-head"><span><span class="cdot" aria-hidden="true">&#9679;</span>Claude Code with Say Less</span><span class="state-line" id="hB">Standby</span></div>
+          <div class="pane-head"><span>Claude Code with Say Less</span><span class="state-line" id="hB"><span class="dot" aria-hidden="true"></span>Standby</span></div>
           <div class="meter">
             <span class="n" id="cB">0<span class="unit">words</span></span>
             <span class="bar"><span class="bar-fill" id="barB"></span></span>
@@ -655,7 +666,7 @@
           <div class="pane-body" id="b"></div>
         </div>
         <div class="pane pane-default">
-          <div class="pane-head"><span><span class="cdot" aria-hidden="true">&#9679;</span>Claude Code</span><span class="state-line" id="hA">Standby</span></div>
+          <div class="pane-head"><span>Claude Code</span><span class="state-line" id="hA"><span class="dot" aria-hidden="true"></span>Standby</span></div>
           <div class="meter">
             <span class="n" id="cA">0<span class="unit">words</span></span>
             <span class="bar"><span class="bar-fill" id="barA"></span></span>
@@ -850,7 +861,12 @@ q.addEventListener("input", () => { askSource = "typed"; resizeQ(); });
 // to it (the CSS default is hidden to avoid a reserved-gutter line).
 function resizeQ() {
   q.style.height = "auto";
-  q.style.height = q.scrollHeight + "px";
+  // +2px buffer: line-height is a fractional multiplier (1.4 x 17px), and
+  // at some zoom/display-scale combinations the browser rounds scrollHeight
+  // and the rendered line box in opposite directions, clipping a descender
+  // on the last line by a pixel or two. The buffer is invisible when the
+  // measurement is exact and saves the clip when it's off by a hair.
+  q.style.height = (q.scrollHeight + 2) + "px";
   q.style.overflowY = q.scrollHeight > q.offsetHeight ? "auto" : "hidden";
 }
 resizeQ();
@@ -997,9 +1013,13 @@ function renderBars() {
   UI.sayless.bar.style.width = (b / max * 100) + "%";
 }
 
+// The dot is the one status signal now (a second, always-orange dot next to
+// the pane label was redundant with this one and never changed colour, so
+// it was decoration, not a status). Present in every state so the layout
+// never jumps; colour and pulse come entirely from the state-line class.
 function setSub(k, html, cls) {
   for (const el of UI[k].subs) {
-    el.innerHTML = html;
+    el.innerHTML = '<span class="dot"></span>' + html;
     el.className = "state-line" + (cls ? " " + cls : "");
   }
 }
@@ -1030,7 +1050,7 @@ function reset() {
   for (const k of Object.keys(UI)) {
     arm[k] = { text: "", words: null, done: false, error: null, started: false };
     UI[k].body.textContent = "";
-    setSub(k, '<span class="dot"></span>starting');
+    setSub(k, "starting", "running");
     setCount(k, 0);
   }
   renderBars();
@@ -1269,7 +1289,25 @@ f.addEventListener("submit", (e) => {
   // from the first.
   if (runCount === 2) interceptFire("second_run");
   // First ask: collapse the hero stage and bring the terminals into being.
-  document.body.classList.add("asked");
+  // FLIP: the grid collapse snaps in one layout pass (no CSS transition;
+  // animating fr tracks re-layouts the whole page per frame and stutters),
+  // then .rig glides from its old position to its new one on the
+  // compositor. First ask only: later asks change no layout.
+  if (!document.body.classList.contains("asked")) {
+    const rig = document.querySelector(".hero .rig");
+    const before = rig.getBoundingClientRect().top;
+    document.body.classList.add("asked");
+    const dy = before - rig.getBoundingClientRect().top;
+    if (!reduce && dy > 0 && rig.animate) {
+      // Duration comes from the --t-stage token so the timing stays tunable
+      // with the rest of the page; easing mirrors --ease-decide.
+      const secs = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--t-stage"));
+      rig.animate(
+        [{ transform: "translateY(" + dy + "px)" }, { transform: "none" }],
+        { duration: (secs || 0.5) * 1000, easing: "cubic-bezier(0.16, 1, 0.3, 1)" }
+      );
+    }
+  }
   busy = true;
   setGoState(true);
   setStatus("running");
@@ -1294,7 +1332,7 @@ f.addEventListener("submit", (e) => {
     if (!a) return;
 
     if (d.delta) {
-      if (!a.started) { a.started = true; setSub(d.arm, '<span class="dot"></span>writing'); }
+      if (!a.started) { a.started = true; setSub(d.arm, "writing", "running"); }
       a.text += d.delta;
       UI[d.arm].body.innerHTML = renderMd(a.text);
       setCount(d.arm, countWords(a.text));
