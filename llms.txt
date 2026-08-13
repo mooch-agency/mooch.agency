@@ -28,6 +28,7 @@ We figure out what people actually need, then build the AI to deliver it. Most o
 
 ## Prompts
 
+- [Say Less](https://mooch.agency/say-less): A Claude Code plugin that cuts the fluff, 71% fewer words.
 - [/soundlikeme](https://mooch.agency/prompts/soundlikeme): A prompt to make AI write in your voice.
 - [/deslop](https://mooch.agency/prompts/deslop): A prompt to remove the red flags of AI writing.
 - [/revolut-account-migration](https://www.notion.so/tahi/revolut-account-migration-dcdc2afa0c0940e289aca3761dc6b638): A prompt to help you close your Revolut account and open a new local one, with less headache.
