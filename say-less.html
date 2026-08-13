@@ -7,18 +7,18 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
-<meta name="description" content="Ask Claude anything and watch it answer twice: once plain, once with the Say Less style. 71% shorter, median, same reasoning. A free plugin for Claude Code."><link rel="canonical" href="https://mooch.agency/say-less">
+<meta name="description" content="Cut Claude Code replies by ~71%."><link rel="canonical" href="https://mooch.agency/say-less">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://mooch.agency/say-less">
 <meta property="og:title" content="Say Less: try it live, cuts replies 71% | Mooch">
-<meta property="og:description" content="Ask Claude anything and watch it answer twice: once plain, once with the Say Less style. 71% shorter, median, same reasoning.">
+<meta property="og:description" content="Cut Claude Code replies by ~71%.">
 <meta property="og:image" content="https://mooch.agency/og-say-less.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Make Claude say less. Cut Claude Code replies by ~71%.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Say Less: try it live, cuts replies 71% | Mooch">
-<meta name="twitter:description" content="Ask Claude anything and watch it answer twice: once plain, once with the Say Less style. 71% shorter, median, same reasoning.">
+<meta name="twitter:description" content="Cut Claude Code replies by ~71%.">
 <meta name="twitter:image" content="https://mooch.agency/og-say-less.png">
 <meta name="twitter:image:alt" content="Make Claude say less. Cut Claude Code replies by ~71%.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -61,6 +61,9 @@
     --chassis: #0a0a0c;         /* instrument face */
     --field-bg: #1a1a1f;        /* the one control, the brightest surface */
     --rig: 1100px;              /* one chassis width for the whole page */
+    --strip-h: 45px;            /* .strip's 44px min-height + 1px border; the hero's viewport calc depends on it */
+    --input-max-h: 148px;       /* textarea growth cap, ~5 lines; resizeQ() reads the same limit via max-height */
+    --t-stage: 0.5s;            /* hero stage collapse on first ask */
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -108,16 +111,50 @@
   .strip .state { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
 
   /* ── Hero ──────────────────────────────────────────────────────────────
-     Deliberately short. The device below is the argument; this is the label
-     on its front panel. */
-  .hero { padding: clamp(32px, 6vw, 72px) var(--pad-x) clamp(24px, 3.5vw, 40px); }
+     Centred both ways, reading as an app's first screen (ChatGPT, Claude)
+     at every width, no divergence between mobile and desktop. The stage is
+     exactly one viewport: content sits in a fixed-size middle row, flanked
+     by two spacer rows that share the rest of the height.
+
+     The top:bottom split is 3:5, not 1:1: optical centring sits above
+     mathematical centre (the eye reads true 50/50 as low), and on mobile
+     it keeps the input clear of the keyboard once it opens. Matches the
+     ChatGPT/Claude convention this stage is borrowing.
+
+     The collapse on first ask borrows the site's existing slide-open
+     convention (.prompt-details' grid-template-rows 0fr trick, below) rather
+     than animating min-height alone: min-height isn't GPU-compositable and,
+     worse, shrinking a flex-centred box makes the heading visibly recentre
+     every frame. Here only the empty spacer rows collapse to 0fr; content
+     never moves once the top spacer is gone, so the motion reads as the
+     console sliding up into the space, not the hero lurching. Same three
+     rows, same collapse, on phone and desktop alike. */
+  .hero {
+    min-height: calc(100vh - var(--strip-h));
+    min-height: calc(100svh - var(--strip-h));   /* svh: stable under mobile browser chrome */
+    display: grid; grid-template-rows: minmax(0, 0.75fr) auto minmax(0, 1.25fr);
+    text-align: center;
+    padding: clamp(32px, 6vw, 72px) var(--pad-x) clamp(24px, 3.5vw, 40px);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero { transition: grid-template-rows var(--t-stage) var(--ease-decide), min-height var(--t-stage) var(--ease-decide); }
+  }
+  body.asked .hero { grid-template-rows: minmax(0, 0fr) auto minmax(0, 0fr); min-height: 0; }
+  /* grid-row: 2 pins the content to the middle track explicitly, so the
+     spacer rows above and below stay empty tracks in the template (no
+     spacer markup needed) and the collapse can never grab the wrong row.
+     min-width: 0 overrides the grid item's default min-width: auto, which
+     otherwise sizes the column to the paragraph's content instead of the
+     container and causes a few px of horizontal overflow on narrow phones. */
+  .hero .rig { grid-row: 2; width: 100%; min-width: 0; }
+  .hero h1, .hero .standfirst { margin-inline: auto; }
+  /* No leading rule: a left-aligned device (anchors to a margin) looks
+     lopsided once the eyebrow is centred with nothing to anchor to. */
   .eyebrow {
     font-family: var(--mono); font-size: 10.5px;
     text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted-small);
     margin-bottom: clamp(16px, 2.5vw, 32px);
-    display: flex; align-items: center; gap: 12px;
   }
-  .eyebrow .rule { flex: 0 0 40px; height: 1px; background: var(--hairline-focus); }
   .hero h1 {
     font-family: var(--serif); font-weight: 400;
     font-size: clamp(46px, 8.5vw, 100px);
@@ -130,12 +167,35 @@
     color: var(--muted-small); max-width: 48ch;
     margin-top: clamp(14px, 2vw, 22px); text-wrap: pretty;
   }
+  /* The one control lives in the hero now, directly under the standfirst.
+     auto side margins are a no-op on phones (viewport < 640px) and centre
+     it on the desktop stage. */
+  .hero form { max-width: 640px; margin: clamp(28px, 4vw, 44px) auto 0; }
 
   /* ── Console: the instrument itself ────────────────────────────────────
      One control, then the readout bank, then the transcripts. The bank sits
      directly under the control at every width so the measurement is never
      the thing you have to scroll for. */
   .console { padding: 0 var(--pad-x) clamp(48px, 7vw, 84px); }
+  /* The terminals only exist once a question has been asked; before that the
+     hero stage owns the screen and the install section sits below the fold.
+     Only .term-wrap is display:none'd, not the whole section: #deltaNote is
+     an aria-live region, and a live region that enters the accessibility
+     tree in the same task that writes to it gets its first announcement
+     dropped by most screen readers. Keeping it in the tree (visually hidden)
+     from page load means run 1's "Both running." actually announces. */
+  body:not(.asked) .console { padding-block: 0; }
+  body:not(.asked) .term-wrap { display: none; }
+  body:not(.asked) .delta-note {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    /* riseIn + --rise-dur come from motion.css (linked in the head): the
+       console's entrance is the house scroll-reveal, not a bespoke copy. */
+    body.asked .term-wrap { animation: riseIn var(--rise-dur) var(--ease-decide) both; }
+  }
 
   /* ui.css .ghost, re-pointed for the dark ground: its base already reads
      --ink and --hairline-focus (both remapped above), only the hover and
@@ -143,20 +203,36 @@
   .ghost { min-height: 44px; }
   .ghost:hover { border-color: var(--paper); color: var(--paper); }
   .ghost:focus-visible { outline-color: var(--paper); }
-  .example-btn { flex: 0 0 auto; align-self: center; font-size: 12.5px; padding: 8px 14px; min-height: 40px; margin-right: 6px; }
-  @media (max-width: 600px) {
-    .example-btn .example-label-ext { display: none; }   /* "Random" alone on phones */
-    .example-btn { padding: 8px 12px; }
+  /* Random moved out of the field entirely: on a long question the field
+     used to lose its Ask button and its text under the same overflow, so
+     the field is now just input + submit, and this is a quiet secondary
+     action below it, not a second control competing for the same row. */
+  .example-link {
+    /* margin-inline auto: the stage is centred at every width, so the link
+       centres under the field rather than orphaned at the form's left edge.
+       44px min-height holds the same touch-target floor as .ghost/.go. */
+    display: block; margin: 10px auto 0; padding: 4px 0; min-height: 44px;
+    background: none; border: 0; cursor: pointer;
+    font-family: var(--sans); font-size: 13px; color: var(--muted-small);
+    border-bottom: 1px solid transparent; width: fit-content;
   }
+  .example-link:hover { color: var(--paper); border-bottom-color: var(--hairline-focus); }
+  .example-link:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
 
   /* The one control. No fake prompt glyph: the accent rule at the left edge
      is the caret cue, and the real text caret is set to full white so the
      thing you actually type with is the brightest mark on the page. */
   .field {
-    display: flex; align-items: stretch;
+    display: flex; align-items: flex-end;
     background: var(--field-bg);
     border: 1px solid var(--hairline-focus);
-    border-radius: 29px; overflow: hidden;   /* concentric: 22px go circle + 7px margin */
+    border-radius: 29px;   /* concentric: 22px go circle + 7px margin, at rest;
+       the radius doesn't scale with height, so a grown multi-line field reads
+       as a rounded rectangle instead of a stretched pill, same as ChatGPT/Claude. */
+    /* No overflow/contain here: the focus-ring box-shadow below draws
+       outside this border box on purpose, and clipping the field itself
+       would cut that ring off flat instead of letting it follow the curve.
+       The accent bar's own clip is scoped to .field-text below instead. */
     transition: border-color var(--t-deliver) var(--ease-deliver),
                 box-shadow var(--t-deliver) var(--ease-deliver);
   }
@@ -164,21 +240,38 @@
     border-color: var(--paper);
     box-shadow: 0 0 0 3px rgba(255,255,255,0.08);
   }
+  /* Wraps the accent bar and textarea only (not the go button, which is
+     already self-rounded). overflow: hidden here is scoped to just this
+     rectangle-in-a-curve pairing, so it can't fight the field's own shadow. */
+  .field-text {
+    display: flex; align-items: stretch; align-self: stretch; flex: 1; min-width: 0;
+    border-radius: 29px 0 0 29px; overflow: hidden;
+  }
   .field-accent { flex: 0 0 3px; background: var(--hairline-focus); }
   .field:focus-within .field-accent { background: var(--paper); }
   @media (prefers-reduced-motion: no-preference) {
     .field-accent { transition: background var(--t-deliver) var(--ease-deliver); }
   }
-  .field input {
+  /* Auto-grows with input (JS sets height from scrollHeight) instead of
+     scrolling long text sideways behind the buttons, the WhatsApp/
+     Messenger/ChatGPT convention. Caps at --input-max-h (~5 lines), then
+     scrolls internally; resize handle is off since the field manages its
+     own height. */
+  .field textarea {
     flex: 1; min-width: 0; border: 0; background: transparent;
     font-family: var(--sans); font-size: 17px; line-height: 1.4;
     color: var(--ink); padding: 17px 8px 17px 18px;
     caret-color: var(--paper);
+    resize: none; overflow-y: hidden; max-height: var(--input-max-h);
+    /* resizeQ() flips overflow-y to auto once the cap is actually hit.
+       Leaving it permanently auto reserves a scrollbar gutter that renders
+       as a stray vertical line even when nothing overflows. */
+    display: block;
   }
-  .field input:focus { outline: none; }
-  .field input::placeholder { color: var(--muted); }
+  .field textarea:focus { outline: none; }
+  .field textarea::placeholder { color: var(--muted); }
   .go {
-    align-self: center; flex: 0 0 auto; margin: 0 7px;
+    align-self: flex-end; flex: 0 0 auto; margin: 7px 7px 7px 0;
     display: inline-flex; align-items: center; justify-content: center;
     width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer;
     background: var(--paper); color: var(--black); font-size: 21px; line-height: 1;
@@ -202,31 +295,11 @@
   }
   .n.null { color: var(--muted); }
 
-  /* One terminal window, tmux-style: the delta rides the top edge as a badge
-     and each half carries its own count and gauge in the chrome. */
-  .term-wrap { position: relative; margin-top: 34px; scroll-margin-top: 60px; }
-  .delta-chip {
-    position: absolute; top: -19px; left: 50%; transform: translateX(-50%); z-index: 2;
-    background: var(--black); border: 1px solid var(--hairline-focus);
-    border-radius: 999px; padding: 8px 20px;
-  }
-  .delta-chip { display: flex; align-items: baseline; gap: 7px; }
-  .delta-chip .n { font-size: 21px; line-height: 1; }
-  .delta-word {
-    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
-    letter-spacing: 0.14em; color: var(--muted-small);
-  }
-  .delta-word:empty { display: none; }
-  /* Settle stays white; the coral lives only in the one-time ring flash. */
-  .delta-chip.settled { animation: chipPop 0.7s var(--ease-decide); }
-  @keyframes chipPop {
-    0%   { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(217, 119, 87, 0.45); }
-    35%  { transform: translateX(-50%) scale(1.3); }
-    100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 14px rgba(217, 119, 87, 0); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .delta-chip.settled { animation: none; }   /* coral stays: the static cue */
-  }
+  /* One terminal window, tmux-style: each half carries its own count and
+     gauge in the chrome. The result sentence lives in .delta-note below.
+     (An earlier delta badge rode this wrapper's top edge; removed, it got
+     in the way of the pane chrome.) */
+  .term-wrap { position: relative; margin-top: 34px; }
   @media (min-width: 720px) { .pane { padding-top: clamp(24px, 3vw, 34px); } }
   .meter { display: flex; align-items: center; gap: 14px; margin: 0 0 14px; }
   .meter .n { font-size: clamp(24px, 3.4vw, 32px); }
@@ -271,9 +344,8 @@
   .delta-note.err { color: var(--error); }
 
   /* ── Transcript panes ──────────────────────────────────────────────────
-     Always present, at rest, reading standby: the device shows its face
-     before you touch it. Answers are prose, so they set in --sans; every
-     label and readout around them stays mono. */
+     Revealed with the console on the first ask. Answers are prose, so they
+     set in --sans; every label and readout around them stays mono. */
   .panes {
     display: grid; grid-template-columns: 1fr; gap: 1px;
     background: var(--hairline); border: 1px solid var(--hairline);
@@ -289,13 +361,6 @@
     text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted-small);
   }
   .cdot { color: #d97757; margin-right: 7px; }
-  .term-q {
-    font-family: var(--mono); font-size: 12px; color: var(--muted);
-    margin-bottom: 12px; overflow-wrap: break-word;
-  }
-  .term-q:empty { display: none; }
-  /* Empty-state ghost lines: the outcome's shape before any words exist. */
-  .ghost-line { display: block; height: 10px; border-radius: 3px; background: var(--hairline); opacity: 0.6; margin: 0 0 9px; }
   .pane-head .state-line { margin-top: 0; }
   /* Rendered markdown inside the answers, dark ground. */
   .pane-body p { margin: 0 0 12px; }
@@ -453,7 +518,7 @@
   .intercept-card h2 {
     font-family: var(--serif); font-weight: 400; font-size: clamp(24px, 2.6vw, 30px);
     line-height: 1.05; letter-spacing: -0.02em; color: var(--paper); margin: 0;
-    text-wrap: balance;
+    text-wrap: pretty;
   }
   .intercept-x {
     margin-left: auto; margin-top: -8px; margin-right: -10px;
@@ -533,7 +598,6 @@
 
   @media (max-width: 420px) {
     .control-head { gap: 10px; }
-    .example-btn { padding: 10px 13px; font-size: 12.5px; }
     .strip { letter-spacing: 0.12em; }
   }
 
@@ -556,9 +620,23 @@
 
 <section class="hero">
   <div class="rig">
-    <p class="eyebrow reveal d1"><span class="rule"></span> Claude Code plugin</p>
+    <p class="eyebrow reveal d1">Prompt</p>
     <h1 class="reveal d2">Make Claude <em>say less</em>.</h1>
-    <p class="standfirst reveal d3">Say Less is a Claude Code plugin that cuts replies by ~71% without cutting reasoning. Free.</p>
+    <p class="standfirst reveal d3">A Claude Code plugin that cuts replies by 71%.</p>
+
+    <form id="f" class="reveal d4">
+      <div class="field">
+        <div class="field-text">
+          <span class="field-accent" aria-hidden="true"></span>
+          <textarea id="q" rows="1" autocomplete="off" maxlength="1200"
+                    aria-label="Ask Claude Code anything" placeholder="Ask anything…"></textarea>
+        </div>
+        <button class="go" id="go" type="submit" aria-label="Ask" title="Ask">
+          <span class="go-icon" aria-hidden="true">&rarr;</span>
+        </button>
+      </div>
+      <button type="button" class="example-link" id="exampleBtn">Try a random question</button>
+    </form>
   </div>
 </section>
 
@@ -566,22 +644,7 @@
   <div class="rig">
     <h2 id="console-heading" class="visually-hidden">Live comparison</h2>
 
-    <form id="f" class="reveal d4">
-      <div class="field">
-        <span class="field-accent" aria-hidden="true"></span>
-        <input type="text" id="q" autocomplete="off" maxlength="1200"
-               aria-label="Ask Claude Code anything" placeholder="Ask anything…">
-        <button type="button" class="ghost example-btn" id="exampleBtn">
-          <span class="example-label">Random<span class="example-label-ext"> question</span></span>
-        </button>
-        <button class="go" id="go" type="submit" aria-label="Ask" title="Ask">
-          <span class="go-icon" aria-hidden="true">&rarr;</span>
-        </button>
-      </div>
-    </form>
-
     <div class="term-wrap">
-      <div class="delta-chip" aria-hidden="true"><span class="n" id="deltaNum">vs</span><span class="delta-word" id="deltaWord"></span></div>
       <div class="panes">
         <div class="pane pane-sayless">
           <div class="pane-head"><span><span class="cdot" aria-hidden="true">&#9679;</span>Claude Code with Say Less</span><span class="state-line" id="hB">Standby</span></div>
@@ -589,7 +652,6 @@
             <span class="n" id="cB">0<span class="unit">words</span></span>
             <span class="bar"><span class="bar-fill" id="barB"></span></span>
           </div>
-          <div class="term-q" id="tqB"></div>
           <div class="pane-body" id="b"></div>
         </div>
         <div class="pane pane-default">
@@ -598,7 +660,6 @@
             <span class="n" id="cA">0<span class="unit">words</span></span>
             <span class="bar"><span class="bar-fill" id="barA"></span></span>
           </div>
-          <div class="term-q" id="tqA"></div>
           <div class="pane-body" id="a"></div>
           <button class="see-more" id="seeMore" type="button" hidden aria-expanded="false" aria-controls="a">See the full answer</button>
         </div>
@@ -739,10 +800,6 @@ const f = document.getElementById("f");
 const q = document.getElementById("q");
 const go = document.getElementById("go");
 const goIcon = go.querySelector(".go-icon");
-const termWrap = document.querySelector(".term-wrap");
-const deltaChip = document.querySelector(".delta-chip");
-const deltaWord = document.getElementById("deltaWord");
-const deltaNum = document.getElementById("deltaNum");
 const deltaNote = document.getElementById("deltaNote");
 const lamp = document.getElementById("lamp");
 const statusText = document.getElementById("statusText");
@@ -783,14 +840,43 @@ function refillDeck() {
     [deck[0], deck[deck.length - 1]] = [deck[deck.length - 1], deck[0]];
   }
 }
-let askSource = "typed";     // flips to "random" on the chip below, back on manual edit
-q.addEventListener("input", () => { askSource = "typed"; });
+let askSource = "typed";     // flips to "random" on the example link below, back on manual edit
+q.addEventListener("input", () => { askSource = "typed"; resizeQ(); });
+
+// Auto-grow: WhatsApp/Messenger/ChatGPT convention. Reset to auto first so a
+// deleted line can shrink the box back down, not just grow it. Past the CSS
+// max-height cap the box stops growing, so overflow-y flips to auto there:
+// without that flip the capped text would be clipped with no way to scroll
+// to it (the CSS default is hidden to avoid a reserved-gutter line).
+function resizeQ() {
+  q.style.height = "auto";
+  q.style.height = q.scrollHeight + "px";
+  q.style.overflowY = q.scrollHeight > q.offsetHeight ? "auto" : "hidden";
+}
+resizeQ();
+// Back/forward-cache and session restore repopulate the textarea after load
+// without an input event; re-measure so a restored multi-line value isn't
+// clipped at the single-line height.
+window.addEventListener("pageshow", resizeQ);
+
+// Enter sends, same as every chat composer; Shift+Enter keeps the newline
+// (a plain <textarea> has no submit-on-Enter of its own, unlike the <input>
+// this replaced). The isComposing guard keeps Enter-to-commit inside an IME
+// (Japanese, Chinese, Korean) from submitting a half-composed question.
+q.addEventListener("keydown", (e) => {
+  if (e.isComposing || e.keyCode === 229) return;
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    f.requestSubmit();
+  }
+});
 
 document.getElementById("exampleBtn").addEventListener("click", () => {
   if (!deck.length) refillDeck();
   lastExample = deck.pop();
   const text = EXAMPLES[lastExample][1];
   q.value = text;
+  resizeQ();
   q.focus();
   q.setSelectionRange(text.length, text.length);   // caret at the end, ready to edit
   askSource = "random";
@@ -925,23 +1011,11 @@ function setNote(text, isError, isResult) {
   deltaNote.textContent = text;                   // server text, never parsed as markup
   deltaNote.classList.toggle("err", !!isError);
 }
-function setDelta(text, isNull) {
-  deltaNum.textContent = text;
-  deltaNum.classList.toggle("null", !!isNull);
-}
-
 // The strip now carries the beta label; run state lives in the pane heads
-// and the delta chip, so setStatus keeps the API and drops the display.
+// and the note below the panes, so setStatus keeps the API and drops the
+// display. (A live delta badge used to update per token here; removed with
+// the chip, the note states the settled figure instead.)
 function setStatus() {}
-
-// Below this, both answers are barely a sentence in and a percentage would be
-// noise rather than a reading, so the readout stays honestly blank.
-const LIVE_MIN = 12;
-function renderLiveDelta() {
-  const a = armWords("default"), b = armWords("sayless");
-  if (a < LIVE_MIN || b < LIVE_MIN) { setDelta("··", true); return; }
-  setDelta("~" + Math.round(Math.abs(1 - b / a) * 100) + "%");  // tilde: provisional, still streaming
-}
 
 // The submit button doubles as Stop mid-stream: swap the arrow for a square
 // and the label so screen readers and the icon agree on which action is next.
@@ -952,16 +1026,6 @@ function setGoState(running) {
   goIcon.textContent = running ? "■" : "→";
 }
 
-// Empty-state ghost lines: the outcome's shape (a long answer next to a
-// short one) before any words exist. reset() overwrites them on the first run.
-(function ghosts() {
-  const seed = (el, widths) => {
-    el.innerHTML = widths.map((w) => '<span class="ghost-line" style="width:' + w + '%"></span>').join("");
-  };
-  seed(document.getElementById("a"), [96, 100, 88, 97, 62, 92, 100, 84, 45]);
-  seed(document.getElementById("b"), [72, 34]);
-})();
-
 function reset() {
   for (const k of Object.keys(UI)) {
     arm[k] = { text: "", words: null, done: false, error: null, started: false };
@@ -970,7 +1034,6 @@ function reset() {
     setCount(k, 0);
   }
   renderBars();
-  setDelta("··", true);
 }
 
 function idle() {
@@ -993,7 +1056,6 @@ function finish() {
   const failed = Object.keys(UI).filter((k) => arm[k].error);
   if (failed.length) {
     setStatus("error");
-    setDelta("··", true);
     setNote(failed.map((k) => UI[k].name + ": " + arm[k].error).join("  ·  "), true);
     track("sayless_error", { reason: "arm_error" });
     return;
@@ -1001,25 +1063,20 @@ function finish() {
   const a = arm.default.words, b = arm.sayless.words;
   if (!a || !b) {
     setStatus("error");
-    setDelta("··", true);
     setNote("One side came back empty. Try again.", true);
     track("sayless_error", { reason: "empty" });
     return;
   }
   setStatus("done");
-  deltaChip.classList.add("settled");
   // Intent is proven now, not before: schedule the intercept's dwell timer
   // off the first successful run's real word counts, not the second run.
   if (runCount === 1) scheduleDwell(a, b);
   if (a === b) {
-    setDelta("0%");
     setNote("0%: same length.", false, true);
     track("sayless_result", { default_words: a, sayless_words: b, pct: 0 });
     return;
   }
   const p = Math.round(Math.abs(1 - b / a) * 100);
-  setDelta(p + "%");
-  deltaWord.textContent = b < a ? "shorter" : "longer";
   setNote(b < a
     ? p + "% shorter with Say Less."
     : p + "% longer with Say Less. It happens: the style protects completeness over brevity.",
@@ -1059,6 +1116,9 @@ REASONS.forEach((r) => {
 
 let runCount = 0;
 let dwellTimer = null;
+// Persisted so a visitor who already answered or dismissed the intercept
+// never sees it again on a later visit, not just later in the same tab.
+const INTERCEPT_DONE_KEY = "sayless_intercept_done";
 let interceptTriggered = false;   // fired once, by whichever condition wins
 let interceptShown = false;       // the dialog has actually opened
 let interceptReturnFocus = null;
@@ -1078,8 +1138,15 @@ function feedbackPost(body) {
   }).then((r) => r.json()).catch(() => null);
 }
 
+function interceptDone() {
+  try { return localStorage.getItem(INTERCEPT_DONE_KEY) === "1"; } catch { return false; }
+}
+function markInterceptDone() {
+  try { localStorage.setItem(INTERCEPT_DONE_KEY, "1"); } catch {}
+}
+
 function scheduleDwell(a, b) {
-  if (interceptTriggered) return;
+  if (interceptTriggered || interceptDone()) return;
   const words = Math.max(a || 0, b || 0);
   const delay = Math.min(DWELL_CAP_MS, DWELL_FLOOR_MS + words * DWELL_PER_WORD_MS);
   clearTimeout(dwellTimer);
@@ -1087,7 +1154,7 @@ function scheduleDwell(a, b) {
 }
 
 function interceptFire(trigger) {
-  if (interceptTriggered) return;
+  if (interceptTriggered || interceptDone()) return;
   interceptTriggered = true;
   clearTimeout(dwellTimer);
   showIntercept(trigger);
@@ -1110,6 +1177,9 @@ function showIntercept(trigger) {
 }
 
 function closeIntercept(focusEl) {
+  // Every path out (dismiss, Yes, or the delayed close after a No answer)
+  // funnels through here, so this is the one place that needs to record it.
+  markInterceptDone();
   intercept.classList.remove("open");
   const to = focusEl || interceptReturnFocus;
   if (to && document.contains(to)) to.focus({ preventScroll: !!focusEl });
@@ -1198,22 +1268,18 @@ f.addEventListener("submit", (e) => {
   // wait for this run to finish, and it preempts a dwell timer still running
   // from the first.
   if (runCount === 2) interceptFire("second_run");
+  // First ask: collapse the hero stage and bring the terminals into being.
+  document.body.classList.add("asked");
   busy = true;
   setGoState(true);
   setStatus("running");
   reset();
   collapseDefault();
-  deltaChip.classList.remove("settled");
-  deltaWord.textContent = "";
-  document.getElementById("tqA").textContent = "> " + prompt;
-  document.getElementById("tqB").textContent = "> " + prompt;
   setNote("Both running.");
-  // Only scroll if the bank is actually off-screen. On a phone the readouts
-  // sit below the fold and nothing visibly happens without this; on a desktop
-  // an unconditional scroll would just yank the input out of view.
-  if (termWrap.getBoundingClientRect().bottom > window.innerHeight) {
-    termWrap.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-  }
+  // No forced scroll: the hero's spacer grid rows collapse as the terminals
+  // appear, so the input stays put and the panes simply arrive underneath
+  // it. A programmatic scroll here would fight that layout shift and read
+  // as a jump.
 
   // The function runs two Anthropic streams concurrently and interleaves
   // their deltas onto one SSE response, so the columns fill at their real
@@ -1233,7 +1299,6 @@ f.addEventListener("submit", (e) => {
       UI[d.arm].body.innerHTML = renderMd(a.text);
       setCount(d.arm, countWords(a.text));
       renderBars();
-      renderLiveDelta();
       return;
     }
     // One arm failing is not a reason to throw away the other, so the stream
@@ -1253,7 +1318,6 @@ f.addEventListener("submit", (e) => {
     if (!busy) return;
     idle();
     setStatus("error");
-    setDelta("··", true);
     setNote("The stream dropped, or the demo hit its rate limit. Try again shortly.", true);
   };
 });

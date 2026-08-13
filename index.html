@@ -454,26 +454,6 @@
     padding-top: 16px;
     white-space: nowrap;
   }
-  /* Pill badge: UX fills solid, AI stays outline so the two disciplines read
-     apart at a glance. */
-  .work-row .discipline {
-    display: inline-block;
-    font-family: var(--mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    color: var(--paper);
-    background: var(--ink);
-    border: 1px solid var(--ink);
-    padding: 4px 12px;
-    border-radius: 980px;
-    margin-left: 12px;
-    vertical-align: middle;
-  }
-  .work-row .discipline[data-disc="ai"] {
-    background: transparent;
-    color: var(--ink);
-  }
   .work-row .tldr {
     display: block;
     font-family: var(--sans);
@@ -489,7 +469,6 @@
       padding: 22px 0;
     }
     .work-row .year { grid-column: 2; padding-top: 4px; }
-    .work-row .discipline { margin-left: 8px; }
   }
 
   /* ───────── Bento: Things we've made ───────── */
@@ -836,7 +815,7 @@
       <a class="work-row" href="/gov-uk.html">
         <span class="idx">001</span>
         <span>
-          <span class="client">gov.uk <span class="discipline" data-disc="ux">UX</span></span>
+          <span class="client">gov.uk</span>
           <span class="tldr">Designing government digital services that millions of people rely on every day.</span>
         </span>
         <span class="year">2021</span>
@@ -844,7 +823,7 @@
       <a class="work-row" href="/british-airways.html">
         <span class="idx">002</span>
         <span>
-          <span class="client">British Airways <span class="discipline" data-disc="ux">UX</span></span>
+          <span class="client">British Airways</span>
           <span class="tldr">Bringing British heritage into the 2020s through clearer in-flight content.</span>
         </span>
         <span class="year">2024</span>
@@ -852,7 +831,7 @@
       <a class="work-row" href="/octant.html">
         <span class="idx">003</span>
         <span>
-          <span class="client">Octant <span class="discipline" data-disc="ux">UX</span></span>
+          <span class="client">Octant</span>
           <span class="tldr">Simplifying public-goods funding on Ethereum without losing the politics.</span>
         </span>
         <span class="year">2023</span>
@@ -860,7 +839,7 @@
       <a class="work-row" href="/ethereum.html">
         <span class="idx">004</span>
         <span>
-          <span class="client">Ethereum Foundation <span class="discipline" data-disc="ux">UX</span></span>
+          <span class="client">Ethereum Foundation</span>
           <span class="tldr">Plain-English rewrites for the core informational layer of ethereum.org.</span>
         </span>
         <span class="year">2025</span>
@@ -868,7 +847,7 @@
       <a class="work-row" href="/zksync.html">
         <span class="idx">005</span>
         <span>
-          <span class="client">zkSync <span class="discipline" data-disc="ux">UX</span></span>
+          <span class="client">zkSync</span>
           <span class="tldr">UX research on developer experience and bridging flows for Ethereum's Layer 2.</span>
         </span>
         <span class="year">2023</span>
@@ -876,7 +855,7 @@
       <a class="work-row" href="/lisbon-restaurant-group.html">
         <span class="idx">006</span>
         <span>
-          <span class="client">Lisbon Restaurant Group <span class="discipline" data-disc="ai">AI</span></span>
+          <span class="client">Lisbon Restaurant Group</span>
           <span class="tldr">Automating Google review replies across 4 locations in 5 languages.</span>
         </span>
         <span class="year">2026</span>
@@ -1314,7 +1293,7 @@
   // Fires after DOM is ready; uses the va() queue so events are held until the
   // analytics script loads.
   // Reads an element's own text, ignoring nested elements (e.g. the
-  // .discipline tag inside .client, or the arrow span inside a CTA).
+  // arrow span inside a CTA).
   function ownText(el) {
     if (!el) return '';
     return Array.prototype.filter
