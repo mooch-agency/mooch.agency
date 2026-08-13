@@ -8,7 +8,6 @@
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
 <meta name="description" content="A prompt to make AI write in your voice using a few writing samples. Free from Mooch.">
-<meta name="robots" content="noindex">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://mooch.agency/prompts/soundlikeme">
 <link rel="canonical" href="https://mooch.agency/prompts/soundlikeme">
@@ -84,6 +83,7 @@
     color: var(--black);
     margin-bottom: clamp(28px, 4vw, 48px);
     max-width: 16ch;
+    text-wrap: balance;
   }
   .case-hero h1 em { font-style: italic; }
   .case-hero .standfirst {
@@ -95,7 +95,27 @@
     color: var(--ink);
     max-width: 36ch;
     margin-bottom: clamp(40px, 6vw, 64px);
+    text-wrap: pretty;
   }
+
+  /* Hero shortcut for return visitors who just want the deliverable,
+     now that the prompt sits last on the page. */
+  .jump-link {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink);
+    min-height: 44px;
+    margin-bottom: clamp(24px, 4vw, 40px);
+    text-decoration: underline;
+    text-decoration-color: var(--hairline-focus);
+    text-underline-offset: 5px;
+    transition: text-decoration-color var(--t-deliver) var(--ease-deliver);
+  }
+  .jump-link:hover { text-decoration-color: var(--ink); }
+  .jump-link:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
 
   .case-meta {
     display: grid;
@@ -134,6 +154,7 @@
     margin-top: clamp(64px, 8vw, 112px);
     margin-bottom: 28px;
     scroll-margin-top: 40px;
+    text-wrap: balance;
   }
   .case-body h2 em { font-style: italic; }
   .case-body h2:first-child { margin-top: 0; }
@@ -157,7 +178,7 @@
     margin-top: 40px;
     margin-bottom: 14px;
   }
-  .case-body p { margin-bottom: 1.1em; hanging-punctuation: first last; }
+  .case-body p { margin-bottom: 1.1em; hanging-punctuation: first last; text-wrap: pretty; }
   .case-body p strong { font-weight: 600; color: var(--black); }
   .case-body p em { font-style: italic; }
   .case-body a { border-bottom: 1px solid var(--hairline); transition: border-color 0.15s ease; }
@@ -165,34 +186,87 @@
   .case-body ul, .case-body ol { margin: 0 0 1.4em 0; padding-left: 1.4em; }
   .case-body li { margin-bottom: 0.6em; }
 
-  .case-body .lead-stat {
-    font-family: var(--serif);
-    font-size: clamp(28px, 4vw, 44px);
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    color: var(--black);
-    margin: 8px 0 24px;
-    max-width: 38ch;
+  /* Three steps, numbered with the same mono numerals as the § headings so
+     the section reads as one system rather than a new component. */
+  .steps {
+    list-style: none;
+    counter-reset: step;
+    margin: 24px 0 8px;
+    padding: 0;
   }
-  .case-body .lead-stat strong { font-weight: 400; font-style: italic; }
+  .steps li {
+    counter-increment: step;
+    position: relative;
+    padding: 16px 0 16px 44px;
+    border-top: 1px solid var(--hairline);
+    text-wrap: pretty;
+  }
+  .steps li:last-child { border-bottom: 1px solid var(--hairline); }
+  .steps li::before {
+    content: "0" counter(step);
+    position: absolute;
+    left: 0;
+    top: 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+  }
+  .steps li strong { font-weight: 600; color: var(--black); }
 
-  .user-need {
-    border-left: 2px solid var(--black);
-    padding: 14px 0 14px 20px;
-    margin: 32px 0 40px;
-    font-family: var(--sans);
-    font-size: 18px;
-    line-height: 1.55;
-    color: var(--ink);
+  /* The nine things the voice profile learns, three parallel columns. */
+  .tell-list {
+    margin: 24px 0 8px;
+    display: grid;
+    grid-template-columns: 1fr;
+    border-top: 1px solid var(--hairline);
   }
-  .user-need .qual { color: var(--muted); }
+  @media (min-width: 720px) { .tell-list { grid-template-columns: repeat(3, 1fr); } }
+  .tell-list > div {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+  @media (min-width: 720px) {
+    .tell-list > div {
+      padding: 22px 22px 22px 0;
+      border-bottom: none;
+      border-right: 1px solid var(--hairline);
+    }
+    .tell-list > div:last-child { border-right: none; padding-right: 0; }
+    .tell-list > div:not(:first-child) { padding-left: 22px; }
+  }
+  .tell-list dt {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .tell-list dd { margin: 0; }
+  .tell-list ol { list-style: none; margin: 0; padding: 0; }
+  .tell-list li {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 6px 0;
+    font-size: 15.5px;
+    line-height: 1.35;
+    text-wrap: pretty;
+  }
+  .tell-list .n {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    flex: 0 0 16px;
+  }
 
   .prompt-box {
-    border: 1px solid var(--hairline);
     border-radius: 10px;
     background: var(--surface);
     margin: 24px 0 40px;
     overflow: hidden;
+    box-shadow: var(--shadow-border);
   }
   .prompt-box-head {
     display: flex;
@@ -207,6 +281,18 @@
     letter-spacing: 0.14em;
     color: var(--muted);
   }
+  /* ui.css .copy-btn assumes a bare border; here it sits on --surface inside
+     a card that already carries the shadow-border ring, so switch the chip
+     to the same shadow language instead of doubling up on borders. */
+  .prompt-box-head .copy-btn {
+    border: none;
+    box-shadow: var(--shadow-border);
+    transition-property: box-shadow, color, transform;
+    transition-duration: 0.15s;
+    transition-timing-function: ease-out;
+  }
+  .prompt-box-head .copy-btn:hover { box-shadow: var(--shadow-border-hover); }
+  .prompt-box-head .copy-btn:active { transform: scale(0.96); }
   .prompt-box pre {
     margin: 0;
     padding: 22px 20px;
@@ -218,6 +304,7 @@
     word-wrap: break-word;
     overflow-x: auto;
   }
+  .prompt-box-foot { padding: 4px 20px 18px; }
 
   .ba-grid {
     display: grid;
@@ -227,10 +314,10 @@
   }
   @media (min-width: 720px) { .ba-grid { grid-template-columns: 1fr 1fr; } }
   .ba-col {
-    border: 1px solid var(--hairline);
     border-radius: 10px;
     padding: 20px;
     background: var(--paper);
+    box-shadow: var(--shadow-border);
   }
   .ba-col .ba-label {
     font-family: var(--mono);
@@ -241,7 +328,7 @@
     margin-bottom: 12px;
   }
   .ba-col.after { background: var(--surface); }
-  .ba-col p { font-size: 16px; line-height: 1.6; margin-bottom: 0.8em; }
+  .ba-col p { font-size: 16px; line-height: 1.6; margin-bottom: 0.8em; text-wrap: pretty; }
   .ba-col p:last-child { margin-bottom: 0; }
 
   .case-next {
@@ -277,6 +364,7 @@
     line-height: 1;
     letter-spacing: -0.02em;
     color: var(--black);
+    text-wrap: balance;
   }
   .case-next a.next-card h3 em { font-style: italic; }
   .case-next a.next-card p {
@@ -284,6 +372,7 @@
     color: var(--muted);
     margin-top: 8px;
     max-width: 56ch;
+    text-wrap: pretty;
   }
   .case-next a.next-card .arrow {
     font-family: var(--serif);
@@ -371,9 +460,10 @@
 
 <section class="case-hero">
   <div class="case-hero-inner">
-    <div class="eyebrow reveal d1"><span class="rule"></span> <strong>Prompt</strong> · Steal it · Free</div>
+    <div class="eyebrow reveal d1"><span class="rule"></span> <strong>Prompt</strong> · Free</div>
     <h1 class="reveal d2">/sound<em>like</em>me</h1>
-    <p class="standfirst reveal d3">Make AI write in your voice using a few writing samples. Write first, sound like yourself second.</p>
+    <p class="standfirst reveal d3">Make AI write in your voice.</p>
+    <p class="reveal d3"><a class="jump-link" href="#prompt">Skip to the prompt <span aria-hidden="true">&darr;</span></a></p>
     <dl class="case-meta reveal d4">
       <div><dt>Use case</dt><dd>Voice matching</dd></div>
       <div><dt>Works with</dt><dd>Claude, ChatGPT, Gemini</dd></div>
@@ -388,20 +478,64 @@
   <div class="case-body-inner">
 
     <h2><span class="num">&sect; 01</span>What it does</h2>
-    <p class="lead-stat"><strong>Your voice, learned from examples, applied to anything.</strong></p>
-    <p>Feed the prompt 2-3 samples of your writing and it builds a voice profile: how you sound, how you write, what makes you distinct. Confirm or tweak the profile, then paste any draft and it rewrites it to match.</p>
-    <div class="user-need">
-      <span class="qual">Use this when</span> AI-generated text sounds generic, corporate, or nothing like you<br>
-      <span class="qual">so that you can</span> ship drafts that read like you wrote them yourself
+    <p>"Write casually" gets you a LinkedIn post. This learns nine specifics instead, from 2-3 samples.</p>
+
+    <dl class="tell-list">
+      <div>
+        <dt>How you sound</dt>
+        <dd><ol>
+          <li><span class="n">01</span> Tone</li>
+          <li><span class="n">02</span> Vocabulary</li>
+          <li><span class="n">03</span> Quirks</li>
+        </ol></dd>
+      </div>
+      <div>
+        <dt>How you write</dt>
+        <dd><ol>
+          <li><span class="n">04</span> Sentence style</li>
+          <li><span class="n">05</span> Structure</li>
+          <li><span class="n">06</span> Pacing</li>
+        </ol></dd>
+      </div>
+      <div>
+        <dt>How you stand out</dt>
+        <dd><ol>
+          <li><span class="n">07</span> Signature habits</li>
+          <li><span class="n">08</span> Your do's</li>
+          <li><span class="n">09</span> Your don'ts</li>
+        </ol></dd>
+      </div>
+    </dl>
+
+    <h2><span class="num">&sect; 02</span>How it works</h2>
+    <p>Three steps to a draft that sounds like you.</p>
+    <ol class="steps">
+      <li><strong>Paste 2-3 writing samples.</strong> Emails, posts, docs, anything you actually wrote.</li>
+      <li><strong>Confirm the voice profile.</strong> Correct anything that's off before it rewrites a word.</li>
+      <li><strong>Paste any draft</strong>, get it back in your voice, with a changelog of what shifted.</li>
+    </ol>
+
+    <h2><span class="num">&sect; 03</span>Before / after</h2>
+    <p>One /soundlikeme pass on a founder's update. Highlights mark what changed.</p>
+    <div class="ba-grid">
+      <div class="ba-col before">
+        <div class="ba-label">Before (generic AI)</div>
+        <p><mark class="flag">I'm excited to share</mark> that we've made <mark class="flag">significant progress</mark> this quarter. Our team has been <mark class="flag">working diligently</mark>, and <mark class="flag">I'm pleased to report</mark> that we've exceeded our targets. The enterprise pipeline has doubled, the API shipped two weeks ahead of schedule, and Jamie's team successfully closed the Acme account. Here's what you need to know about our <mark class="flag">journey forward</mark>.</p>
+      </div>
+      <div class="ba-col after">
+        <div class="ba-label">After (/soundlikeme)</div>
+        <p>Good quarter, <mark class="voice">and I did not expect to write that</mark>. We beat the number. The enterprise pipeline doubled, the API shipped two weeks early, and Jamie <mark class="voice">resurrected the Acme deal after the rest of us had written its obituary</mark>. Full breakdown below, <mark class="voice">warts and all</mark>.</p>
+      </div>
     </div>
 
-    <h2><span class="num">&sect; 02</span>The prompt</h2>
-    <p>Copy the full prompt below and paste it into any AI chat. Then follow the three-step flow: share samples, confirm your voice profile, paste a draft to rewrite.</p>
+    <h2 id="prompt"><span class="num">&sect; 04</span>The prompt</h2>
+    <p>Free to copy and edit.</p>
     <div class="prompt-box">
       <div class="prompt-box-head">
         <span>Prompt &middot; v2.2</span>
         <button class="copy-btn" type="button" data-copy-target="prompt-text">Copy</button>
       </div>
+      <div class="disclosure" id="promptDisclosure" style="--disclosure-bg: var(--surface); --disclosure-max: min(46vh, 400px);">
       <pre id="prompt-text">You are a voice analyst and rewriter. Your job is to learn how someone writes, then rewrite content to match their voice.
 
 You work in three steps. Do not skip steps. Do not combine them.
@@ -483,23 +617,22 @@ Group changes by voice profile section. One line per change. Only include change
 After the rewrite, say:
 
 > Paste another draft anytime. I'll keep using this voice.</pre>
-    </div>
-
-    <h2><span class="num">&sect; 03</span>Before / after</h2>
-    <p>A founder's update email, drafted by Claude, then rewritten with /soundlikeme after profiling 3 of their real emails.</p>
-    <div class="ba-grid">
-      <div class="ba-col before">
-        <div class="ba-label">Before (generic AI)</div>
-        <p>I'm excited to share that we've made significant progress this quarter. Our team has been working diligently to deliver results, and I'm pleased to report that we've exceeded our targets. Here's what you need to know about our journey forward.</p>
       </div>
-      <div class="ba-col after">
-        <div class="ba-label">After (/soundlikeme)</div>
-        <p>Good quarter. We hit the number, beat it actually. Three things worth knowing: the enterprise pipeline doubled, we shipped the API two weeks early, and Jamie's team closed the Acme deal everyone said was dead. More below.</p>
+      <div class="prompt-box-foot">
+        <button class="disclosure-toggle" type="button" hidden aria-expanded="false" aria-controls="promptDisclosure">See the full prompt</button>
       </div>
     </div>
 
-    <h2><span class="num">&sect; 04</span>How it works</h2>
-    <p>Most people tell AI "write in a casual tone" or "be more conversational" and get back something that sounds like a LinkedIn post. The voice profile forces the model to learn specifics: your sentence length, your quirks, what you never do. Confirming the profile before any rewrite gives you a chance to correct the model's read on you. The rewrite rules then lock the model into editing mode rather than generation mode, so it changes how your draft sounds without changing what it says.</p>
+    <h3>Using Claude Code?</h3>
+    <p>Install /soundlikeme once and it auto-updates. No copying each time.</p>
+    <div class="prompt-box">
+      <div class="prompt-box-head">
+        <span>Claude Code</span>
+        <button class="copy-btn" type="button" data-copy-target="install-commands">Copy</button>
+      </div>
+      <pre id="install-commands">/plugin marketplace add mooch-agency/skills
+/plugin install skills@mooch-agency</pre>
+    </div>
 
   </div>
 </article>
@@ -560,6 +693,57 @@ After the rewrite, say:
           btn.classList.remove('copied');
         }, 2000);
       });
+    });
+  });
+
+  // Progressive disclosure on the full prompt. The collapse itself is
+  // JS-gated (.is-collapsible): with no JS the prompt renders in full
+  // rather than being clipped behind a toggle that never appears.
+  document.querySelectorAll('.disclosure-toggle[aria-controls]').forEach(function (btn) {
+    var body = document.getElementById(btn.getAttribute('aria-controls'));
+    if (!body) return;
+    var openLabel = 'Show less';
+    var closedLabel = btn.textContent.trim();
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    // Clamp first, then measure: scrollHeight is the full content height
+    // either way, but clientHeight must reflect the collapsed box.
+    body.classList.add('is-collapsible');
+    btn.hidden = body.scrollHeight <= body.clientHeight + 24;
+
+    // Hold the measured height only while the open animation runs, then
+    // release it. Leaving a pixel cap in place would re-clip the content
+    // the next time it reflows taller (narrower window, late font swap).
+    function release() {
+      body.style.maxHeight = 'none';
+    }
+    btn.addEventListener('click', function () {
+      var open = !body.classList.contains('open');
+      if (open) {
+        body.style.maxHeight = body.scrollHeight + 'px';
+        body.classList.add('open');
+        if (reduced.matches) {
+          release();                       // no transition fires, so don't wait
+        } else {
+          body.addEventListener('transitionend', function done (e) {
+            if (e.target !== body || e.propertyName !== 'max-height') return;
+            body.removeEventListener('transitionend', done);
+            release();
+          });
+        }
+      } else {
+        // Animating down from `none` doesn't transition, so land on a
+        // concrete height for a frame before removing .open.
+        body.style.maxHeight = body.scrollHeight + 'px';
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            body.classList.remove('open');
+            body.style.maxHeight = '';
+          });
+        });
+      }
+      btn.textContent = open ? openLabel : closedLabel;
+      btn.setAttribute('aria-expanded', String(open));
     });
   });
 </script>

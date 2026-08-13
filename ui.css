@@ -82,3 +82,86 @@
 .copy-btn:hover { border-color: var(--ink); }
 .copy-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .copy-btn.copied { color: var(--muted); }
+
+/* Progressive disclosure — promoted from /deslop (rule of three: deslop,
+   soundlikeme, and any future prompt page's long prompt/example).
+   Collapse to a fixed height, fade the cut edge, reveal on demand. A real
+   transition (not a snap) since this is an interactive toggle, not a
+   one-shot entrance: CSS transitions retarget cleanly if someone clicks
+   again mid-animation. The fade is a bottom gradient overlay rather than
+   mask-image, so it can crossfade in step with the height change instead
+   of cutting abruptly.
+
+   The clamp is deliberately gated behind .is-collapsible, which the toggle
+   JS adds on init. Collapsing content the reader cannot then expand is
+   worse than showing all of it, so with JS unavailable the element stays
+   its natural height and nothing is hidden.
+
+   Each page sets --disclosure-bg (to match the surface behind it) and
+   --disclosure-max (the collapsed height) inline on the .disclosure
+   element. While open, the JS pins max-height to the measured scrollHeight
+   only for the length of the animation, then releases it to `none`, so a
+   later reflow (window resize, font swap) can never clip the content.
+   --disclosure-max-open is just a floor for that in-flight state. */
+.disclosure { position: relative; }
+.disclosure.is-collapsible {
+  overflow: hidden;
+  max-height: var(--disclosure-max, 220px);
+  transition: max-height 0.4s var(--ease-decide);
+}
+.disclosure.is-collapsible::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 64px;
+  background: linear-gradient(to bottom, transparent, var(--disclosure-bg, var(--paper)));
+  opacity: 1;
+  transition: opacity 0.25s var(--ease-decide);
+  pointer-events: none;
+}
+.disclosure.is-collapsible.open {
+  max-height: var(--disclosure-max-open, 6000px);
+}
+.disclosure.is-collapsible.open::after { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .disclosure.is-collapsible, .disclosure.is-collapsible::after { transition: none; }
+}
+.disclosure-toggle {
+  font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--ink);
+  background: none; border: 0; cursor: pointer;
+  min-height: 44px; padding: 0; margin-top: 4px;
+  text-decoration: underline; text-decoration-color: var(--hairline);
+  text-underline-offset: 5px;
+}
+.disclosure-toggle:hover { text-decoration-color: var(--ink); }
+.disclosure-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+.disclosure-toggle[hidden] { display: none; }
+
+/* Before/after highlight marks for prompt pages. mark.flag marks a phrase
+   being removed, mark.voice marks one that came through. Both use a pale
+   wash rather than a solid highlight so the paragraph still reads as
+   prose; box-decoration-break lets multi-line marks wrap cleanly. */
+mark.flag, mark.voice {
+  color: inherit;
+  padding: 1px 3px;
+  margin: 0 -1px;
+  border-radius: 3px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+mark.flag { background: var(--flag-cut); }
+mark.voice { background: var(--flag-voice); }
+
+/* On paper there is no toggle to press, so a collapsed disclosure would
+   silently swallow most of the prompt. Print always shows everything.
+   These pages hide .copy-btn in print, which makes printing the intended
+   take-it-with-you path: clipping it would defeat the point. */
+@media print {
+  .disclosure, .disclosure.is-collapsible {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .disclosure.is-collapsible::after { display: none; }
+  .disclosure-toggle { display: none; }
+}

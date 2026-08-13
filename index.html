@@ -719,7 +719,7 @@
   .colophon-mark em { font-style: italic; }
   .colophon-nav {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 32px;
     padding-top: 36px;
     border-top: 1px solid var(--hairline-dark);
@@ -745,6 +745,9 @@
   }
   .colophon-col a:hover { opacity: 1; }
   .colophon-col a:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+  @media (max-width: 1080px) {
+    .colophon-nav { grid-template-columns: repeat(3, 1fr); gap: 32px 24px; }
+  }
   @media (max-width: 720px) {
     .colophon-nav { grid-template-columns: repeat(2, 1fr); gap: 28px 20px; }
   }
@@ -1263,6 +1266,12 @@
         <a href="https://joinhighway.vercel.app/">highway</a>
         <a href="https://usefortress.vercel.app">fortress</a>
         <a href="https://samantha.mooch.agency">samantha</a>
+      </div>
+      <div class="colophon-col">
+        <h4>Prompts</h4>
+        <a href="/say-less">Say Less</a>
+        <a href="/prompts/deslop">/deslop</a>
+        <a href="/prompts/soundlikeme">/soundlikeme</a>
       </div>
       <div class="colophon-col">
         <h4>Playthings</h4>

@@ -168,16 +168,39 @@
       <button class="copy-btn copied" type="button">Copied</button>
     </div>
     <p class="sg-note">.copy-btn from ui.css. Mono action chip used in prompt pages. Add .copied for the confirmed state.</p>
-    <div class="sg-buttons" style="margin-top:24px">
+  </section>
+
+  <!-- COMPONENTS -->
+  <section class="sg-section">
+    <h2 class="sg-h"><strong>05</strong> Components <span class="rule"></span></h2>
+    <div class="sg-buttons">
       <div style="padding:20px 24px;border-radius:10px;box-shadow:var(--shadow-border)">shadow-border</div>
       <div style="padding:20px 24px;border-radius:10px;box-shadow:var(--shadow-border-hover)">shadow-border-hover</div>
     </div>
     <p class="sg-note">--shadow-border / --shadow-border-hover from tokens.css. A 1px ring plus two soft lift layers, for cards that fake depth with a solid border. Used on prompt-page cards.</p>
+
+    <div style="margin-top:24px; max-width:480px; border-radius:10px; background:var(--surface); box-shadow:var(--shadow-border); overflow:hidden;">
+      <div class="disclosure" id="sgDisclosure" style="--disclosure-bg: var(--surface); --disclosure-max: 90px;">
+        <div style="padding:16px 20px; font-family:var(--mono); font-size:13px; line-height:1.6;">
+          Line one of collapsed content.<br>Line two, still visible.<br>Line three, right at the fade.<br>Line four is past the collapsed height.<br>Line five only shows once opened.
+        </div>
+      </div>
+      <div style="padding:4px 20px 16px;">
+        <button class="disclosure-toggle" type="button" aria-expanded="false" aria-controls="sgDisclosure">See more</button>
+      </div>
+    </div>
+    <p class="sg-note">.disclosure / .disclosure-toggle from ui.css. Collapses to --disclosure-max, fades the cut edge via --disclosure-bg. The clamp is gated behind .is-collapsible, added by the toggle's click handler (copied per-page, see /prompts/deslop), so with no JS the content renders in full rather than being clipped behind a toggle that never appears. The handler releases the measured height once the open animation ends, so a later resize can't re-clip it, and print always expands.</p>
+
+    <div class="sg-buttons" style="margin-top:24px; align-items:flex-start;">
+      <p style="max-width:320px; font-size:15px;">A draft with <mark class="flag">some AI phrasing</mark> flagged for removal.</p>
+      <p style="max-width:320px; font-size:15px;">A rewrite where <mark class="voice">a real voice</mark> comes through.</p>
+    </div>
+    <p class="sg-note">mark.flag / mark.voice from ui.css, tinted from --flag-cut and --flag-voice. Pale washes, not solid highlights, so the paragraph still reads as prose.</p>
   </section>
 
   <!-- MOTION -->
   <section class="sg-section">
-    <h2 class="sg-h"><strong>05</strong> Motion <span class="rule"></span></h2>
+    <h2 class="sg-h"><strong>06</strong> Motion <span class="rule"></span></h2>
     <div class="sg-buttons" style="margin-bottom:24px">
       <button class="ghost" id="replay" type="button">Replay entrances</button>
     </div>
@@ -209,7 +232,31 @@
   (function () {
     var rs = getComputedStyle(document.documentElement);
 
-    var colours = ['--black', '--ink', '--paper', '--surface', '--muted', '--muted-small', '--hairline', '--hairline-focus'];
+    // Read the colour tokens straight out of tokens.css rather than keeping a
+    // hand-maintained list here. A hardcoded array is exactly how this guide
+    // drifts: a token gets added to tokens.css and silently never appears.
+    // Anything that resolves to a colour is a swatch; type/layout/motion
+    // tokens are filtered out by name prefix.
+    var SKIP = /^--(serif|sans|mono|pad-x|rhythm|eyebrow-gap|max|col|ease-|t-|stagger-|word-|rise-|q-step|countup-|shadow-)/;
+    var colours = [];
+    for (var s = 0; s < document.styleSheets.length; s++) {
+      var rules;
+      try { rules = document.styleSheets[s].cssRules; } catch (e) { continue; }
+      for (var r = 0; r < (rules || []).length; r++) {
+        var rule = rules[r];
+        if (!rule.style || !rule.selectorText || rule.selectorText.indexOf(':root') === -1) continue;
+        for (var p = 0; p < rule.style.length; p++) {
+          var prop = rule.style[p];
+          if (prop.indexOf('--') !== 0 || SKIP.test(prop)) continue;
+          if (colours.indexOf(prop) === -1) colours.push(prop);
+        }
+      }
+    }
+    // Fallback if the stylesheet isn't readable (file:// origin, say).
+    if (!colours.length) {
+      colours = ['--black', '--ink', '--paper', '--surface', '--muted', '--muted-small', '--hairline', '--hairline-focus', '--error', '--success'];
+    }
+
     var sw = document.getElementById('swatches');
     colours.forEach(function (name) {
       var val = rs.getPropertyValue(name).trim();
@@ -243,6 +290,45 @@
       boxes.forEach(function (b) { b.style.animation = 'none'; });
       void document.getElementById('revealRow').offsetWidth;
       boxes.forEach(function (b) { b.style.animation = ''; });
+    });
+
+    // Same disclosure-toggle handler the prompt pages use (see
+    // /prompts/deslop): JS applies the clamp, and the measured height is
+    // released once the open animation finishes so a resize can't re-clip.
+    document.querySelectorAll('.disclosure-toggle[aria-controls]').forEach(function (btn) {
+      var body = document.getElementById(btn.getAttribute('aria-controls'));
+      if (!body) return;
+      var openLabel = 'See less';
+      var closedLabel = btn.textContent.trim();
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+      body.classList.add('is-collapsible');
+      function release() { body.style.maxHeight = 'none'; }
+      btn.addEventListener('click', function () {
+        var open = !body.classList.contains('open');
+        if (open) {
+          body.style.maxHeight = body.scrollHeight + 'px';
+          body.classList.add('open');
+          if (reduced.matches) {
+            release();
+          } else {
+            body.addEventListener('transitionend', function done (e) {
+              if (e.target !== body || e.propertyName !== 'max-height') return;
+              body.removeEventListener('transitionend', done);
+              release();
+            });
+          }
+        } else {
+          body.style.maxHeight = body.scrollHeight + 'px';
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              body.classList.remove('open');
+              body.style.maxHeight = '';
+            });
+          });
+        }
+        btn.textContent = open ? openLabel : closedLabel;
+        btn.setAttribute('aria-expanded', String(open));
+      });
     });
   })();
 </script>

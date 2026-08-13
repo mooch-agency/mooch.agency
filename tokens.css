@@ -29,6 +29,7 @@
   --hairline-focus: #86868b;  /* Darker hairline for focusable element borders */
   --hairline-dark: #2a2a2c;   /* Hairline rule for dark-footer (.colophon-dark) context */
   --error: #b00020;
+  --success: #0a7d3f;
 
   /* Elevation. Shadow-as-border: a 1px ring plus two soft lift layers,
      for cards/buttons that currently fake depth with a solid border.
@@ -36,6 +37,12 @@
      only, since the site has no dark theme outside the one-off dark footer. */
   --shadow-border: 0px 0px 0px 1px rgba(0, 0, 0, 0.06), 0px 1px 2px -1px rgba(0, 0, 0, 0.06), 0px 2px 4px 0px rgba(0, 0, 0, 0.04);
   --shadow-border-hover: 0px 0px 0px 1px rgba(0, 0, 0, 0.08), 0px 1px 2px -1px rgba(0, 0, 0, 0.08), 0px 2px 4px 0px rgba(0, 0, 0, 0.06);
+
+  /* Before/after flag tints for prompt pages. --flag-cut marks a phrase
+     being removed, --flag-voice marks one that came through. Both derive
+     from the semantic status colours so the pair stays symmetric. */
+  --flag-cut: color-mix(in srgb, var(--error) 10%, transparent);
+  --flag-voice: color-mix(in srgb, var(--success) 12%, transparent);
 
   /* Type families */
   --serif: 'Instrument Serif', 'Instrument Serif Fallback', 'Times New Roman', serif;

@@ -263,19 +263,6 @@
     flex: 0 0 16px;
   }
 
-  /* Slop flags in the "before" column: a pale wash behind each offending
-     phrase, tinted from --error so it reads as a flag rather than a
-     highlighter. Kept light enough to hold AA contrast for the ink on top. */
-  .ba-col mark.flag {
-    background: color-mix(in srgb, var(--error) 10%, transparent);
-    color: inherit;
-    padding: 1px 3px;
-    margin: 0 -1px;
-    border-radius: 3px;
-    box-decoration-break: clone;
-    -webkit-box-decoration-break: clone;
-  }
-
   .prompt-box {
     border-radius: 10px;
     background: var(--surface);
@@ -345,52 +332,6 @@
   .ba-col.after { background: var(--surface); }
   .ba-col p { font-size: 16px; line-height: 1.6; margin-bottom: 0.8em; text-wrap: pretty; }
   .ba-col p:last-child { margin-bottom: 0; }
-
-  /* Progressive disclosure, reused for both the messy "before" draft and the
-     full prompt: collapse to a fixed height, fade the cut edge, reveal on
-     demand. A real transition (not a snap) since this is an interactive
-     toggle, not a one-shot entrance: CSS transitions retarget cleanly if
-     someone clicks again mid-animation. The fade is a bottom gradient overlay
-     rather than mask-image, so it can crossfade in step with the height
-     change instead of cutting abruptly. --disclosure-bg matches whatever
-     surface the content sits on, so the fade blends into it. */
-  .disclosure {
-    position: relative;
-    overflow: hidden;
-    max-height: var(--disclosure-max, 220px);
-    transition: max-height 0.4s var(--ease-decide);
-  }
-  .disclosure::after {
-    content: "";
-    position: absolute;
-    inset: auto 0 0 0;
-    height: 64px;
-    background: linear-gradient(to bottom, transparent, var(--disclosure-bg, var(--paper)));
-    opacity: 1;
-    transition: opacity 0.25s var(--ease-decide);
-    pointer-events: none;
-  }
-  /* The open height is set inline by the toggle JS from the measured
-     scrollHeight, so long content (the full prompt is well over 2000px)
-     never clips; this rule is just the no-JS fallback. */
-  .disclosure.open {
-    max-height: var(--disclosure-max-open, 6000px);
-  }
-  .disclosure.open::after { opacity: 0; }
-  @media (prefers-reduced-motion: reduce) {
-    .disclosure, .disclosure::after { transition: none; }
-  }
-  .disclosure-toggle {
-    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
-    letter-spacing: 0.14em; color: var(--ink);
-    background: none; border: 0; cursor: pointer;
-    min-height: 44px; padding: 0; margin-top: 4px;
-    text-decoration: underline; text-decoration-color: var(--hairline);
-    text-underline-offset: 5px;
-  }
-  .disclosure-toggle:hover { text-decoration-color: var(--ink); }
-  .disclosure-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
-  .disclosure-toggle[hidden] { display: none; }
 
   .case-next {
     padding: var(--rhythm) var(--pad-x);
@@ -751,20 +692,52 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
     });
   });
 
-  // Progressive disclosure, shared by the "before" draft and the full
-  // prompt: only surface a toggle if its collapsed fade is actually hiding
-  // content, and label each toggle from its own controlled element.
+  // Progressive disclosure on the full prompt. The collapse itself is
+  // JS-gated (.is-collapsible): with no JS the prompt renders in full
+  // rather than being clipped behind a toggle that never appears.
   document.querySelectorAll('.disclosure-toggle[aria-controls]').forEach(function (btn) {
     var body = document.getElementById(btn.getAttribute('aria-controls'));
     if (!body) return;
     var openLabel = 'Show less';
     var closedLabel = btn.textContent.trim();
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    // Clamp first, then measure: scrollHeight is the full content height
+    // either way, but clientHeight must reflect the collapsed box.
+    body.classList.add('is-collapsible');
     btn.hidden = body.scrollHeight <= body.clientHeight + 24;
+
+    // Hold the measured height only while the open animation runs, then
+    // release it. Leaving a pixel cap in place would re-clip the content
+    // the next time it reflows taller (narrower window, late font swap).
+    function release() {
+      body.style.maxHeight = 'none';
+    }
     btn.addEventListener('click', function () {
-      var open = body.classList.toggle('open');
-      // Animate to the real content height, not a guessed cap: the full
-      // prompt is taller than any fixed max would safely allow.
-      body.style.maxHeight = open ? body.scrollHeight + 'px' : '';
+      var open = !body.classList.contains('open');
+      if (open) {
+        body.style.maxHeight = body.scrollHeight + 'px';
+        body.classList.add('open');
+        if (reduced.matches) {
+          release();                       // no transition fires, so don't wait
+        } else {
+          body.addEventListener('transitionend', function done (e) {
+            if (e.target !== body || e.propertyName !== 'max-height') return;
+            body.removeEventListener('transitionend', done);
+            release();
+          });
+        }
+      } else {
+        // Animating down from `none` doesn't transition, so land on a
+        // concrete height for a frame before removing .open.
+        body.style.maxHeight = body.scrollHeight + 'px';
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            body.classList.remove('open');
+            body.style.maxHeight = '';
+          });
+        });
+      }
       btn.textContent = open ? openLabel : closedLabel;
       btn.setAttribute('aria-expanded', String(open));
     });
