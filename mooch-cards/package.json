@@ -1,0 +1,32 @@
+{
+  "name": "mooch-cards",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "card": "tsx card.ts",
+    "quote": "tsx card.ts quote",
+    "stat": "tsx card.ts stat",
+    "compare": "tsx card.ts side-by-side",
+    "hero": "tsx card.ts hero",
+    "list": "tsx card.ts list",
+    "definition": "tsx card.ts definition",
+    "hook": "tsx card.ts hook",
+    "cta": "tsx card.ts cta",
+    "steps": "tsx card.ts steps",
+    "portfolio": "tsx card.ts portfolio",
+    "team-cover": "tsx card.ts team-cover",
+    "team-member": "tsx card.ts team-member"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "react": "^18.3.1",
+    "satori": "^0.10.13"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.3.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  }
+}
