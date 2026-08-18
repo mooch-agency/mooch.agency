@@ -15,6 +15,7 @@
 // since one ask is two upstream calls), origin check, kill switch.
 
 const SAYLESS_SYSTEM = require("./_say-less-system.js");
+const { startRun, endRun } = require("./_langsmith.js");
 
 const MODEL = process.env.SAYLESS_MODEL || "claude-sonnet-5";
 const MAX_TOKENS = 1500;           // headroom over the longest benchmark reply (~330 words)
@@ -60,6 +61,13 @@ function totalWords(text) {
   return String(text || "").split(/\s+/).filter((w) => /[0-9A-Za-z]/.test(w)).length;
 }
 
+// Hostname only. Enough to separate HN from search from direct, without
+// retaining whatever a referring site happened to put in its query string.
+function refererHost(referer) {
+  if (!referer) return null;
+  try { return new URL(referer).hostname; } catch { return null; }
+}
+
 async function streamArm(arm, system, question, write, signal) {
   const body = {
     model: MODEL,
@@ -83,13 +91,13 @@ async function streamArm(arm, system, question, write, signal) {
     });
   } catch (e) {
     write({ arm, error: "Upstream unreachable." });
-    return;
+    return { error: "Upstream unreachable." };
   }
   if (!upstream.ok || !upstream.body) {
     const detail = await upstream.text().catch(() => "");
     console.error("anthropic error", arm, upstream.status, detail.slice(0, 500));
     write({ arm, error: "Answer failed. Try again." });
-    return;
+    return { error: "http " + upstream.status };
   }
 
   const reader = upstream.body.getReader();
@@ -115,8 +123,9 @@ async function streamArm(arm, system, question, write, signal) {
         // check the loop falls through to "done" below and reports a
         // truncated answer as a clean, complete one.
         if (obj.type === "error") {
-          write({ arm, error: (obj.error && obj.error.message) || "Answer failed. Try again." });
-          return;
+          const msg = (obj.error && obj.error.message) || "Answer failed. Try again.";
+          write({ arm, error: msg });
+          return { error: msg, text: full, words: totalWords(full) };
         }
         if (obj.type === "content_block_delta" && obj.delta && obj.delta.text) {
           full += obj.delta.text;
@@ -126,9 +135,13 @@ async function streamArm(arm, system, question, write, signal) {
     }
   } catch (e) {
     write({ arm, error: "Stream interrupted." });
-    return;
+    return { error: "Stream interrupted.", text: full, words: totalWords(full) };
   }
-  write({ arm, done: true, words: totalWords(full) });
+  const words = totalWords(full);
+  write({ arm, done: true, words });
+  // Returned so the handler can close the LangSmith trace with both answers
+  // side by side; the client already has everything it needs from write().
+  return { text: full, words };
 }
 
 module.exports = async function handler(req, res) {
@@ -180,12 +193,24 @@ module.exports = async function handler(req, res) {
   if (res.flushHeaders) res.flushHeaders();
 
   let closed = false;
+  // armsDone separates the two reasons this connection can close. The client
+  // calls es.close() the instant both arms settle, so req 'close' fires on
+  // every successful run too: without this flag, a completed run and a
+  // walked-away visitor look identical, and everything would be recorded as
+  // abandoned. Only a close that arrives while the answers are still
+  // streaming is a real abandonment.
+  let armsDone = false;
+  let abandoned = false;
   // A closed connection has to cancel the upstream Anthropic calls, not just
   // stop writing to a dead response: without this, Stop (or a closed tab)
   // still runs both replies to completion server-side, and Anthropic still
   // bills for tokens generated after nobody is listening.
   const controller = new AbortController();
-  req.on("close", () => { closed = true; controller.abort(); });
+  req.on("close", () => {
+    closed = true;
+    if (!armsDone) abandoned = true;
+    controller.abort();
+  });
 
   function write(obj) {
     if (closed) return;
@@ -199,11 +224,42 @@ module.exports = async function handler(req, res) {
     try { res.write(": ping\n\n"); } catch { closed = true; }
   }, PING_EVERY_MS);
 
-  await Promise.all([
+  // Opened before either arm starts, so a question is recorded even if the
+  // visitor closes the tab mid-stream. Hostname only, never the full referer:
+  // that is all we need to tell HN traffic from the rest, and a full referer
+  // URL can carry a session token or an email hash in its query string from
+  // whatever site linked here. No IP and no user agent either.
+  const runId = startRun(prompt, {
+    model: MODEL,
+    prompt_words: words,
+    country: req.headers["x-vercel-ip-country"] || null,
+    referrer_host: refererHost(req.headers.referer),
+  });
+
+  const [def, say] = await Promise.all([
     streamArm("default", null, prompt, write, controller.signal),
     streamArm("sayless", SAYLESS_SYSTEM, prompt, write, controller.signal),
   ]);
+  armsDone = true;
 
   clearInterval(ping);
+
+  // pct_shorter is the page's own headline metric, stored per run so the 71%
+  // claim can be re-derived from real questions, not just the benchmark. An
+  // arm that errored mid-stream still carries a word count, for the partial
+  // text it managed, so both arms have to be clean before the ratio means
+  // anything: otherwise a truncated 50-word answer against a complete 19-word
+  // one records a confident, entirely fictional 62%.
+  const comparable = !def.error && !say.error && def.words > 0 && say.words > 0;
+  // Awaited, unlike the opening call: once res.end() runs this invocation can
+  // be frozen, and an un-awaited PATCH would die with it, leaving the run
+  // open with a question and no answers. Bounded by the client's own timeout.
+  await endRun(runId, {
+    default: def,
+    sayless: say,
+    pct_shorter: comparable ? Math.round((1 - say.words / def.words) * 100) : null,
+    abandoned,
+  });
+
   try { res.end(); } catch {}
 };

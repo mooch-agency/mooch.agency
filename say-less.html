@@ -213,13 +213,23 @@
   .example-link {
     /* margin-inline auto: the stage is centred at every width, so the link
        centres under the field rather than orphaned at the form's left edge.
-       44px min-height holds the same touch-target floor as .ghost/.go. */
-    display: block; margin: 10px auto 0; padding: 4px 0; min-height: 44px;
+       44px min-height holds the same touch-target floor as .ghost/.go.
+
+       Underlined and at --ink at rest, not on hover only. Analytics showed
+       14 visitors pressing this against 115 landing on the page, and as
+       undecorated 13px --muted-small text it read as a caption describing
+       the field rather than a control you can press. text-decoration, not
+       the old border-bottom: the border draws at the foot of the 44px touch
+       box, a good 25px adrift of the text, so it never looked like a link.
+       Still quieter than .go, which stays the primary action. */
+    display: block; margin: 12px auto 0; padding: 4px 0; min-height: 44px;
     background: none; border: 0; cursor: pointer;
-    font-family: var(--sans); font-size: 13px; color: var(--muted-small);
-    border-bottom: 1px solid transparent; width: fit-content;
+    font-family: var(--sans); font-size: 14px; color: var(--ink);
+    text-decoration: underline; text-decoration-thickness: 1px;
+    text-underline-offset: 4px; text-decoration-color: var(--hairline-focus);
+    width: fit-content;
   }
-  .example-link:hover { color: var(--paper); border-bottom-color: var(--hairline-focus); }
+  .example-link:hover { color: var(--paper); text-decoration-color: var(--paper); }
   .example-link:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
 
   /* The one control. No fake prompt glyph: the accent rule at the left edge
@@ -302,9 +312,10 @@
 
   /* One terminal window, tmux-style: each half carries its own count and
      gauge in the chrome. The result sentence lives in .delta-note below.
-     (An earlier delta badge rode this wrapper's top edge; removed, it got
-     in the way of the pane chrome.) */
-  .term-wrap { position: relative; margin-top: 34px; }
+     (An earlier delta badge rode this wrapper's top edge; removed. The
+     margin-top it needed for clearance is gone too, so spacing above the
+     terminal now comes only from the hero's own bottom padding.) */
+  .term-wrap { position: relative; }
   @media (min-width: 720px) { .pane { padding-top: clamp(24px, 3vw, 34px); } }
   .meter { display: flex; align-items: center; gap: 14px; margin: 0 0 14px; }
   .meter .n { font-size: clamp(24px, 3.4vw, 32px); }
@@ -786,19 +797,30 @@ When it's done, tell me to run `/reload-plugins`, then test by asking "What's th
 // [label, prompt]: kept in the same shape as the source page so the two stay
 // diffable. Only the prompt is used here, since the example control loads
 // straight into the field rather than showing a chip.
+// The old deck was twelve variations on "explain a beginner concept", which
+// is why people shuffled it and left: 42 presses from 14 visitors against 23
+// asks. A reader who already knows what an API is has no reason to read
+// either answer, so measuring the two is pointless to them. These four
+// groups each give someone a reason to want the answer, not just its length.
 const EXAMPLES = [
-  ["Git vs GitHub?", "What's the difference between Git and GitHub?"],
-  ["What's an API?", "Explain what an API is in simple terms."],
-  ["Undo a commit", "How do I undo my last Git commit?"],
-  ["Python or JavaScript?", "Should I learn Python or JavaScript first?"],
-  ["Center a div", "How do I center a div in CSS?"],
-  ["What's a 404?", "What's a 404 error and why does it happen?"],
-  ["Explain recursion", "Explain recursion like I'm new to coding."],
-  ["What's the cloud?", "What actually is the cloud, physically?"],
-  ["Rename a branch", "How do I rename a Git branch?"],
-  ["== vs === ?", "What's the difference between == and === in JavaScript?"],
+  // One-word answers, where the default's sprawl is self-evidently absurd.
   ["Default Postgres port?", "What's the default Postgres port?"],
-  ["Resolve a merge conflict", "How do I resolve a git merge conflict?"],
+  ["What does kill -9 do?", "What does the -9 in kill -9 actually do?"],
+  // Decisions. The default hedges both sides at length; Say Less commits to
+  // one and says why. This is the sharpest contrast the demo can show, and
+  // the deck previously had none of it.
+  ["REST or GraphQL?", "Should I use REST or GraphQL for a new internal API?"],
+  ["Postgres or Mongo?", "Postgres or MongoDB for a new product?"],
+  ["Kubernetes for 3 people?", "Is Kubernetes overkill for a three-person team?"],
+  ["Move to TypeScript?", "Is it worth migrating a 50,000-line JavaScript codebase to TypeScript?"],
+  // Contested takes: you want the verdict, and to see whether it agrees.
+  ["Tabs or spaces?", "Tabs or spaces?"],
+  ["Are ORMs worth it?", "Are ORMs worth it?"],
+  ["Is useEffect overused?", "Is useEffect overused in React?"],
+  // Questions notorious for burying you in text.
+  ["Fix a merge conflict", "How do I resolve a git merge conflict?"],
+  ["Fix a CORS error", "How do I fix a CORS 'No Access-Control-Allow-Origin' error?"],
+  ["Center a div", "How do I center a div in CSS?"],
 ];
 
 // Vercel Analytics custom events. window.va is bootstrapped near the insights
@@ -1282,7 +1304,16 @@ f.addEventListener("submit", (e) => {
     return;
   }
 
-  track("sayless_ask", { prompt_words: promptWords, source: askSource });
+  // example is carried through so per-question submit rate is readable
+  // directly. sayless_random_question counts presses (42), sayless_ask counts
+  // the ones actually sent (23 across both sources): without the label on
+  // both sides we could see people shuffling past questions but not which
+  // ones they were shuffling past.
+  track("sayless_ask", {
+    prompt_words: promptWords,
+    source: askSource,
+    example: askSource === "random" && lastExample >= 0 ? EXAMPLES[lastExample][0] : null,
+  });
   runCount++;
   // Reaching for Ask a second time is proof enough on its own; it doesn't
   // wait for this run to finish, and it preempts a dwell timer still running
@@ -1388,16 +1419,12 @@ if (feedbackLink) {
 }
 </script>
 
-<!-- Vercel Web Analytics (static-site install). Activates once Web Analytics is
-     enabled on the mooch.agency Vercel project; script served at /_vercel/insights/script.js -->
+<!-- Vercel Web Analytics and Speed Insights. analytics.js injects both,
+     unless this browser has opted out via ?notrack=1; see analytics.js. -->
 <script>
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
-<script defer src="/_vercel/insights/script.js"></script>
-
-<!-- Vercel Speed Insights (static-site install). Activates once Speed Insights is
-     enabled on the project; script served at /_vercel/speed-insights/script.js -->
-<script defer src="/_vercel/speed-insights/script.js"></script>
+<script defer src="/analytics.js"></script>
 
 </body>
 </html>

@@ -143,6 +143,7 @@
     <li><strong>Analytics:</strong> We use Vercel Web Analytics and Speed Insights. These collect anonymous, aggregated page-view data (page URL, referrer, country, device type, browser). No cookies are set. No personal data is collected. Vercel does not sell or share this data.</li>
     <li><strong>Contact forms and email:</strong> If you email us at hey@mooch.agency or book a discovery call, we store your name and email address to respond and follow up. We do not add you to any marketing list.</li>
     <li><strong>AI tools:</strong> Some pages (e.g. the Paul Graham rewriter) send text you enter to an AI API for processing. We do not store what you type after the request completes. The API provider (Anthropic) processes it under their own data policy and does not use it for training.</li>
+    <li><strong>Say Less demo:</strong> The <a href="/say-less">Say Less</a> comparison is the one exception. We store the question you submit and both answers it produces, so we can see which questions the demo handles well and check the published word-count claim against real use. These are kept in LangSmith, our tracing tool, for 12 months and then deleted. We store the country and referring site alongside them, but never your IP address, and we do not use any of it for training. To have yours deleted sooner, email <a href="mailto:hey@mooch.agency">hey@mooch.agency</a>. Please do not enter personal or confidential information.</li>
   </ul>
 
   <h2>What we do not do</h2>
@@ -176,8 +177,7 @@
 <script>
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
-<script defer src="/_vercel/insights/script.js"></script>
-<script defer src="/_vercel/speed-insights/script.js"></script>
+<script defer src="/analytics.js"></script>
 
 </body>
 </html>
