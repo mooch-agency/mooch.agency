@@ -256,7 +256,11 @@
   .work-row:hover { background: var(--surface); }
 
   /* ───────── Free audit band (Treatment B) ───────── */
-  .audit-band { background: var(--surface); border-bottom: 1px solid var(--hairline); }
+  /* --cat-ai over --surface: at near-white the band read as just another
+     quiet block, easy to mistake for a newsletter strip while scrolling.
+     The tint borrows the bento cards' AI category colour so the section
+     break is legible without introducing an unrelated new hue. */
+  .audit-band { background: var(--cat-ai); border-bottom: 1px solid var(--hairline); }
   .audit-band-inner { max-width: var(--col); }
   .audit-form { margin-top: 32px; }
   /* flex-end keeps the button on the input's baseline now the fields carry labels. */
