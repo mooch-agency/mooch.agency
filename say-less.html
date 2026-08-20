@@ -727,7 +727,8 @@
 <section class="install" id="install" tabindex="-1" aria-labelledby="install-heading">
   <div class="rig">
     <h2 id="install-heading">Add to Claude Code</h2>
-    <p>Copy the prompt, paste it into Claude Code.</p>
+    <p>Copy the prompt, paste it into Claude Code. One line, same on the
+      terminal and the desktop app.</p>
 
     <div class="install-actions">
       <button class="pill" type="button" data-copy-target="install-prompt">Copy the prompt</button>
@@ -743,11 +744,7 @@
           <span>Prompt</span>
           <button class="copy-btn" type="button" data-copy-target="install-prompt">Copy</button>
         </div>
-        <pre id="install-prompt">Install the Say Less plugin from mooch-agency/say-less.
-
-Use /plugin if it's available; if not, add it to .claude/settings.json.
-
-When it's done, tell me to start a new session, then test by asking "What's the default Postgres port?"</pre>
+        <pre id="install-prompt">Install the Say Less plugin — follow the install instructions in AGENTS.md at github.com/mooch-agency/say-less.</pre>
       </div>
       <p>Manual install (terminal only):</p>
       <div class="codeblock">
@@ -758,7 +755,7 @@ When it's done, tell me to start a new session, then test by asking "What's the 
         <pre id="install-commands">/plugin marketplace add mooch-agency/say-less
 /plugin install say-less@say-less</pre>
       </div>
-      <p>On the desktop app or the web, <code>/plugin</code> isn't available as a typed command &mdash; use the prompt above, or read the <a href="https://github.com/mooch-agency/say-less/blob/main/INSTALL.md">per-surface install guide</a>.</p>
+      <p>On the desktop app or the web, <code>/plugin</code> isn't available as a typed command &mdash; use the prompt above, which handles every surface, or read the <a href="https://github.com/mooch-agency/say-less/blob/master/INSTALL.md">per-surface install guide</a>.</p>
       <p class="feedback-line">Something off, or working well? <a id="feedbackLink" href="mailto:hey@mooch.agency?subject=Say%20Less%20beta%20feedback">hey@mooch.agency</a>.</p>
       </div>
     </div>
