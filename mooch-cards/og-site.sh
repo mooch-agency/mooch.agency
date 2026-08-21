@@ -54,7 +54,29 @@ card paulgraham \
   --domain "paulgraham.mooch.agency" \
   --scale 1.15
 
+card deslop \
+  --eyebrow "Prompt" \
+  --title "*/deslop*" \
+  --subtitle "Remove the red flags of AI writing." \
+  --domain "mooch.agency/prompts/deslop" \
+  --tint prompt --scale 1.45
+
+card soundlikeme \
+  --eyebrow "Prompt" \
+  --title "*/soundlikeme*" \
+  --subtitle "Make AI write in your voice." \
+  --domain "mooch.agency/prompts/soundlikeme" \
+  --tint prompt --scale 1.1
+
+card ready \
+  --eyebrow "Self-audit" \
+  --title "Ready to *automate*,\nor just keen?" \
+  --subtitle "6 questions. A readiness score and 3 next steps." \
+  --domain "mooch.agency/ready" \
+  --tint ai --scale 0.85
+
 echo "Selected work"
+
 card gov-uk \
   --eyebrow "Selected work" \
   --title "*GOV.UK*" \
