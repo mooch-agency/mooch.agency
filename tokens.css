@@ -38,6 +38,19 @@
   --shadow-border: 0px 0px 0px 1px rgba(0, 0, 0, 0.06), 0px 1px 2px -1px rgba(0, 0, 0, 0.06), 0px 2px 4px 0px rgba(0, 0, 0, 0.04);
   --shadow-border-hover: 0px 0px 0px 1px rgba(0, 0, 0, 0.08), 0px 1px 2px -1px rgba(0, 0, 0, 0.08), 0px 2px 4px 0px rgba(0, 0, 0, 0.06);
 
+  /* Dark-context surfaces. The one dark page (/say-less) and the dark footer
+     share these: a scrim for anything that sits over the page, a modal lift,
+     and a focus ring that reads on black where the light ring disappears. */
+  --scrim: rgba(0, 0, 0, 0.75);
+  --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.6);
+  --focus-ring-dark: 0 0 0 3px rgba(255, 255, 255, 0.08);
+
+  /* Claude's own orange, the one borrowed colour on the site. Marks Claude's
+     turn on /say-less (running state, install highlight) and nothing else. */
+  --claude: #d97757;
+  --claude-ring: color-mix(in srgb, var(--claude) 90%, transparent);
+  --claude-ring-out: color-mix(in srgb, var(--claude) 0%, transparent);
+
   /* Before/after flag tints for prompt pages. --flag-cut marks a phrase
      being removed, --flag-voice marks one that came through. Both derive
      from the semantic status colours so the pair stays symmetric. */

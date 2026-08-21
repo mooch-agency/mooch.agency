@@ -73,7 +73,7 @@ const EXCLUDED = new Set([
   'portfolio-all.html',             // portfolio index / lab page (noindex, not in sitemap)
   'portfolio-explorations.html',    // portfolio lab page (noindex, not in sitemap)
   'portfolio-explorations-2.html',  // portfolio lab page (noindex, not in sitemap)
-  'say-less.html',                  // Claude Code plugin, private beta, invite-only (noindex, not in sitemap)
+  'og-explorations.html',           // share-card review page (noindex, not in sitemap)
 ]);
 
 // Pages that legitimately sit in the sitemap AND carry noindex: the prompt
@@ -307,7 +307,11 @@ function checkColours(rel, raw) {
     const s = v.toLowerCase().replace(/\s+/g, '');
     return ['#000', '#000000', '#fff', '#ffffff', 'rgb(0,0,0)', 'rgba(0,0,0,1)', 'rgb(255,255,255)', 'rgba(255,255,255,1)'].includes(s);
   };
-  for (const { start, text } of chunks) {
+  // Comments are blanked (same length, so offsets still map to lines): a
+  // contrast table or a "was #ccc" note documents a colour, it doesn't ship one.
+  const stripComments = (css) => css.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '));
+  for (const { start, text: withComments } of chunks) {
+    const text = stripComments(withComments);
     // Ranges of `@media print { ... }` inside this chunk are exempt (print
     // stylesheets legitimately hardcode black/white).
     const printRanges = [];
