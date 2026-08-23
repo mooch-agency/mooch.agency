@@ -13,11 +13,17 @@
 <meta property="og:url" content="https://mooch.agency/[slug]">
 <meta property="og:title" content="[Project name] - Case study - Mooch">
 <meta property="og:description" content="[Description] - Case study by Mooch.">
-<meta property="og:image" content="https://mooch.agency/og-image.png">
+<!-- Every page gets its own card: add a block to mooch-cards/og-site.sh, run
+     ./og-site.sh, copy out/site/[slug].png to og-[slug].png in the repo root. -->
+<meta property="og:image" content="https://mooch.agency/og-[slug].png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="[Card title]. [Card subtitle]">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="[Project name] - Case study - Mooch">
 <meta name="twitter:description" content="[Description] - Case study by Mooch.">
-<meta name="twitter:image" content="https://mooch.agency/og-image.png">
+<meta name="twitter:image" content="https://mooch.agency/og-[slug].png">
+<meta name="twitter:image:alt" content="[Card title]. [Card subtitle]">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">

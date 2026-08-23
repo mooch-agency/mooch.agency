@@ -35,6 +35,12 @@ before `</body>` only if the page uses `data-reveal` / `data-stagger`. Put only
 page-specific layout in the inline `<style>`. Add public pages to `sitemap.xml` and
 `llms.txt`.
 
+Every public page ships its own share card. Add a `card` block to
+`mooch-cards/og-site.sh`, run `./og-site.sh`, copy `out/site/<slug>.png` to
+`og-<slug>.png` in the repo root, and point the page's `og:image` /
+`twitter:image` at it (with width, height and alt). `og-image.png` is the brand
+card and the fallback only.
+
 ## Voice
 British English, terse, no em dashes. Full house style: MOOCHBOT.md in Notion.
 

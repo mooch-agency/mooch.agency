@@ -7,18 +7,18 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
-<meta name="description" content="Cut Claude Code fluff by ~71%."><link rel="canonical" href="https://mooch.agency/say-less">
+<meta name="description" content="A Claude Code plugin that cuts fluff by 71%. Try it live on the page, then install it in one line."><link rel="canonical" href="https://mooch.agency/say-less">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://mooch.agency/say-less">
 <meta property="og:title" content="Say Less: try it live, cuts fluff 71% | Mooch">
-<meta property="og:description" content="Cut Claude Code fluff by ~71%.">
+<meta property="og:description" content="A Claude Code plugin that cuts fluff by 71%. Try it live on the page, then install it in one line.">
 <meta property="og:image" content="https://mooch.agency/og-say-less.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Make Claude say less. Cut Claude Code fluff by ~71%.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Say Less: try it live, cuts fluff 71% | Mooch">
-<meta name="twitter:description" content="Cut Claude Code fluff by ~71%.">
+<meta name="twitter:description" content="A Claude Code plugin that cuts fluff by 71%. Try it live on the page, then install it in one line.">
 <meta name="twitter:image" content="https://mooch.agency/og-say-less.png">
 <meta name="twitter:image:alt" content="Make Claude say less. Cut Claude Code fluff by ~71%.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -251,7 +251,7 @@
   }
   .field:focus-within {
     border-color: var(--paper);
-    box-shadow: 0 0 0 3px rgba(255,255,255,0.08);
+    box-shadow: var(--focus-ring-dark);
   }
   /* Wraps the accent bar and textarea only (not the go button, which is
      already self-rounded). overflow: hidden here is scoped to just this
@@ -342,7 +342,7 @@
     margin-top: 10px; min-height: 14px; font-variant-numeric: tabular-nums;
   }
   .state-line.fail { color: var(--error); }
-  .state-line.running { color: #d97757; }
+  .state-line.running { color: var(--claude); }
   @media (prefers-reduced-motion: no-preference) {
     .state-line { transition: color var(--t-deliver) var(--ease-deliver); }
   }
@@ -523,12 +523,12 @@
     padding: var(--pad-x);
   }
   .intercept.open { display: flex; }
-  .intercept-scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.75); }
+  .intercept-scrim { position: absolute; inset: 0; background: var(--scrim); }
   .intercept-card {
     position: relative; width: min(440px, 100%);
     background: var(--surface); border: 1px solid var(--hairline-focus);
     border-radius: 16px; padding: clamp(22px, 3vw, 30px);
-    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    box-shadow: var(--shadow-modal);
   }
   @media (prefers-reduced-motion: no-preference) {
     .intercept.open .intercept-card { animation: interceptIn 0.4s var(--ease-decide); }
@@ -586,12 +586,12 @@
      second install surface. */
   .install-hi { animation: installHi 2.4s var(--ease-decide); }
   @keyframes installHi {
-    0%   { box-shadow: inset 0 0 0 1px rgba(217,119,87,0.9); }
-    70%  { box-shadow: inset 0 0 0 1px rgba(217,119,87,0.9); }
-    100% { box-shadow: inset 0 0 0 1px rgba(217,119,87,0); }
+    0%   { box-shadow: inset 0 0 0 1px var(--claude-ring); }
+    70%  { box-shadow: inset 0 0 0 1px var(--claude-ring); }
+    100% { box-shadow: inset 0 0 0 1px var(--claude-ring-out); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .install-hi { animation: none; box-shadow: inset 0 0 0 1px rgba(217,119,87,0.9); }
+    .install-hi { animation: none; box-shadow: inset 0 0 0 1px var(--claude-ring); }
   }
 
   /* ── Colophon ──────────────────────────────────────────────────────────
@@ -755,7 +755,7 @@
         <pre id="install-commands">/plugin marketplace add mooch-agency/say-less
 /plugin install say-less@say-less</pre>
       </div>
-      <p>On the desktop app or the web, <code>/plugin</code> isn't available as a typed command &mdash; use the prompt above, which handles every surface, or read the <a href="https://github.com/mooch-agency/say-less/blob/master/INSTALL.md">per-surface install guide</a>.</p>
+      <p>On the desktop app or the web, <code>/plugin</code> isn't available as a typed command. Use the prompt above, which handles every surface, or read the <a href="https://github.com/mooch-agency/say-less/blob/master/INSTALL.md">per-surface install guide</a>.</p>
       <p class="feedback-line">Something off, or working well? <a id="feedbackLink" href="mailto:hey@mooch.agency?subject=Say%20Less%20beta%20feedback">hey@mooch.agency</a>.</p>
       </div>
     </div>
