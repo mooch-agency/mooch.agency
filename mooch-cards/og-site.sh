@@ -6,26 +6,60 @@
 # against the domain on the right. Nothing here should deviate from that; if a
 # page needs a different shape, change the template, not one card.
 #
-#   ./og-site.sh [outdir]     # default: ./out/site
+#   pnpm cards:build            # rebuild + stamp every card, in place
+#   ./mooch-cards/og-site.sh /tmp/preview   # render elsewhere to compare first
+#
+# This file exists ONLY here. The private mooch-cards repo has the same renderer
+# (Natalie uses it for brand work) but no og-site.sh, so there is nothing to keep
+# in sync: card copy is site content and lives with the pages it describes.
+#
+# The renderer alongside it is a vendored copy, which is deliberate. It pins the
+# cards to a known engine, so they stay reproducible from this repo alone with no
+# network and no access to a private repo. To take a rendering improvement from
+# mooch-cards, copy the changed file across on purpose.
 #
 # Adding a page = one card block below: name, eyebrow, title, subtitle, domain.
 # Frame, footer meta and format come from card(); watermarks are suppressed on
 # framed cards by the renderer itself. Pick --scale so the text block clears the
 # footer, then eyeball the PNG (satori has no auto-fit).
+#
+# `pnpm cards:build` runs this and then stamps every URL with a hash of the new
+# bytes. That stamp is what stops Telegram and X serving a card from months ago.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-OUT="${1:-out/site}"
-mkdir -p "$OUT"
+ROOT="$(cd "$HERE/.." && pwd)"
+
+# No argument: write each card straight to the name the site serves it under, so
+# building IS installing and there is no copy step to forget. Pass a directory to
+# render into that instead, for previewing or diffing without touching the site.
+PREVIEW="${1:-}"
+[ -n "$PREVIEW" ] && mkdir -p "$PREVIEW"
 COUNT=0
+
+if [ ! -x "$HERE/node_modules/.bin/tsx" ]; then
+  echo "Renderer deps missing. Run: cd \"$HERE\" && pnpm install" >&2
+  exit 1
+fi
 
 # Shared template chrome. A card can still override any flag (last one wins),
 # e.g. a different --meta for a card whose footer context isn't the house line.
 card() {
   local name="$1"; shift
-  "$HERE/node_modules/.bin/tsx" "$HERE/card.ts" hero \
+  local out
+  if [ -n "$PREVIEW" ]; then
+    out="$PREVIEW/$name.png"
+  elif [ "$name" = "home" ]; then
+    out="$ROOT/og-image.png"   # brand card, and the site-wide fallback
+  else
+    out="$ROOT/og-$name.png"
+  fi
+  # --tsconfig is explicit so this runs from anywhere: tsx looks for a tsconfig
+  # relative to the working directory, and without the JSX settings in ours it
+  # falls back to the classic transform and dies with "React is not defined".
+  "$HERE/node_modules/.bin/tsx" --tsconfig "$HERE/tsconfig.json" "$HERE/card.ts" hero \
     --format og --frame --meta "London / Lisbon" \
-    --out "$OUT/$name.png" "$@" >/dev/null
+    --out "$out" "$@" >/dev/null
   COUNT=$((COUNT + 1))
   echo "  $name"
 }
@@ -68,12 +102,8 @@ card soundlikeme \
   --domain "mooch.agency/prompts/soundlikeme" \
   --tint prompt --scale 1.1
 
-card ready \
-  --eyebrow "Self-audit" \
-  --title "Ready to *automate*,\nor just keen?" \
-  --subtitle "6 questions. A readiness score and 3 next steps." \
-  --domain "mooch.agency/ready" \
-  --tint ai --scale 0.85
+# No `ready` card: /ready was retired in the Phase 0 roadmap decision and now
+# 301s to /, so a sharer never reaches a page that would use one.
 
 echo "Selected work"
 
@@ -127,4 +157,4 @@ card lisbon-restaurant-group \
   --scale 0.95
 
 echo
-echo "Wrote $COUNT cards to $OUT"
+echo "Wrote $COUNT cards to ${PREVIEW:-$ROOT}"

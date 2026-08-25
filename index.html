@@ -13,14 +13,14 @@
 <link rel="canonical" href="https://mooch.agency">
 <meta property="og:title" content="Mooch. UX &amp; AI Automation.">
 <meta property="og:description" content="A UX and AI automation agency in London and Lisbon. We design products people want to use, and AI automations they can't live without.">
-<meta property="og:image" content="https://mooch.agency/og-image.png">
+<meta property="og:image" content="https://mooch.agency/og-image.png?v=ddc41f4f">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Mooch. We design products people want to use, and AI automations they can't live without.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Mooch. UX &amp; AI Automation.">
 <meta name="twitter:description" content="A UX and AI automation agency in London and Lisbon. We design products people want to use, and AI automations they can't live without.">
-<meta name="twitter:image" content="https://mooch.agency/og-image.png">
+<meta name="twitter:image" content="https://mooch.agency/og-image.png?v=ddc41f4f">
 <meta name="twitter:image:alt" content="Mooch. We design products people want to use, and AI automations they can't live without.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -266,6 +266,12 @@
      break is legible without introducing an unrelated new hue. */
   .audit-band { background: var(--cat-ai); border-bottom: 1px solid var(--hairline); }
   .audit-band-inner { max-width: var(--col); }
+  /* --muted is 4.45:1 on the --cat-ai tint, just under WCAG AA's 4.5:1 (axe
+     color-contrast). --muted-small is 6.02:1 there, so the band's quiet text
+     steps up to it. */
+  .audit-band .section-num,
+  .audit-band .section-lead,
+  .audit-band .audit-label { color: var(--muted-small); }
   .audit-form { margin-top: 32px; }
   /* flex-end keeps the button on the input's baseline now the fields carry labels. */
   .audit-fields { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }

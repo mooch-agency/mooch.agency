@@ -1,9 +1,12 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import satori from 'satori'
 import { Resvg } from '@resvg/resvg-js'
 
-const FONT_DIR = path.join(process.cwd(), 'fonts')
+// Resolved against this file, not the working directory, so the renderer works
+// wherever it is called from, not only when standing in the repo root.
+const FONT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'fonts')
 
 async function loadFonts() {
   try {

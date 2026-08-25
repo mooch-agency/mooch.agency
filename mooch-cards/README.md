@@ -2,11 +2,15 @@
 
 Branded card generator using Satori. PNGs for LinkedIn, Substack, Twitter/OG.
 
-> Vendored here (in the public mooch.agency repo) to regenerate `/og-*.png`
-> site cards via `./og-site.sh`. `assets/` (avatars, LinkedIn banners, team
-> photos) is intentionally left out, so any command below that references
-> `assets/...` needs the full tool: private repo at
-> [mooch-agency/mooch-cards](https://github.com/mooch-agency/mooch-cards).
+> Vendored here, in the public mooch.agency repo, so the site's `/og-*.png`
+> cards rebuild from this repo alone. Run them with `pnpm cards:build` from the
+> repo root: that renders every card straight into place and stamps the URLs.
+> `og-site.sh` holds the card definitions and lives only here.
+>
+> `assets/` (avatars, LinkedIn banners, team photos) is intentionally left out,
+> so any command below referencing `assets/...` needs the full tool: the private
+> repo at [mooch-agency/mooch-cards](https://github.com/mooch-agency/mooch-cards).
+> A rendering improvement made there reaches the site by a deliberate copy.
 
 Monochrome, Instrument Serif display, no accent colour. Styled to match
 mooch.agency: the site's tokens (paper/ink, the serif, the mono labels) are
@@ -14,7 +18,7 @@ mirrored in `lib/brand.ts`, so changing a token propagates everywhere.
 
 ## Setup
 
-1. `npm install`
+1. `pnpm install` (from this directory; needed once before `pnpm cards:build`)
 2. Fonts live in `/fonts/` (already committed). Five static TTFs are needed:
    - `InstrumentSerif-Regular.ttf`, `InstrumentSerif-Italic.ttf` — display type
      (https://fonts.google.com/specimen/Instrument+Serif)

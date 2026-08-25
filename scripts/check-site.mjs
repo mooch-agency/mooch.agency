@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ---------------------------------------------------------------------------
-// check-site.mjs — deterministic pre-launch checks for the mooch.agency site.
+// check-site.mjs: deterministic pre-launch checks for the mooch.agency site.
 //
 // This is the scriptable, CI-gateable version of the `pre-launch-website-check`
 // skill (github.com/mooch-agency/skills). It parses every shipped .html page and
@@ -8,7 +8,7 @@
 // violation grouped by discipline with the file and (where feasible) line.
 //
 // Run:   node scripts/check-site.mjs            (checks this repo)
-//        node scripts/check-site.mjs <root-dir> (checks a copy elsewhere — used
+//        node scripts/check-site.mjs <root-dir> (checks a copy elsewhere, used
 //                                                 by the verification harness)
 //
 // Rules implemented (see AC in Sprint 9 ticket "Add programmatic CI workflow"):
@@ -21,17 +21,18 @@
 //   Index hygiene ........ sitemap <-> pages bijection, no stray noindex, robots
 //   Uniqueness ........... unique titles + descriptions, exactly one <h1>
 //
-// Scoping: we check the pages the site actually ships — every *.html at the repo
-// root plus prompts/*.html — MINUS a documented exclusion list of templates,
-// dev tools, redirect targets and noindex lab pages (see EXCLUDED below). We do
+// Scoping: we check the pages the site actually ships: every *.html at the repo
+// root plus prompts/*.html, MINUS a documented exclusion list of templates, dev
+// tools, redirect targets and noindex lab pages (see site-files.mjs). We do
 // NOT walk audit/, node_modules/, api/, docs/ or pg-rewriter/: those are not
 // site pages.
 // ---------------------------------------------------------------------------
 
-import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { load } from 'cheerio';
+import { EXCLUDED, shippedPages } from './site-files.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -59,22 +60,8 @@ const DESC_MIN = 70, DESC_MAX = 165;    // ideal 120-160
 const OG_W = 1200, OG_H = 630, OG_TOL = 0.05;
 
 // ---- Page scoping ----------------------------------------------------------
-// Non-shipped repo-root/prompts pages, excluded from every check. Kept explicit
-// so a genuinely NEW page (not listed here, not in the sitemap) trips the
-// index-hygiene check instead of slipping through silently.
-const EXCLUDED = new Set([
-  '404.html',                       // error page (noindex, not indexable content)
-  'case-study-template.html',       // template, not a page
-  'prompt-template.html',           // template, not a page
-  'stagger-tuner.html',             // internal motion-tuning dev tool (noindex)
-  'styleguide.html',                // internal design reference (noindex)
-  'ready.html',                     // redirected to / in vercel.json (/ready -> /)
-  'paulgraham.html',                // interactive demo, intentionally unlisted (no canonical)
-  'portfolio-all.html',             // portfolio index / lab page (noindex, not in sitemap)
-  'portfolio-explorations.html',    // portfolio lab page (noindex, not in sitemap)
-  'portfolio-explorations-2.html',  // portfolio lab page (noindex, not in sitemap)
-  'og-explorations.html',           // share-card review page (noindex, not in sitemap)
-]);
+// The shipped-page set and the EXCLUDED list it filters live in site-files.mjs,
+// so check-site and stamp-cards can never disagree on what a page is by accident.
 
 // Pages that legitimately sit in the sitemap AND carry noindex: the prompt
 // utility pages are kept discoverable (sitemap + llms.txt) but deliberately not
@@ -82,7 +69,7 @@ const EXCLUDED = new Set([
 const SITEMAP_NOINDEX_ALLOWED = new Set(['prompts/deslop.html', 'prompts/soundlikeme.html']);
 
 // Inline colour literals are never tolerated: every colour must come from a
-// token in tokens.css. This set is intentionally empty — the former #2a2a2c
+// token in tokens.css. This set is intentionally empty: the former #2a2a2c
 // dark-footer hairline is now the --hairline-dark token. Keep it empty.
 const ALLOWED_INLINE_HEX = new Set(); // no exceptions
 
@@ -146,7 +133,7 @@ const decode = (s) => s
   .replace(/&#8212;/g, '—').replace(/&#x2014;/gi, '—');
 
 // ---------------------------------------------------------------------------
-// Image dimensions (PNG + JPEG) — avoids adding an image-size dependency.
+// Image dimensions (PNG + JPEG), avoiding an image-size dependency.
 // ---------------------------------------------------------------------------
 function imageSize(buf) {
   // PNG: 8-byte signature, then IHDR with width@16 height@20 (big-endian).
@@ -195,15 +182,8 @@ function keyToFile(key) {
 // ---------------------------------------------------------------------------
 // Discover shipped pages
 // ---------------------------------------------------------------------------
-function discoverPages() {
-  const rootHtml = readdirSync(ROOT).filter((f) => f.endsWith('.html'));
-  const promptsHtml = has('prompts')
-    ? readdirSync(path.join(ROOT, 'prompts')).filter((f) => f.endsWith('.html')).map((f) => `prompts/${f}`)
-    : [];
-  return [...rootHtml, ...promptsHtml]
-    .filter((rel) => !EXCLUDED.has(rel))
-    .sort();
-}
+const discoverPages = () => shippedPages(ROOT);
+
 
 // ---------------------------------------------------------------------------
 // Per-page checks
@@ -329,7 +309,7 @@ function checkColours(rel, raw) {
     while ((m = colour.exec(text))) {
       const val = m[0];
       const norm = val.toLowerCase();
-      // Token composition — an rgb()/hsl() built from a var() reference, e.g.
+      // Token composition: an rgb()/hsl() built from a var() reference, e.g.
       // `rgb(var(--brand))`, `rgba(var(--brand-rgb), .5)`, `rgb(var(--x) / 50%)`.
       // These are token-based, not hardcoded literals, so they must not be
       // flagged. A literal like `rgb(51,102,255)` (no var()) still is.
@@ -340,7 +320,7 @@ function checkColours(rel, raw) {
       // Custom-property definition (`--name: <colour>`) is a legit token (re)definition.
       const declStart = Math.max(text.lastIndexOf(';', m.index), text.lastIndexOf('{', m.index)) + 1;
       if (/^\s*--[\w-]+\s*:/.test(text.slice(declStart, m.index))) continue;
-      fail('Design tokens', rel, `hardcoded colour "${val}" in inline CSS — use a var(--token) from tokens.css`, offsetToLine(raw, start + m.index));
+      fail('Design tokens', rel, `hardcoded colour "${val}" in inline CSS: use a var(--token) from tokens.css`, offsetToLine(raw, start + m.index));
     }
   }
 }
@@ -355,7 +335,13 @@ function checkSocial(rel, raw, $) {
   }
   const ogImage = ($('meta[property="og:image"]').first().attr('content') || '').trim();
   if (!ogImage) return;
-  const imgRel = ogImage.replace(/^https?:\/\/[^/]+/i, '').replace(/^\/+/, '');
+  // Card URLs carry a ?v=<content-hash> cache-busting stamp (scripts/stamp-cards.mjs),
+  // so strip the query before resolving the URL to a file on disk. The stamp's
+  // freshness is a separate check: `node scripts/stamp-cards.mjs --check`.
+  const imgRel = ogImage
+    .replace(/^https?:\/\/[^/]+/i, '')
+    .replace(/[?#].*$/, '')
+    .replace(/^\/+/, '');
   if (!has(imgRel)) {
     fail('Social cards', rel, `og:image "${ogImage}" does not resolve to a file on disk`, lineOf(raw, /property=["']og:image["']/i));
     return;
@@ -407,7 +393,7 @@ function checkIndexHygiene(pages) {
   // 3. No stray noindex or dev/lab page in the sitemap. Iterate the sitemap
   //    entries (not just the shipped `pages`): a <loc> that resolves to an
   //    EXCLUDED template/dev/lab page, or to any page carrying a noindex robots
-  //    meta, is a bug — it must not be advertised for indexing. The only
+  //    meta, is a bug: it must not be advertised for indexing. The only
   //    exception is the deliberate sitemap+noindex utility allowlist (prompts/*).
   //    Iterating `pages` (as before) silently passed such entries, because
   //    EXCLUDED/dev pages are filtered out of `pages` and were never inspected.
@@ -450,7 +436,7 @@ function checkUniqueness(seenTitles, seenDescs) {
 }
 
 // ---------------------------------------------------------------------------
-// Fragments — every same-origin fragment link on a shipped page must resolve to
+// Fragments: every same-origin fragment link on a shipped page must resolve to
 // a real id on its target shipped page. We own this check (rather than lychee)
 // because lychee can't reliably resolve root-relative fragments: `/#work`
 // resolves `/` to a directory, so `--include-fragments` reports "Cannot find
@@ -483,7 +469,7 @@ function checkFragments(pages) {
       if (hashIdx === -1) return;                 // no fragment at all
       let pathPart = href.slice(0, hashIdx);
       const frag = href.slice(hashIdx + 1);
-      if (!frag) return;                          // `#` or `path#` — top-of-page, nothing to resolve
+      if (!frag) return;                          // `#` or `path#`, top-of-page, nothing to resolve
 
       // Same-origin absolute -> reduce to its path; skip external / non-http.
       if (/^[a-zA-Z][\w+.-]*:/.test(pathPart)) {
@@ -538,7 +524,7 @@ checkIndexHygiene(pages);
 checkFragments(pages);
 
 // ---------------------------------------------------------------------------
-// Output — grouped by discipline, file + line where feasible.
+// Output, grouped by discipline, file + line where feasible.
 // ---------------------------------------------------------------------------
 const DISCIPLINES = ['SEO & Meta', 'Content hygiene', 'Trust & contactability', 'Mobile', 'Design tokens', 'Social cards', 'Fragments', 'Index hygiene', 'Uniqueness & structure'];
 console.log(`check-site: ${pages.length} shipped pages under ${ROOT}`);
@@ -546,7 +532,7 @@ console.log(pages.map((p) => `  - ${p}`).join('\n'));
 console.log('');
 
 if (findings.length === 0) {
-  console.log('PASS — all disciplines clean.');
+  console.log('PASS: all disciplines clean.');
   process.exit(0);
 }
 
@@ -560,5 +546,5 @@ for (const d of DISCIPLINES) {
   }
   console.log('');
 }
-console.log(`FAIL — ${findings.length} problem(s) across ${new Set(findings.map((f) => f.discipline)).size} discipline(s).`);
+console.log(`FAIL: ${findings.length} problem(s) across ${new Set(findings.map((f) => f.discipline)).size} discipline(s).`);
 process.exit(1);

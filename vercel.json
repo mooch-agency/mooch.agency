@@ -6,7 +6,9 @@
     { "source": "/ready", "destination": "/", "permanent": true },
     { "source": "/contrabando", "destination": "/lisbon-restaurant-group", "permanent": true },
     { "source": "/contrabando.html", "destination": "/lisbon-restaurant-group", "permanent": true },
-    { "source": "/audit", "destination": "/#audit", "permanent": true }
+    { "source": "/audit", "destination": "/#audit", "permanent": true },
+    { "source": "/og.jpg", "destination": "/og-image.png?v=ddc41f4f", "permanent": true },
+    { "source": "/og-ready.png", "destination": "/og-image.png?v=ddc41f4f", "permanent": true }
   ],
   "headers": [
     {
