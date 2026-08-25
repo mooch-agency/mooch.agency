@@ -31,8 +31,9 @@
 //        node scripts/stamp-cards.mjs --check   verify only, exit 1 if stale (CI)
 //        node scripts/stamp-cards.mjs <root>    operate on a copy elsewhere
 //
-// Regenerating cards? Run mooch-cards/og-site.sh, copy the PNGs in, then run
-// this. `pnpm ci:check` fails if you forget, so a stale stamp cannot ship.
+// Regenerating cards? Run `pnpm cards:build`, copy the PNGs in, then run this
+// (`pnpm cards:stamp`). `pnpm ci:check` fails if you forget, so a stale stamp
+// cannot ship.
 // ---------------------------------------------------------------------------
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -60,7 +61,11 @@ const reEscape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 // future jpg card is stamped (or loudly reported as missing) rather than
 // silently skipped by a regex that never matched it.
 const CARD_FILE = String.raw`og-[a-z0-9-]+\.(?:png|jpg)`;
-const STAMP = String.raw`(\?v=[0-9a-f]+)?`;
+// Deliberately greedy about what counts as an existing stamp: anything after
+// `?v=` up to the end of the URL. A strict [0-9a-f]+ would fail to match a
+// malformed stamp, so the rewrite would append a second one and `--check` would
+// then pass forever on the corrupt result.
+const STAMP = String.raw`(\?v=[^"'\s>]*)?`;
 
 // Absolute card URLs in page markup, built from SITE_ORIGIN so that changing the
 // origin cannot leave this regex silently matching nothing.

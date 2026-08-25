@@ -3,6 +3,7 @@
   "scripts": {
     "ci:check": "node scripts/check-site.mjs && node scripts/stamp-cards.mjs --check",
     "ci:validate-html": "html-validate \"*.html\" \"prompts/*.html\"",
+    "cards:build": "./mooch-cards/og-site.sh && node scripts/stamp-cards.mjs",
     "cards:stamp": "node scripts/stamp-cards.mjs"
   },
   "dependencies": {

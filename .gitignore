@@ -14,3 +14,11 @@ audit/report/out/
 # Local dev-server config and Lighthouse CI artifacts.
 .claude/
 .lighthouseci/
+
+# Card renderer working files. `pnpm cards:build` writes generated PNGs to out/;
+# the ones the site actually uses are copied to og-<slug>.png in the root and
+# committed there. Everything else in out/ is scratch, and this repo is public.
+out/
+mooch-cards/node_modules/
+mooch-cards/out/
+mooch-cards/pnpm-lock.yaml

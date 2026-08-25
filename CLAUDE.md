@@ -35,11 +35,29 @@ before `</body>` only if the page uses `data-reveal` / `data-stagger`. Put only
 page-specific layout in the inline `<style>`. Add public pages to `sitemap.xml` and
 `llms.txt`.
 
-Every public page ships its own share card. Add a `card` block to
-`mooch-cards/og-site.sh`, run `./og-site.sh`, copy `out/site/<slug>.png` to
-`og-<slug>.png` in the repo root, and point the page's `og:image` /
-`twitter:image` at it (with width, height and alt). `og-image.png` is the brand
-card and the fallback only.
+Every public page ships its own share card, and **creating it is part of
+creating the page, never a separate ask**: whoever builds a page (usually
+Claude) adds a `card` block to `mooch-cards/og-site.sh` in the same change, with
+eyebrow/title/subtitle drawn from the page's own hero copy, runs `pnpm
+cards:build`, and points the page's `og:image` / `twitter:image` at the card
+(with width, height and alt). Tahi and Natalie never do this by hand.
+
+`pnpm cards:build` renders every card straight to its `og-<slug>.png` in the
+repo root and stamps the URLs, so there is no copy step. CI is the safety net,
+not the instructions: `check-site` fails a shipped page without a resolving
+`og:image`, and `stamp-cards --check` fails a stale or missing stamp, so a page
+cannot ship cardless or stale even if this paragraph is ignored. First run
+needs the renderer's deps (`cd mooch-cards && pnpm install`); to eyeball a card
+before it lands, `./mooch-cards/og-site.sh /tmp/preview`. `og-image.png` is the
+brand card and the fallback only.
+
+`mooch-cards/` here is a vendored copy of the renderer from the private
+mooch-cards repo, which Natalie also uses for brand assets. The split is by
+ownership: **card definitions live only here** (`og-site.sh` is site content and
+versions with the pages), **brand assets live only there**. The renderer exists
+in both on purpose, which pins the site's cards to a known engine and keeps them
+reproducible from this repo alone. To take a rendering improvement, copy the
+changed file across deliberately.
 
 Then run `pnpm cards:stamp`. Card URLs carry a `?v=<content-hash>` stamp, because
 Telegram, X and LinkedIn cache preview images by URL and never revalidate one they
