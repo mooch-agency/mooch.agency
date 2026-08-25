@@ -41,6 +41,20 @@ Every public page ships its own share card. Add a `card` block to
 `twitter:image` at it (with width, height and alt). `og-image.png` is the brand
 card and the fallback only.
 
+Then run `pnpm cards:stamp`. Card URLs carry a `?v=<content-hash>` stamp, because
+Telegram, X and LinkedIn cache preview images by URL and never revalidate one they
+have already fetched. Reusing a filename for new artwork is how the site ended up
+serving a card from months earlier on every platform at once. The stamp makes a
+redesigned card a new URL, so this cannot recur, and `pnpm ci:check` fails on a
+stale stamp.
+
+Retiring a card: never let its URL start 404ing. Add a redirect in `vercel.json`
+so snapshots cached elsewhere resolve to something current, then the file itself
+can go (Vercel matches redirects before the filesystem, so the redirect works
+either way). Point the destination at a card, not at a bare filename: `cards:stamp`
+stamps redirect destinations too, precisely so a retired URL cannot hand a crawler
+back the unstamped key it was already caching.
+
 ## Voice
 British English, terse, no em dashes. Full house style: MOOCHBOT.md in Notion.
 

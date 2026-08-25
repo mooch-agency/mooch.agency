@@ -8,10 +8,19 @@
 #
 #   ./og-site.sh [outdir]     # default: ./out/site
 #
+# THIS COPY IS AUTHORITATIVE for mooch.agency's cards. The standalone mooch-cards
+# repo carries the same script for its own brand work, so the two can drift apart
+# silently: edit this one, then mirror the change there. If you are checking
+# whether they agree, fetch first. A stale clone looks exactly like a divergence.
+#
 # Adding a page = one card block below: name, eyebrow, title, subtitle, domain.
 # Frame, footer meta and format come from card(); watermarks are suppressed on
 # framed cards by the renderer itself. Pick --scale so the text block clears the
 # footer, then eyeball the PNG (satori has no auto-fit).
+#
+# After regenerating: copy out/site/<slug>.png to og-<slug>.png in the repo root,
+# then run `pnpm cards:stamp` so each URL carries a hash of its new bytes. That
+# stamp is what stops Telegram and X serving a card from months ago.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -68,12 +77,8 @@ card soundlikeme \
   --domain "mooch.agency/prompts/soundlikeme" \
   --tint prompt --scale 1.1
 
-card ready \
-  --eyebrow "Self-audit" \
-  --title "Ready to *automate*,\nor just keen?" \
-  --subtitle "6 questions. A readiness score and 3 next steps." \
-  --domain "mooch.agency/ready" \
-  --tint ai --scale 0.85
+# No `ready` card: /ready was retired in the Phase 0 roadmap decision and now
+# 301s to /, so a sharer never reaches a page that would use one.
 
 echo "Selected work"
 

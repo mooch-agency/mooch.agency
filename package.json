@@ -1,8 +1,9 @@
 {
   "private": true,
   "scripts": {
-    "ci:check": "node scripts/check-site.mjs",
-    "ci:validate-html": "html-validate \"*.html\" \"prompts/*.html\""
+    "ci:check": "node scripts/check-site.mjs && node scripts/stamp-cards.mjs --check",
+    "ci:validate-html": "html-validate \"*.html\" \"prompts/*.html\"",
+    "cards:stamp": "node scripts/stamp-cards.mjs"
   },
   "dependencies": {
     "@vercel/edge": "^1.3.1",
