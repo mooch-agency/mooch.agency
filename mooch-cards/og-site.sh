@@ -102,6 +102,13 @@ card soundlikeme \
   --domain "mooch.agency/prompts/soundlikeme" \
   --tint prompt --scale 1.1
 
+card frwa \
+  --eyebrow "Plaything" \
+  --title "Fake Real\n*World Assets.*" \
+  --subtitle "Trade the FRWA 10 asset index 24/7 365 on the Mooch Stock Exchange (MSE)." \
+  --domain "mooch.agency/frwa" \
+  --dark --scale 1.15
+
 # No `ready` card: /ready was retired in the Phase 0 roadmap decision and now
 # 301s to /, so a sharer never reaches a page that would use one.
 
