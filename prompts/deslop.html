@@ -728,37 +728,9 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
   -H "Content-Type: application/json" \
   -d '{"text":"We&apos;re thrilled to unveil our seamless, cutting-edge platform..."}'
 
-# 402 Payment Required. The response body (shape below) names the
-# price, network and address: build X-PAYMENT with x402-fetch,
-# x402-axios, or any x402-speaking wallet, then retry.
-# Success returns {"cleaned": "...", "changelog": "..."}</pre>
-    </div>
-
-    <h3>What the 402 sends back</h3>
-    <p>The <code>accepts</code> array is the whole contract: scheme, network, amount, and the address to pay. An x402 client needs nothing beyond this response to complete the round trip.</p>
-    <div class="prompt-box">
-      <div class="prompt-box-head">
-        <span>402 response &middot; application/json</span>
-        <button class="copy-btn" type="button" data-copy-target="agent-402">Copy</button>
-      </div>
-      <pre id="agent-402">{
-  "x402Version": 1,
-  "error": "X-PAYMENT header is required",
-  "accepts": [
-    {
-      "scheme": "exact",
-      "network": "base-sepolia",
-      "maxAmountRequired": "100000",
-      "resource": "https://mooch.agency/api/deslop",
-      "description": "Run text through the /deslop cleanup",
-      "mimeType": "application/json",
-      "payTo": "0x000000000000000000000000000000000000dEaD",
-      "maxTimeoutSeconds": 120,
-      "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-      "extra": { "name": "USDC", "version": "2" }
-    }
-  ]
-}</pre>
+# 402 Payment Required. Response names the price, network and address.
+# Build X-PAYMENT with x402-fetch, x402-axios, or any x402-speaking
+# wallet, then retry. Success returns {"cleaned": "...", "changelog": "..."}</pre>
     </div>
     <p>Don't hand-roll the payment header. <code>x402-fetch</code> and <code>x402-axios</code> both wrap this exchange for a wallet-holding agent, so the client signs and retries for you.</p>
 
