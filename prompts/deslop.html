@@ -312,6 +312,57 @@
   }
   .prompt-box-foot { padding: 4px 20px 18px; }
 
+  /* Compare card: the one screenshottable moment on the page, contrasting
+     the free human path against the paid agent path. The agent column is
+     scoped dark like the footer (.colophon-dark): override --muted locally
+     rather than touching the page's light-mode tokens. */
+  .cmp-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px;
+    max-width: 600px;
+    margin: 32px 0 12px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow-border);
+  }
+  @media (min-width: 560px) { .cmp-grid { grid-template-columns: 1fr 1fr; } }
+  .cmp-col { padding: 22px 20px; background: var(--surface); }
+  .cmp-col.agent { --muted: #8e8e93; background: var(--black); color: var(--paper); }
+  .cmp-who {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted-small);
+    margin-bottom: 10px;
+  }
+  .cmp-col.agent .cmp-who { color: var(--muted); }
+  .cmp-price { font-family: var(--serif); font-size: 34px; margin-bottom: 8px; }
+  .cmp-desc { font-size: 14px; color: var(--muted-small); }
+  .cmp-col.agent .cmp-desc { color: var(--muted); }
+  .cmp-caption {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted-small);
+    margin-bottom: 40px;
+  }
+  /* Inline copy trigger riding on the caption line, not a boxed .copy-btn
+     chip: there's no code block left on the page to attach a header to. */
+  .cmp-install-btn {
+    font: inherit;
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    background: none;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    min-height: auto;
+    cursor: pointer;
+  }
+  .cmp-install-btn:hover { color: var(--ink); }
+
   .ba-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -447,7 +498,8 @@
     .case-body-inner { max-width: 100%; }
     a { color: #000; text-decoration: underline; }
     .reveal { opacity: 1; transform: none; animation: none; }
-    .prompt-box, .ba-col { break-inside: avoid; border: 1px solid #000; }
+    .prompt-box, .ba-col, .cmp-grid { break-inside: avoid; border: 1px solid #000; }
+    .cmp-col, .cmp-col.agent { background: #fff; color: #000; }
     .copy-btn { display: none; }
     * { box-shadow: none !important; }
   }
@@ -636,6 +688,24 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
       <pre id="install-commands">/plugin marketplace add mooch-agency/skills
 /plugin install skills@mooch-agency</pre>
     </div>
+
+    <h2 id="agents"><span class="num">&sect; 05</span>For agents</h2>
+    <p>Humans go free. Agents pay $0.10 in USDC over <a href="https://www.x402.org">x402</a> to use /deslop.</p>
+
+    <div class="cmp-grid">
+      <div class="cmp-col">
+        <div class="cmp-who">Human</div>
+        <div class="cmp-price">Free</div>
+        <div class="cmp-desc">Copy the prompt, paste your draft in.</div>
+      </div>
+      <div class="cmp-col agent">
+        <div class="cmp-who">Agent</div>
+        <div class="cmp-price">$0.10</div>
+        <div class="cmp-desc">One API call. No signup, no key.</div>
+      </div>
+    </div>
+    <p class="cmp-caption">Robots pay to sound less like robots. <button class="copy-btn cmp-install-btn" type="button" data-copy-target="agent-commands">Install command</button></p>
+    <span id="agent-commands" hidden>curl -X POST https://mooch.agency/api/deslop -d '{"text":"..."}'</span>
 
   </div>
 </article>
