@@ -51,6 +51,43 @@ function rateLimited(ip) {
   return false;
 }
 
+// verify() is a read-only check: it does not spend the payment's nonce, only
+// settle() does, on-chain. Without this, the same signed X-PAYMENT header
+// replayed across concurrent requests passes verify() every time and
+// triggers a paid model call for each one, before settle() finally rejects
+// all but the first as already spent. Track nonces we've already accepted
+// for processing so a duplicate is rejected before it costs an LLM call.
+// Same per-instance caveat as the rate limiter above: good enough to stop
+// casual replay, not a substitute for settle() being the real source of truth.
+const seenNonces = new Map(); // nonce -> "in-flight" | "settled"
+const NONCE_TTL_MS = 10 * 60_000; // matches the ballpark of a payment's own validity window
+function pruneNonces() {
+  const now = Date.now();
+  for (const [n, v] of seenNonces) if (now - v.at > NONCE_TTL_MS) seenNonces.delete(n);
+}
+function claimNonce(nonce) {
+  pruneNonces();
+  if (seenNonces.has(nonce)) return false;
+  seenNonces.set(nonce, { at: Date.now() });
+  return true;
+}
+function releaseNonce(nonce) {
+  seenNonces.delete(nonce);
+}
+
+// Same shape as api/rewrite.js and api/feedback.js: Vercel's Node runtime
+// usually pre-parses JSON into req.body, but only when the request arrives
+// with an exact application/json content-type. A caller that sends valid
+// JSON without that header gets a raw string here, not an object, so parse
+// it ourselves rather than silently treating it as an empty body.
+function parseBody(req) {
+  if (req.body && typeof req.body === "object") return req.body;
+  if (typeof req.body === "string") {
+    try { return JSON.parse(req.body || "{}"); } catch { return {}; }
+  }
+  return {};
+}
+
 // The published prompt on /prompts/deslop is canonical. Read it out of the
 // page rather than duplicating it here, so a prompt edit ships to both the
 // page and the API in one change. (vercel.json includeFiles bundles the page.)
@@ -126,18 +163,30 @@ async function runDeslop(text) {
   const data = await upstream.json();
   const full = (data.content || []).map((b) => b.text || "").join("");
   // The prompt's output format is "**Cleaned draft** ... **Changelog** ...".
-  // Split on the changelog heading; if the model varied, ship the whole thing
-  // as cleaned rather than failing a paid call over formatting.
-  const split = full.split(/\*\*Changelog\*\*/i);
+  // Try the exact heading first, then a looser match (different emphasis,
+  // a colon, a markdown heading) so a minor model formatting drift doesn't
+  // silently ship an empty changelog on a call the caller paid for. If
+  // nothing matches, ship the whole thing as cleaned rather than failing.
+  let split = full.split(/\*\*Changelog\*\*/i);
+  if (split.length === 1) split = full.split(/#{1,3}\s*changelog:?/i);
   return {
-    cleaned: split[0].replace(/^\s*\*\*Cleaned draft\*\*\s*/i, "").trim(),
+    cleaned: split[0].replace(/^\s*\*\*Cleaned draft\*\*\s*/i, "").replace(/^#{1,3}\s*Cleaned draft:?\s*/i, "").trim(),
     changelog: (split[1] || "").trim(),
   };
 }
 
 module.exports = async (req, res) => {
+  // Meant for the open agent ecosystem, not just same-origin callers: allow
+  // any origin, and let a browser-based agent client past the preflight its
+  // fetch triggers for the custom X-PAYMENT header.
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-PAYMENT");
+  res.setHeader("Access-Control-Expose-Headers", "X-PAYMENT-RESPONSE");
+  if (req.method === "OPTIONS") return res.status(204).end();
+
   if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
+    res.setHeader("Allow", "POST, OPTIONS");
     return res.status(405).json({ error: "POST only. Body: { \"text\": \"...\" }" });
   }
   if (process.env.DESLOP_KILL === "1") {
@@ -145,6 +194,10 @@ module.exports = async (req, res) => {
   }
   if (!process.env.X402_PAY_TO) {
     return res.status(503).json({ error: "Payments not configured yet. Try again soon." });
+  }
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error("ANTHROPIC_API_KEY not set");
+    return res.status(503).json({ error: "Endpoint misconfigured. Try again soon." });
   }
 
   const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
@@ -167,36 +220,52 @@ module.exports = async (req, res) => {
   const selected = findMatchingPaymentRequirements(accepts, decoded);
   if (!selected) return reply402(res, accepts, "Unable to find matching payment requirements");
 
+  // Claim the nonce before doing any paid work. verify() alone doesn't spend
+  // it, so without this a replayed X-PAYMENT header across concurrent
+  // requests would trigger a paid model call per request before settle()
+  // finally rejects all but one as already spent.
+  const nonce = decoded.payload && decoded.payload.authorization && decoded.payload.authorization.nonce;
+  if (nonce && !claimNonce(nonce)) {
+    return reply402(res, accepts, "Payment already used or in progress");
+  }
+  const releaseOnFailure = () => { if (nonce) releaseNonce(nonce); };
+
   const { verify, settle } = useFacilitator({ url: FACILITATOR_URL });
   try {
     const v = await verify(decoded, selected);
-    if (!v.isValid) return reply402(res, accepts, v.invalidReason || "Payment invalid");
+    if (!v.isValid) { releaseOnFailure(); return reply402(res, accepts, v.invalidReason || "Payment invalid"); }
   } catch (e) {
     console.error("verify error", e);
+    releaseOnFailure();
     return reply402(res, accepts, "Payment verification failed");
   }
 
   // Payment verified. Do the work BEFORE settling, so a model failure costs
   // the caller nothing.
-  const text = String((req.body && req.body.text) || "");
+  const text = String(parseBody(req).text || "");
   const words = totalWords(text);
-  if (!words) return res.status(400).json({ error: "Body must be JSON: { \"text\": \"...\" }" });
+  if (!words) { releaseOnFailure(); return res.status(400).json({ error: "Body must be JSON: { \"text\": \"...\" }" }); }
   if (words > WORD_CAP) {
+    releaseOnFailure();
     return res.status(400).json({ error: `Too long: ${words} words, cap is ${WORD_CAP}.` });
   }
 
   let result;
   try { result = await runDeslop(text); }
-  catch (e) { return res.status(502).json({ error: "The editor choked. You were not charged." }); }
+  catch (e) { releaseOnFailure(); return res.status(502).json({ error: "The editor choked. You were not charged." }); }
 
   try {
     const s = await settle(decoded, selected);
-    if (!s.success) return reply402(res, accepts, s.errorReason || "Payment settlement failed");
+    if (!s.success) { releaseOnFailure(); return reply402(res, accepts, s.errorReason || "Payment settlement failed"); }
     res.setHeader("X-PAYMENT-RESPONSE", settleResponseHeader(s));
   } catch (e) {
     console.error("settle error", e);
+    releaseOnFailure();
     return reply402(res, accepts, "Payment settlement failed");
   }
+  // Settled: leave the nonce marked as seen for the rest of its TTL so a
+  // stray duplicate request with the same (now-spent) header gets an
+  // instant, cheap rejection instead of a wasted verify() round trip.
 
   return res.status(200).json({
     cleaned: result.cleaned,
