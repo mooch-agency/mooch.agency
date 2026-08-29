@@ -27,6 +27,7 @@
   ],
   "functions": {
     "api/rewrite.js": { "includeFiles": "api/pg-system.md" },
-    "api/say-less.js": { "maxDuration": 60 }
+    "api/say-less.js": { "maxDuration": 60 },
+    "api/deslop.js": { "includeFiles": "prompts/deslop.html", "maxDuration": 120 }
   }
 }

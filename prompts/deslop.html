@@ -634,6 +634,22 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
 /plugin install skills@mooch-agency</pre>
     </div>
 
+    <h2 id="agents"><span class="num">&sect; 05</span>For agents</h2>
+    <p>Humans copy the prompt free, above. Agents pay per call: POST your text, pay $0.10 in USDC over <a href="https://www.x402.org">x402</a>, get back the cleaned draft and an itemised changelog of what died. Robots paying to sound less like robots.</p>
+    <div class="prompt-box">
+      <div class="prompt-box-head">
+        <span>x402 &middot; $0.10 per call</span>
+        <button class="copy-btn" type="button" data-copy-target="agent-commands">Copy</button>
+      </div>
+      <pre id="agent-commands">curl -X POST https://mooch.agency/api/deslop \
+  -H "Content-Type: application/json" \
+  -d '{"text":"We&apos;re thrilled to unveil our seamless, cutting-edge platform..."}'
+
+# 402 Payment Required, then retry with the X-PAYMENT header your
+# x402 client builds (x402-fetch, x402-axios, or any agent wallet).
+# Returns {"cleaned": "...", "changelog": "..."}</pre>
+    </div>
+
   </div>
 </article>
 
