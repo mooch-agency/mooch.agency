@@ -37,7 +37,6 @@ const { exact } = require("x402/schemes");
 const { useFacilitator } = require("x402/verify");
 const { processPriceToAtomicAmount, findMatchingPaymentRequirements, toJsonSafe } = require("x402/shared");
 const { settleResponseHeader } = require("x402/types");
-const { getAuthHeaders } = require("@coinbase/cdp-sdk/auth");
 
 const MODEL = process.env.DESLOP_MODEL || "claude-sonnet-5";
 const PRICE = process.env.DESLOP_PRICE_USD || "0.10";
@@ -56,6 +55,13 @@ const CDP_API_KEY_SECRET = process.env.CDP_API_KEY_SECRET;
 // the method + host + path being called, not a static bearer token — so
 // this has to run per-request, per-operation, not once at module load.
 async function createCdpAuthHeaders() {
+  // Dynamic import, not require: @coinbase/cdp-sdk/auth's CJS build calls
+  // require() on jose's ESM-only "webapi" export and crashes at load time
+  // in Vercel's Node runtime (ERR_REQUIRE_ESM) — took the whole endpoint
+  // down, testnet included, when this was a static top-level require.
+  // The package's own ESM build has no such problem, and import() loads
+  // it lazily, only when a mainnet request actually needs a CDP header.
+  const { getAuthHeaders } = await import("@coinbase/cdp-sdk/auth");
   const url = new URL(FACILITATOR_URL);
   async function headersFor(operation, method) {
     return getAuthHeaders({
