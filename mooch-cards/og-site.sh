@@ -104,8 +104,8 @@ card soundlikeme \
 
 card frwa \
   --eyebrow "Plaything" \
-  --title "Trade the\n*FRWA 10.*" \
-  --subtitle "24/7 365 on the Mooch Stock Exchange (MSE)." \
+  --title "Fake Real\n*World Assets.*" \
+  --subtitle "Trade the FRWA 10 asset index 24/7 365 on the Mooch Stock Exchange (MSE)." \
   --domain "mooch.agency/frwa" \
   --dark --scale 1.15
 
