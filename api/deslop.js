@@ -14,9 +14,15 @@
 //   X402_PAY_TO          receiving wallet address. UNSET => endpoint replies
 //                        503 "not configured". This is the one manual step.
 //   X402_NETWORK         "base-sepolia" (default, testnet) or "base" (mainnet).
-//   X402_FACILITATOR_URL default https://x402.org/facilitator (testnet, keyless).
-//                        Mainnet: Coinbase CDP facilitator (needs CDP keys) or
-//                        another facilitator URL.
+//   X402_FACILITATOR_URL override the facilitator base URL. Default is
+//                        network-dependent: x402.org's keyless testnet
+//                        facilitator for base-sepolia, Coinbase CDP's
+//                        facilitator for base (see CDP_API_KEY_ID below).
+//   CDP_API_KEY_ID        \
+//   CDP_API_KEY_SECRET     } CDP Secret API key (portal.cdp.coinbase.com ->
+//                             API Keys -> Secret API Keys). Only read when
+//                             NETWORK is "base" — CDP's facilitator requires
+//                             authenticated requests, unlike the testnet one.
 //   DESLOP_PRICE_USD     default "0.10".
 //   DESLOP_MODEL         default "claude-sonnet-5".
 //   DESLOP_KILL=1        kill switch, same convention as the other functions.
@@ -35,7 +41,48 @@ const { settleResponseHeader } = require("x402/types");
 const MODEL = process.env.DESLOP_MODEL || "claude-sonnet-5";
 const PRICE = process.env.DESLOP_PRICE_USD || "0.10";
 const NETWORK = process.env.X402_NETWORK || "base-sepolia";
-const FACILITATOR_URL = process.env.X402_FACILITATOR_URL || "https://x402.org/facilitator";
+
+// x402.org's facilitator is keyless and testnet-only. CDP's facilitator
+// needs authenticated requests (below), so mainnet gets a different default.
+const DEFAULT_FACILITATOR_URL = NETWORK === "base"
+  ? "https://api.cdp.coinbase.com/platform/v2/x402"
+  : "https://x402.org/facilitator";
+const FACILITATOR_URL = process.env.X402_FACILITATOR_URL || DEFAULT_FACILITATOR_URL;
+const CDP_API_KEY_ID = process.env.CDP_API_KEY_ID;
+const CDP_API_KEY_SECRET = process.env.CDP_API_KEY_SECRET;
+
+// CDP's facilitator authenticates each call with a short-lived JWT bound to
+// the method + host + path being called, not a static bearer token — so
+// this has to run per-request, per-operation, not once at module load.
+async function createCdpAuthHeaders() {
+  // Dynamic import, not require: @coinbase/cdp-sdk/auth's CJS build calls
+  // require() on jose's ESM-only "webapi" export and crashes at load time
+  // in Vercel's Node runtime (ERR_REQUIRE_ESM) — took the whole endpoint
+  // down, testnet included, when this was a static top-level require.
+  // The package's own ESM build has no such problem, and import() loads
+  // it lazily, only when a mainnet request actually needs a CDP header.
+  const { getAuthHeaders } = await import("@coinbase/cdp-sdk/auth");
+  const url = new URL(FACILITATOR_URL);
+  async function headersFor(operation, method) {
+    return getAuthHeaders({
+      apiKeyId: CDP_API_KEY_ID,
+      apiKeySecret: CDP_API_KEY_SECRET,
+      requestMethod: method,
+      requestHost: url.host,
+      requestPath: `${url.pathname}/${operation}`,
+    });
+  }
+  // x402's useFacilitator calls this once inside verify() and once inside
+  // settle(), reading only one of these three per call — so two of three
+  // signings are always thrown away. Parallel, not sequential, at least
+  // keeps that waste from stacking as extra latency on the critical path.
+  const [verify, settle, supported] = await Promise.all([
+    headersFor("verify", "POST"),
+    headersFor("settle", "POST"),
+    headersFor("supported", "GET"),
+  ]);
+  return { verify, settle, supported };
+}
 const MAX_TOKENS = 4000;
 const WORD_CAP = 2000;            // a post, not a book
 const RATE_PER_MIN = 10;          // paid calls, but still cap runaway loops
@@ -199,6 +246,14 @@ module.exports = async (req, res) => {
     console.error("ANTHROPIC_API_KEY not set");
     return res.status(503).json({ error: "Endpoint misconfigured. Try again soon." });
   }
+  // On mainnet, FACILITATOR_URL defaults to CDP's authenticated facilitator
+  // (line ~48) regardless of whether CDP creds are actually set. Without this
+  // check, a missing/removed CDP key doesn't fail here — it fails silently
+  // inside verify(), indistinguishable from a genuinely invalid payment.
+  if (NETWORK === "base" && (!CDP_API_KEY_ID || !CDP_API_KEY_SECRET)) {
+    console.error("CDP_API_KEY_ID/CDP_API_KEY_SECRET not set for base network");
+    return res.status(503).json({ error: "Endpoint misconfigured. Try again soon." });
+  }
 
   const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
   if (rateLimited(ip)) return res.status(429).json({ error: "Slow down. 10 calls a minute." });
@@ -230,7 +285,11 @@ module.exports = async (req, res) => {
   }
   const releaseOnFailure = () => { if (nonce) releaseNonce(nonce); };
 
-  const { verify, settle } = useFacilitator({ url: FACILITATOR_URL });
+  const useCdpAuth = NETWORK === "base" && CDP_API_KEY_ID && CDP_API_KEY_SECRET;
+  const { verify, settle } = useFacilitator({
+    url: FACILITATOR_URL,
+    ...(useCdpAuth ? { createAuthHeaders: createCdpAuthHeaders } : {}),
+  });
   try {
     const v = await verify(decoded, selected);
     if (!v.isValid) { releaseOnFailure(); return reply402(res, accepts, v.invalidReason || "Payment invalid"); }
