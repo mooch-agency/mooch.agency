@@ -772,12 +772,44 @@ After the rewrite, say:
   // first. Split by target, matching how /say-less already separates
   // sayless_copy_prompt from sayless_copy_commands.
   document.addEventListener("DOMContentLoaded", function () {
+    var counter = document.querySelector(".copy-count");
+
+    // The number shown on page load is whatever scripts/copy-counts.mjs baked
+    // in at the last deploy: real, but as stale as the time since. This
+    // refreshes it from /api/copy-count (backed by the Copy Counters database
+    // in Notion) so every visitor sees the same live figure, then the click
+    // handler below asks the same endpoint to increment it. Failures here just
+    // leave the build-time number in place, so a Notion hiccup never breaks
+    // the copy button itself.
+    function setCounter(count) {
+      if (!counter) return;
+      // Setting the attribute is what un-hides a fresh page's "0" state too:
+      // ui.css hides the element only while data-copy-count="0".
+      counter.setAttribute("data-copy-count", count);
+      counter.textContent = "Copied " + count.toLocaleString("en-GB") + (count === 1 ? " time" : " times");
+    }
+
+    if (counter) {
+      fetch("/api/copy-count?slug=soundlikeme")
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) { if (data) setCounter(data.count); })
+        .catch(function () {});
+    }
+
     document.querySelectorAll(".copy-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        var name = btn.getAttribute("data-copy-target") === "install-commands"
-          ? "install_copy"
-          : "prompt_copy";
+        var isPrompt = btn.getAttribute("data-copy-target") !== "install-commands";
+        var name = isPrompt ? "prompt_copy" : "install_copy";
         window.va("event", { name: name, data: { prompt: document.title } });
+        if (!isPrompt) return;
+        fetch("/api/copy-count", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ slug: "soundlikeme" }),
+        })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (data) { if (data) setCounter(data.count); })
+          .catch(function () {});
       });
     });
   });

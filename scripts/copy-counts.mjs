@@ -50,12 +50,20 @@ const DRY = ARGV.includes('--dry');
 const PROJECT_ID = 'prj_9ktpx6Qd6nCMT8BT5k7N7Vu4WOBx';
 const TEAM_ID = 'team_EQeV0ciRFVyubEPoQGf21bfC';
 
-// Pages carrying a counter, mapped to the request path their events report
-// under. Add a row when a new prompt page ships; the page needs a matching
-// data-copy-count element or this errors rather than silently doing nothing.
+// Pages carrying a counter, mapped to the request path and event name their
+// copy fires under. /say-less predates the prompt_copy convention and keeps
+// its own sayless_copy_prompt name; add a row here when a new prompt page
+// ships. The page needs a matching data-copy-count element or this errors
+// rather than silently doing nothing.
+//
+// This is the render seen for an instant before /api/copy-count (backed by
+// Notion, the actual persistent counter) overwrites it on load, so it only
+// needs to be roughly right, not exact: Vercel Analytics stays the source
+// here rather than Notion, so this script doesn't need NOTION_TOKEN too.
 const PAGES = [
-  { file: 'prompts/deslop.html', requestPath: '/prompts/deslop' },
-  { file: 'prompts/soundlikeme.html', requestPath: '/prompts/soundlikeme' },
+  { file: 'prompts/deslop.html', requestPath: '/prompts/deslop', eventName: 'prompt_copy' },
+  { file: 'prompts/soundlikeme.html', requestPath: '/prompts/soundlikeme', eventName: 'prompt_copy' },
+  { file: 'say-less.html', requestPath: '/say-less', eventName: 'sayless_copy_prompt' },
 ];
 
 // Analytics retains a bounded window, but these pages are newer than any of it,
@@ -63,8 +71,8 @@ const PAGES = [
 const SINCE = Date.now() - 365 * 86_400_000;
 const UNTIL = Date.now();
 
-function odata(requestPath) {
-  return `eventName eq 'prompt_copy' and requestPath eq '${requestPath}'`;
+function odata(requestPath, eventName) {
+  return `eventName eq '${eventName}' and requestPath eq '${requestPath}'`;
 }
 
 // The CLI prints a "did you mean to deploy" warning to stdout on some repos, so
@@ -75,13 +83,13 @@ function parseLoose(out) {
   return JSON.parse(out.slice(start));
 }
 
-function fetchCount(requestPath) {
+function fetchCount(requestPath, eventName) {
   const qs = new URLSearchParams({
     projectId: PROJECT_ID,
     teamId: TEAM_ID,
     since: String(SINCE),
     until: String(UNTIL),
-    filter: odata(requestPath),
+    filter: odata(requestPath, eventName),
   });
   const url = `/v1/query/web-analytics/events/count?${qs}`;
 
@@ -132,7 +140,7 @@ for (const page of PAGES) {
     continue;
   }
 
-  const count = fetchCount(page.requestPath);
+  const count = fetchCount(page.requestPath, page.eventName);
   const attr = ` data-copy-count="${count}"`;
   const openTag = m[1].replace(/\s*data-copy-count(="[^"]*")?/, '') .replace(/>$/, `${attr}>`);
   const next = `${openTag}${render(count)}${m[3]}`;
