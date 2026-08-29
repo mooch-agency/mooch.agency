@@ -49,16 +49,46 @@ function rateLimited(ip, method) {
   return false;
 }
 
-function originOk(req) {
-  const src = req.headers.origin || req.headers.referer || "";
-  if (!src) return true; // non-browser clients aren't the cost threat; the caps are
-  let host;
-  try { host = new URL(src).hostname; } catch { return false; }
+// A key with nothing live left (its owner hasn't hit the endpoint in the last
+// day) is dead weight: a warm Lambda instance can run for hours, and without
+// this a record persists for every unique IP that ever visited, not just the
+// ones still rate-limit-relevant. Called after each rateLimited() so the map
+// only holds keys with at least one timestamp still in a live window.
+function pruneDeadHits() {
+  const now = Date.now();
+  for (const [key, rec] of hits) {
+    const liveMin = rec.min.some((t) => now - t < 60_000);
+    const liveDay = rec.day.some((t) => now - t < 86_400_000);
+    if (!liveMin && !liveDay) hits.delete(key);
+  }
+}
+
+// Vercel replaces dots with hyphens in a project's preview subdomain, so this
+// project's previews are always "mooch-agency-<something>.vercel.app" (or the
+// bare "mooch-agency.vercel.app" alias). Matching on that prefix, not just
+// ".vercel.app", stops any other Vercel-hosted site on the internet from
+// counting as a trusted origin.
+function isAllowedHost(host) {
   return (
     ALLOWED_HOSTS.includes(host) ||
     host.endsWith(".mooch.agency") ||
-    host.endsWith(".vercel.app") // preview deployments
+    host === "mooch-agency.vercel.app" ||
+    (host.startsWith("mooch-agency-") && host.endsWith(".vercel.app"))
   );
+}
+
+function originOk(req, { requireHeader } = {}) {
+  const src = req.headers.origin || req.headers.referer || "";
+  if (!src) {
+    // A GET is read-only, so a client that strips both headers (some privacy
+    // browsers do) isn't worth blocking; the rate caps are the backstop for
+    // it. A POST changes the public count, so it doesn't get that leniency:
+    // no header means no proof of same-site, so it's rejected outright.
+    return !requireHeader;
+  }
+  let host;
+  try { host = new URL(src).hostname; } catch { return false; }
+  return isAllowedHost(host);
 }
 
 function readBody(req) {
@@ -95,7 +125,15 @@ async function notion(path, method, body) {
 }
 
 function countOf(page) {
-  return (page.properties && page.properties.Count && page.properties.Count.number) || 0;
+  const prop = page && page.properties && page.properties.Count;
+  // A missing or renamed Count property is not the same thing as a genuine
+  // zero (soundlikeme legitimately starts at 0): falling back to 0 here would
+  // let the POST path write 1 straight over Notion and destroy the real
+  // total with no error and no way back. Fail loudly instead.
+  if (!prop || typeof prop.number !== "number") {
+    throw new Error("Count property missing from Notion page");
+  }
+  return prop.number;
 }
 
 module.exports = async function handler(req, res) {
@@ -104,7 +142,7 @@ module.exports = async function handler(req, res) {
     res.statusCode = 405;
     return res.end("Method not allowed");
   }
-  if (!originOk(req)) {
+  if (!originOk(req, { requireHeader: method === "POST" })) {
     res.statusCode = 403;
     return res.end("Forbidden");
   }
@@ -119,7 +157,9 @@ module.exports = async function handler(req, res) {
   }
 
   const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "anon";
-  if (rateLimited(ip, method)) {
+  const limited = rateLimited(ip, method);
+  pruneDeadHits();
+  if (limited) {
     res.statusCode = 429;
     return res.end("Slow down a moment, then try again.");
   }
@@ -133,9 +173,13 @@ module.exports = async function handler(req, res) {
   try {
     if (method === "GET") {
       const page = await notion(`pages/${pageId}`, "GET");
-      // Read-only, so a short edge cache is free accuracy-for-load trade: a
-      // burst of visitors in the same 30s window shares one Notion read.
-      res.setHeader("Cache-Control", "public, s-maxage=30, stale-while-revalidate=300");
+      // No edge caching: this is a "live global count" precisely so a visitor
+      // who just copied can reload and see it went up. A shared CDN cache
+      // (even a short one) can serve a stale, lower number to that same
+      // visitor or to someone else mid-window, which is worse than the cost
+      // of one extra Notion read per page load - at these volumes (tens of
+      // copies a year) that cost is free.
+      res.setHeader("Cache-Control", "no-store");
       return res.end(JSON.stringify({ count: countOf(page) }));
     }
 
@@ -148,6 +192,8 @@ module.exports = async function handler(req, res) {
   } catch (e) {
     console.error("copy-count failed", slug, e && e.message);
     res.statusCode = 502;
-    return res.end("Copy count unavailable.");
+    // Content-Type above already declared JSON, so a caller doing res.json()
+    // must get JSON back on the error path too, not a plain string.
+    return res.end(JSON.stringify({ error: "Copy count unavailable." }));
   }
 };

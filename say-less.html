@@ -1395,8 +1395,17 @@ f.addEventListener("submit", (e) => {
 // whatever's baked into the page, refreshed live on load, then bumped by the
 // endpoint's own response after a real prompt copy, not a local guess.
 var copyCounter = document.querySelector(".copy-count");
+// The load-GET and the click-POST both land here, and either can resolve
+// after the other (Notion round-trips are slow and uneven). Without an
+// ordering guard the counter can tick up on the POST reply and then back
+// down when the older GET finally lands, so this refuses to render a value
+// lower than the one already shown. `shownCopyCount` resets on every page
+// load, so a value corrected downward in Notion still appears next visit.
+var shownCopyCount = null;
 function setCopyCount(count) {
   if (!copyCounter) return;
+  if (shownCopyCount !== null && count < shownCopyCount) return;
+  shownCopyCount = count;
   copyCounter.setAttribute("data-copy-count", count);
   copyCounter.textContent = "Copied " + count.toLocaleString("en-GB") + (count === 1 ? " time" : " times");
 }

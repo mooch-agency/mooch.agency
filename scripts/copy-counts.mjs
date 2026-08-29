@@ -6,37 +6,39 @@
 // Why build time and not a request
 // --------------------------------
 // The obvious shape is a serverless function the page calls on load. It is the
-// wrong trade here. Vercel's Web Analytics query API has no read-only scope, so
-// a runtime reader means storing a full-account API token in production to
-// render one integer. Baking the number in at build time keeps that token on
-// the machine that runs this script (the Vercel CLI's own session, already
-// authenticated) and ships the page as plain static HTML with nothing to call.
+// wrong trade here. Baking the number in at build time ships the page as
+// plain static HTML with a correct-looking number already in it, and lets
+// /api/copy-count.js (the live, persistent counter) simply confirm or nudge
+// that number on load instead of visibly overwriting a different one.
 //
 // The cost is staleness: the number only moves when the site is next deployed.
 // At the volumes these pages see, that is not a real cost.
 //
 // Where the number comes from
 // ---------------------------
-// The `prompt_copy` custom event, filtered to the page's own path. That event
-// is what the copy buttons already fire, so this counts real copies rather than
-// visits. It undercounts by whatever share of visitors block the analytics
-// script, which is the honest floor, not the true total.
-//
-// One wrinkle in the history: until the split landed, both copy buttons on a
-// prompt page (the prompt, and the install commands) fired prompt_copy. Events
-// from before then are therefore a mix of the two, so the earliest part of the
-// count runs slightly high. Everything recorded since is prompt-only.
+// The same Notion page and Count property that api/copy-count.js reads and
+// increments at runtime (see that file's header for the shape). This used to
+// read Vercel Web Analytics' prompt_copy event instead, which was appealing
+// because it needed no token: the Vercel CLI's own session was enough. But
+// Analytics and Notion diverge the moment they're seeded, because Notion
+// counts every click that reaches the endpoint while Analytics misses anyone
+// blocking the analytics script or using ?notrack=1. That gap only widens, so
+// every page load baked from Analytics rendered a smaller number and then
+// visibly jumped to Notion's larger one once the runtime fetch landed, worse
+// with every deploy. Reading the same source at build time as at runtime is
+// the only way to make that jump disappear: this script now needs
+// NOTION_TOKEN for exactly that reason.
 //
 // Run:   node scripts/copy-counts.mjs           refresh every counter
 //        node scripts/copy-counts.mjs --check   verify only, exit 1 if stale
 //        node scripts/copy-counts.mjs --dry     print what it would write
 //
-// Auth: uses the Vercel CLI's session (`vercel api`). Run `vercel login` once.
-// In CI, set VERCEL_TOKEN and this uses it instead.
+// Auth: needs NOTION_TOKEN in the environment (the same token api/copy-count.js
+// uses in production). Get it with `vercel env pull` (writes .env.local) or
+// export it directly: NOTION_TOKEN=secret_... pnpm counts:build.
 // ---------------------------------------------------------------------------
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -47,70 +49,49 @@ const ARGV = process.argv.slice(2);
 const CHECK_ONLY = ARGV.includes('--check');
 const DRY = ARGV.includes('--dry');
 
-const PROJECT_ID = 'prj_9ktpx6Qd6nCMT8BT5k7N7Vu4WOBx';
-const TEAM_ID = 'team_EQeV0ciRFVyubEPoQGf21bfC';
+const NOTION_VERSION = '2026-03-11';
 
-// Pages carrying a counter, mapped to the request path and event name their
-// copy fires under. /say-less predates the prompt_copy convention and keeps
-// its own sayless_copy_prompt name; add a row here when a new prompt page
-// ships. The page needs a matching data-copy-count element or this errors
-// rather than silently doing nothing.
+// Pages carrying a counter, mapped to the Notion page id api/copy-count.js
+// reads and increments for that same slug (see PAGES there). Add a row here
+// when a new prompt page ships. The page needs a matching data-copy-count
+// element or this errors rather than silently doing nothing.
 //
-// This is the render seen for an instant before /api/copy-count (backed by
-// Notion, the actual persistent counter) overwrites it on load, so it only
-// needs to be roughly right, not exact: Vercel Analytics stays the source
-// here rather than Notion, so this script doesn't need NOTION_TOKEN too.
+// This is baked in at build time from the same source /api/copy-count.js
+// reads at runtime, so the two agree from the moment a page ships: no more
+// jump from one number to a bigger one as the runtime fetch lands.
 const PAGES = [
-  { file: 'prompts/deslop.html', requestPath: '/prompts/deslop', eventName: 'prompt_copy' },
-  { file: 'prompts/soundlikeme.html', requestPath: '/prompts/soundlikeme', eventName: 'prompt_copy' },
-  { file: 'say-less.html', requestPath: '/say-less', eventName: 'sayless_copy_prompt' },
+  { file: 'prompts/deslop.html', pageId: '3cb804529ed08134986cdeb19a30f57a' },
+  { file: 'prompts/soundlikeme.html', pageId: '3cb804529ed0815fa148cea34d1880ea' },
+  { file: 'say-less.html', pageId: '3cb804529ed081e2832ae8ac3dd6bcb9' },
 ];
 
-// Analytics retains a bounded window, but these pages are newer than any of it,
-// so a wide range is simply "all time" without needing the page's ship date.
-const SINCE = Date.now() - 365 * 86_400_000;
-const UNTIL = Date.now();
-
-function odata(requestPath, eventName) {
-  return `eventName eq '${eventName}' and requestPath eq '${requestPath}'`;
-}
-
-// The CLI prints a "did you mean to deploy" warning to stdout on some repos, so
-// the JSON is located rather than assumed to start at byte zero.
-function parseLoose(out) {
-  const start = out.indexOf('{');
-  if (start === -1) throw new Error(`no JSON in response:\n${out}`);
-  return JSON.parse(out.slice(start));
-}
-
-function fetchCount(requestPath, eventName) {
-  const qs = new URLSearchParams({
-    projectId: PROJECT_ID,
-    teamId: TEAM_ID,
-    since: String(SINCE),
-    until: String(UNTIL),
-    filter: odata(requestPath, eventName),
-  });
-  const url = `/v1/query/web-analytics/events/count?${qs}`;
-
-  let out;
-  if (process.env.VERCEL_TOKEN) {
-    // CI path: no CLI session to lean on.
-    const res = execFileSync(
-      'curl',
-      ['-sS', '-H', `Authorization: Bearer ${process.env.VERCEL_TOKEN}`, `https://api.vercel.com${url}`],
-      { encoding: 'utf8' },
-    );
-    out = res;
-  } else {
-    out = execFileSync('vercel', ['api', url], { encoding: 'utf8', cwd: ROOT });
+function countOf(page) {
+  const prop = page && page.properties && page.properties.Count;
+  // Matches api/copy-count.js: a missing or renamed Count property is not a
+  // genuine zero. Falling back to 0 here would bake a zero into every page,
+  // and ui.css hides the counter at zero, so the whole thing would quietly
+  // vanish from the site on the next deploy. Fail the build instead.
+  if (!prop || typeof prop.number !== 'number') {
+    throw new Error('Count property missing from Notion page');
   }
+  return prop.number;
+}
 
-  const json = parseLoose(out);
-  if (json.error) throw new Error(`${requestPath}: ${json.error.message}`);
-  const count = json?.data?.count;
-  if (typeof count !== 'number') throw new Error(`${requestPath}: no count in response`);
-  return count;
+// Kept as a parameter (rather than reading process.env.NOTION_TOKEN directly)
+// so a test harness can inject a fetch stub without touching the environment.
+async function fetchCount(pageId, token, fetchImpl = fetch) {
+  const res = await fetchImpl(`https://api.notion.com/v1/pages/${pageId}`, {
+    headers: {
+      authorization: `Bearer ${token}`,
+      'notion-version': NOTION_VERSION,
+    },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = (data && data.message) || `Notion ${res.status}`;
+    throw new Error(`${pageId}: ${msg}`);
+  }
+  return countOf(data);
 }
 
 // The counter element is the single source of truth for its own value: the
@@ -127,47 +108,79 @@ function render(count) {
   return `Copied ${count.toLocaleString('en-GB')} ${noun}`;
 }
 
-let stale = 0;
-let wrote = 0;
-
-for (const page of PAGES) {
-  const file = path.join(ROOT, page.file);
-  const html = readFileSync(file, 'utf8');
-  const m = html.match(RE);
-  if (!m) {
-    console.error(`✗ ${page.file}: no [data-copy-count] element found`);
+// Exported so a test harness can drive the whole run with a fake fetch and a
+// fake token without shelling out or touching real files outside ROOT.
+export async function run({ token, fetchImpl = fetch, root = ROOT, checkOnly = CHECK_ONLY, dry = DRY } = {}) {
+  if (!token) {
+    console.error(
+      '✗ NOTION_TOKEN is not set. This script bakes the same Notion-backed\n' +
+      '  count that api/copy-count.js serves at runtime, so it needs that\n' +
+      '  token too. Get it with `vercel env pull` (writes .env.local), or\n' +
+      '  export it directly: NOTION_TOKEN=secret_... pnpm counts:build',
+    );
     process.exitCode = 1;
-    continue;
+    return;
   }
 
-  const count = fetchCount(page.requestPath, page.eventName);
-  const attr = ` data-copy-count="${count}"`;
-  const openTag = m[1].replace(/\s*data-copy-count(="[^"]*")?/, '') .replace(/>$/, `${attr}>`);
-  const next = `${openTag}${render(count)}${m[3]}`;
+  let stale = 0;
+  let wrote = 0;
 
-  if (m[0] === next) {
-    console.log(`= ${page.file}: ${count}`);
-    continue;
+  for (const page of PAGES) {
+    const file = path.join(root, page.file);
+    const html = readFileSync(file, 'utf8');
+    const m = html.match(RE);
+    if (!m) {
+      console.error(`✗ ${page.file}: no [data-copy-count] element found`);
+      process.exitCode = 1;
+      continue;
+    }
+
+    let count;
+    try {
+      count = await fetchCount(page.pageId, token, fetchImpl);
+    } catch (e) {
+      console.error(`✗ ${page.file}: ${e.message}`);
+      process.exitCode = 1;
+      continue;
+    }
+
+    const attr = ` data-copy-count="${count}"`;
+    const openTag = m[1].replace(/\s*data-copy-count(="[^"]*")?/, '').replace(/>$/, `${attr}>`);
+    const next = `${openTag}${render(count)}${m[3]}`;
+
+    if (m[0] === next) {
+      console.log(`= ${page.file}: ${count}`);
+      continue;
+    }
+
+    if (checkOnly) {
+      console.error(`✗ ${page.file}: counter is stale (page shows a different number to ${count})`);
+      stale++;
+      continue;
+    }
+
+    if (dry) {
+      console.log(`→ ${page.file}: would write ${count}`);
+      continue;
+    }
+
+    writeFileSync(file, html.replace(RE, next));
+    console.log(`✓ ${page.file}: ${count}`);
+    wrote++;
   }
 
-  if (CHECK_ONLY) {
-    console.error(`✗ ${page.file}: counter is stale (page shows a different number to ${count})`);
-    stale++;
-    continue;
+  if (stale) {
+    console.error(`\n${stale} counter(s) stale. Run: pnpm counts:build`);
+    process.exitCode = 1;
   }
-
-  if (DRY) {
-    console.log(`→ ${page.file}: would write ${count}`);
-    continue;
-  }
-
-  writeFileSync(file, html.replace(RE, next));
-  console.log(`✓ ${page.file}: ${count}`);
-  wrote++;
+  if (wrote) console.log(`\nUpdated ${wrote} counter(s).`);
 }
 
-if (stale) {
-  console.error(`\n${stale} counter(s) stale. Run: pnpm counts:build`);
-  process.exit(1);
+// Only run when invoked directly (`node scripts/copy-counts.mjs`), not when a
+// test harness imports `run` for its own use. Compared as resolved paths,
+// not raw strings, because a repo path containing spaces (this one does)
+// round-trips through file:// URL-encoding and would never string-match.
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  await run({ token: process.env.NOTION_TOKEN });
+  process.exit(process.exitCode || 0);
 }
-if (wrote) console.log(`\nUpdated ${wrote} counter(s).`);

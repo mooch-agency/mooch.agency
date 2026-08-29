@@ -781,8 +781,17 @@ After the rewrite, say:
     // handler below asks the same endpoint to increment it. Failures here just
     // leave the build-time number in place, so a Notion hiccup never breaks
     // the copy button itself.
+    // The load-GET and the click-POST both land here, and either can resolve
+    // after the other (Notion round-trips are slow and uneven). Without an
+    // ordering guard the counter can tick up on the POST reply and then back
+    // down when the older GET finally lands, so this refuses to render a
+    // value lower than the one already shown. `shown` resets on every page
+    // load, so a value corrected downward in Notion still appears next visit.
+    var shown = null;
     function setCounter(count) {
       if (!counter) return;
+      if (shown !== null && count < shown) return;
+      shown = count;
       // Setting the attribute is what un-hides a fresh page's "0" state too:
       // ui.css hides the element only while data-copy-count="0".
       counter.setAttribute("data-copy-count", count);
