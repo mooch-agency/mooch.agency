@@ -321,7 +321,7 @@
     grid-template-columns: 1fr;
     gap: 2px;
     max-width: 600px;
-    margin: 32px 0 12px;
+    margin: 32px 0 40px;
     border-radius: 10px;
     overflow: hidden;
     box-shadow: var(--shadow-border);
@@ -341,28 +341,6 @@
   .cmp-price { font-family: var(--serif); font-size: 34px; margin-bottom: 8px; }
   .cmp-desc { font-size: 14px; color: var(--muted-small); }
   .cmp-col.agent .cmp-desc { color: var(--muted); }
-  .cmp-caption {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--muted-small);
-    margin-bottom: 40px;
-  }
-  /* Inline copy trigger riding on the caption line, not a boxed .copy-btn
-     chip: there's no code block left on the page to attach a header to. */
-  .cmp-install-btn {
-    font: inherit;
-    color: inherit;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    background: none;
-    border: none;
-    border-radius: 0;
-    padding: 0;
-    min-height: auto;
-    cursor: pointer;
-  }
-  .cmp-install-btn:hover { color: var(--ink); }
-
   .ba-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -704,8 +682,6 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
         <div class="cmp-desc">One API call. No signup, no key.</div>
       </div>
     </div>
-    <p class="cmp-caption">Robots pay to sound less like robots. <button class="copy-btn cmp-install-btn" type="button" data-copy-target="agent-commands">Install command</button></p>
-    <span id="agent-commands" hidden>curl -X POST https://mooch.agency/api/deslop -d '{"text":"..."}'</span>
 
   </div>
 </article>
