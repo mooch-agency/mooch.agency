@@ -597,7 +597,10 @@
     <div class="prompt-box">
       <div class="prompt-box-head">
         <span>Prompt &middot; v1.2</span>
-        <button class="copy-btn" type="button" data-copy-target="prompt-text">Copy</button>
+        <span class="copy-cluster">
+          <span class="copy-count" data-copy-count="17">Copied 17 times</span>
+          <button class="copy-btn" type="button" data-copy-target="prompt-text">Copy</button>
+        </span>
       </div>
       <div class="disclosure" id="promptDisclosure" style="--disclosure-bg: var(--surface); --disclosure-max: min(46vh, 400px);">
       <pre id="prompt-text">You are a writing editor. Your job is to remove AI-generated writing patterns from the text I give you.
@@ -827,10 +830,68 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
 
 <script>
   // Custom Vercel Analytics events for prompt pages.
+  //
+  // There are two copy buttons here, the prompt itself and the install
+  // commands, and they used to report as the same prompt_copy event. That made
+  // the number unreadable: "someone took the prompt" and "someone is installing
+  // the skill" are different intents, and the on-page counter is built from the
+  // first. Split by target, matching how /say-less already separates
+  // sayless_copy_prompt from sayless_copy_commands.
   document.addEventListener("DOMContentLoaded", function () {
+    var counter = document.querySelector(".copy-count");
+
+    // The number shown on page load is whatever scripts/copy-counts.mjs baked
+    // in at the last deploy: real, but as stale as the time since. This
+    // refreshes it from /api/copy-count (backed by the Copy Counters database
+    // in Notion) so every visitor sees the same live figure, then the click
+    // handler below asks the same endpoint to increment it. Failures here just
+    // leave the build-time number in place, so a Notion hiccup never breaks
+    // the copy button itself.
+    // The load-GET and the click-POST both land here, and either can resolve
+    // after the other (Notion round-trips are slow and uneven). Without an
+    // ordering guard the counter can tick up on the POST reply and then back
+    // down when the older GET finally lands, so this refuses to render a
+    // value lower than the one already shown. `shown` resets on every page
+    // load, so a value corrected downward in Notion still appears next visit.
+    var shown = null;
+    // animate is true only for a click-driven increment, never the silent
+    // load-time sync: a visitor reloading shouldn't see a tick just because
+    // the page fetched the current total.
+    function setCounter(count, animate) {
+      if (!counter) return;
+      if (shown !== null && count < shown) return;
+      shown = count;
+      // Setting the attribute is what un-hides a fresh page's "0" state too:
+      // ui.css hides the element only while data-copy-count="0".
+      counter.setAttribute("data-copy-count", count);
+      counter.textContent = "Copied " + count.toLocaleString("en-GB") + (count === 1 ? " time" : " times");
+      if (animate) {
+        counter.classList.add("just-copied");
+        setTimeout(function () { counter.classList.remove("just-copied"); }, 400);
+      }
+    }
+
+    if (counter) {
+      fetch("/api/copy-count?slug=deslop")
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) { if (data) setCounter(data.count); })
+        .catch(function () {});
+    }
+
     document.querySelectorAll(".copy-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        window.va("event", { name: "prompt_copy", data: { prompt: document.title } });
+        var isPrompt = btn.getAttribute("data-copy-target") !== "install-commands";
+        var name = isPrompt ? "prompt_copy" : "install_copy";
+        window.va("event", { name: name, data: { prompt: document.title } });
+        if (!isPrompt) return;
+        fetch("/api/copy-count", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ slug: "deslop" }),
+        })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (data) { if (data) setCounter(data.count, true); })
+          .catch(function () {});
       });
     });
   });

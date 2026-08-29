@@ -25,3 +25,4 @@ mooch-cards/pnpm-lock.yaml
 
 # Dependencies are installed per environment, never committed.
 node_modules/
+.env*

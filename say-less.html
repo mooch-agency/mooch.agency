@@ -735,6 +735,7 @@
       <button class="ghost" type="button" id="promptToggle" aria-expanded="false" aria-controls="promptDetails">
         <span class="chev" aria-hidden="true">&#9662;</span> <span class="toggle-label">Show the prompt</span>
       </button>
+      <span class="copy-count" data-copy-count="20">Copied 20 times</span>
     </div>
 
     <div class="prompt-details" id="promptDetails">
@@ -1389,6 +1390,39 @@ f.addEventListener("submit", (e) => {
   };
 });
 
+// Global copy counter, backed by /api/copy-count (the Copy Counters database
+// in Notion). Same mechanism as the prompt pages: the count shown on load is
+// whatever's baked into the page, refreshed live on load, then bumped by the
+// endpoint's own response after a real prompt copy, not a local guess.
+var copyCounter = document.querySelector(".copy-count");
+// The load-GET and the click-POST both land here, and either can resolve
+// after the other (Notion round-trips are slow and uneven). Without an
+// ordering guard the counter can tick up on the POST reply and then back
+// down when the older GET finally lands, so this refuses to render a value
+// lower than the one already shown. `shownCopyCount` resets on every page
+// load, so a value corrected downward in Notion still appears next visit.
+var shownCopyCount = null;
+// animate is true only for a click-driven increment, never the silent
+// load-time sync: a visitor reloading shouldn't see a tick just because the
+// page fetched the current total.
+function setCopyCount(count, animate) {
+  if (!copyCounter) return;
+  if (shownCopyCount !== null && count < shownCopyCount) return;
+  shownCopyCount = count;
+  copyCounter.setAttribute("data-copy-count", count);
+  copyCounter.textContent = "Copied " + count.toLocaleString("en-GB") + (count === 1 ? " time" : " times");
+  if (animate) {
+    copyCounter.classList.add("just-copied");
+    setTimeout(function () { copyCounter.classList.remove("just-copied"); }, 400);
+  }
+}
+if (copyCounter) {
+  fetch("/api/copy-count?slug=say-less")
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) { if (data) setCopyCount(data.count); })
+    .catch(function () {});
+}
+
 // Targets the data attribute rather than a class, so a copy control can be
 // styled as whatever the block around it needs.
 document.querySelectorAll("[data-copy-target]").forEach(function (btn) {
@@ -1396,7 +1430,18 @@ document.querySelectorAll("[data-copy-target]").forEach(function (btn) {
     var targetId = btn.getAttribute("data-copy-target");
     var target = document.getElementById(targetId);
     if (!target) return;
-    track(targetId === "install-commands" ? "sayless_copy_commands" : "sayless_copy_prompt");
+    var isPrompt = targetId !== "install-commands";
+    track(isPrompt ? "sayless_copy_prompt" : "sayless_copy_commands");
+    if (isPrompt) {
+      fetch("/api/copy-count", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ slug: "say-less" }),
+      })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) { if (data) setCopyCount(data.count, true); })
+        .catch(function () {});
+    }
     navigator.clipboard.writeText(target.textContent.trim()).then(function () {
       var original = btn.textContent;
       btn.textContent = "Copied";
