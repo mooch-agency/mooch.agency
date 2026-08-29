@@ -788,7 +788,10 @@ After the rewrite, say:
     // value lower than the one already shown. `shown` resets on every page
     // load, so a value corrected downward in Notion still appears next visit.
     var shown = null;
-    function setCounter(count) {
+    // animate is true only for a click-driven increment, never the silent
+    // load-time sync: a visitor reloading shouldn't see a tick just because
+    // the page fetched the current total.
+    function setCounter(count, animate) {
       if (!counter) return;
       if (shown !== null && count < shown) return;
       shown = count;
@@ -796,6 +799,10 @@ After the rewrite, say:
       // ui.css hides the element only while data-copy-count="0".
       counter.setAttribute("data-copy-count", count);
       counter.textContent = "Copied " + count.toLocaleString("en-GB") + (count === 1 ? " time" : " times");
+      if (animate) {
+        counter.classList.add("just-copied");
+        setTimeout(function () { counter.classList.remove("just-copied"); }, 400);
+      }
     }
 
     if (counter) {
@@ -817,7 +824,7 @@ After the rewrite, say:
           body: JSON.stringify({ slug: "soundlikeme" }),
         })
           .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (data) { if (data) setCounter(data.count); })
+          .then(function (data) { if (data) setCounter(data.count, true); })
           .catch(function () {});
       });
     });

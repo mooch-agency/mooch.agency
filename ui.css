@@ -102,10 +102,20 @@
   color: var(--muted-small);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  transition: color var(--t-deliver) var(--ease-deliver);
 }
 
 /* A page with no copies yet says nothing rather than advertising a zero. */
 .copy-count[data-copy-count="0"] { display: none; }
+
+/* Brief colour tick when a copy click bumps the number, so the change reads
+   as "your click did that" rather than a silent text swap. The number itself
+   is the real feedback (a static cue); this is only decoration on top of it,
+   so it's fine to skip under reduced motion — the JS never adds this class
+   in that case. */
+@media (prefers-reduced-motion: no-preference) {
+  .copy-count.just-copied { color: var(--success); }
+}
 
 /* The count is decoration next to a button that already says what it does,
    so it is not worth the ink on a printed page. */

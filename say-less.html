@@ -1402,12 +1402,19 @@ var copyCounter = document.querySelector(".copy-count");
 // lower than the one already shown. `shownCopyCount` resets on every page
 // load, so a value corrected downward in Notion still appears next visit.
 var shownCopyCount = null;
-function setCopyCount(count) {
+// animate is true only for a click-driven increment, never the silent
+// load-time sync: a visitor reloading shouldn't see a tick just because the
+// page fetched the current total.
+function setCopyCount(count, animate) {
   if (!copyCounter) return;
   if (shownCopyCount !== null && count < shownCopyCount) return;
   shownCopyCount = count;
   copyCounter.setAttribute("data-copy-count", count);
   copyCounter.textContent = "Copied " + count.toLocaleString("en-GB") + (count === 1 ? " time" : " times");
+  if (animate) {
+    copyCounter.classList.add("just-copied");
+    setTimeout(function () { copyCounter.classList.remove("just-copied"); }, 400);
+  }
 }
 if (copyCounter) {
   fetch("/api/copy-count?slug=say-less")
@@ -1432,7 +1439,7 @@ document.querySelectorAll("[data-copy-target]").forEach(function (btn) {
         body: JSON.stringify({ slug: "say-less" }),
       })
         .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (data) { if (data) setCopyCount(data.count); })
+        .then(function (data) { if (data) setCopyCount(data.count, true); })
         .catch(function () {});
     }
     navigator.clipboard.writeText(target.textContent.trim()).then(function () {
