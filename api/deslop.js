@@ -72,11 +72,16 @@ async function createCdpAuthHeaders() {
       requestPath: `${url.pathname}/${operation}`,
     });
   }
-  return {
-    verify: await headersFor("verify", "POST"),
-    settle: await headersFor("settle", "POST"),
-    supported: await headersFor("supported", "GET"),
-  };
+  // x402's useFacilitator calls this once inside verify() and once inside
+  // settle(), reading only one of these three per call — so two of three
+  // signings are always thrown away. Parallel, not sequential, at least
+  // keeps that waste from stacking as extra latency on the critical path.
+  const [verify, settle, supported] = await Promise.all([
+    headersFor("verify", "POST"),
+    headersFor("settle", "POST"),
+    headersFor("supported", "GET"),
+  ]);
+  return { verify, settle, supported };
 }
 const MAX_TOKENS = 4000;
 const WORD_CAP = 2000;            // a post, not a book
@@ -239,6 +244,14 @@ module.exports = async (req, res) => {
   }
   if (!process.env.ANTHROPIC_API_KEY) {
     console.error("ANTHROPIC_API_KEY not set");
+    return res.status(503).json({ error: "Endpoint misconfigured. Try again soon." });
+  }
+  // On mainnet, FACILITATOR_URL defaults to CDP's authenticated facilitator
+  // (line ~48) regardless of whether CDP creds are actually set. Without this
+  // check, a missing/removed CDP key doesn't fail here — it fails silently
+  // inside verify(), indistinguishable from a genuinely invalid payment.
+  if (NETWORK === "base" && (!CDP_API_KEY_ID || !CDP_API_KEY_SECRET)) {
+    console.error("CDP_API_KEY_ID/CDP_API_KEY_SECRET not set for base network");
     return res.status(503).json({ error: "Endpoint misconfigured. Try again soon." });
   }
 
