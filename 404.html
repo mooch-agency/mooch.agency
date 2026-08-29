@@ -128,5 +128,26 @@
   <span>&copy; 2026 Mooch Agency Ltd.</span>
 </footer>
 
+<!-- Vercel Web Analytics. The 404 is tracked deliberately: a broken inbound
+     link is invisible otherwise, and this is the one page where a spike is
+     always a bug worth chasing. -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/analytics.js"></script>
+
+<script>
+  // Record what was actually asked for. The pageview alone reports the path as
+  // /404, which says a 404 happened but not which URL caused it.
+  document.addEventListener("DOMContentLoaded", function () {
+    try {
+      window.va("event", {
+        name: "not_found",
+        data: { path: location.pathname.slice(0, 255), referrer: document.referrer.slice(0, 255) || "none" },
+      });
+    } catch (e) {}
+  });
+</script>
+
 </body>
 </html>

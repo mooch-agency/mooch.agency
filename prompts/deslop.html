@@ -545,7 +545,10 @@
     <div class="prompt-box">
       <div class="prompt-box-head">
         <span>Prompt &middot; v1.2</span>
-        <button class="copy-btn" type="button" data-copy-target="prompt-text">Copy</button>
+        <span class="copy-cluster">
+          <span class="copy-count" data-copy-count="17">Copied 17 times</span>
+          <button class="copy-btn" type="button" data-copy-target="prompt-text">Copy</button>
+        </span>
       </div>
       <div class="disclosure" id="promptDisclosure" style="--disclosure-bg: var(--surface); --disclosure-max: min(46vh, 400px);">
       <pre id="prompt-text">You are a writing editor. Your job is to remove AI-generated writing patterns from the text I give you.
@@ -757,10 +760,20 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
 
 <script>
   // Custom Vercel Analytics events for prompt pages.
+  //
+  // There are two copy buttons here, the prompt itself and the install
+  // commands, and they used to report as the same prompt_copy event. That made
+  // the number unreadable: "someone took the prompt" and "someone is installing
+  // the skill" are different intents, and the on-page counter is built from the
+  // first. Split by target, matching how /say-less already separates
+  // sayless_copy_prompt from sayless_copy_commands.
   document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".copy-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        window.va("event", { name: "prompt_copy", data: { prompt: document.title } });
+        var name = btn.getAttribute("data-copy-target") === "install-commands"
+          ? "install_copy"
+          : "prompt_copy";
+        window.va("event", { name: name, data: { prompt: document.title } });
       });
     });
   });

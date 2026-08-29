@@ -4,7 +4,9 @@
     "ci:check": "node scripts/check-site.mjs && node scripts/stamp-cards.mjs --check",
     "ci:validate-html": "html-validate \"*.html\" \"prompts/*.html\"",
     "cards:build": "./mooch-cards/og-site.sh && node scripts/stamp-cards.mjs",
-    "cards:stamp": "node scripts/stamp-cards.mjs"
+    "cards:stamp": "node scripts/stamp-cards.mjs",
+    "counts:build": "node scripts/copy-counts.mjs",
+    "counts:check": "node scripts/copy-counts.mjs --check"
   },
   "dependencies": {
     "@vercel/edge": "^1.3.1",

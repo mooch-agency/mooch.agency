@@ -73,6 +73,54 @@ either way). Point the destination at a card, not at a bare filename: `cards:sta
 stamps redirect destinations too, precisely so a retired URL cannot hand a crawler
 back the unstamped key it was already caching.
 
+## Analytics
+
+Vercel Web Analytics is on. Every shipped page loads `analytics.js`, which is a
+loader, not the vendor script: it honours a per-device `?notrack=1` opt-out so
+our own browsing doesn't pollute numbers this small. Internal pages (styleguide,
+templates, portfolio explorations, stagger-tuner) deliberately have no analytics.
+
+Custom events are the point, not pageviews. A new page ships with the clicks
+that matter already instrumented, in the same change as the page. Conventions:
+
+- `snake_case` names, scoped by surface where a page owns a flow (`sayless_ask`,
+  `sayless_result`). One name per intent: two buttons that mean different things
+  never share an event, which is exactly the bug that made `prompt_copy` a mix
+  of "took the prompt" and "installed the skill".
+- Custom fields go under `data`, flat. Vercel allows strings, numbers, booleans
+  and null only, no nesting, 255 characters per name, key and value.
+- Guard the call (`try { if (window.va) ... }`), so a blocked script never
+  throws into the page.
+
+Reading the numbers: the dashboard, or the query API via the CLI, which needs no
+stored token because it uses your `vercel login` session:
+
+```
+vercel api "/v1/query/web-analytics/events/aggregate?projectId=<id>&teamId=<id>&since=<ms>&until=<ms>&by=eventName"
+```
+
+Note the API has no `hostname` dimension, so `paulgraham.mooch.agency` reports
+its root as `/` and blends into the homepage's path. Split those by event name,
+not by path.
+
+### The copy counter
+
+Prompt pages show how many times the prompt has actually been copied, next to
+the copy button (`.copy-cluster` / `.copy-count` in `ui.css`). The number is
+baked into the HTML by `pnpm counts:build`, which reads the `prompt_copy` event
+for that page's path.
+
+Build time, not request time, and deliberately: Vercel issues no read-only
+analytics token, so a page that fetched this on load would mean keeping a
+full-account token in production to render one integer. This way the token never
+leaves the machine running the script and the page ships static.
+
+The number therefore only moves on deploy, which is fine at these volumes. It is
+a floor, not a true total, since it misses anyone blocking the script. A count of
+0 hides itself. `pnpm counts:check` fails if a page's number has drifted from
+what analytics now reports; it is **not** in `ci:check`, because the count
+legitimately goes stale between deploys and would otherwise fail every PR.
+
 ## Voice
 British English, terse, no em dashes. Full house style: MOOCHBOT.md in Notion.
 
