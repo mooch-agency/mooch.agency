@@ -105,7 +105,7 @@ card soundlikeme \
 card frwa \
   --eyebrow "Plaything" \
   --title "Trade the\n*FRWA 10.*" \
-  --subtitle "Ten companies that only exist in fiction, priced as if they'd been listed the whole time." \
+  --subtitle "24/7 365 on the Mooch Stock Exchange (MSE)." \
   --domain "mooch.agency/frwa" \
   --dark --scale 1.15
 
