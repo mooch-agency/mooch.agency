@@ -9,6 +9,7 @@
     "counts:check": "node scripts/copy-counts.mjs --check"
   },
   "dependencies": {
+    "@coinbase/cdp-sdk": "^1.55.0",
     "@vercel/edge": "^1.3.1",
     "mailchecker": "^6.0.15",
     "x402": "^1.2.0"

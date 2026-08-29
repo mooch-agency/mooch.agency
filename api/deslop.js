@@ -14,9 +14,15 @@
 //   X402_PAY_TO          receiving wallet address. UNSET => endpoint replies
 //                        503 "not configured". This is the one manual step.
 //   X402_NETWORK         "base-sepolia" (default, testnet) or "base" (mainnet).
-//   X402_FACILITATOR_URL default https://x402.org/facilitator (testnet, keyless).
-//                        Mainnet: Coinbase CDP facilitator (needs CDP keys) or
-//                        another facilitator URL.
+//   X402_FACILITATOR_URL override the facilitator base URL. Default is
+//                        network-dependent: x402.org's keyless testnet
+//                        facilitator for base-sepolia, Coinbase CDP's
+//                        facilitator for base (see CDP_API_KEY_ID below).
+//   CDP_API_KEY_ID        \
+//   CDP_API_KEY_SECRET     } CDP Secret API key (portal.cdp.coinbase.com ->
+//                             API Keys -> Secret API Keys). Only read when
+//                             NETWORK is "base" — CDP's facilitator requires
+//                             authenticated requests, unlike the testnet one.
 //   DESLOP_PRICE_USD     default "0.10".
 //   DESLOP_MODEL         default "claude-sonnet-5".
 //   DESLOP_KILL=1        kill switch, same convention as the other functions.
@@ -31,11 +37,41 @@ const { exact } = require("x402/schemes");
 const { useFacilitator } = require("x402/verify");
 const { processPriceToAtomicAmount, findMatchingPaymentRequirements, toJsonSafe } = require("x402/shared");
 const { settleResponseHeader } = require("x402/types");
+const { getAuthHeaders } = require("@coinbase/cdp-sdk/auth");
 
 const MODEL = process.env.DESLOP_MODEL || "claude-sonnet-5";
 const PRICE = process.env.DESLOP_PRICE_USD || "0.10";
 const NETWORK = process.env.X402_NETWORK || "base-sepolia";
-const FACILITATOR_URL = process.env.X402_FACILITATOR_URL || "https://x402.org/facilitator";
+
+// x402.org's facilitator is keyless and testnet-only. CDP's facilitator
+// needs authenticated requests (below), so mainnet gets a different default.
+const DEFAULT_FACILITATOR_URL = NETWORK === "base"
+  ? "https://api.cdp.coinbase.com/platform/v2/x402"
+  : "https://x402.org/facilitator";
+const FACILITATOR_URL = process.env.X402_FACILITATOR_URL || DEFAULT_FACILITATOR_URL;
+const CDP_API_KEY_ID = process.env.CDP_API_KEY_ID;
+const CDP_API_KEY_SECRET = process.env.CDP_API_KEY_SECRET;
+
+// CDP's facilitator authenticates each call with a short-lived JWT bound to
+// the method + host + path being called, not a static bearer token — so
+// this has to run per-request, per-operation, not once at module load.
+async function createCdpAuthHeaders() {
+  const url = new URL(FACILITATOR_URL);
+  async function headersFor(operation, method) {
+    return getAuthHeaders({
+      apiKeyId: CDP_API_KEY_ID,
+      apiKeySecret: CDP_API_KEY_SECRET,
+      requestMethod: method,
+      requestHost: url.host,
+      requestPath: `${url.pathname}/${operation}`,
+    });
+  }
+  return {
+    verify: await headersFor("verify", "POST"),
+    settle: await headersFor("settle", "POST"),
+    supported: await headersFor("supported", "GET"),
+  };
+}
 const MAX_TOKENS = 4000;
 const WORD_CAP = 2000;            // a post, not a book
 const RATE_PER_MIN = 10;          // paid calls, but still cap runaway loops
@@ -230,7 +266,11 @@ module.exports = async (req, res) => {
   }
   const releaseOnFailure = () => { if (nonce) releaseNonce(nonce); };
 
-  const { verify, settle } = useFacilitator({ url: FACILITATOR_URL });
+  const useCdpAuth = NETWORK === "base" && CDP_API_KEY_ID && CDP_API_KEY_SECRET;
+  const { verify, settle } = useFacilitator({
+    url: FACILITATOR_URL,
+    ...(useCdpAuth ? { createAuthHeaders: createCdpAuthHeaders } : {}),
+  });
   try {
     const v = await verify(decoded, selected);
     if (!v.isValid) { releaseOnFailure(); return reply402(res, accepts, v.invalidReason || "Payment invalid"); }
