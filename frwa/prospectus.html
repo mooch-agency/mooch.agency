@@ -1,0 +1,880 @@
+<meta charset="utf-8">
+<title>Form S-1 Counterfactual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Archivo+Narrow:wght@600;700&display=swap">
+
+<style>
+  :root {
+    --desk: #E6E4DC;
+    --paper: #FCFBF7;
+    --ink: #12110E;
+    --faint: #6E6B62;
+    --rule: #C9C6BC;
+    --stamp: #A8232B;
+
+    --doc: 'Courier Prime', 'Courier New', Courier, monospace;
+    --overprint: 'Archivo Narrow', 'Arial Narrow', sans-serif;
+
+    --measure: 880px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--desk);
+    color: var(--ink);
+    font-family: var(--doc);
+    font-size: 14.5px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sheet {
+    max-width: var(--measure);
+    margin: 0 auto;
+    background: var(--paper);
+    border-left: 1px solid var(--rule);
+    border-right: 1px solid var(--rule);
+    padding: 64px 84px 0;
+    position: relative;
+    min-height: 100vh;
+  }
+
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ---------- running head ---------- */
+
+  .runhead {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    font-size: 11.5px;
+    letter-spacing: 0.05em;
+    color: var(--faint);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* ---------- filing header ---------- */
+
+  .filing-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    text-align: center;
+    padding: 46px 0 30px;
+  }
+
+  .agency { font-size: 12.5px; letter-spacing: 0.09em; }
+
+  .formno {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    line-height: 1.2;
+    padding-top: 14px;
+  }
+
+  .actline { font-size: 12.5px; letter-spacing: 0.045em; }
+
+  .rule-double { border-top: 3px double var(--ink); }
+  .rule-single { border-top: 1px solid var(--ink); }
+
+  /* ---------- the stamp ---------- */
+
+  .stamp {
+    position: absolute;
+    top: 118px;
+    right: 46px;
+    transform: rotate(-4.5deg);
+    border: 2.5px solid var(--stamp);
+    color: var(--stamp);
+    font-family: var(--overprint);
+    padding: 9px 15px 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    opacity: 0.86;
+    pointer-events: none;
+  }
+
+  .stamp-lead {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+
+  .stamp-no {
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stamp-foot {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border-top: 1.5px solid var(--stamp);
+    margin-top: 4px;
+    padding-top: 3px;
+  }
+
+  /* ---------- items ---------- */
+
+  .item { padding: 26px 0 0; }
+
+  .item h2 {
+    font-size: 14.5px;
+    font-weight: 700;
+    line-height: 1.75;
+    margin: 0 0 4px;
+    letter-spacing: 0.01em;
+  }
+
+  .item p { margin: 0 0 12px; max-width: 68ch; }
+
+  .item p:last-child { margin-bottom: 0; }
+
+  b { font-weight: 700; }
+
+  /* ---------- register table ---------- */
+
+  .table-scroll { overflow-x: auto; margin-top: 14px; }
+
+  table { width: 100%; border-collapse: collapse; min-width: 640px; }
+
+  thead th {
+    font-size: 11.5px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-align: right;
+    padding: 0 0 5px;
+    border-bottom: 1px solid var(--ink);
+    white-space: nowrap;
+  }
+
+  thead th.l { text-align: left; }
+
+  tr.sector td {
+    font-style: italic;
+    font-size: 13px;
+    padding: 12px 0 2px;
+  }
+
+  tbody tr.reg {
+    cursor: pointer;
+  }
+
+  tbody tr.reg:hover td { background: #F1EFE7; }
+
+  tbody tr.reg:focus-visible {
+    outline: 1.5px solid var(--stamp);
+    outline-offset: -1px;
+  }
+
+  tbody tr.reg td {
+    padding: 4px 0;
+    text-align: right;
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+
+  tbody tr.reg td.l { text-align: left; padding-right: 18px; white-space: normal; }
+  tbody tr.reg td.sym { text-align: left; padding-right: 14px; }
+
+  tr.open td { font-weight: 700; }
+
+  .marker { color: var(--faint); padding-left: 8px; }
+
+  /* ---------- expanded record ---------- */
+
+  .record {
+    border-left: 2px solid var(--ink);
+    margin: 16px 0 20px;
+    padding: 2px 0 6px 22px;
+  }
+
+  .record h3 {
+    font-size: 14.5px;
+    font-weight: 700;
+    margin: 0 0 10px;
+  }
+
+  .record p { margin: 0 0 12px; max-width: 66ch; line-height: 1.72; }
+
+  .sub {
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--faint);
+    padding: 16px 0 6px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 6px;
+  }
+
+  .coverage { width: 100%; border-collapse: collapse; min-width: 0; }
+
+  .coverage td {
+    padding: 7px 0;
+    vertical-align: top;
+    border-bottom: 1px solid var(--rule);
+    font-size: 13.5px;
+    line-height: 1.65;
+  }
+
+  .coverage td.src { width: 150px; padding-right: 16px; white-space: nowrap; color: var(--faint); font-size: 12.5px; }
+  .coverage td.rec { width: 66px; text-align: right; font-size: 12.5px; letter-spacing: 0.08em; }
+
+  .wire-row { display: grid; grid-template-columns: 66px 1fr; gap: 12px; padding: 6px 0; font-size: 13.5px; }
+  .wire-row .t { color: var(--faint); font-size: 12.5px; }
+
+  figure { margin: 4px 0 0; }
+
+  .chart { display: block; width: 100%; height: auto; }
+
+  figcaption { font-size: 11.5px; color: var(--faint); padding-top: 6px; line-height: 1.6; }
+
+  .facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 20px; padding-top: 14px; }
+  .facts div { display: flex; flex-direction: column; }
+  .facts .k { font-size: 11.5px; color: var(--faint); letter-spacing: 0.05em; }
+  .facts .v { font-size: 13.5px; }
+
+  /* ---------- footnotes and signature ---------- */
+
+  .footnotes {
+    border-top: 1px solid var(--ink);
+    margin-top: 24px;
+    padding-top: 10px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+
+  .footnotes p { margin: 0 0 6px; max-width: 72ch; }
+
+  .signature { padding: 34px 0 0; }
+
+  .sig-name {
+    font-style: italic;
+    font-size: 15.5px;
+    padding: 14px 0 2px;
+  }
+
+  .colophon {
+    border-top: 1px solid var(--rule);
+    margin-top: 40px;
+    padding: 12px 0 40px;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    font-size: 11.5px;
+    color: var(--faint);
+  }
+
+  a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--stamp); }
+
+  @media (max-width: 820px) {
+    .sheet { padding: 40px 26px 0; border-left: 0; border-right: 0; }
+    .stamp { position: static; transform: rotate(-2deg); margin: 14px 0 2px; padding: 6px 11px 5px; }
+    .stamp-wrap { display: flex; justify-content: flex-end; }
+    .stamp-lead { font-size: 8.5px; letter-spacing: 0.18em; }
+    .stamp-no { font-size: 16px; }
+    .stamp-foot { font-size: 8px; letter-spacing: 0.14em; }
+    .filing-head { padding: 20px 0 24px; }
+    .formno { font-size: 22px; padding-top: 10px; }
+    .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: 1ms !important; animation: none !important; }
+  }
+</style>
+
+<div class="sheet">
+
+  <div class="runhead">
+    <span>Mooch Stock Exchange</span>
+    <span>Form S-1 &middot; Amended continuously</span>
+  </div>
+
+  <div class="stamp-wrap">
+    <div class="stamp" aria-hidden="true">
+      <span class="stamp-lead">Amendment No.</span>
+      <span class="stamp-no num" id="amend">4,200,000</span>
+      <span class="stamp-foot">Filed continuously</span>
+    </div>
+  </div>
+
+  <header class="filing-head">
+    <span class="agency">UNITED STATES SECURITIES AND EXCHANGE COMMISSION</span>
+    <span class="agency">Washington, D.C. 20549</span>
+    <span class="formno">FORM S-1</span>
+    <span class="actline">REGISTRATION STATEMENT UNDER THE SECURITIES ACT OF 1933</span>
+  </header>
+
+  <div class="rule-double"></div>
+  <div class="runhead" style="border-bottom: 1px solid var(--ink); padding-top: 8px;">
+    <span>MOOCH STOCK EXCHANGE &mdash; ADMITTED LISTINGS</span>
+    <span class="num" id="asof">AS OF &mdash;</span>
+  </div>
+
+  <section class="item">
+    <h2>Item 1. Registrants.</h2>
+    <p>Ten registrants are admitted to the exchange as at the date of this statement.
+    None of them has an underlying that exists. Each was first described in a work of
+    fiction, and each is priced here as though the description had been a prospectus.</p>
+    <p>Settlement remains suspended pending the existence of the underlying. The
+    registrants have been invited to comment and have not.</p>
+  </section>
+
+  <section class="item">
+    <h2>Item 5. Market for Registrants&rsquo; Common Equity.</h2>
+    <p>The composite index of admitted listings stood at <b class="num" id="idx">&mdash;</b>
+    at the time of filing, a movement of <b class="num" id="idxchg">&mdash;</b> over the
+    preceding session. Prices are stated in United States dollars and are delayed by one
+    universe. Select any registrant below for its record.</p>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th class="l" style="width: 74px;">SYMBOL</th>
+            <th class="l">REGISTRANT</th>
+            <th>PRICE($)</th>
+            <th>CHANGE($)</th>
+            <th>CHANGE(%)</th>
+            <th>CAP($BN)</th>
+            <th style="width: 30px;"></th>
+          </tr>
+        </thead>
+        <tbody id="register"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="item">
+    <h2>Item 6. Selected Financial Data.</h2>
+    <p>Price history for each registrant is indexed from first appearance rather than from
+    admission, and is reproduced within the record of each registrant above. Drawdowns
+    common to every listing are exchange-wide and are not registrant events.</p>
+  </section>
+
+  <div class="footnotes">
+    <p>(1) Ammu-Nation discloses no waiting period on any product line and has declined comment
+    on a regional spike in property damage claims.</p>
+    <p>(2) Blockbuster&rsquo;s same-store sales figure is drawn entirely from its one surviving
+    franchise location, in Bend, Oregon.</p>
+    <p>(3) House Harkonnen&rsquo;s most recent chief strategist was terminated; the circumstances
+    remain undisclosed.</p>
+  </div>
+
+  <section class="item signature">
+    <h2>SIGNATURES</h2>
+    <p>Pursuant to the requirements of the Securities Act of 1933, this registration statement
+    has been signed on behalf of the registrants by the party responsible for their clearing and
+    custody, none of the registrants being available to sign on their own behalf.</p>
+    <p class="sig-name">/s/ Mooch Agency Holdings</p>
+    <p style="font-size: 12.5px; color: var(--faint);">Clearing and custody &middot; <a href="https://mooch.agency">mooch.agency</a></p>
+  </section>
+
+  <div class="colophon">
+    <span>Prices in USD. Delayed by one universe. Nothing here settles.</span>
+    <span class="num">1</span>
+  </div>
+</div>
+
+<script>
+function hash(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function rng(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a += 0x6D2B79F5;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/* Smooth shared wander: interpolates hashed values on a 6s lattice, so
+   the tick is continuous, deterministic, and identical for everyone. */
+function wander(ticker, seconds, amp) {
+  const k = hash(ticker);
+  const step = seconds / 6;
+  const i = Math.floor(step);
+  const f = step - i;
+  const at = (n) => (hash(ticker + ':' + n) % 20001) / 10000 - 1;
+  const a = at(i), b = at(i + 1);
+  const s = f * f * (3 - 2 * f);
+  const slow = Math.sin((seconds + (k % 600)) / 240) * 0.45;
+  return (a + (b - a) * s + slow) * amp;
+}
+
+/* Market-wide shocks, so every listing correlates like a real index.
+   Applied as a transient deviation on top of the walk, never compounded
+   into it: a crash draws down and recovers, it does not reset the trend. */
+const SHOCKS = [
+  { at: 0.16, hit: -0.20 },
+  { at: 0.41, hit: -0.29 },
+  { at: 0.58, hit: -0.38 },
+  { at: 0.78, hit: -0.24 },
+  { at: 0.91, hit: 0.16 }
+];
+
+const FALL = 0.025, HEAL = 0.11;
+
+function history(co, n) {
+  const r = rng(hash(co.ticker));
+  const out = [];
+  let v = 100;
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1);
+    v *= 1 + co.drift + co.vol * (r() - 0.5);
+    let adj = 1;
+    for (const s of SHOCKS) {
+      const d = t - s.at;
+      if (d > -FALL && d < HEAL) {
+        const shape = d < 0 ? (d + FALL) / FALL : 1 - d / HEAL;
+        adj *= 1 + s.hit * co.beta * shape * shape;
+      }
+    }
+    out.push(v * adj);
+  }
+  const scale = co.close / out[out.length - 1];
+  return out.map((x) => x * scale);
+}
+
+/* ---------------------------------------------------------------
+   Listings
+   --------------------------------------------------------------- */
+
+const COMPANIES = [
+  {
+    ticker: 'DUFF',
+    name: 'Duff Beer',
+    sector: 'Household Names',
+    close: 42.50, drift: 0.0062, vol: 0.040, beta: 0.5,
+    from: 1989, cap: '3.8B', float: '54%', hq: 'Springfield', staff: 'Not disclosed',
+    forkDate: '1989, Springfield',
+    fork: 'The only beer anyone in this town drinks, brewed beside a nuclear plant everyone insists is fine. A costumed mascot has fronted every launch for thirty years. Nobody’s ever seen his contract.',
+    thesis: 'One town, total market share, one lifelong customer doing more for retention than the whole ad budget.',
+    notes: [
+      { q: 'Category share of 98% in the home market and zero credible competitor on record. This is the closest thing to a beverage monopoly we have ever rated.', src: 'Fenmore &amp; Vale', rec: 'Buy' },
+      { q: 'The mascot’s compensation has never appeared in a filing. Neither has his surname.', src: 'B. Hargreave', rec: 'Hold' },
+      { q: 'Proximity to the plant is either a cost-of-goods advantage or a class action waiting on a filing date. We would like to know which before we upgrade.', src: 'Court &amp; Aubin', rec: 'Sell' }
+    ],
+    wire: [
+      'Duff Dry relaunch confirmed for the fourth time this decade',
+      'Costumed mascot appearance schedule extended through year end',
+      'Plant safety inspection closes without incident, ninth consecutive year',
+      'Rival brewer’s advertising campaign quietly withdrawn after one week'
+    ]
+  },
+  {
+    ticker: 'WNKA',
+    name: 'Wonka Industries',
+    sector: 'Household Names',
+    close: 348.10, drift: 0.0095, vol: 0.050, beta: 0.7,
+    from: 1971, cap: '22.4B', float: '31%', hq: 'Location undisclosed', staff: 'Not disclosed',
+    forkDate: '1971, location undisclosed',
+    fork: 'One factory, one river of chocolate, and a hiring process built entirely around a single paper ticket. Nobody outside the plant has been let past the gates in fifty years.',
+    thesis: 'The product never launches, it just reappears. Scarcity is the entire marketing budget, and it’s worked for half a century.',
+    notes: [
+      { q: 'The golden ticket promotion moves more units than the product itself. This is the only FMCG name we cover where the box outperforms what’s inside it.', src: 'Fenmore &amp; Vale', rec: 'Buy' },
+      { q: 'Labour costs are effectively zero and nobody on this desk knows why. Compliance risk on the labour agreement is the whole short case.', src: 'B. Hargreave', rec: 'Hold' },
+      { q: 'We’ve covered this name for six years and have never once been inside the building. That is not normal governance.', src: 'Court &amp; Aubin', rec: 'Sell' }
+    ],
+    wire: [
+      'Golden ticket promotion opens for the winter distribution run',
+      'Factory tour access denied to three separate regulators this quarter',
+      'Labour agreement renewed on undisclosed terms, again',
+      'Rival confectioner drops patent challenge on the everlasting gobstopper'
+    ]
+  },
+  {
+    ticker: 'DNMF',
+    name: 'Dunder Mifflin',
+    sector: 'Household Names',
+    close: 11.85, drift: 0.0041, vol: 0.045, beta: 0.5,
+    from: 2005, cap: '0.4B', float: '68%', hq: 'Scranton, Pennsylvania', staff: '9 (Scranton branch)',
+    forkDate: '2005, Scranton',
+    fork: 'One regional branch has been filmed on camera for nineteen straight years and nobody in the filing explains the crew. Paper’s been dying for two decades. This branch didn’t get the memo.',
+    thesis: 'Not a paper company. A group of people who show up, trading as one stock.',
+    notes: [
+      { q: 'Revenue has not grown in a decade. It also has not meaningfully fallen, which on this desk now counts as an achievement.', src: 'Ardsley Research', rec: 'Hold' },
+      { q: 'Client retention on this account list is the best in the sector. Whatever they are doing at the Scranton branch, we would like it studied.', src: 'Fenmore &amp; Vale', rec: 'Buy' },
+      { q: 'A single regional manager appears to be the entire retention strategy. That is not a strategy, it is a dependency.', src: 'B. Hargreave', rec: 'Hold' }
+    ],
+    wire: [
+      'Scranton branch renews largest client account for a ninth consecutive year',
+      'Corporate confirms no plans to close the regional branch network',
+      'Annual sales awards dinner proceeds despite a threatened venue cancellation',
+      'Branch manager declines interview request, again'
+    ]
+  },
+  {
+    ticker: 'WAYN',
+    name: 'Wayne Enterprises',
+    sector: 'Household Names',
+    close: 745.20, drift: 0.0102, vol: 0.055, beta: 0.85,
+    from: 1939, cap: '268.7B', float: '61%', hq: 'Gotham City', staff: '104,500',
+    forkDate: '1939, Gotham City',
+    fork: 'Every prototype to leave the Applied Sciences lab this year has gone missing from inventory within twelve months, and turned up over the city’s rooftops. The owner is rarely at headquarters, never before midday, running a century-old conglomerate in the city with the worst costumed-crime rate we cover.',
+    thesis: 'Survives anything the city throws at it, including the city itself. Ownership is the only governance flag on this file.',
+    notes: [
+      { q: 'Diversification here is not a strategy slide, it is a survival mechanism. This is the only holding company we cover that has outlasted its own insurer twice.', src: 'Fenmore &amp; Vale', rec: 'Buy' },
+      { q: 'Applied Sciences spend has never appeared in a single line item we can find. We have stopped asking and started modelling it as a black box.', src: 'Ardsley Research', rec: 'Hold' },
+      { q: 'The owner’s attendance record at his own AGM is the worst in the sector and the stock does not seem to care. We would like to understand why.', src: 'B. Hargreave', rec: 'Hold' }
+    ],
+    wire: [
+      'Applied Sciences division declines to disclose annual research spend',
+      'Foundation arm commits further funding to downtown redevelopment',
+      'Board confirms owner missed third consecutive quarterly meeting',
+      'Manufacturing unit wins municipal contract disputed by two rivals'
+    ]
+  },
+  {
+    ticker: 'NAPS',
+    name: 'Napster',
+    sector: 'Delisted, still trading',
+    close: 2.15, drift: -0.0012, vol: 0.120, beta: 1.3,
+    from: 1999, cap: '0.3B', float: '88%', hq: 'San Mateo, California', staff: 'Not disclosed',
+    forkDate: '1999, San Mateo',
+    fork: 'Built an entire business on other people’s music, for free, and got sued out of existence by one drummer with impeccable timing. Now in its fourth relaunch as a paid subscription service nobody asked for.',
+    thesis: 'The platform that invented an industry, then got killed by the industry it invented. We’re not aware of that happening anywhere else on this exchange.',
+    notes: [
+      { q: 'Proved there was demand for digital music before anyone else did, and the brand still carries more recognition than half the platforms that replaced it.', src: 'Fenmore &amp; Vale', rec: 'Buy' },
+      { q: 'The core product was free access to other people’s copyrighted work. That is not a business model, it is a lawsuit with a login page.', src: 'B. Hargreave', rec: 'Sell' },
+      { q: 'Fourth relaunch, fourth ownership structure, same name. We’d want to see one of these stick before we call it a turnaround.', src: 'Court &amp; Aubin', rec: 'Hold' }
+    ],
+    wire: [
+      'Latest relaunch confirmed to retain the original logo',
+      'Founder declines invitation to relaunch anniversary event',
+      '2000 litigation referenced in filing for the ninth consecutive year',
+      'Streaming rights renegotiated with three major labels, terms undisclosed'
+    ]
+  },
+  {
+    ticker: 'BGMP',
+    name: 'Bubba Gump Shrimp Co.',
+    sector: 'Household Names',
+    close: 68.45, drift: 0.0088, vol: 0.052, beta: 0.6,
+    from: 1994, cap: '9.1B', float: '61%', hq: 'Bayou La Batre, Alabama', staff: '2,300',
+    forkDate: '1994, Bayou La Batre',
+    fork: 'Built on a promise made to a war buddy who didn’t come home to collect on it. One boat outlived a hurricane that sank the rest of the fleet. That’s the whole business plan.',
+    thesis: 'Never tried to be smarter than it needs to be. We wouldn’t bet against that.',
+    notes: [
+      { q: 'Same-store sales growth is consistent and the brand costs almost nothing to market. The story sells itself, and has for thirty years.', src: 'Ardsley Research', rec: 'Buy' },
+      { q: 'Supply chain risk on the core product is real and un-hedged. A bad season for the fleet is a bad quarter for the chain.', src: 'Fenmore &amp; Vale', rec: 'Hold' },
+      { q: 'Menu has not meaningfully changed in three decades. We would call that a risk anywhere else. Here it appears to be the point.', src: 'Court &amp; Aubin', rec: 'Hold' }
+    ],
+    wire: [
+      'Fleet reports strongest seasonal catch in six years',
+      'New restaurant location opens, thirty-first in the chain',
+      'Menu review confirms no changes for a record twenty-ninth year',
+      'Founding shrimping partnership honoured with a dockside plaque'
+    ]
+  },
+  {
+    ticker: 'AMMU',
+    name: 'Ammu-Nation',
+    sector: 'Household Names',
+    close: 34.20, drift: 0.0075, vol: 0.065, beta: 0.9,
+    from: 1997, cap: '6.4B', float: '28%', hq: 'Every city we operate in', staff: 'Not disclosed',
+    forkDate: '1997, multiple locations',
+    fork: 'A firearms retailer with a branch on every corner of every city it serves, no waiting period on record, and same-day service as the entire value proposition. This desk has stopped attempting to model the customer base’s insurance claims.',
+    thesis: 'Same-day firearm service to an unusually accident-prone clientele. Regulatory risk is the whole short case and the whole reason the multiple is this low.',
+    notes: [
+      { q: 'Same-store growth in this category is unheard of anywhere else we cover. Repeat custom is remarkably high, for reasons the filing doesn’t examine.', src: 'Fenmore &amp; Vale', rec: 'Buy' },
+      { q: 'No waiting period, no background check disclosed, and a customer base with a documented tendency toward property damage. We’d want more detail before adding exposure.', src: 'Ardsley Research', rec: 'Hold' },
+      { q: 'Regulatory scrutiny in every jurisdiction this chain operates in is a matter of when, not if. We would not hold this into that filing.', src: 'B. Hargreave', rec: 'Sell' }
+    ],
+    wire: [
+      'New branch opens, third this quarter, no permit delay reported',
+      'Same-day service guarantee extended to include ammunition delivery',
+      'Chain declines to comment on regional spike in property damage claims',
+      'Loyalty programme relaunched with expanded weekly rewards'
+    ]
+  },
+  {
+    ticker: 'BLOK',
+    name: 'Blockbuster',
+    sector: 'Delisted, still trading',
+    close: 0.85, drift: -0.0020, vol: 0.150, beta: 1.5,
+    from: 1985, cap: '0.05B', float: '99%', hq: 'Dallas, Texas', staff: '10 (Bend, Oregon franchise)',
+    forkDate: '1985, Dallas',
+    fork: 'The board once turned down fifty million dollars for the whole company, from the rival that went on to be worth several hundred billion. Filed for bankruptcy anyway, a decade later. The one surviving franchise now accounts for all of its same-store sales.',
+    thesis: 'This company does not exist. The stock trades. Someone’s still paying the late fee.',
+    notes: [
+      { q: 'Same-store sales are, technically, one store. We are required to disclose that and we are disclosing it.', src: 'Court &amp; Aubin', rec: 'Hold' },
+      { q: 'There is no version of this thesis that survives contact with the word "bankrupt." We are aware people are buying anyway.', src: 'Ardsley Research', rec: 'Sell' },
+      { q: 'Nostalgia has a yield curve. This is the only name on our coverage list that trades purely on it, and it hasn’t stopped.', src: 'Fenmore &amp; Vale', rec: 'Buy' }
+    ],
+    wire: [
+      'Bend, Oregon location reports steady foot traffic, no other locations to compare against',
+      'Brand licensing deal signed for a fourth unrelated product category',
+      'Company confirms it has not filed an operating report since 2013',
+      'Late fee revenue, if any, remains undisclosed'
+    ]
+  },
+  {
+    ticker: 'MYSP',
+    name: 'MySpace',
+    sector: 'Delisted, still trading',
+    close: 1.40, drift: -0.0015, vol: 0.110, beta: 1.2,
+    from: 2003, cap: '0.2B', float: '91%', hq: 'Santa Monica, California', staff: 'Not disclosed',
+    forkDate: '2003, Santa Monica',
+    fork: 'Once the most visited website in the United States. Every song ever uploaded to it was deleted in a server migration, and nobody mentioned it for three years.',
+    thesis: 'The Top 8 was the last honest ranking system the internet ever shipped. Everything since has been worse and called it an algorithm.',
+    notes: [
+      { q: 'We are rating a website that lost twelve years of user-uploaded music and disclosed it three years after the fact. There is no multiple that fixes a disclosure record like that.', src: 'B. Hargreave', rec: 'Sell' },
+      { q: 'Brand recognition remains total. Everything you would build on top of that recognition is a decision somebody else already made badly.', src: 'Ardsley Research', rec: 'Hold' },
+      { q: 'The nostalgia cycle turns every fifteen years without fail. We’re early, which is the only way to be right on this name.', src: 'Court &amp; Aubin', rec: 'Buy' }
+    ],
+    wire: [
+      'Company confirms 2019 data loss figure is final, declines further comment',
+      'Third relaunch attempt reported to be in early planning',
+      'Former Top 8 feature trends on social media for the fourth time this year',
+      'Founder unavailable for comment on any of the above'
+    ]
+  },
+  {
+    ticker: 'HRKN',
+    name: 'House Harkonnen',
+    sector: 'Sinister Conglomerates',
+    close: 452.80, drift: 0.0140, vol: 0.090, beta: 1.35,
+    from: 1965, cap: '178.6B', float: '19%', hq: 'Giedi Prime', staff: 'Not disclosed',
+    forkDate: '1965, Giedi Prime',
+    fork: 'Run by a Baron whose body requires mechanical suspension to move and whose management style requires none. The last man who held the company’s most valuable concession died screaming; the filing doesn’t say at whose hand.',
+    thesis: 'Extraction margins are excellent. Don’t ask about the labour. We asked. Nobody answered.',
+    notes: [
+      { q: 'Extraction margins on Arrakis-adjacent concessions are the best on this exchange, full stop. We are not paid to rate the labour practices.', src: 'Fenmore &amp; Vale', rec: 'Buy' },
+      { q: 'Succession risk here is not a line item, it is a body count. We would not hold this through the next transition.', src: 'B. Hargreave', rec: 'Sell' },
+      { q: 'The Baron’s personal mobility requirements are disclosed. His decision-making process is not. We’d like both.', src: 'Ardsley Research', rec: 'Hold' }
+    ],
+    wire: [
+      'Giedi Prime concession renewed on terms the filing declines to itemise',
+      'Board confirms Baron will not attend this year’s investor day in person',
+      'Rival extraction house’s fief transferred without public explanation',
+      'Labour practices inquiry referred for the second consecutive year'
+    ]
+  }
+];
+/* ---------------------------------------------------------------
+   Document rendering. Every registrant is a lettered sub-item of
+   Item 5, expanded in place: the filing unfolds, it never navigates.
+   --------------------------------------------------------------- */
+
+const SECTORS = ['Household Names', 'Delisted, still trading', 'Sinister Conglomerates'];
+const HIST_N = 168;
+const LETTERS = 'abcdefghijklmnopqrstuvwxyz';
+
+COMPANIES.forEach((c, i) => {
+  c.series = history(c, HIST_N);
+  c.prev = c.series[c.series.length - 2];
+});
+
+/* Lettered in the order they appear on the register, not in source order. */
+const ORDERED = [];
+SECTORS.forEach((s) => COMPANIES.filter((c) => c.sector === s).forEach((c) => ORDERED.push(c)));
+ORDERED.forEach((c, i) => { c.ref = '5(' + LETTERS[i] + ')'; });
+
+function now() { return Math.floor(Date.now() / 1000); }
+
+function live(c) {
+  const px = c.close * (1 + wander(c.ticker, now(), 0.031));
+  const chg = px - c.prev;
+  return { px: px, chg: chg, pct: (chg / c.prev) * 100 };
+}
+
+function fmt(n, dp) {
+  const d = dp === undefined ? 2 : dp;
+  return n.toLocaleString('en-GB', { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+
+/* Accountants' convention: a loss wears parentheses, never a colour. */
+function acct(n, dp) {
+  const v = fmt(Math.abs(n), dp);
+  return n < 0 ? '(' + v + ')' : v;
+}
+
+/* ---------------------------------------------------------------
+   Exhibit chart. Hairline, unfilled, printed rather than plotted.
+   --------------------------------------------------------------- */
+
+const CW = 680, CH = 200, PL = 26, PR = 46, PT = 10, PB = 22;
+
+function exhibit(c) {
+  const v = c.series;
+  const iw = CW - PL - PR, ih = CH - PT - PB;
+  const lo = Math.min.apply(null, v) * 0.96;
+  const hi = Math.max.apply(null, v) * 1.04;
+  const X = (i) => PL + (i / (v.length - 1)) * iw;
+  const Y = (n) => PT + (1 - (n - lo) / (hi - lo)) * ih;
+
+  let d = '';
+  for (let i = 0; i < v.length; i++) d += (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v[i]).toFixed(1);
+
+  let grid = '';
+  for (let g = 0; g <= 2; g++) {
+    const val = lo + ((hi - lo) * g) / 2;
+    const y = Y(val).toFixed(1);
+    grid += '<line x1="' + PL + '" x2="' + (PL + iw) + '" y1="' + y + '" y2="' + y +
+      '" stroke="#C9C6BC" stroke-width="1" vector-effect="non-scaling-stroke"/>' +
+      '<text x="' + (PL + iw + 7) + '" y="' + (parseFloat(y) + 3.5) +
+      '" fill="#6E6B62" font-family="Courier Prime, monospace" font-size="10.5">' + fmt(val, 0) + '</text>';
+  }
+
+  const span = 2026 - c.from;
+  const step = span > 40 ? 15 : span > 20 ? 10 : span > 8 ? 5 : 2;
+  let ticks = '';
+  for (let yr = c.from; yr <= 2026; yr += step) {
+    const i = ((yr - c.from) / span) * (v.length - 1);
+    ticks += '<text x="' + X(i).toFixed(1) + '" y="' + (CH - 5) +
+      '" fill="#6E6B62" font-family="Courier Prime, monospace" font-size="10.5" text-anchor="middle">' + yr + '</text>';
+  }
+
+  return '<svg class="chart" viewBox="0 0 ' + CW + ' ' + CH + '" role="img" aria-label="' +
+    c.ticker + ' price, ' + c.from + ' to 2026, ending at ' + fmt(c.close) + ' dollars">' +
+    grid +
+    '<line x1="' + PL + '" x2="' + (PL + iw) + '" y1="' + (PT + ih) + '" y2="' + (PT + ih) +
+    '" stroke="#12110E" stroke-width="1" vector-effect="non-scaling-stroke"/>' +
+    '<path d="' + d + '" fill="none" stroke="#12110E" stroke-width="1.1" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>' +
+    '<rect x="' + (X(v.length - 1) - 2.4).toFixed(1) + '" y="' + (Y(v[v.length - 1]) - 2.4).toFixed(1) +
+    '" width="4.8" height="4.8" fill="#12110E"/>' +
+    ticks + '</svg>';
+}
+
+/* ---------------------------------------------------------------
+   Register
+   --------------------------------------------------------------- */
+
+const tbody = document.getElementById('register');
+let open = null;
+
+function recordHtml(c) {
+  const coverage = c.notes.map((n) =>
+    '<tr><td class="src">' + n.src + '</td><td>' + n.q + '</td>' +
+    '<td class="rec">' + n.rec.toUpperCase() + '</td></tr>'
+  ).join('');
+
+  const t = Date.now();
+  const wire = c.wire.map((w, i) => {
+    const d = new Date(t - (i * 47 + 12) * 60000);
+    const hh = String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
+    return '<div class="wire-row"><span class="t num">' + hh + '</span><span>' + w + '</span></div>';
+  }).join('');
+
+  return '<div class="record">' +
+    '<h3>Item ' + c.ref + '. ' + c.name + '.</h3>' +
+    '<p><b>Canon.</b> ' + c.forkDate + '. ' + c.fork + '</p>' +
+    '<p>' + c.thesis + '</p>' +
+    '<div class="facts">' +
+      '<div><span class="k">Market cap</span><span class="v num">' + c.cap + '</span></div>' +
+      '<div><span class="k">Free float</span><span class="v num">' + c.float + '</span></div>' +
+      '<div><span class="k">Employees</span><span class="v num">' + c.staff + '</span></div>' +
+      '<div><span class="k">First appearance</span><span class="v num">' + c.from + '</span></div>' +
+    '</div>' +
+    '<div class="sub">Exhibit 99.1 &mdash; Price history</div>' +
+    '<figure>' + exhibit(c) +
+    '<figcaption>Close, ' + c.from + ' to date, indexed from first appearance. Drawdowns are exchange-wide and are not registrant events.</figcaption></figure>' +
+    '<div class="sub">Analyst coverage</div>' +
+    '<table class="coverage"><tbody>' + coverage + '</tbody></table>' +
+    '<div class="sub">Newswire</div>' + wire +
+  '</div>';
+}
+
+function render() {
+  let html = '';
+  SECTORS.forEach((sec) => {
+    html += '<tr class="sector"><td class="l" colspan="7">' + sec + '</td></tr>';
+    COMPANIES.filter((c) => c.sector === sec).forEach((c) => {
+      html += '<tr class="reg" tabindex="0" data-t="' + c.ticker + '">' +
+        '<td class="sym">' + c.ticker + '</td>' +
+        '<td class="l">' + c.name + '</td>' +
+        '<td class="num" data-px="' + c.ticker + '">' + fmt(c.close) + '</td>' +
+        '<td class="num" data-chg="' + c.ticker + '">&mdash;</td>' +
+        '<td class="num" data-pct="' + c.ticker + '">&mdash;</td>' +
+        '<td class="num">' + c.cap.replace('B', '') + '</td>' +
+        '<td class="marker">' + c.ref.slice(1) + '</td>' +
+        '</tr>';
+      if (open === c.ticker) {
+        html += '<tr class="expanded"><td colspan="7">' + recordHtml(c) + '</td></tr>';
+      }
+    });
+  });
+  tbody.innerHTML = html;
+
+  tbody.querySelectorAll('tr.reg').forEach((tr) => {
+    if (tr.dataset.t === open) tr.classList.add('open');
+    const toggle = () => {
+      open = open === tr.dataset.t ? null : tr.dataset.t;
+      render();
+      if (open) {
+        const row = tbody.querySelector('tr.reg[data-t="' + open + '"]');
+        if (row) row.focus();
+      }
+    };
+    tr.addEventListener('click', toggle);
+    tr.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    });
+  });
+
+  tick();
+}
+
+/* ---------------------------------------------------------------
+   Tick. The filing is amended once a second and says so.
+   --------------------------------------------------------------- */
+
+const BASE = COMPANIES.reduce((s, c) => s + c.close, 0) / COMPANIES.length;
+
+function tick() {
+  let sum = 0, prevSum = 0;
+  COMPANIES.forEach((c) => {
+    const l = live(c);
+    sum += l.px;
+    prevSum += c.prev;
+    document.querySelectorAll('[data-px="' + c.ticker + '"]').forEach((e) => { e.textContent = fmt(l.px); });
+    document.querySelectorAll('[data-chg="' + c.ticker + '"]').forEach((e) => { e.textContent = acct(l.chg); });
+    document.querySelectorAll('[data-pct="' + c.ticker + '"]').forEach((e) => { e.textContent = acct(l.pct); });
+  });
+
+  const idx = (sum / COMPANIES.length / BASE) * 4180;
+  const prev = (prevSum / COMPANIES.length / BASE) * 4180;
+  const d = idx - prev;
+  document.getElementById('idx').textContent = fmt(idx);
+  document.getElementById('idxchg').textContent =
+    acct(d) + ' points (' + fmt(Math.abs((d / prev) * 100)) + ' per cent.)';
+
+  const t = new Date();
+  const hh = String(t.getUTCHours()).padStart(2, '0');
+  const mm = String(t.getUTCMinutes()).padStart(2, '0');
+  const ss = String(t.getUTCSeconds()).padStart(2, '0');
+  document.getElementById('asof').textContent = 'AS OF 22 AUGUST 2026, ' + hh + ':' + mm + ':' + ss + ' UTC';
+  document.getElementById('amend').textContent =
+    (4200000 + (now() % 100000)).toLocaleString('en-GB');
+}
+
+render();
+setInterval(tick, 1000);
+
+</script>
