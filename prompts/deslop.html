@@ -312,6 +312,71 @@
   }
   .prompt-box-foot { padding: 4px 20px 18px; }
 
+  /* Agent receipt: the one screenshottable moment on the page, proving an
+     agent can pay this endpoint and get something back. Scoped dark like
+     the footer (.colophon-dark): override --muted/--hairline locally
+     rather than touching the page's light-mode tokens. --receipt-accent
+     derives from --success (money in, response out) the same way
+     tokens.css derives --claude-ring from --claude, so the one accent
+     stays token-driven rather than a new hardcoded colour. */
+  .agent-receipt {
+    --muted: #8e8e93;
+    --hairline: var(--hairline-dark);
+    --receipt-accent: color-mix(in srgb, var(--success) 70%, var(--paper));
+    max-width: 380px;
+    margin: 32px 0 12px;
+    border-radius: 10px;
+    border: 1px solid var(--hairline);
+    background: var(--black);
+    color: var(--paper);
+    overflow: hidden;
+  }
+  .agent-receipt-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--hairline);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+  }
+  .agent-receipt-lines {
+    list-style: none;
+    margin: 0;
+    padding: 16px 20px 4px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .agent-receipt-lines li { display: flex; align-items: baseline; gap: 10px; padding: 6px 0; }
+  .agent-receipt-lines .who {
+    flex: 0 0 44px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .agent-receipt-lines .arrow { color: var(--muted); }
+  .agent-receipt-lines .ok { color: var(--receipt-accent); }
+  .agent-receipt-total {
+    margin: 4px 20px 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--hairline);
+    font-family: var(--mono);
+    font-size: 19px;
+    letter-spacing: -0.01em;
+    color: var(--receipt-accent);
+  }
+  .agent-receipt-caption {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 40px;
+  }
+
   .ba-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -447,7 +512,9 @@
     .case-body-inner { max-width: 100%; }
     a { color: #000; text-decoration: underline; }
     .reveal { opacity: 1; transform: none; animation: none; }
-    .prompt-box, .ba-col { break-inside: avoid; border: 1px solid #000; }
+    .prompt-box, .ba-col, .agent-receipt { break-inside: avoid; border: 1px solid #000; }
+    .agent-receipt { background: #fff; color: #000; }
+    .agent-receipt-lines .ok, .agent-receipt-total { color: #000; }
     .copy-btn { display: none; }
     * { box-shadow: none !important; }
   }
@@ -635,7 +702,23 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
     </div>
 
     <h2 id="agents"><span class="num">&sect; 05</span>For agents</h2>
-    <p>Humans copy the prompt free, above. Agents pay per call: POST your text, pay $0.10 in USDC over <a href="https://www.x402.org">x402</a>, get back the cleaned draft and an itemised changelog of what died. Robots paying to sound less like robots.</p>
+    <p>Humans copy the prompt above into a chat. An agent can't do that, so the same cleanup runs behind an API: it pays $0.10 in USDC over <a href="https://www.x402.org">x402</a>, sends the text, and gets back a cleaned draft with a changelog. No human needs to open this page.</p>
+
+    <div class="agent-receipt">
+      <div class="agent-receipt-head">
+        <span>Example exchange</span>
+        <span>Not a live feed</span>
+      </div>
+      <ol class="agent-receipt-lines">
+        <li><span class="who">Agent</span><span class="arrow">&rarr;</span><span>POST /api/deslop</span></li>
+        <li><span class="who">Mooch</span><span class="arrow">&larr;</span><span>402 Payment Required</span></li>
+        <li><span class="who">Agent</span><span class="arrow">&rarr;</span><span>$0.10 USDC, Base Sepolia</span></li>
+        <li><span class="who">Mooch</span><span class="arrow">&larr;</span><span class="ok">200 OK</span></li>
+      </ol>
+      <div class="agent-receipt-total">{ cleaned, changelog }</div>
+    </div>
+    <p class="agent-receipt-caption">Robots paying to sound less like robots.</p>
+
     <div class="prompt-box">
       <div class="prompt-box-head">
         <span>x402 &middot; $0.10 per call</span>
@@ -645,10 +728,39 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
   -H "Content-Type: application/json" \
   -d '{"text":"We&apos;re thrilled to unveil our seamless, cutting-edge platform..."}'
 
-# 402 Payment Required, then retry with the X-PAYMENT header your
-# x402 client builds (x402-fetch, x402-axios, or any agent wallet).
-# Returns {"cleaned": "...", "changelog": "..."}</pre>
+# 402 Payment Required. The response body (shape below) names the
+# price, network and address: build X-PAYMENT with x402-fetch,
+# x402-axios, or any x402-speaking wallet, then retry.
+# Success returns {"cleaned": "...", "changelog": "..."}</pre>
     </div>
+
+    <h3>What the 402 sends back</h3>
+    <p>The <code>accepts</code> array is the whole contract: scheme, network, amount, and the address to pay. An x402 client needs nothing beyond this response to complete the round trip.</p>
+    <div class="prompt-box">
+      <div class="prompt-box-head">
+        <span>402 response &middot; application/json</span>
+        <button class="copy-btn" type="button" data-copy-target="agent-402">Copy</button>
+      </div>
+      <pre id="agent-402">{
+  "x402Version": 1,
+  "error": "X-PAYMENT header is required",
+  "accepts": [
+    {
+      "scheme": "exact",
+      "network": "base-sepolia",
+      "maxAmountRequired": "100000",
+      "resource": "https://mooch.agency/api/deslop",
+      "description": "Run text through the /deslop cleanup",
+      "mimeType": "application/json",
+      "payTo": "0x000000000000000000000000000000000000dEaD",
+      "maxTimeoutSeconds": 120,
+      "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "extra": { "name": "USDC", "version": "2" }
+    }
+  ]
+}</pre>
+    </div>
+    <p>Don't hand-roll the payment header. <code>x402-fetch</code> and <code>x402-axios</code> both wrap this exchange for a wallet-holding agent, so the client signs and retries for you.</p>
 
   </div>
 </article>
