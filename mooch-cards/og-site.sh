@@ -102,6 +102,13 @@ card soundlikeme \
   --domain "mooch.agency/prompts/soundlikeme" \
   --tint prompt --scale 1.1
 
+card frwa \
+  --eyebrow "Plaything" \
+  --title "Trade the\n*FRWA 10.*" \
+  --subtitle "Ten companies that only exist in fiction, priced as if they'd been listed the whole time." \
+  --domain "mooch.agency/frwa" \
+  --dark --scale 1.15
+
 # No `ready` card: /ready was retired in the Phase 0 roadmap decision and now
 # 301s to /, so a sharer never reaches a page that would use one.
 
