@@ -1,12 +1,14 @@
 {
   "private": true,
   "scripts": {
-    "ci:check": "node scripts/check-site.mjs && node scripts/stamp-cards.mjs --check",
+    "ci:check": "node scripts/check-site.mjs && node scripts/stamp-cards.mjs --check && node scripts/agent-skills.mjs --check",
     "ci:validate-html": "html-validate \"*.html\" \"prompts/*.html\"",
     "cards:build": "./mooch-cards/og-site.sh && node scripts/stamp-cards.mjs",
     "cards:stamp": "node scripts/stamp-cards.mjs",
     "counts:build": "node scripts/copy-counts.mjs",
-    "counts:check": "node scripts/copy-counts.mjs --check"
+    "counts:check": "node scripts/copy-counts.mjs --check",
+    "skills:build": "node scripts/agent-skills.mjs",
+    "skills:sync": "node scripts/agent-skills.mjs --sync"
   },
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.55.0",

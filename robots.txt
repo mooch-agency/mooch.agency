@@ -1,4 +1,10 @@
 User-agent: *
 Allow: /
+# Content Signals: how automated systems may use this content.
+# All three are yes on purpose. Mooch is found by being read, cited and
+# answered with, so training, search indexing and RAG-style grounding are all
+# welcome. This is a preference signal, not access control.
+# https://contentsignals.org/
+Content-Signal: ai-train=yes, search=yes, ai-input=yes
 
 Sitemap: https://mooch.agency/sitemap.xml

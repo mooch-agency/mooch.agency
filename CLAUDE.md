@@ -121,6 +121,44 @@ a floor, not a true total, since it misses anyone blocking the script. A count o
 what analytics now reports; it is **not** in `ci:check`, because the count
 legitimately goes stale between deploys and would otherwise fail every PR.
 
+## Agent discovery
+
+Three things advertise the site to agents, on top of `llms.txt` and `sitemap.xml`:
+
+- **`Content-Signal` in `robots.txt`** declares how automated systems may use the
+  content. All three signals (`ai-train`, `search`, `ai-input`) are `yes` on
+  purpose: mooch is found by being read, cited and answered with. It is a
+  preference signal, not access control, so it never gates anything.
+- **A `Link` header** on every response (set in `vercel.json`) points at
+  `llms.txt`, the skills index and the sitemap, so an agent finds them from a
+  HEAD request without guessing paths.
+- **`/.well-known/agent-skills/index.json`**, the Agent Skills Discovery index
+  (Cloudflare RFC v0.2.0), answering "what skills does mooch publish?" from the
+  front door rather than only from GitHub.
+
+The skills themselves are **vendored** into `.well-known/agent-skills/`, copied
+from `mooch-agency/skills`. That is deliberate, and the same ownership split as
+`mooch-cards/`. Every index entry carries a SHA-256 `digest` that clients MUST
+verify before using the skill; if the `url` pointed at raw.githubusercontent,
+any commit in the skills repo would silently invalidate every digest we serve
+and nothing here could detect it. Serving our own copies makes the check
+self-contained, so it actually runs in CI.
+
+```
+pnpm skills:sync ../skills-repo-staging   # re-copy from a skills-repo clone, then rebuild
+pnpm skills:build                          # rebuild index.json + archives from what is vendored
+```
+
+A skill that is `SKILL.md` alone ships as `type: "skill-md"`. One with
+supporting files ships as a reproducible `.tar.gz` (`type: "archive"`), so its
+relative references still resolve; `scripts/agent-skills.mjs` writes the tar by
+hand precisely so the bytes, and therefore the digest, never churn between
+builds. `pnpm ci:check` runs `--check` and fails on any drift between a vendored
+skill and the index that describes it.
+
+Adding a skill to the public repo is not automatic here: run `skills:sync` and
+commit, or the index goes stale and CI says so.
+
 ## Voice
 British English, terse, no em dashes. Full house style: MOOCHBOT.md in Notion.
 

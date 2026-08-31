@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "baby-app",
+      "type": "skill-md",
+      "description": "Spin up a throwaway design prototype, iterate until it feels right, then extract what worked. Use when exploring a design idea, testing an interaction, or discovering what you want before committing to a proper build. Triggers on \"baby app\", \"/baby-app\", \"throwaway prototype\", \"design spike\", \"vibe the design\", or \"let's explore [UI thing] before building it\".",
+      "url": "/.well-known/agent-skills/baby-app/SKILL.md",
+      "digest": "sha256:8768c54c741ec9c9a4a81970d573be323977ffcb2d19d60a92891d0329d03cc3"
+    },
+    {
+      "name": "content-audit",
+      "type": "skill-md",
+      "description": "Run a content audit on any public website. Browse the live site, find real issues (broken links, pricing inconsistencies, contradictions, stale content), and return a formatted report the client can act on. Designed as a free taster audit for prospective clients. Use when asked to \"run a content audit on [domain]\" or \"audit [domain] for content issues\".",
+      "url": "/.well-known/agent-skills/content-audit/SKILL.md",
+      "digest": "sha256:6979bdb6588cad9579287ce91795ffd3e7ac49feab2a82e4be157e84317e5faf"
+    },
+    {
+      "name": "deslop",
+      "type": "skill-md",
+      "description": "Strip the most common AI writing patterns from a draft. Returns a cleaned version plus a changelog of what it fixed. Use when the user says \"/deslop\", \"de-slop this\", \"remove the AI tells\", or \"clean up this draft\". An editor, not a ghostwriter. It does not generate writing, only cleans writing you have already done.",
+      "url": "/.well-known/agent-skills/deslop/SKILL.md",
+      "digest": "sha256:104c83ea057281ed9e62e9de38ee50c93dd8df52cc149cc47ae6e2bf9feb9124"
+    },
+    {
+      "name": "pre-launch-website-check",
+      "type": "skill-md",
+      "description": "Pre-launch website check for marketing and brand sites. Two modes. \"check\" crawls the site, runs 10 discipline audits in parallel, and returns a pass/fail report grouped by severity. \"apply\" does the same audit, then fixes safe items and flags the rest. Use when asked to \"run a pre-launch check on [site]\", \"audit [site]\", \"check [site] before launch\", or \"run best practices on [site]\". Works on any static or server-rendered site with a public URL or local repo.",
+      "url": "/.well-known/agent-skills/pre-launch-website-check/SKILL.md",
+      "digest": "sha256:b40e9051be956937808cf8f70f8f8ea414e75e8e81c60bc7599629665dba3696"
+    },
+    {
+      "name": "save-to-reading",
+      "type": "archive",
+      "description": "Turn a YouTube video URL or a web article URL into a single Notion Reading DB entry. For video, pull and clean the transcript (yt-dlp captions, whisper fallback). For an article, fetch and lightly clean the author's text. File either with the right properties, a \"Linked to\" line, and a \"## Notes\" take. Creates the Reading DB if none exists. Use when asked to \"add this to the Reading DB\", \"save this video / article / talk / essay to Notion\", \"file this link\", or to turn a URL into a Reading entry with notes.",
+      "url": "/.well-known/agent-skills/save-to-reading.tar.gz",
+      "digest": "sha256:6d85bffd9bfb67ab80e753bc5aead54e153e4a0bebbc3125f72fd71b7bfabfd5"
+    },
+    {
+      "name": "soundlikeme",
+      "type": "skill-md",
+      "description": "Learn a user's writing voice from 2-3 samples, generate a voice profile, then rewrite any draft to match their voice. Returns a rewritten draft plus a voice changelog.",
+      "url": "/.well-known/agent-skills/soundlikeme/SKILL.md",
+      "digest": "sha256:80985f53841f44c1ac8ecab739f9b17c640b2b8850814f2b3420fdb080457229"
+    },
+    {
+      "name": "vl",
+      "type": "skill-md",
+      "description": "Toggle low-verbosity mode. Constrain the output to the fewest words for a clear, complete answer, without constraining the thinking. Use when the user says \"/vl\", \"low verbosity\", \"be terse\", or \"keep it short\". Stay in this mode until the user explicitly cancels.",
+      "url": "/.well-known/agent-skills/vl/SKILL.md",
+      "digest": "sha256:0762356c0f7fc43c6a552648473d4941187da9b584f27462c1933e848a9fd6a8"
+    }
+  ]
+}
