@@ -34,7 +34,7 @@
       "type": "archive",
       "description": "Turn a YouTube video URL or a web article URL into a single Notion Reading DB entry. For video, pull and clean the transcript (yt-dlp captions, whisper fallback). For an article, fetch and lightly clean the author's text. File either with the right properties, a \"Linked to\" line, and a \"## Notes\" take. Creates the Reading DB if none exists. Use when asked to \"add this to the Reading DB\", \"save this video / article / talk / essay to Notion\", \"file this link\", or to turn a URL into a Reading entry with notes.",
       "url": "/.well-known/agent-skills/save-to-reading.tar.gz",
-      "digest": "sha256:2f22defcc194d9ab143a88c2bb5986d6371adb713bb6b7876d9be6938208a91d"
+      "digest": "sha256:d8323e36236dc9369af208d98fd937699979ee43f22690dfd3bd5e23b64a2f06"
     },
     {
       "name": "soundlikeme",
