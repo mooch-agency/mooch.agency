@@ -135,6 +135,44 @@ button, input { font-family:inherit; }
 .lede { margin-top:12px; font-size:clamp(15px,1.3vw,16.5px); color:var(--ink); max-width:68ch; text-wrap:pretty; }
 .subtle { color:var(--muted); }
 
+/* --- disclosure (shared across all five folds) --------------------------
+   The exact component board.html already ships: a real button (so Enter and
+   Space work with no keydown handler) plus a 0fr/1fr grid that animates
+   height without ever measuring anything. This is the one mechanism the
+   whole exercise turns on, so it is copied verbatim rather than re-invented
+   per fold. */
+.moretoggle {
+  appearance:none; background:none; border:0; padding:9px 0; margin:14px 0 0;
+  font:inherit; font-size:13.5px; color:var(--ink); cursor:pointer;
+  display:inline-flex; align-items:center; gap:8px; text-align:left;
+  text-decoration:underline; text-underline-offset:4px;
+  text-decoration-color:var(--hairline-focus);
+  transition:text-decoration-color var(--t-deliver) var(--ease-deliver);
+}
+.moretoggle:hover { text-decoration-color:var(--ink); }
+.moretoggle .chev {
+  display:inline-block; font-family:var(--mono); color:var(--muted-small);
+  transition:transform var(--t-deliver) var(--ease-deliver);
+}
+.moretoggle[aria-expanded="true"] .chev { transform:rotate(90deg); }
+.morewrap {
+  display:grid; grid-template-rows:0fr;
+  transition:grid-template-rows var(--t-disclose) var(--ease-decide);
+}
+.morewrap[data-open="true"] { grid-template-rows:1fr; }
+/* visibility, not just clipping: collapsed copy must leave the accessibility
+   tree too, or a screen reader reads a note the eye cannot see. */
+.morewrap > .morein {
+  overflow:hidden; min-height:0; visibility:hidden;
+  transition:visibility 0s linear var(--t-disclose);
+}
+.morewrap[data-open="true"] > .morein { visibility:visible; transition-delay:0s; }
+.morein { padding-top:16px; }
+.morein > * + * { margin-top:14px; }
+@media (prefers-reduced-motion:reduce) {
+  .morewrap > .morein { transition-delay:0s !important; }
+}
+
 /* --- 01 Contrast: the same request, two readers -------------------------- */
 .contrast { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:22px; }
 .cpanel { border:1px solid var(--hairline); border-radius:10px; overflow:hidden; background:var(--paper); }
@@ -282,8 +320,12 @@ table.board tr:hover td { background:var(--band); }
   <p class="decknote">
     A foundation decision-maker lands on <b>mooch.agency/ax</b>. Before they reach the
     table they need two things: what AX is, and why a low score should bother them.
-    Each exploration changes only what sits above the first row, and each bets on a
-    different mechanism. The board underneath is the settled design, unchanged.
+    Redone 10 September through progressive disclosure: every fold now shows one
+    hook and nothing else, and everything that supports it, evidence, method,
+    proof, sits behind a single "one more click" the reader chooses to take. The
+    hook is what the five seconds actually buy; the disclosure is what a reader
+    who pauses gets, using the same button-plus-grid the board's own "How scoring
+    works" already ships. The board underneath is the settled design, unchanged.
     Real 8 September scan throughout, every number computed from the data.
   </p>
 
@@ -337,6 +379,25 @@ function meter(lv) {
 function foldline() {
   return '<div class="foldline"><span>fold at 1280&times;800</span></div>';
 }
+/* One disclosure, wired once for whichever fold is on stage. label is what
+   the closed button says; content is the markup it reveals. id must be
+   unique per fold so aria-controls always resolves to the live element. */
+function disclosure(id, label, content) {
+  return '<button class="moretoggle" type="button" aria-expanded="false" aria-controls="' + id + '">' +
+      '<span class="chev" aria-hidden="true">&rsaquo;</span>' + esc(label) + "</button>" +
+    '<div class="morewrap" id="' + id + '" data-open="false"><div class="morein">' + content + "</div></div>";
+}
+function wireDisclosures(root) {
+  root.querySelectorAll(".moretoggle").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var w = document.getElementById(b.getAttribute("aria-controls"));
+      if (!w) return;
+      var open = b.getAttribute("aria-expanded") === "true";
+      b.setAttribute("aria-expanded", String(!open));
+      w.dataset.open = String(!open);
+    });
+  });
+}
 
 /* The top of the settled board, enough rows to show the handoff. Website view,
    the default, ranked by score then by value secured. */
@@ -364,79 +425,88 @@ function boardTop(limit) {
    The five folds. Each returns only what sits above the board.
    ========================================================================== */
 
-/* 01 CONTRAST. Bet: show the deficit rather than describe it. The same URL is
-   fetched twice, once by a person and once by an agent, side by side. No
-   definition sentence does as much work as seeing what comes back empty. */
+/* 01 CONTRAST. Bet: the headline alone is the five-second read. The reveal is
+   evidence for a reader who pauses, never a second attempt at the same job.
+   The panel is exactly what shipped before, unchanged, just gated. */
 function foldContrast() {
   return eyebrowRow() +
     '<h2 class="display">Your site answers <em>people</em>. It does not answer <em>agents</em>.</h2>' +
-    '<p class="lede">Agent experience is how much of what you publish a machine can actually ' +
-      "retrieve. We asked " + SITES + " web addresses across the top " + N +
-      " rollups. Here is the same front page, read twice.</p>" +
-    '<div class="contrast">' +
-      '<div class="cpanel"><h3>What a person gets</h3><div class="cbody">' +
-        '<div class="sketch" aria-hidden="true">' +
-          '<div class="bar t"></div><div class="bar s"></div><div class="bar m"></div>' +
-          '<div class="row"><span class="chip"></span><span class="chip"></span><span class="chip"></span></div>' +
-          '<div class="bar s"></div><div class="bar m"></div>' +
-        "</div>" +
-        '<p class="sr">A rendered page: headline, paragraphs, navigation and images.</p>' +
-      "</div></div>" +
-      '<div class="cpanel"><h3>What an agent gets</h3><div class="cbody">' +
-        '<div class="wire">' +
-          '<div class="req">GET ' + esc(ROWS[0].d) + '<br>Accept: text/markdown</div>' +
-          '<div class="got">&rarr; 200 text/html</div>' +
-          "<ul>" +
-            '<li><i class="x" aria-hidden="true">&times;</i>no Markdown version of the page</li>' +
-            '<li><i class="x" aria-hidden="true">&times;</i>no Content Signals in robots.txt</li>' +
-            '<li><i class="x" aria-hidden="true">&times;</i>no Link headers pointing anywhere</li>' +
-          "</ul>" +
-        "</div>" +
-      "</div></div>" +
-    "</div>" +
-    '<p class="lede subtle" style="margin-top:16px;">' + SITE_LOW + " of the " + N +
-      " score 1 out of 5 or worse on their own front page.</p>" +
+    disclosure("d-contrast", "See what an agent gets back",
+      '<p class="lede">Agent experience is how much of what you publish a machine can actually ' +
+        "retrieve. We asked " + SITES + " web addresses across the top " + N +
+        " rollups. Here is the same front page, read twice.</p>" +
+      '<div class="contrast">' +
+        '<div class="cpanel"><h3>What a person gets</h3><div class="cbody">' +
+          '<div class="sketch" aria-hidden="true">' +
+            '<div class="bar t"></div><div class="bar s"></div><div class="bar m"></div>' +
+            '<div class="row"><span class="chip"></span><span class="chip"></span><span class="chip"></span></div>' +
+            '<div class="bar s"></div><div class="bar m"></div>' +
+          "</div>" +
+          '<p class="sr">A rendered page: headline, paragraphs, navigation and images.</p>' +
+        "</div></div>" +
+        '<div class="cpanel"><h3>What an agent gets</h3><div class="cbody">' +
+          '<div class="wire">' +
+            '<div class="req">GET ' + esc(ROWS[0].d) + '<br>Accept: text/markdown</div>' +
+            '<div class="got">&rarr; 200 text/html</div>' +
+            "<ul>" +
+              '<li><i class="x" aria-hidden="true">&times;</i>no Markdown version of the page</li>' +
+              '<li><i class="x" aria-hidden="true">&times;</i>no Content Signals in robots.txt</li>' +
+              '<li><i class="x" aria-hidden="true">&times;</i>no Link headers pointing anywhere</li>' +
+            "</ul>" +
+          "</div>" +
+        "</div></div>" +
+      "</div>" +
+      '<p class="lede subtle" style="margin-top:16px;">' + SITE_LOW + " of the " + N +
+        " score 1 out of 5 or worse on their own front page.</p>") +
     foldline();
 }
 
-/* 02 CONSEQUENCE. Bet: one plain sentence and one number outrun any picture.
-   Nothing else competes for the five seconds, and the table arrives sooner. */
+/* 02 CONSEQUENCE. Bet: the number alone is the five-second read, and the
+   original design already put the explanation second. Progressive disclosure
+   here means literally hiding what "agent experience" means until asked,
+   rather than stating it unconditionally underneath. */
 function foldConsequence() {
   return eyebrowRow() +
     '<p class="stateline">' + SITE_LOW + " of the top " + N +
       " rollups are <span class=\"big\">1 out of 5</span> or worse at being read by an AI agent.</p>" +
-    '<p class="statesub">That is their agent experience: how easily software sent to ' +
-      "evaluate them can find and read what they publish. It is measured, weekly, " +
-      "on the same " + SITES + " addresses.</p>" +
+    disclosure("d-consequence", "What this measures",
+      '<p class="statesub">That is their agent experience: how easily software sent to ' +
+        "evaluate them can find and read what they publish. It is measured, weekly, " +
+        "on the same " + SITES + " addresses.</p>") +
     foldline();
 }
 
-/* 03 THE QUESTION. Bet: the use case creates the recognition, not the metric.
-   Shows the moment the score is spent, using our own 12-run test result. The
-   copy must not claim agents arrive at the front page, because they did not:
-   the finding is that they went to the docs. */
+/* 03 THE QUESTION. Bet: the question alone creates the tension. What actually
+   happened when we asked it stays gated, since it is proof for a reader who
+   wants proof, not part of recognising the problem. Must not claim agents
+   arrive at the front page: the finding is that they went to the docs. */
 function foldQuestion() {
   return eyebrowRow() +
     '<h2 class="display">A builder asks. <em>Your docs answer</em>, or they do not.</h2>' +
     '<div class="ask">' +
       '<div class="askbubble"><span class="who">A developer, to an AI assistant</span>' +
         "Which Layer 2 should I build on, and how do I deploy there?</div>" +
-      '<div class="fetch">' +
-        '<div class="line"><span class="verb">fetch</span><span>' + esc(GAP.sd) +
-          '</span><span class="ok">&check; readable</span></div>' +
-        '<div class="line"><span class="verb">fetch</span><span>' + esc(WORST_DOCS.sd) +
-          '</span><span class="no">&times; nothing to read</span></div>' +
-      "</div>" +
     "</div>" +
-    '<p class="lede" style="margin-top:16px;">In twelve test runs, the assistant fetched ' +
-      "documentation every time and the marketing site never. Agent experience is whether " +
-      "yours is the one it can read: " + DOCS_GOOD + " of " + N + " are.</p>" +
+    disclosure("d-question", "See what the agent actually fetched",
+      '<div class="ask">' +
+        '<div class="fetch">' +
+          '<div class="line"><span class="verb">fetch</span><span>' + esc(GAP.sd) +
+            '</span><span class="ok">&check; readable</span></div>' +
+          '<div class="line"><span class="verb">fetch</span><span>' + esc(WORST_DOCS.sd) +
+            '</span><span class="no">&times; nothing to read</span></div>' +
+        "</div>" +
+      "</div>" +
+      '<p class="lede" style="margin-top:16px;">In twelve test runs, the assistant fetched ' +
+        "documentation every time and the marketing site never. Agent experience is whether " +
+        "yours is the one it can read: " + DOCS_GOOD + " of " + N + " are.</p>") +
     foldline();
 }
 
-/* 04 THE FIELD. Bet: the distribution is the whole argument, so show it and
-   write almost nothing. The reader sees the field, finds their own bar, and
-   the shape (everything piled at the bottom) is the point. */
+/* 04 THE FIELD. Bet: one summary sentence is the five-second read; the chart
+   is the working underneath it for a reader who wants to see their own bar.
+   Inverts the original bet (distribution first) into disclosure's shape
+   (conclusion first, distribution on request), which is the sharpest test of
+   whether "progressive disclosure" survives a bet built the other way round. */
 function foldField() {
   var site = [0,0,0,0,0,0], docs = [0,0,0,0,0,0];
   ROWS.forEach(function (r) { site[r.s]++; docs[r.k]++; });
@@ -456,26 +526,27 @@ function foldField() {
         '<div class="fname">' + names[lv] + "</div>" +
       "</div>";
   }
+  /* Written so the verb and pronoun follow the count: "1 site reaches ... they
+     own" was the first draft and it does not survive a re-scan moving the
+     number either way. */
+  var topLine = "Only " + (SITE_TOP === 1 ? "one chain reaches" : SITE_TOP + " chains reach") +
+    " the top on the site " + (SITE_TOP === 1 ? "it owns" : "they own") + ".";
   return eyebrowRow() +
     '<h2 class="display">Every Layer 2, scored on how well an <em>agent can read it</em>.</h2>' +
-    '<div class="field"><div class="fieldgrid">' + cols + "</div>" +
-      '<div class="fkey"><span><i class="site"></i>Marketing site</span>' +
-        '<span><i class="docs"></i>Documentation</span>' +
-        "<span>" + N + " rollups, scanned 8 September</span></div>" +
-    "</div>" +
-    /* Written so the verb and pronoun follow the count: "1 site reaches ... they
-       own" was the first draft and it does not survive a re-scan moving the
-       number either way. */
-    '<p class="lede" style="margin-top:18px;">Only ' +
-      (SITE_TOP === 1 ? "one chain reaches" : SITE_TOP + " chains reach") +
-      " the top on the site " + (SITE_TOP === 1 ? "it owns" : "they own") + ". " +
-      SITE_ZERO + " return nothing an agent can use at all.</p>" +
+    '<p class="lede">' + topLine + " " + SITE_ZERO + " return nothing an agent can use at all.</p>" +
+    disclosure("d-field", "See the full distribution",
+      '<div class="field"><div class="fieldgrid">' + cols + "</div>" +
+        '<div class="fkey"><span><i class="site"></i>Marketing site</span>' +
+          '<span><i class="docs"></i>Documentation</span>' +
+          "<span>" + N + " rollups, scanned 8 September</span></div>" +
+      "</div>") +
     foldline();
 }
 
-/* 05 DEFINITION. Bet: name the term before anything else. The most formal of
-   the five, and the only one that would still work if the reader had never
-   heard the phrase. Costs the most vertical space. */
+/* 05 DEFINITION. Bet: the term and its one-line meaning are the five-second
+   read. Why it matters, the evidence a skeptical reader wants, is what stays
+   gated: the least formal reveal of the five, since it is three plain facts
+   rather than a chart or a transcript. */
 function foldDefinition() {
   return eyebrowRow() +
     '<div class="defblock">' +
@@ -484,14 +555,15 @@ function foldDefinition() {
       '<p class="defbody">Agent experience. How easily an AI agent can find, read and use ' +
         "what a website publishes, scored 0 to 5.</p>" +
     "</div>" +
-    '<ul class="deffacts">' +
-      '<li><span class="n">01</span><span>It is not about your chain. It is about the ' +
-        "site in front of it.</span></li>" +
-      '<li><span class="n">02</span><span>' + SITE_LOW + " of the top " + N +
-        " rollups score 1 out of 5 or worse on their own front page.</span></li>" +
-      '<li><span class="n">03</span><span>' + esc(GAP.n) + " scores " + GAP.s + "/5 on its site and " +
-        GAP.k + "/5 on its docs. Same team, same week.</span></li>" +
-    "</ul>" +
+    disclosure("d-definition", "Why it matters",
+      '<ul class="deffacts">' +
+        '<li><span class="n">01</span><span>It is not about your chain. It is about the ' +
+          "site in front of it.</span></li>" +
+        '<li><span class="n">02</span><span>' + SITE_LOW + " of the top " + N +
+          " rollups score 1 out of 5 or worse on their own front page.</span></li>" +
+        '<li><span class="n">03</span><span>' + esc(GAP.n) + " scores " + GAP.s + "/5 on its site and " +
+          GAP.k + "/5 on its docs. Same team, same week.</span></li>" +
+      "</ul>") +
     foldline();
 }
 
@@ -500,29 +572,29 @@ function foldDefinition() {
    ========================================================================== */
 var EXPLORATIONS = [
   { id:"contrast", name:"Contrast",
-    bet:"<b>Bet: show the deficit, do not describe it.</b> The same page fetched twice, " +
-        "by a person and by an agent. Costs the most horizontal space and needs the " +
-        "right-hand panel to be read, not skimmed.",
+    bet:"<b>Hook: the headline alone.</b> “Your site answers people, not agents.” " +
+        "<b>Gated: the two-panel proof.</b> A person who does not click still leaves knowing " +
+        "the claim; a person who does gets the transcript that backs it.",
     build:foldContrast },
   { id:"consequence", name:"Consequence",
-    bet:"<b>Bet: one sentence and one number beat any picture.</b> No visual, nothing to " +
-        "decode, the table arrives soonest. Costs the explanation of what is being measured, " +
-        "which moves below the fold.",
+    bet:"<b>Hook: the number alone.</b> No explanation of what agent experience even means. " +
+        "<b>Gated: the one-sentence definition.</b> The fold with the least to hide, since the " +
+        "reveal is a single line, not evidence.",
     build:foldConsequence },
   { id:"question", name:"The question",
-    bet:"<b>Bet: the use case creates the recognition, not the metric.</b> Shows the moment " +
-        "a score is spent, with our own twelve-run finding. Costs a claim we can only make " +
-        "about documentation, because that is where the agents actually went.",
+    bet:"<b>Hook: the question alone.</b> No answer, no data, just what a developer would ask. " +
+        "<b>Gated: our own fetch trace.</b> Recognition comes from the question; the proof is " +
+        "for whoever stops to ask “is that actually true.”",
     build:foldQuestion },
   { id:"field", name:"The field",
-    bet:"<b>Bet: the distribution is the argument.</b> The reader sees the whole field and " +
-        "finds their own bar before reading a word. Costs comprehension for anyone who has " +
-        "never met the term, since nothing here defines it.",
+    bet:"<b>Hook: one summary sentence.</b> The verdict without the evidence, which inverts the " +
+        "original bet (distribution first, conclusion after). <b>Gated: the full chart.</b> The " +
+        "sharpest test of the principle, since the whole earlier bet was to lead with the shape.",
     build:foldField },
   { id:"definition", name:"Definition",
-    bet:"<b>Bet: name the term first.</b> The only one that works for a reader who has never " +
-        "heard of agent experience, and the most authoritative in tone. Costs the most " +
-        "vertical space, so the first row sits lowest.",
+    bet:"<b>Hook: the term and one line.</b> What a dictionary gives you and nothing more. " +
+        "<b>Gated: why it matters.</b> Three plain facts, the least dramatic reveal of the five, " +
+        "which is the point: a definition should not need drama to be complete.",
     build:foldDefinition }
 ];
 
@@ -546,6 +618,10 @@ function render(i) {
       '<div class="frametab"><span>mooch.agency/ax</span><span>' + esc(e.name) + "</span></div>" +
       '<div class="pad">' + e.build() + boardTop(6) + "</div>" +
     "</div>";
+  /* Every disclosure starts closed on every fold: switching tabs should never
+     carry an "opened" state over, or the five-second budget this whole
+     exercise is testing gets silently spent by the previous tab's click. */
+  wireDisclosures(stage);
   Array.prototype.forEach.call(switcher.children, function (b, n) {
     b.setAttribute("aria-selected", String(n === i));
     b.tabIndex = n === i ? 0 : -1;
