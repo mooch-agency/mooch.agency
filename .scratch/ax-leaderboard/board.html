@@ -92,8 +92,20 @@ button, input { font-family:inherit; }
   transition:transform var(--t-deliver) var(--ease-deliver);
 }
 .moretoggle[aria-expanded="true"] .chev { transform:rotate(90deg); }
-/* .detwrap is the same recipe wrapped around an opened row. */
-.morewrap, .morein > * + * { margin-top:9px; }
+/* .detwrap (below) is the same recipe wrapped around an opened row. */
+.morewrap {
+  display:grid; grid-template-rows:0fr;
+  transition:grid-template-rows var(--t-disclose) var(--ease-decide);
+}
+.morewrap[data-open="true"] { grid-template-rows:1fr; }
+/* visibility, not just clipping: collapsed copy must leave the accessibility
+   tree too, or a screen reader reads a note the eye cannot see. */
+.morewrap > .morein {
+  overflow:hidden; min-height:0; visibility:hidden;
+  transition:visibility 0s linear var(--t-disclose);
+}
+.morewrap[data-open="true"] > .morein { visibility:visible; transition-delay:0s; }
+.morein > * + * { margin-top:9px; }
 
 /* --- page chrome (the design deck around the mocks) --------------------- */
 .deck { max-width:var(--max); margin:0 auto; padding:30px var(--pad-x) 0; }
@@ -124,12 +136,13 @@ button, input { font-family:inherit; }
 .lede { margin-top:12px; font-size:clamp(15px,1.3vw,16.5px); color:var(--ink); max-width:70ch; text-wrap:pretty; }
 
 .morein p { font-size:13.5px; color:var(--muted); text-wrap:pretty; }
-/* The trust stamp now lives at the foot of the page, alongside the notes. */
-.stamp {
-  margin:0; font-family:var(--mono); font-size:11px; letter-spacing:.06em;
-  color:var(--muted-small); display:flex; gap:6px 16px; flex-wrap:wrap; align-items:center;
+/* Eyebrow and scan date share a row, right-justified against each other. */
+.eyebrowrow { display:flex; align-items:baseline; justify-content:space-between; gap:12px 20px; flex-wrap:wrap; }
+.scanline {
+  font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--muted-small);
+  white-space:nowrap; display:inline-flex; align-items:center;
 }
-.stamp .dot { width:6px; height:6px; border-radius:50%; background:var(--success); display:inline-block; margin-right:6px; }
+.scanline .dot { width:6px; height:6px; border-radius:50%; background:var(--success); display:inline-block; margin-right:6px; }
 
 /* --- controls row: the toggle and the filter, directly above the header --- */
 .controls {
@@ -397,13 +410,6 @@ function score(lv) {
     '<span class="snum">' + lv + "/5</span>" +
     '<span class="sr">, ' + LEVEL_NAME[lv] + "</span></span>";
 }
-function fmtDate(iso) {
-  var d = new Date(iso);
-  return d.getUTCDate() + " " +
-    ["January","February","March","April","May","June","July","August","September","October","November","December"][d.getUTCMonth()] +
-    " " + d.getUTCFullYear();
-}
-var SCAN_DATE = fmtDate(DATA.scannedAt);
 
 /* Counts used in copy, computed from the data so the copy can never drift. */
 function tally(view) {
@@ -608,19 +614,19 @@ function pitch() {
 }
 
 /* --- shared page furniture --------------------------------------------------- */
-/* The fold, in order: eyebrow, headline, lede, method disclosure. The trust
-   stamp moved to the foot of the page; nothing else stands between this and
-   row one. */
+/* The fold, in order: eyebrow (with the scan date right-justified against it),
+   headline, lede, method disclosure. */
 function hero(o) {
   return "<div>" +
-    '<p class="eyebrow">Agent experience</p>' +
+    '<p class="eyebrowrow"><span class="eyebrow">Agent experience</span>' +
+      '<span class="scanline"><span class="dot"></span>Scanning weekly</span></p>' +
     '<h2 class="display">' + o.headline + "</h2>" +
     '<p class="lede">' + esc(o.lede) + "</p>" +
     '<button class="moretoggle" type="button" aria-expanded="false" aria-controls="' + o.methodId + '" style="margin-top:12px;">' +
       '<span class="chev" aria-hidden="true">&rsaquo;</span>How scoring works</button>' +
     '<div class="morewrap" id="' + o.methodId + '" data-open="false"><div class="morein">' +
-      "<p>We use Cloudflare\u2019s agent-readiness API and scoring system to rank each website. " +
-      "It scores how well agents can find info, not whether it\u2019s correct or updated. " +
+      "<p>We use Cloudflare\u2019s agent-readiness API and scoring system to rank each website.</p>" +
+      "<p>It scores how well agents can find info, not whether it\u2019s correct or updated. " +
       "Rescanned weekly.</p>" +
     "</div></div>" +
   "</div>";
@@ -701,8 +707,6 @@ function footnotes() {
   html += '<p class="eyebrow" style="margin-top:8px;">Notes on ' + plural(notes.length, "row") + "</p><ol>" +
     notes.map(function (r) { return "<li><b>" + esc(r.name) + ".</b> " + esc(r.note) + "</li>"; }).join("") +
     "</ol>" +
-    '<p class="stamp" style="margin-top:8px;"><span><span class="dot"></span>Scanned ' + SCAN_DATE + "</span>" +
-      "<span>Re-scanned every Monday</span></p>" +
   "</div>";
   return html;
 }
