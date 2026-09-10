@@ -628,6 +628,12 @@ function hero(o) {
       "<p>We use Cloudflare\u2019s agent-readiness API and scoring system to rank each website.</p>" +
       "<p>It scores how well agents can find info, not whether it\u2019s correct or updated. " +
       "Rescanned weekly.</p>" +
+      /* The tiebreak has to be visible: 15 of 22 websites share one score, so
+         the order inside a tie is value secured, not agent readiness. Say so,
+         or a rank gap reads as a score gap. */
+      "<p>Equal scores are ordered by value secured, per L2Beat. " +
+      '<a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Learn more</a> ' +
+      "about how Cloudflare\u2019s scan works.</p>" +
     "</div></div>" +
   "</div>";
 }
