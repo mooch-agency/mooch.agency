@@ -34,7 +34,9 @@
 // three different byte streams for the same tar at level 6), so a build on one
 // machine read as "stale" in CI. The gzip is therefore written at level 0:
 // stored blocks are defined by the input alone, identical across every zlib
-// tested, and the archives are a few KB so compression bought nothing.
+// tested, and the archives are a few KB so compression bought nothing. The
+// header's XFL and OS bytes are pinned too, since zlib writes the host OS
+// into byte 9 and a Mac build would never match a Linux check.
 // ---------------------------------------------------------------------------
 
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, rmSync, cpSync } from 'node:fs';
@@ -104,7 +106,14 @@ function makeTarGz(files) {
   parts.push(Buffer.alloc(1024)); // two empty blocks terminate the archive
   // level 0 on purpose: see the header. Any real compression level makes the
   // bytes, and so the digest, depend on which zlib built them.
-  return gzipSync(Buffer.concat(parts), { level: 0 });
+  const gz = gzipSync(Buffer.concat(parts), { level: 0 });
+  // The gzip header also carries two bytes zlib fills in from the build: XFL
+  // (byte 8, varies with level) and OS (byte 9: 3 on Linux, 19 on macOS). Both
+  // are informational to every decoder, so pin them, or a Mac-built archive
+  // reads as stale in CI forever.
+  gz[8] = 0;
+  gz[9] = 3;
+  return gz;
 }
 
 // ---------------------------------------------------------------------------
