@@ -140,7 +140,7 @@ button, input { font-family:inherit; }
 .eyebrowrow { display:flex; align-items:baseline; justify-content:space-between; gap:12px 20px; flex-wrap:wrap; }
 .scanline {
   font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--muted-small);
-  white-space:nowrap; display:inline-flex; align-items:center;
+  white-space:nowrap; display:inline-flex; align-items:center; text-transform:uppercase;
 }
 .scanline .dot { width:6px; height:6px; border-radius:50%; background:var(--success); display:inline-block; margin-right:6px; }
 
@@ -623,21 +623,23 @@ function hero(o) {
     '<h2 class="display">' + o.headline + "</h2>" +
     '<p class="lede">' + esc(o.lede) + "</p>" +
     '<button class="moretoggle" type="button" aria-expanded="false" aria-controls="' + o.methodId + '" style="margin-top:12px;">' +
-      '<span class="chev" aria-hidden="true">&rsaquo;</span>How scoring works</button>' +
+      '<span class="chev" aria-hidden="true">&rsaquo;</span>How it works</button>' +
     '<div class="morewrap" id="' + o.methodId + '" data-open="false"><div class="morein">' +
-      "<p>We use Cloudflare\u2019s agent-readiness API and scoring system to rank each website.</p>" +
-      "<p>It scores how well agents can find info, not whether it\u2019s correct or updated. " +
-      "Rescanned weekly.</p>" +
+      "<p>AX, agent experience, is how easily an AI agent can find and read your site.</p>" +
+      '<p>We use <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare\u2019s ' +
+        "agent-readiness</a> API and scoring system.</p>" +
       /* The tiebreak has to be visible: 15 of 22 websites share one score, so
          the order inside a tie is value secured, not agent readiness. Say so,
          or a rank gap reads as a score gap. */
-      "<p>Equal scores are ordered by value secured, per L2Beat. Learn more about " +
-      '<a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">how Cloudflare\u2019s scan works</a>.</p>' +
+      "<p>Equal scores are ordered by value secured, per L2Beat.</p>" +
     "</div></div>" +
   "</div>";
 }
 
-/* The toggle and the filter on one row, directly above the table header. */
+/* The toggle and the filter on one row, directly above the table header. The
+   chip opens the disclosure above rather than duplicate its copy: reuse what
+   already explains the score, make it findable, per Tahi's 10 Sep pick from
+   the five /ax-explainer layers. */
 function controls(o) {
   return '<div class="controls">' +
     '<div class="find">' +
