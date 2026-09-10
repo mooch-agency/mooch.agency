@@ -28,6 +28,15 @@
 // written by hand below because it must be byte-for-byte reproducible: any
 // nondeterminism (mtimes, uids, file order) would churn the digest on every
 // build and make --check meaningless.
+//
+// One source of churn lives outside this file: compressed deflate output
+// depends on the zlib build Node ships with (three Node versions on hand gave
+// three different byte streams for the same tar at level 6), so a build on one
+// machine read as "stale" in CI. The gzip is therefore written at level 0:
+// stored blocks are defined by the input alone, identical across every zlib
+// tested, and the archives are a few KB so compression bought nothing. The
+// header's XFL and OS bytes are pinned too, since zlib writes the host OS
+// into byte 9 and a Mac build would never match a Linux check.
 // ---------------------------------------------------------------------------
 
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, rmSync, cpSync } from 'node:fs';
@@ -49,6 +58,7 @@ const CHECK = ARGV.includes('--check');
 const syncAt = ARGV.indexOf('--sync');
 const SYNC_FROM = syncAt === -1 ? null : ARGV[syncAt + 1];
 if (syncAt !== -1 && !SYNC_FROM) throw new Error('--sync needs a path to a skills-repo clone');
+
 
 const sha256 = (buf) => `sha256:${createHash('sha256').update(buf).digest('hex')}`;
 
@@ -94,7 +104,16 @@ function makeTarGz(files) {
     if (pad) parts.push(Buffer.alloc(pad));
   }
   parts.push(Buffer.alloc(1024)); // two empty blocks terminate the archive
-  return gzipSync(Buffer.concat(parts), { level: 9 });
+  // level 0 on purpose: see the header. Any real compression level makes the
+  // bytes, and so the digest, depend on which zlib built them.
+  const gz = gzipSync(Buffer.concat(parts), { level: 0 });
+  // The gzip header also carries two bytes zlib fills in from the build: XFL
+  // (byte 8, varies with level) and OS (byte 9: 3 on Linux, 19 on macOS). Both
+  // are informational to every decoder, so pin them, or a Mac-built archive
+  // reads as stale in CI forever.
+  gz[8] = 0;
+  gz[9] = 3;
+  return gz;
 }
 
 // ---------------------------------------------------------------------------
