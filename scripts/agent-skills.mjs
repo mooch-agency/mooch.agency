@@ -28,6 +28,12 @@
 // written by hand below because it must be byte-for-byte reproducible: any
 // nondeterminism (mtimes, uids, file order) would churn the digest on every
 // build and make --check meaningless.
+//
+// One source of churn lives outside this file: the gzip bytes depend on the
+// zlib build Node ships with, and Node 22 and Node 23 compress the same tar
+// differently. CI runs Node 22 (ci.yml), so build and check are pinned to that
+// major below (.nvmrc says the same). Found the day CI went red on a branch
+// that had not touched the skills at all.
 // ---------------------------------------------------------------------------
 
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, rmSync, cpSync } from 'node:fs';
@@ -49,6 +55,18 @@ const CHECK = ARGV.includes('--check');
 const syncAt = ARGV.indexOf('--sync');
 const SYNC_FROM = syncAt === -1 ? null : ARGV[syncAt + 1];
 if (syncAt !== -1 && !SYNC_FROM) throw new Error('--sync needs a path to a skills-repo clone');
+
+// Refuse early under any other Node major: a build would commit archives CI
+// cannot reproduce, and a check would report drift that is not there.
+const PINNED_NODE_MAJOR = 22;
+const nodeMajor = Number(process.versions.node.split('.')[0]);
+if (nodeMajor !== PINNED_NODE_MAJOR) {
+  console.error(
+    `agent-skills: needs Node ${PINNED_NODE_MAJOR} (running ${process.version}). ` +
+    `The archive bytes depend on Node's zlib, so build and --check must match CI. Run: nvm use`,
+  );
+  process.exit(1);
+}
 
 const sha256 = (buf) => `sha256:${createHash('sha256').update(buf).digest('hex')}`;
 

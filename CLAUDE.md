@@ -153,8 +153,10 @@ A skill that is `SKILL.md` alone ships as `type: "skill-md"`. One with
 supporting files ships as a reproducible `.tar.gz` (`type: "archive"`), so its
 relative references still resolve; `scripts/agent-skills.mjs` writes the tar by
 hand precisely so the bytes, and therefore the digest, never churn between
-builds. `pnpm ci:check` runs `--check` and fails on any drift between a vendored
-skill and the index that describes it.
+builds. The gzip bytes still depend on Node's zlib, so build and check are pinned
+to Node 22 (`.nvmrc`, matching CI) and the script refuses any other major.
+`pnpm ci:check` runs `--check` and fails on any drift between a vendored skill
+and the index that describes it.
 
 Adding a skill to the public repo is not automatic here: run `skills:sync` and
 commit, or the index goes stale and CI says so.
