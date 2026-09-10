@@ -62,7 +62,7 @@ const PINNED_NODE_MAJOR = 22;
 const nodeMajor = Number(process.versions.node.split('.')[0]);
 if (nodeMajor !== PINNED_NODE_MAJOR) {
   console.error(
-    `agent-skills: needs Node ${PINNED_NODE_MAJOR} (running ${process.version}). ` +
+    `agent-skills: needs Node ${PINNED_NODE_MAJOR} (running ${process.version}, zlib ${process.versions.zlib}). ` +
     `The archive bytes depend on Node's zlib, so build and --check must match CI. Run: nvm use`,
   );
   process.exit(1);
