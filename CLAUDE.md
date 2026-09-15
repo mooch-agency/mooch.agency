@@ -161,6 +161,54 @@ that describes it.
 Adding a skill to the public repo is not automatic here: run `skills:sync` and
 commit, or the index goes stale and CI says so.
 
+## AXBeat (`/axbeat`)
+
+The public agent-experience board for the top 22 L2s. Cloudflare's agent-readiness
+level for two hosts per chain, the website and the docs, republished unaltered.
+
+`https://mooch.agency/axbeat` is the canonical URL and the only place the board is
+served. If a short AXBeat domain is ever bought it becomes a **permanent redirect
+here**, never a second copy: two hosts would split the inbound links and hand
+search engines a duplicate to pick between. Add it as a `redirects` entry in
+`vercel.json`, not as a new page.
+
+The scores are **baked into the page**, not fetched at request time:
+
+```
+pnpm axbeat:build ../ax-audit   # re-bake from a local ax-audit clone (pull it first)
+pnpm axbeat:check               # verify what is baked; runs in ci:check
+```
+
+`scripts/axbeat-data.mjs` is the only bridge to the private `mooch-agency/ax-audit`
+repo, and it runs on a machine that has both, never in CI. It reads that repo's
+`results/l2-top22-latest.json`, writes two things into `axbeat.html` in one pass
+(the JSON block the interactive board reads, and the static no-JavaScript board
+above it), and **holds the build** if any row is low confidence: a failed scan, or
+any check Cloudflare returned as `unableToCheck`. A week-stale board beats a row
+we cannot stand behind. There is deliberately **no GitHub token**: baking and
+committing the numbers makes a re-scan a reviewable diff and keeps builds hermetic.
+
+Two rules that are easy to break by accident:
+
+- **Never hand-edit the baked block or the static table.** `axbeat:check`
+  regenerates both from the data and fails on any drift, including a level that no
+  longer matches its own derived gates.
+- **Cloudflare's `nextLevel.requirements` is not the scoring rule** and must never
+  be used as one. Its entries carry a `prompt` and a `skillUrl`, which makes it a
+  list of suggested fixes for a coding agent. It does not match the observed data:
+  it names Link headers for a 1/5 site while every 1/5 site on the board fails Link
+  headers. What a level takes is derived instead, from the scan: every check passed
+  by 100% of hosts at or above it.
+
+Display copy carrying a chain's name or a reader-facing caveat lives in
+`scripts/axbeat-chains.json`, keyed by the brand in ax-audit's targets file.
+Nothing there can change a score.
+
+Leads land via `api/axbeat-lead.js` in the same Notion "Inbound Audit Leads" DB as
+the homepage audit band (Reviewer: Natalie), so there is one review queue. The
+endpoint reads its allowlist of domains out of `axbeat.html` itself, so the page
+and the endpoint move together on a re-scan.
+
 ## Voice
 British English, terse, no em dashes. Full house style: MOOCHBOT.md in Notion.
 
