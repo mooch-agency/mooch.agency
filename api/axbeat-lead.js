@@ -45,6 +45,12 @@ const DATA_SOURCE_ID =
 
 const ALLOWED_HOSTS = ["mooch.agency", "www.mooch.agency", "localhost", "127.0.0.1"];
 
+// Best-effort and per-instance, which is worth stating plainly: these counters
+// live in this lambda's memory, so on a scaled deploy each instance keeps its own
+// and GLOBAL_PER_DAY is a per-instance floor rather than a true global cap. It
+// stops casual loops, nothing more. The real containment is upstream of it: the
+// domain has to be on the board, the address has to be at that domain and resolve
+// MX, and every row waits for a human before anything is sent.
 const RATE_PER_MIN = 5;
 const RATE_PER_DAY = 30;
 const PER_CHAIN_PER_DAY = 10;
@@ -206,8 +212,12 @@ module.exports = async (req, res) => {
     return res.status(405).json({ ok: false, error: "method" });
   }
 
+  // Origin is REQUIRED, not just checked when present. Browsers send it on every
+  // cross-origin and same-origin fetch POST, so the board always has one; letting
+  // a missing header through would have waved past every non-browser caller,
+  // which is the one shape a real abuser sends.
   const origin = req.headers.origin || "";
-  if (origin && !originAllowed(origin, req.headers.host)) {
+  if (!origin || !originAllowed(origin, req.headers.host)) {
     return res.status(403).json({ ok: false, error: "origin" });
   }
 
