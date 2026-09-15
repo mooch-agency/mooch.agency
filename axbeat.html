@@ -930,7 +930,11 @@ function footnotes() {
   ROWS.forEach(function (r) { seen[r.site.level] = 1; seen[r.docs.level] = 1; });
   var missing = [0,1,2,3,4,5].filter(function (lv) { return !seen[lv]; });
   var names = observedNames();
-  var scale = LEVEL_NAME.map(function (n, i) { return i + "/5 " + (names[i] || n); }).join(", ");
+  /* names[] carries Cloudflare's own strings, so it is escaped here for the same
+     reason score() and the static board escape it: everything that came off the
+     scan goes through esc() before it reaches innerHTML, with no exceptions to
+     reason about later. */
+  var scale = LEVEL_NAME.map(function (n, i) { return i + "/5 " + esc(names[i] || n); }).join(", ");
 
   /* Evidence for the "we name the builder, not who serves it" note below. Cloudflare
      being detected on a host is not the same as Cloudflare serving it, and this
