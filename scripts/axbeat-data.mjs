@@ -290,11 +290,17 @@ function build(scanPath) {
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// Fallback only. Every scanned host carries Cloudflare's own levelName and that
+// is what renders; this fills a level nothing on the board reached.
 const LEVEL_NAME = ['Not Ready', 'Basic Web Presence', 'Bot-Aware', 'Agent-Readable', 'Agent-Integrated', 'Agent-Native'];
 
 function staticBoard(data) {
+  // Pinned to UTC, because this string is baked into the file and then compared
+  // byte for byte by --check. Without it the date follows the machine's zone, so
+  // a scan landing after about 23:00 UTC would render one day here and a
+  // different one in CI, and the check would fail on a page nobody had touched.
   const when = new Date(data.scannedAt).toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'long', year: 'numeric',
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
   });
   // Ranked the way the board opens: website score, ties broken on value secured.
   const list = [...data.rows].sort((a, b) => (b.site.level - a.site.level) || (a.tvs - b.tvs));
@@ -305,7 +311,7 @@ function staticBoard(data) {
 <h1 class="display">How <em>agent friendly</em> is your Layer 2?</h1>
 <p class="lede">${data.rows.length} rollups, ranked on how well agents can read their website and docs.</p>
 <p class="caveat">AX, agent experience, is how easily an AI agent can find and read what you publish. It is not a test of whether an agent can complete an onchain transaction. A chain can be excellent to build on and still be unreadable at the front door.</p>
-<p class="caveat">Scores are <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare's agent-readiness</a> levels, republished unaltered, re-scanned weekly. Equal scores are ordered by value secured, per L2Beat.</p>
+<p class="caveat">Scores are <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s agent-readiness</a> levels, republished unaltered, re-scanned weekly. Equal scores are ordered by value secured, per L2Beat.</p>
 </div>
 <div class="tablewrap"><table class="board">
 <caption class="sr">The top ${data.rows.length} Layer 2 rollups by value secured, with their Cloudflare agent-readiness level out of 5 for their website and their docs, scanned ${esc(when)}.</caption>
@@ -313,8 +319,8 @@ function staticBoard(data) {
 <tbody>
 ${list.map((r, i) => `<tr><td class="rank">${i + 1}</td>` +
   `<td><span class="brand">${esc(r.name)}</span><span class="brandurl">${esc(r.site.url)}</span></td>` +
-  `<td><span class="snum">${r.site.level}/5</span> ${esc(LEVEL_NAME[r.site.level])}</td>` +
-  `<td><span class="snum">${r.docs.level}/5</span> ${esc(LEVEL_NAME[r.docs.level])}</td></tr>`).join('\n')}
+  `<td><span class="snum">${r.site.level}/5</span> ${esc(r.site.levelName || LEVEL_NAME[r.site.level])}</td>` +
+  `<td><span class="snum">${r.docs.level}/5</span> ${esc(r.docs.levelName || LEVEL_NAME[r.docs.level])}</td></tr>`).join('\n')}
 </tbody></table></div>
 </div>`;
 }
@@ -384,6 +390,19 @@ function check() {
     if (JSON.stringify(expect) !== JSON.stringify(data.gates || null)) {
       problems.push('gates do not match the levels in the baked rows: rebuild with pnpm axbeat:build');
     }
+  }
+
+  // Every count in the body derives from the data, but the meta description and
+  // the share card are hand-written and cannot. The description at least says a
+  // number out loud, so check it still matches. A re-scan that changes the field
+  // size should not leave the search result claiming the old one.
+  const desc = /<meta name="description" content="([^"]*)"/.exec(html);
+  const claimed = desc && /\btop (\d+)\b/i.exec(desc[1]);
+  if (claimed && Array.isArray(data.rows) && Number(claimed[1]) !== data.rows.length) {
+    problems.push(
+      `the meta description says "top ${claimed[1]}" but the board has ${data.rows.length} chains ` +
+      '(update the description, the og:description, the twitter:description and the share card)'
+    );
   }
 
   if (problems.length) {
