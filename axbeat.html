@@ -252,10 +252,10 @@ table.board tr.row:focus-visible {
    font-size is pinned to the table's 14px so the em widths below resolve
    against the same base the colgroup uses; every control inside sets its own
    size, so nothing inherits it by accident.
-   max-width is set inline per render rather than fixed here, because the
-   toggle swaps one score column instead of showing both, and Docs platform
-   only exists on the docs view: the table is a different width on each view
-   and the controls have to track whichever one is live. */
+   max-width is set inline per render, because it still depends on HISTORY:
+   the column set is otherwise identical across both views now, so the table
+   and the controls stay one fixed width while the toggle only swaps the
+   score cell's content and header. */
 .boardcol { font-size:14px; margin:0 auto; }
 /* Column widths live here rather than on the colgroup, because an inline style
    on a <col> outranks every stylesheet rule: the first attempt at narrowing
@@ -1084,7 +1084,12 @@ function renderA(view) {
      is set to, not a fixed constant. 3.5 rank + 17 chain + 11 score, plus 9 for
      platform on the docs view, plus 4.5 for 30D the week a second scan gives
      it something to say. */
-  var boardEms = 3.5 + 17 + 11 + (isDocs ? 9 : 0) + (HISTORY ? 4.5 : 0);
+  /* Docs platform stays on screen regardless of view now: it describes the
+     docs host, which doesn't change when the toggle swaps which score is
+     shown, and keeping the column set identical across both views means the
+     table is one fixed width and only the score cell's content and header
+     swap. HISTORY is the only thing that still changes the column count. */
+  var boardEms = 3.5 + 17 + 9 + 11 + (HISTORY ? 4.5 : 0);
   s.innerHTML = '<div class="pad">' +
     hero({
       headline: 'How <em>agent friendly</em> is your Layer 2?',
@@ -1097,17 +1102,16 @@ function renderA(view) {
       toggle: segToggle(view)
     }) +
     '<div class="tablewrap"><table class="board">' +
-    /* Chain is the one column without a fixed job: rank, score and (on the
-       docs view) platform all have a natural width, and Chain absorbs
-       whatever is left. table-layout:fixed (scoped to this board, see the
-       #p-a rule) pins the widths below rather than treating them as a hint. */
+    /* Chain is the one column without a fixed job: rank, platform and score
+       all have a natural width, and Chain absorbs whatever is left.
+       table-layout:fixed (scoped to this board, see the #p-a rule) pins the
+       widths below rather than treating them as a hint. */
     '<colgroup><col class="c-rank"><col class="c-chain">' +
-      (isDocs ? '<col class="opt c-plat">' : "") +
-      '<col class="c-score">' +
+      '<col class="opt c-plat"><col class="c-score">' +
       (HISTORY ? '<col class="opt2 c-30">' : "") + "</colgroup>" +
     "<thead><tr>" +
       '<th scope="col">#</th><th scope="col">Chain</th>' +
-      (isDocs ? '<th scope="col" class="opt">Docs platform</th>' : "") +
+      '<th scope="col" class="opt">Docs platform</th>' +
       '<th scope="col">' + VIEW_COPY[view].label + " score</th>" +
       (HISTORY ? '<th scope="col" class="opt2">30D</th>' : "") +
     "</tr></thead><tbody>" +
@@ -1125,19 +1129,18 @@ function renderA(view) {
           "</span><span class='brandurl'>" + esc(vw.url) + "</span>" +
           /* Below 960px the Docs platform column goes. It rides with the row
              instead of vanishing on a phone. */
-          (isDocs ? "<span class='platpill onsm'>" + esc(platformText(r.docs.platform)) + "</span>" : "") + "</td>" +
-        (isDocs ? '<td class="opt platcell"><span class="platpill">' + esc(platformText(r.docs.platform)) + "</span></td>" : "") +
+          "<span class='platpill onsm'>" + esc(platformText(r.docs.platform)) + "</span></td>" +
+        '<td class="opt platcell"><span class="platpill">' + esc(platformText(r.docs.platform)) + "</span></td>" +
         "<td>" + score(vw) + "</td>" +
         (HISTORY ? moveCell("opt2", vw.delta) : "") +
       "</tr>" +
         /* Not [hidden]: that snapped a full panel in and out with nothing to
            interrupt. Same 0fr/1fr grid the page already uses for its other
            disclosures, so the row opens in the page's own motion language. */
-        /* Rank, chain and score are always there; Docs platform only on the
-           docs view and 30D only once there is history, so the span is
-           counted rather than written down. */
+        /* Rank, chain, platform and score are always there now, so only 30D
+           is conditional and the span is counted rather than written down. */
         '<tr class="detailrow"><td class="detail" colspan="' +
-        (3 + (isDocs ? 1 : 0) + (HISTORY ? 1 : 0)) + '">' +
+        (4 + (HISTORY ? 1 : 0)) + '">' +
         '<div class="detwrap" id="' + id + '" data-open="false"><div class="detin">' +
         /* Empty on purpose. Built by fillPanel the first time the row opens:
            these panels were half of every node on the page, 876 of 1765, all of
