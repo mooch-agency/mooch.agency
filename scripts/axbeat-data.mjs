@@ -120,12 +120,14 @@ function readTargets(scanPath, scan) {
   return JSON.parse(readFileSync(file, 'utf8'));
 }
 
-// Cloudflare's checks arrive nested by category; the board only ever addresses
-// them by key, and every key is unique across categories. Flattened to the three
-// fields the page renders: status, message, and the address actually requested.
+// Cloudflare's checks arrive nested by category; the board addresses them by
+// key (every key is unique across categories), but keeps the category too, so
+// the page can group by Cloudflare's own taxonomy instead of inventing one.
+// Flattened to four fields: status, message, the address actually requested,
+// and the category key.
 function flattenChecks(agentReadiness) {
   const out = {};
-  for (const byKey of Object.values(agentReadiness.checks || {})) {
+  for (const [category, byKey] of Object.entries(agentReadiness.checks || {})) {
     for (const [key, check] of Object.entries(byKey || {})) {
       // The first evidence entry is what the scanner did first: a fetch carries
       // the URL it asked for, a parse carries only its own label ("Extract
@@ -136,6 +138,7 @@ function flattenChecks(agentReadiness) {
         s: check.status,
         m: check.message,
         a: first.request?.url || first.label || null,
+        c: category,
       };
     }
   }
