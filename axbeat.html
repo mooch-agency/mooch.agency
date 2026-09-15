@@ -229,13 +229,14 @@ table.board tr.row:focus-visible {
    (about 5.6:1 light, 9.2:1 dark) without hardcoding a second colour. */
 .fnmark { font-size:10px; vertical-align:super; color:color-mix(in srgb, var(--claude) 65%, var(--ink)); margin-left:2px; font-family:var(--mono); }
 
-/* score pie: one wedge per Cloudflare category (sized by its check count),
-   split found/missing within its own wedge. The level number is the value;
-   the pie is the shape of it, the way L2Beat's risk pie is the shape of a
-   stage. */
+/* score meter: five segments, one per level, from the approved lo-fi
+   (axbeat_a1_lofi.html: .meter/.meter i). The pie it replaces tried to carry
+   the category breakdown into the row; that job belongs to the opened panel,
+   and the row only has to say how far up the board this host got. */
 .score { display:inline-flex; align-items:center; gap:9px; white-space:nowrap; }
-.pie { display:inline-flex; line-height:0; flex-shrink:0; }
-.pie svg { display:block; }
+.meter { display:inline-flex; gap:2px; flex-shrink:0; }
+.meter i { width:9px; height:16px; border-radius:2px; background:var(--pip-off); display:block; }
+.meter i.on { background:var(--pip-on); }
 .snum { font-family:var(--mono); font-size:13px; font-variant-numeric:tabular-nums; }
 
 
@@ -266,13 +267,6 @@ table.board col.c-site, table.board col.c-docs { width:8em; }
 table.board col.c-plat { width:9em; }
 table.board col.c-30 { width:4.5em; }
 .boardcol.with30 { max-width:50em; }
-/* Both scores are always on screen now, so the column the order was built from
-   is inked and the other steps back. Opacity rather than a second palette: the
-   pie already carries three token colours and a fourth would start competing
-   with the found/missing meaning they already have. */
-.score.off .pie { opacity:.45; }
-.score.off .snum { color:var(--muted); }
-th.ranked { color:var(--ink); }
 
 /* Iteration 01 only. Its Docs platform column comes and goes with the view,
    so its widths have to be law rather than a hint: with the default
@@ -668,14 +662,6 @@ var LEVEL_NAME = ["Not Ready","Basic Web Presence","Bot-Aware","Agent-Readable",
 /* Checks Cloudflare runs but never scores. Derived, not asserted: the count in
    the footnote is however many of these the scan actually returned. */
 var PAYMENT_KEYS = ["x402","mpp","ucp","acp","ap2"];
-/* Cloudflare's own five categories (see scripts/axbeat-data.mjs). Commerce is
-   dropped here the same way PAYMENT_KEYS is: it is never scored, so a card
-   for it would always read 0 of 0. */
-var CATEGORY_NAME = {
-  discoverability: "Discoverability", contentAccessibility: "Content accessibility",
-  botAccessControl: "Bot access control", discovery: "Discovery"
-};
-var CATEGORY_ORDER = ["discoverability", "contentAccessibility", "botAccessControl", "discovery"];
 
 var VIEW_COPY = {
   site: { label: "Website", of: "website" },
@@ -689,52 +675,20 @@ function esc(s) {
   });
 }
 function viewOf(row, view) { return view === "site" ? row.site : row.docs; }
-/* One equal quadrant per category, regardless of how many checks it holds:
-   Discovery (9 checks) and Content accessibility (1) get the same-size
-   wedge, so the shape is a fixed reference frame a reader pattern-matches
-   by colour across every row, the way L2Beat's risk pie is always five even
-   wedges. Each wedge is one solid colour for its state, not a fractional
-   fill: full, partial or none. The exact ratio is what tapping the row is
-   for. */
-function polar(cx, cy, r, deg) {
-  var a = (deg - 90) * Math.PI / 180;
-  return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
-}
-function pieSlice(cx, cy, r, a0, a1, fill) {
-  if (a1 <= a0) return "";
-  var p0 = polar(cx, cy, r, a0), p1 = polar(cx, cy, r, a1);
-  var large = (a1 - a0) > 180 ? 1 : 0;
-  return '<path d="M ' + cx + " " + cy + " L " + p0[0] + " " + p0[1] +
-    " A " + r + " " + r + " 0 " + large + " 1 " + p1[0] + " " + p1[1] +
-    ' Z" fill="' + fill + '" stroke="var(--paper)" stroke-width="1"/>';
-}
-function catFill(c) {
-  if (c.found === 0) return "var(--pip-off)";
-  if (c.found === c.total) return "var(--pip-on)";
-  return "var(--pip-part)";
-}
-function pie(cats, size) {
-  var r = size / 2, cx = r, cy = r;
-  var span = 360 / cats.length, angle = 0, paths = "";
-  cats.forEach(function (c) {
-    paths += pieSlice(cx, cy, r, angle, angle + span, catFill(c));
-    angle += span;
-  });
-  /* The boundary, so a wedge coloured --pip-off (a category with nothing
-     found) still reads as part of a circle rather than a gap in the page. */
-  paths += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r - 0.5) +
-    '" fill="none" stroke="var(--hairline-focus)" stroke-width="1"/>';
-  return '<span class="pie"><svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size +
-    '" aria-hidden="true">' + paths + "</svg></span>";
-}
-/* Pie plus the number. The level name is not printed next to the score, so it
-   is carried for screen readers only, everywhere.
+/* Meter plus the number, from the approved lo-fi: five segments, filled up to
+   the level. The level name is not printed next to the score, so it is carried
+   for screen readers only, everywhere.
    The name comes off the scanned host, which is Cloudflare's own word for that
    level, because the page's whole claim is that the scores are theirs unaltered.
    LEVEL_NAME is only the fallback, and only ever fills a level nothing reached. */
-function score(v, off) {
+function meter(lv) {
+  var s = '<span class="meter" aria-hidden="true">';
+  for (var i = 1; i <= 5; i++) s += '<i class="' + (i <= lv ? "on" : "") + '"></i>';
+  return s + "</span>";
+}
+function score(v) {
   var lv = v.level;
-  return '<span class="score' + (off ? " off" : "") + '">' + pie(categoryBreakdown(v), 28) +
+  return '<span class="score">' + meter(lv) +
     '<span class="snum">' + lv + "/5</span>" +
     '<span class="sr">, ' + esc(v.levelName || LEVEL_NAME[lv]) + "</span></span>";
 }
@@ -787,26 +741,6 @@ function scoredChecks(view) {
   });
   return out;
 }
-/* Scored checks grouped into Cloudflare's own categories (baked per check as
-   .c by scripts/axbeat-data.mjs), in a fixed reading order. Powers both the
-   row's pie and the panel's cards, so the two always agree. */
-function categoryBreakdown(view) {
-  var ch = scoredChecks(view);
-  var byCat = {};
-  CATEGORY_ORDER.forEach(function (c) {
-    byCat[c] = { name: CATEGORY_NAME[c], found: 0, total: 0, checks: [] };
-  });
-  Object.keys(ch).forEach(function (k) {
-    var b = byCat[ch[k].c];
-    if (!b) return;
-    b.total++;
-    var ok = ch[k].s === "pass";
-    if (ok) b.found++;
-    b.checks.push({ key: k, ok: ok });
-  });
-  return CATEGORY_ORDER.map(function (c) { return byCat[c]; }).filter(function (c) { return c.total > 0; });
-}
-
 /* Cloudflare's own name for a rung, preferred over the fallback list for the
    same reason the row prints theirs: the page's claim is that the scores are
    unaltered. LEVEL_NAME only ever fills a rung nothing on the board reached. */
@@ -1039,8 +973,7 @@ function controls(o) {
   "</div>";
 }
 function segToggle(view) {
-  return '<span class="seglabel">Rank by</span>' +
-    '<div class="seg" role="group" aria-label="Rank the board by website or docs">' +
+  return '<div class="seg" role="group" aria-label="Which site to rank">' +
     '<button type="button" data-view="site" aria-pressed="' + (view === "site") + '">Website</button>' +
     '<button type="button" data-view="docs" aria-pressed="' + (view === "docs") + '">Docs</button></div>';
 }
@@ -1182,10 +1115,8 @@ function renderA(view) {
       (HISTORY ? '<col class="opt2 c-30">' : "") + "</colgroup>" +
     "<thead><tr>" +
       '<th scope="col">#</th><th scope="col">Chain</th>' +
-      /* The ranked column is inked so it stays obvious which of the two
-         produced the order. */
-      '<th scope="col" class="' + (view === "site" ? "ranked" : "") + '">Website</th>' +
-      '<th scope="col" class="' + (isDocs ? "ranked" : "") + '">Docs</th>' +
+      '<th scope="col">Website</th>' +
+      '<th scope="col">Docs</th>' +
       '<th scope="col" class="opt">Docs platform</th>' +
       (HISTORY ? '<th scope="col" class="opt2">30D</th>' : "") +
     "</tr></thead><tbody>" +
@@ -1204,8 +1135,8 @@ function renderA(view) {
           /* Below 960px the Docs platform column goes. It rides with the row
              instead of vanishing on a phone. */
           "<span class='platpill onsm'>" + esc(platformText(r.docs.platform)) + "</span></td>" +
-        "<td>" + score(r.site, view !== "site") + "</td>" +
-        "<td>" + score(r.docs, view !== "docs") + "</td>" +
+        "<td>" + score(r.site) + "</td>" +
+        "<td>" + score(r.docs) + "</td>" +
         '<td class="opt platcell"><span class="platpill">' + esc(platformText(r.docs.platform)) + "</span></td>" +
         (HISTORY ? moveCell("opt2", vw.delta) : "") +
       "</tr>" +
