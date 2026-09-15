@@ -1143,9 +1143,15 @@ function footnotes() {
    without moving a column; the whole row opens to the next-level panel and the
    report request. Ties are numbered and broken on L2Beat value secured.
    ========================================================================= */
+/* What fillPanel needs to build a row's panel later, keyed by the same id the
+   detpad carries. Rebuilt on every render, because the view decides which host
+   a panel describes. */
+var PANELS = {};
+
 function renderA(view) {
   var s = document.getElementById("p-a");
   var list = sorted(view);
+  PANELS = {};
   var isDocs = view === "docs";
   s.innerHTML = '<div class="pad">' +
     hero({
@@ -1185,6 +1191,7 @@ function renderA(view) {
     "</tr></thead><tbody>" +
     list.map(function (r, i) {
       var vw = viewOf(r, view), id = "a-" + r.tvs;
+      PANELS[id] = { vw: vw, row: r, view: view };
       /* No chevron: it repeated what the row already does. The row is the
          control instead (role=button, tabindex, aria-expanded, wired below). */
       return '<tr class="row" data-open data-name="' + esc(r.name.toLowerCase()) + '" ' +
@@ -1211,11 +1218,12 @@ function renderA(view) {
         '<tr class="detailrow"><td class="detail" colspan="' +
         (5 + (HISTORY ? 1 : 0)) + '">' +
         '<div class="detwrap" id="' + id + '" data-open="false"><div class="detin">' +
-        '<div class="detpad">' +
-          nextPanel(vw, r, id) +
-          (r.note ? '<p class="findnote">Note: ' + esc(r.note) + "</p>" : "") +
-          rowCta(r, view) +
-        "</div></div></div></td></tr>";
+        /* Empty on purpose. Built by fillPanel the first time the row opens:
+           these panels were half of every node on the page, 876 of 1765, all of
+           them for rows nobody had touched, and Lighthouse was reading the cost
+           in LCP. */
+        '<div class="detpad" data-panel="' + id + '"></div>' +
+        "</div></div></td></tr>";
     }).join("") +
     "</tbody></table></div>" +
     '<div class="empty" data-role="empty" hidden><p>No chain on the board matches that.</p>' +
@@ -1234,6 +1242,21 @@ function detailOf(tr) {
   var n = tr.nextElementSibling;
   while (n && !n.classList.contains("detailrow")) n = n.nextElementSibling;
   return n;
+}
+
+/* Build a row's panel the first time it is opened, then wire the parts of it
+   that carry behaviour. Idempotent: a second open finds it built and returns. */
+function fillPanel(det) {
+  var pad = det && det.querySelector(".detpad");
+  if (!pad || pad.dataset.built) return;
+  var p = PANELS[pad.dataset.panel];
+  if (!p) return;
+  pad.innerHTML = nextPanel(p.vw, p.row, pad.dataset.panel) +
+    (p.row.note ? '<p class="findnote">Note: ' + esc(p.row.note) + "</p>" : "") +
+    rowCta(p.row, p.view);
+  pad.dataset.built = "1";
+  wireReportForms(pad);
+  wireEvLinks(pad);
 }
 
 /* Disclosures: one button, one 0fr/1fr grid, wired once wherever they appear.
@@ -1273,6 +1296,7 @@ function wire(section) {
      keydown, so Enter and Space work without a native <button>. */
   function toggleRow(tr) {
     var det = detailOf(tr);
+    fillPanel(det);
     var open = tr.getAttribute("aria-expanded") === "true";
     tr.setAttribute("aria-expanded", String(!open));
     det.querySelector(".detwrap").dataset.open = String(!open);
@@ -1319,10 +1343,21 @@ function wire(section) {
     });
   }
 
-  /* The report request. Pessimistic: the button locks while the request is in
-     flight and only says it worked once the server says so, because the whole
-     promise of this form is that something arrives. */
-  section.querySelectorAll("form.mail").forEach(function (f) {
+  /* The report request and the tracked links are wired through helpers, because
+     a row's panel is now built the first time it opens rather than up front, so
+     both have to be wirable against a subtree that did not exist at render. */
+  wireReportForms(section);
+  wireEvLinks(section);
+}
+
+/* Pessimistic: the button locks while the request is in flight and only says it
+   worked once the server says so, because the whole promise of this form is
+   that something arrives. Reads everything it needs off the form's own dataset,
+   which is what makes it safe to call on a freshly built panel. */
+function wireReportForms(root) {
+  root.querySelectorAll("form.mail").forEach(function (f) {
+    if (f.dataset.wired) return;
+    f.dataset.wired = "1";
     f.addEventListener("submit", function (e) {
       e.preventDefault();
       var said = f.querySelector("[data-role=said]");
@@ -1382,8 +1417,13 @@ function wire(section) {
     });
   });
 
-  /* Plain links that carry an event, the missing-chain mail among them. */
-  section.querySelectorAll("a[data-ev]").forEach(function (a) {
+}
+
+/* Plain links that carry an event, the missing-chain mail among them. */
+function wireEvLinks(root) {
+  root.querySelectorAll("a[data-ev]").forEach(function (a) {
+    if (a.dataset.wired) return;
+    a.dataset.wired = "1";
     a.addEventListener("click", function () { track(a.dataset.ev, { where: a.dataset.where || "" }); });
   });
 }
