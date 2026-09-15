@@ -253,9 +253,11 @@ table.board tr.row:focus-visible {
    against the same base the colgroup uses; every control inside sets its own
    size, so nothing inherits it by accident.
    max-width is set inline per render but resolves to the same number on both
-   views regardless of HISTORY: Docs platform's column comes and goes with the
-   view, but Chain gives up or takes back exactly its width in return (see
-   renderA), so the total is constant even though the column count is not. */
+   views: Docs platform's column comes and goes with the view, but Chain gives
+   up or takes back exactly its width in return (see renderA), so the total is
+   constant even though the column count is not. The number itself is driven
+   by the opened panel needing room for five pips side by side, not by the
+   compact row's own narrower natural width; Chain absorbs the difference. */
 .boardcol { font-size:14px; margin:0 auto; }
 /* Column widths live here rather than on the colgroup, because an inline style
    on a <col> outranks every stylesheet rule: the first attempt at narrowing
@@ -313,14 +315,14 @@ table.board td.detail { background:var(--surface); padding:0; }
    on purpose: Cloudflare publishes one nextLevel per host and never a full
    ladder, so anything written into those pips would be invented.
 
-   auto-fit/minmax rather than a fixed 5 columns, because the panel's real
-   width is the table's (567px on this board, not the viewport's), and a
-   viewport media query has no way to know that. 5 columns at 96px each wrapped
-   check names like "Protected resource metadata" into a tower of lines; a
-   150px floor wraps at most twice and lets a wide viewport still show fewer,
-   wider columns instead of 5 illegibly narrow ones. Rows past the first wrap
-   onto their own line and are sized independently, so a tall pip 5 doesn't
-   drag pip 1 up to match it.
+   Explicitly five columns, never fewer. Wrapping to a second line broke the
+   left to right rung reading the same way losing the fifth pip off an edge
+   would, so renderA sizes the board itself to fit five at a legible width
+   instead of letting the grid wrap when the board was narrower: see
+   .boardcol and the boardEms comment in renderA. minmax(150px,1fr) stays as
+   the floor underneath that: it's the width that was already proven clipping
+   free across all 44 hosts, so a column still won't collapse to nothing if
+   the board is ever narrower than 65em again.
 
    No aspect-ratio. It was here once, to echo the row meter's shape, and it
    actively broke the layout: align-items:stretch gives every pip in a row the
@@ -330,7 +332,7 @@ table.board td.detail { background:var(--surface); padding:0; }
    own grid track and spilled into the next column. min-height sets a similar
    floor without that feedback loop, because height is the only dimension it
    touches. */
-.pipset { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:6px; align-items:stretch; }
+.pipset { display:grid; grid-template-columns:repeat(5, minmax(150px, 1fr)); gap:6px; align-items:stretch; }
 .pip {
   min-height:230px; border-radius:8px; background:var(--pip-off);
   display:flex; flex-direction:column; padding:11px 10px; min-width:0;
@@ -1100,12 +1102,22 @@ function renderA(view) {
      the toggle again. What must not come and go is the score's own position:
      Chain is the one column without a fixed job, so it gives up exactly
      platform's width (9em) on the docs view and takes it back on the website
-     view. Rank, score and 30D stay the same width either way, so the sum is
-     constant and the score's left edge lands on the identical pixel on both
-     views: 3.5 rank + 26 chain + 11 score (site) equals 3.5 rank + 17 chain +
-     9 platform + 11 score (docs), both 40.5em. */
-  var chainEms = isDocs ? 17 : 17 + 9;
-  var boardEms = 3.5 + 17 + 9 + 11 + (HISTORY ? 4.5 : 0);
+     view. Rank, score and 30D stay the same width either way, so a compact
+     row's own natural width is constant across views: 3.5 rank + 26 chain +
+     11 score (site) equals 3.5 rank + 17 chain + 9 platform + 11 score (docs),
+     both 40.5em.
+     The board is wider than that natural sum, on purpose: the opened panel's
+     five rung pips read left to right the same way the row's own five score
+     segments do, and wrapping them onto a second line broke that reading, the
+     same way losing the fifth pip off the edge would. 65em fits five pips at
+     roughly 165px, comfortable at the sizes that were already proven clipping
+     free (see .pipset), plus its own gaps and the panel's padding. Chain
+     absorbs the entire difference beyond the compact row's own natural width,
+     equally on both views, so the 9em gap between them (and the score's
+     matched position) survives however wide the panel pushes the board. */
+  var compactEms = 3.5 + 17 + 9 + 11 + (HISTORY ? 4.5 : 0);
+  var boardEms = Math.max(compactEms, 65);
+  var chainEms = (isDocs ? 17 : 17 + 9) + (boardEms - compactEms);
   s.innerHTML = '<div class="pad">' +
     hero({
       headline: 'How <em>agent friendly</em> is your Layer 2?',
