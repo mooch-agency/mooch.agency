@@ -249,12 +249,14 @@ table.board tr.row:focus-visible {
 }
 /* The board column. Controls and table share one measure, so the search field
    and the toggle line up with the table's own edges rather than the page's.
-   font-size is pinned to the table's 14px so the em widths below resolve against
-   the same base the colgroup uses; every control inside sets its own size, so
-   nothing inherits it by accident.
-   The sum is the colgroup: 3.5 + 17 + 8 + 8 + 9 = 45.5em, plus 4.5em for 30D the
-   week a second scan gives it something to say. */
-.boardcol { font-size:14px; max-width:45.5em; margin:0 auto; }
+   font-size is pinned to the table's 14px so the em widths below resolve
+   against the same base the colgroup uses; every control inside sets its own
+   size, so nothing inherits it by accident.
+   max-width is set inline per render rather than fixed here, because the
+   toggle swaps one score column instead of showing both, and Docs platform
+   only exists on the docs view: the table is a different width on each view
+   and the controls have to track whichever one is live. */
+.boardcol { font-size:14px; margin:0 auto; }
 /* Column widths live here rather than on the colgroup, because an inline style
    on a <col> outranks every stylesheet rule: the first attempt at narrowing
    these for a phone was written as a media query against inline widths and did
@@ -263,10 +265,9 @@ table.board tr.row:focus-visible {
    platform fits the longest builder name shown plus cell padding. */
 table.board col.c-rank { width:3.5em; }
 table.board col.c-chain { width:17em; }
-table.board col.c-site, table.board col.c-docs { width:8em; }
+table.board col.c-score { width:11em; }
 table.board col.c-plat { width:9em; }
 table.board col.c-30 { width:4.5em; }
-.boardcol.with30 { max-width:50em; }
 
 /* Iteration 01 only. Its Docs platform column comes and goes with the view,
    so its widths have to be law rather than a hint: with the default
@@ -419,15 +420,7 @@ form.mail { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
   .pipnum { grid-column:1; grid-row:1; }
   .pipname { grid-column:1; grid-row:2; margin-top:0; }
   .pipbody { grid-column:2; grid-row:1 / span 2; margin-top:0; padding-top:0; }
-  /* Both scores have to survive a phone: comparing website against docs is the
-     point of the board, and at the desktop widths the Docs column fell off the
-     right edge into the wrapper's horizontal scroll. Chain gives the width up,
-     because a name and a URL ellipsis without losing their meaning and a score
-     does not. Measured at 390px: table 511px against a 350px column before,
-     328px after. */
-  table.board col.c-rank { width:2.4em; }
   table.board col.c-chain { width:9em; }
-  table.board col.c-site, table.board col.c-docs { width:6em; }
   .pad { padding:20px; }
   table.board th, table.board td { padding:10px 8px; }
   .controls { align-items:stretch; }
@@ -1086,38 +1079,36 @@ function renderA(view) {
   var list = sorted(view);
   PANELS = {};
   var isDocs = view === "docs";
+  /* The table's own width changes with the view: Docs platform only exists on
+     the docs view, so the sum of what's actually rendered is what .boardcol
+     is set to, not a fixed constant. 3.5 rank + 17 chain + 11 score, plus 9 for
+     platform on the docs view, plus 4.5 for 30D the week a second scan gives
+     it something to say. */
+  var boardEms = 3.5 + 17 + 11 + (isDocs ? 9 : 0) + (HISTORY ? 4.5 : 0);
   s.innerHTML = '<div class="pad">' +
     hero({
       headline: 'How <em>agent friendly</em> is your Layer 2?',
       lede: N + " rollups, ranked on how well agents can read their website and docs.",
       methodId: "method-a"
     }) +
-    '<div class="boardcol' + (HISTORY ? " with30" : "") + '">' +
+    '<div class="boardcol" style="max-width:' + boardEms + 'em">' +
     controls({
       findId: "find-a",
       toggle: segToggle(view)
     }) +
     '<div class="tablewrap"><table class="board">' +
-    /* Why every column now carries a width, including Chain.
-       Both scores are permanent, so no column appears or disappears with the
-       view and there is nothing left for Chain to absorb. Measured on the
-       previous build, Chain held 927px to show a name and a URL that need about
-       240px, which put the first score 1053px from the name it belonged to.
-       Widths on every column make the table as wide as its columns and no
-       wider, and .boardcol above is set to the same sum so the search field and
-       the toggle line up with the table's edges instead of the page's.
-       table-layout:fixed (scoped to this board, see the #p-a rule) is the other
-       half: without it these widths are only a suggestion and a long platform
-       string renegotiates the whole row. */
+    /* Chain is the one column without a fixed job: rank, score and (on the
+       docs view) platform all have a natural width, and Chain absorbs
+       whatever is left. table-layout:fixed (scoped to this board, see the
+       #p-a rule) pins the widths below rather than treating them as a hint. */
     '<colgroup><col class="c-rank"><col class="c-chain">' +
-      '<col class="c-site"><col class="c-docs">' +
-      '<col class="opt c-plat">' +
+      (isDocs ? '<col class="opt c-plat">' : "") +
+      '<col class="c-score">' +
       (HISTORY ? '<col class="opt2 c-30">' : "") + "</colgroup>" +
     "<thead><tr>" +
       '<th scope="col">#</th><th scope="col">Chain</th>' +
-      '<th scope="col">Website</th>' +
-      '<th scope="col">Docs</th>' +
-      '<th scope="col" class="opt">Docs platform</th>' +
+      (isDocs ? '<th scope="col" class="opt">Docs platform</th>' : "") +
+      '<th scope="col">' + VIEW_COPY[view].label + " score</th>" +
       (HISTORY ? '<th scope="col" class="opt2">30D</th>' : "") +
     "</tr></thead><tbody>" +
     list.map(function (r, i) {
@@ -1134,20 +1125,19 @@ function renderA(view) {
           "</span><span class='brandurl'>" + esc(vw.url) + "</span>" +
           /* Below 960px the Docs platform column goes. It rides with the row
              instead of vanishing on a phone. */
-          "<span class='platpill onsm'>" + esc(platformText(r.docs.platform)) + "</span></td>" +
-        "<td>" + score(r.site) + "</td>" +
-        "<td>" + score(r.docs) + "</td>" +
-        '<td class="opt platcell"><span class="platpill">' + esc(platformText(r.docs.platform)) + "</span></td>" +
+          (isDocs ? "<span class='platpill onsm'>" + esc(platformText(r.docs.platform)) + "</span>" : "") + "</td>" +
+        (isDocs ? '<td class="opt platcell"><span class="platpill">' + esc(platformText(r.docs.platform)) + "</span></td>" : "") +
+        "<td>" + score(vw) + "</td>" +
         (HISTORY ? moveCell("opt2", vw.delta) : "") +
       "</tr>" +
         /* Not [hidden]: that snapped a full panel in and out with nothing to
            interrupt. Same 0fr/1fr grid the page already uses for its other
            disclosures, so the row opens in the page's own motion language. */
-        /* Rank, chain, both scores and Docs platform are always rendered now,
-           so only 30D is conditional and the span is counted rather than
-           written down. */
+        /* Rank, chain and score are always there; Docs platform only on the
+           docs view and 30D only once there is history, so the span is
+           counted rather than written down. */
         '<tr class="detailrow"><td class="detail" colspan="' +
-        (5 + (HISTORY ? 1 : 0)) + '">' +
+        (3 + (isDocs ? 1 : 0) + (HISTORY ? 1 : 0)) + '">' +
         '<div class="detwrap" id="' + id + '" data-open="false"><div class="detin">' +
         /* Empty on purpose. Built by fillPanel the first time the row opens:
            these panels were half of every node on the page, 876 of 1765, all of
