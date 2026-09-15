@@ -223,7 +223,11 @@ table.board tr.row:focus-visible {
 .rank { font-family:var(--mono); font-size:13px; color:var(--muted-small); font-variant-numeric:tabular-nums; width:1%; white-space:nowrap; }
 .brand { font-weight:600; letter-spacing:-.01em; }
 .brandurl { display:block; font-family:var(--mono); font-size:11px; color:var(--muted-small); margin-top:2px; }
-.fnmark { font-size:10px; vertical-align:super; color:var(--claude); margin-left:2px; font-family:var(--mono); }
+/* The "note" marker beside a chain's name. Flat --claude is 2.9:1 on white at
+   10px, which axe fails and a reader squints at; mixing it toward whichever ink
+   is current keeps the accent legible as an accent and passes AA in both themes
+   (about 5.6:1 light, 9.2:1 dark) without hardcoding a second colour. */
+.fnmark { font-size:10px; vertical-align:super; color:color-mix(in srgb, var(--claude) 65%, var(--ink)); margin-left:2px; font-family:var(--mono); }
 
 /* score meter: five segments, one per level. The number is the value, the
    segments are only there so a tie is visible at a glance. */
@@ -415,6 +419,27 @@ form.mail { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 .colophon-version { color:var(--muted); border-bottom:1px solid transparent; transition:border-color .15s ease; }
 .colophon-version:hover { border-bottom-color:var(--paper); color:var(--paper); }
 
+/* ui.css's .colophon-dark is written for a light-mode palette: it paints
+   var(--black) and writes in var(--paper), which is a dark slab on a white page.
+   This page swaps both of those tokens in dark mode, so without this the footer
+   inverts into a LIGHT slab at the bottom of a dark page, and its --muted text
+   lands at 2.91:1. Repoint the footer at this page's dark values instead, so it
+   stays what it is meant to be. Everything here is a token, never a literal.
+   Worth knowing: CI's axe job runs in the default light scheme, so it does not
+   see this. It was found by running axe with the dark scheme emulated. */
+@media (prefers-color-scheme: dark) {
+  .colophon-dark {
+    background:var(--surface); color:var(--ink);
+    border-top:1px solid var(--hairline);
+    --muted:var(--muted-small);
+    --colophon-rule:var(--hairline);
+  }
+  .colophon-mark { color:var(--ink); }
+  .colophon-links a { color:var(--ink); }
+  .colophon-links a:hover { border-bottom-color:var(--ink); }
+  .colophon-version:hover { border-bottom-color:var(--ink); color:var(--ink); }
+}
+
 /* Before the board renders there is nothing in the section, and a blank screen
    reads as broken. This is replaced by the first render, and is the only thing
    a reader sees if JavaScript never runs. */
@@ -469,7 +494,7 @@ form.mail { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 <h1 class="display">How <em>agent friendly</em> is your Layer 2?</h1>
 <p class="lede">22 rollups, ranked on how well agents can read their website and docs.</p>
 <p class="caveat">AX, agent experience, is how easily an AI agent can find and read what you publish. It is not a test of whether an agent can complete an onchain transaction. A chain can be excellent to build on and still be unreadable at the front door.</p>
-<p class="caveat">Scores are <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare's agent-readiness</a> levels, republished unaltered, re-scanned weekly. Equal scores are ordered by value secured, per L2Beat.</p>
+<p class="caveat">Scores are <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s agent-readiness</a> levels, republished unaltered, re-scanned weekly. Equal scores are ordered by value secured, per L2Beat.</p>
 </div>
 <div class="tablewrap"><table class="board">
 <caption class="sr">The top 22 Layer 2 rollups by value secured, with their Cloudflare agent-readiness level out of 5 for their website and their docs, scanned 8 September 2026.</caption>
@@ -585,11 +610,25 @@ function meter(lv) {
   return s + "</span>";
 }
 /* Pips plus the number. The level name is not printed next to the score, so it
-   is carried for screen readers only, everywhere. */
-function score(lv) {
+   is carried for screen readers only, everywhere.
+   The name comes off the scanned host, which is Cloudflare's own word for that
+   level, because the page's whole claim is that the scores are theirs unaltered.
+   LEVEL_NAME is only the fallback, and only ever fills a level nothing reached. */
+function score(v) {
+  var lv = v.level;
   return '<span class="score">' + meter(lv) +
     '<span class="snum">' + lv + "/5</span>" +
-    '<span class="sr">, ' + LEVEL_NAME[lv] + "</span></span>";
+    '<span class="sr">, ' + esc(v.levelName || LEVEL_NAME[lv]) + "</span></span>";
+}
+/* Cloudflare's name for every level it actually returned on this scan. */
+function observedNames() {
+  var seen = {};
+  ROWS.forEach(function (r) {
+    ["site", "docs"].forEach(function (k) {
+      if (r[k].levelName) seen[r[k].level] = r[k].levelName;
+    });
+  });
+  return seen;
 }
 
 /* Counts used in copy, computed from the data so the copy can never drift. */
@@ -600,10 +639,15 @@ function tally(view) {
 }
 function plural(n, one, many) { return n + " " + (n === 1 ? one : (many || one + "s")); }
 
-/* The scan date, in the form the rest of the site writes dates. */
+/* The scan date, in the form the rest of the site writes dates. Pinned to UTC,
+   not the reader's zone: the scan happened at one instant, the static board above
+   bakes that same instant in UTC, and without this a reader far enough east would
+   watch the date change as the page finished loading. */
 function scanDate() {
   var d = new Date(DATA.scannedAt);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric", month: "long", year: "numeric", timeZone: "UTC"
+  });
 }
 
 /* --- sorting and ranking ---------------------------------------------------- */
@@ -885,7 +929,8 @@ function footnotes() {
   var seen = {};
   ROWS.forEach(function (r) { seen[r.site.level] = 1; seen[r.docs.level] = 1; });
   var missing = [0,1,2,3,4,5].filter(function (lv) { return !seen[lv]; });
-  var scale = LEVEL_NAME.map(function (n, i) { return i + "/5 " + n; }).join(", ");
+  var names = observedNames();
+  var scale = LEVEL_NAME.map(function (n, i) { return i + "/5 " + (names[i] || n); }).join(", ");
 
   /* Evidence for the "we name the builder, not who serves it" note below. Cloudflare
      being detected on a host is not the same as Cloudflare serving it, and this
@@ -1026,7 +1071,7 @@ function renderA(view) {
              instead of vanishing on a phone. */
           (isDocs ? "<span class='platpill onsm'>" + esc(platformText(r.docs.platform)) + "</span>" : "") + "</td>" +
         (isDocs ? '<td class="opt platcell"><span class="platpill">' + esc(platformText(r.docs.platform)) + "</span></td>" : "") +
-        "<td>" + score(vw.level) + "</td>" +
+        "<td>" + score(vw) + "</td>" +
         (HISTORY ? moveCell("opt2", vw.delta) : "") +
       "</tr>" +
         /* Not [hidden]: that snapped a full panel in and out with nothing to
