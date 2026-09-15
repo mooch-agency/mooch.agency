@@ -252,10 +252,10 @@ table.board tr.row:focus-visible {
    font-size is pinned to the table's 14px so the em widths below resolve
    against the same base the colgroup uses; every control inside sets its own
    size, so nothing inherits it by accident.
-   max-width is set inline per render, because it still depends on HISTORY:
-   the column set is otherwise identical across both views now, so the table
-   and the controls stay one fixed width while the toggle only swaps the
-   score cell's content and header. */
+   max-width is set inline per render but resolves to the same number on both
+   views regardless of HISTORY: Docs platform's column comes and goes with the
+   view, but Chain gives up or takes back exactly its width in return (see
+   renderA), so the total is constant even though the column count is not. */
 .boardcol { font-size:14px; margin:0 auto; }
 /* Column widths live here rather than on the colgroup, because an inline style
    on a <col> outranks every stylesheet rule: the first attempt at narrowing
@@ -264,7 +264,7 @@ table.board tr.row:focus-visible {
    ellipsis clipped the two-digit ranks ("10" rendered as "1..."). 9em on the
    platform fits the longest builder name shown plus cell padding. */
 table.board col.c-rank { width:3.5em; }
-table.board col.c-chain { width:17em; }
+table.board col.c-chain { width:var(--chain-w, 17em); }
 table.board col.c-score { width:11em; }
 table.board col.c-plat { width:9em; }
 table.board col.c-30 { width:4.5em; }
@@ -420,6 +420,10 @@ form.mail { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
   .pipnum { grid-column:1; grid-row:1; }
   .pipname { grid-column:1; grid-row:2; margin-top:0; }
   .pipbody { grid-column:2; grid-row:1 / span 2; margin-top:0; padding-top:0; }
+  /* Overrides the custom property above by targeting the same selector: the
+     desktop compensation (17em or 26em) would otherwise still apply here,
+     since a media query only wins by coming later in the cascade, not by
+     being a media query. */
   table.board col.c-chain { width:9em; }
   .pad { padding:20px; }
   table.board th, table.board td { padding:10px 8px; }
@@ -1079,16 +1083,15 @@ function renderA(view) {
   var list = sorted(view);
   PANELS = {};
   var isDocs = view === "docs";
-  /* The table's own width changes with the view: Docs platform only exists on
-     the docs view, so the sum of what's actually rendered is what .boardcol
-     is set to, not a fixed constant. 3.5 rank + 17 chain + 11 score, plus 9 for
-     platform on the docs view, plus 4.5 for 30D the week a second scan gives
-     it something to say. */
-  /* Docs platform stays on screen regardless of view now: it describes the
-     docs host, which doesn't change when the toggle swaps which score is
-     shown, and keeping the column set identical across both views means the
-     table is one fixed width and only the score cell's content and header
-     swap. HISTORY is the only thing that still changes the column count. */
+  /* Docs platform only makes sense on the docs view, so it comes and goes with
+     the toggle again. What must not come and go is the score's own position:
+     Chain is the one column without a fixed job, so it gives up exactly
+     platform's width (9em) on the docs view and takes it back on the website
+     view. Rank, score and 30D stay the same width either way, so the sum is
+     constant and the score's left edge lands on the identical pixel on both
+     views: 3.5 rank + 26 chain + 11 score (site) equals 3.5 rank + 17 chain +
+     9 platform + 11 score (docs), both 40.5em. */
+  var chainEms = isDocs ? 17 : 17 + 9;
   var boardEms = 3.5 + 17 + 9 + 11 + (HISTORY ? 4.5 : 0);
   s.innerHTML = '<div class="pad">' +
     hero({
@@ -1102,16 +1105,18 @@ function renderA(view) {
       toggle: segToggle(view)
     }) +
     '<div class="tablewrap"><table class="board">' +
-    /* Chain is the one column without a fixed job: rank, platform and score
-       all have a natural width, and Chain absorbs whatever is left.
-       table-layout:fixed (scoped to this board, see the #p-a rule) pins the
-       widths below rather than treating them as a hint. */
-    '<colgroup><col class="c-rank"><col class="c-chain">' +
-      '<col class="opt c-plat"><col class="c-score">' +
+    /* chainEms is set inline on the col as a custom property rather than as
+       width directly: setting width itself inline would outrank the 720px
+       media query below the same way the very first attempt at a mobile
+       column width silently failed to apply. The custom property carries the
+       per-view number; the actual width declaration, and its override, both
+       stay in the stylesheet where the cascade can still reach them. */
+    '<colgroup><col class="c-rank"><col class="c-chain" style="--chain-w:' + chainEms + 'em">' +
+      (isDocs ? '<col class="opt c-plat">' : "") + '<col class="c-score">' +
       (HISTORY ? '<col class="opt2 c-30">' : "") + "</colgroup>" +
     "<thead><tr>" +
       '<th scope="col">#</th><th scope="col">Chain</th>' +
-      '<th scope="col" class="opt">Docs platform</th>' +
+      (isDocs ? '<th scope="col" class="opt">Docs platform</th>' : "") +
       '<th scope="col">' + VIEW_COPY[view].label + " score</th>" +
       (HISTORY ? '<th scope="col" class="opt2">30D</th>' : "") +
     "</tr></thead><tbody>" +
@@ -1129,18 +1134,19 @@ function renderA(view) {
           "</span><span class='brandurl'>" + esc(vw.url) + "</span>" +
           /* Below 960px the Docs platform column goes. It rides with the row
              instead of vanishing on a phone. */
-          "<span class='platpill onsm'>" + esc(platformText(r.docs.platform)) + "</span></td>" +
-        '<td class="opt platcell"><span class="platpill">' + esc(platformText(r.docs.platform)) + "</span></td>" +
+          (isDocs ? "<span class='platpill onsm'>" + esc(platformText(r.docs.platform)) + "</span>" : "") + "</td>" +
+        (isDocs ? '<td class="opt platcell"><span class="platpill">' + esc(platformText(r.docs.platform)) + "</span></td>" : "") +
         "<td>" + score(vw) + "</td>" +
         (HISTORY ? moveCell("opt2", vw.delta) : "") +
       "</tr>" +
         /* Not [hidden]: that snapped a full panel in and out with nothing to
            interrupt. Same 0fr/1fr grid the page already uses for its other
            disclosures, so the row opens in the page's own motion language. */
-        /* Rank, chain, platform and score are always there now, so only 30D
-           is conditional and the span is counted rather than written down. */
+        /* Rank, chain and score are always there; Docs platform only on the
+           docs view and 30D only once there is history, so the span is
+           counted rather than written down. */
         '<tr class="detailrow"><td class="detail" colspan="' +
-        (4 + (HISTORY ? 1 : 0)) + '">' +
+        (3 + (isDocs ? 1 : 0) + (HISTORY ? 1 : 0)) + '">' +
         '<div class="detwrap" id="' + id + '" data-open="false"><div class="detin">' +
         /* Empty on purpose. Built by fillPanel the first time the row opens:
            these panels were half of every node on the page, 876 of 1765, all of
