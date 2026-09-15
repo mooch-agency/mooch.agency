@@ -816,7 +816,7 @@ function missingLink(where) {
   return '<a class="secondary" data-ev="axbeat_missing_click" data-where="' + esc(where) + '" ' +
     'href="mailto:hey@mooch.agency?subject=' + encodeURIComponent("AXBeat: a missing L2") +
     "&body=" + encodeURIComponent(
-      "Which chain is missing:\n\nIts website:\nIts docs:\n\nAnything we should know about which host is the real one:\n"
+      "Which chain is missing:\n\nIts website:\nIts docs:\n\nAnything we should know about which address is the real one:\n"
     ) + '">Your L2 missing? Let us know.</a>';
 }
 
@@ -843,7 +843,7 @@ function hero(o) {
       '<span class="chev" aria-hidden="true">&rsaquo;</span>How it works</button>' +
     '<div class="morewrap" id="' + o.methodId + '" data-open="false"><div class="morein">' +
       '<p>We run <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s ' +
-        "agent-readiness</a> scan against two hosts per chain, the website and the docs, and republish " +
+        "agent-readiness</a> scan against two addresses for every chain, its website and its docs, and republish " +
         "the level it returns without altering it.</p>" +
       "<p>Every check is a fetch: the scan asks for a specific file at a specific address and records " +
         "whether it is there.</p>" +
@@ -887,7 +887,7 @@ function footnotes() {
   var missing = [0,1,2,3,4,5].filter(function (lv) { return !seen[lv]; });
   var scale = LEVEL_NAME.map(function (n, i) { return i + "/5 " + n; }).join(", ");
 
-  /* Evidence for the "we name the builder, not the host" note below. Cloudflare
+  /* Evidence for the "we name the builder, not who serves it" note below. Cloudflare
      being detected on a host is not the same as Cloudflare serving it, and this
      is the number that shows it: how many of the detections sit alongside another
      hosting provider on the same host. */
@@ -927,12 +927,12 @@ function footnotes() {
       Math.min.apply(null, spread[widest]) + "/5 to " + Math.max.apply(null, spread[widest]) +
       "/5, because most of what is checked is a file the team publishes. We put the builder on " +
       "the row rather than hide it.",
-    "<b>There is no host column, because this scan cannot tell you who serves a site.</b> " +
-      "It reports everything it recognises on a host at once, which mixes the thing serving the " +
+    "<b>There is no column for who serves a site, because this scan cannot tell you.</b> " +
+      "It reports everything it recognises on a site at once, which mixes the thing serving the " +
       "pages in with the things merely sitting in front of them. Cloudflare is detected on " +
-      cfSeen.length + " of the " + SITES + " hosts here, and " + cfAmbiguous + " of those also " +
-      "report Vercel, Netlify, AWS, Firebase or Google Cloud on the same host. So we name the " +
-      "builder, which the scan can establish, and leave the host to whoever runs it.",
+      cfSeen.length + " of the " + SITES + " sites here, and " + cfAmbiguous + " of those also " +
+      "report Vercel, Netlify, AWS, Firebase or Google Cloud on the same site. So we name the " +
+      "builder, which the scan can establish, and leave the rest to whoever runs it.",
     "<b>Two families of checks run but never count.</b> Web Bot Auth came back neutral on all " +
       SITES + " sites, and Cloudflare does not score the " + payN +
       " agent-payment checks at all. Nothing passed those on any site here, so there is no " +
@@ -945,7 +945,8 @@ function footnotes() {
     "<b>What a level takes is read off the board, not off Cloudflare’s advice.</b> Cloudflare " +
       "returns a list of suggested fixes with each result, and it is not the gate: it names Link " +
       "headers for a 1/5 site while every 1/5 site on this board fails Link headers. So a level’s " +
-      "requirement here is every check passed by all " + SITES + " scanned hosts at or above it.",
+      "requirement here is whatever every site that reached it has in place, read off the " +
+      SITES + " we scanned.",
     "<b>Every check is a fetch, not a read.</b> The scan asks for a specific file at a specific " +
       "address and records whether it is there. It never reads your prose for meaning, so good " +
       "writing cannot raise a score and bad writing cannot lower one."
