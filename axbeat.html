@@ -304,8 +304,8 @@ table.board td.detail { background:var(--surface); padding:0; }
    Chosen 16 Sep over the category cards. The row's own glyph already groups by
    Cloudflare category, so repeating that grouping inside the panel told a
    reader nothing the row had not already said. The five pips are the score
-   enlarged: the same 9:16 shape the meter pip used, read left to right, filled
-   for a rung this host holds and grey for one it does not.
+   enlarged, read left to right, filled for a rung this host holds and grey
+   for one it does not.
 
    Three states, two tones. An earned pip is filled and lists the checks that
    rung adds. The one rung above is outlined, not a third fill, and carries
@@ -313,12 +313,26 @@ table.board td.detail { background:var(--surface); padding:0; }
    on purpose: Cloudflare publishes one nextLevel per host and never a full
    ladder, so anything written into those pips would be invented.
 
-   aspect-ratio sets the shape, it does not cap it. A pip whose content runs
-   past 9:16 grows and the grid stretches its neighbours to match, so the row
-   stays a row and no check is ever clipped out of sight. */
-.pipset { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; align-items:stretch; }
+   auto-fit/minmax rather than a fixed 5 columns, because the panel's real
+   width is the table's (567px on this board, not the viewport's), and a
+   viewport media query has no way to know that. 5 columns at 96px each wrapped
+   check names like "Protected resource metadata" into a tower of lines; a
+   150px floor wraps at most twice and lets a wide viewport still show fewer,
+   wider columns instead of 5 illegibly narrow ones. Rows past the first wrap
+   onto their own line and are sized independently, so a tall pip 5 doesn't
+   drag pip 1 up to match it.
+
+   No aspect-ratio. It was here once, to echo the row meter's shape, and it
+   actively broke the layout: align-items:stretch gives every pip in a row the
+   same height, and once that height came from a taller neighbour rather than
+   the pip's own content, the browser recomputed the pip's WIDTH from that
+   borrowed height to hold the ratio, so short pips rendered wider than their
+   own grid track and spilled into the next column. min-height sets a similar
+   floor without that feedback loop, because height is the only dimension it
+   touches. */
+.pipset { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:6px; align-items:stretch; }
 .pip {
-  aspect-ratio:9 / 16; border-radius:8px; background:var(--pip-off);
+  min-height:230px; border-radius:8px; background:var(--pip-off);
   display:flex; flex-direction:column; padding:11px 10px; min-width:0;
 }
 .pip.earned { background:var(--pip-on); color:var(--paper); }
@@ -405,16 +419,15 @@ form.mail { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 }
 @media (max-width:720px) {
   .opt2 { display:none; }
-  /* The rung pips stack. Five 9:16 boxes at phone width give roughly 60px
-     columns, where a name like "Basic Web Presence" wraps to four lines and the
-     left to right rung reading is lost anyway. Stacked, each rung is a full
-     width block that keeps its fill, so the progression still reads, top to
-     bottom. A horizontal scroller was the other option and was rejected:
-     comparing five rungs at a glance is the point of the row, and a scroller
-     hides three of them behind a gesture. Flagged for review. */
+  /* The rung pips stack. Five narrow cards side by side at phone width put a
+     name like "Basic Web Presence" through four lines and lose the left to
+     right rung reading anyway. Stacked, each rung is a full width block, so
+     the progression still reads, top to bottom. A horizontal scroller was the
+     other option and was rejected: comparing five rungs at a glance is the
+     point of the row, and a scroller hides three of them behind a gesture. */
   .pipset { grid-template-columns:1fr; gap:8px; }
   .pip {
-    aspect-ratio:auto; display:grid; grid-template-columns:9.5em 1fr;
+    min-height:0; display:grid; grid-template-columns:9.5em 1fr;
     gap:2px 14px; align-items:start; padding:12px;
   }
   .pipnum { grid-column:1; grid-row:1; }
