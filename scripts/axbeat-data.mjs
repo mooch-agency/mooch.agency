@@ -36,11 +36,19 @@
 // Nothing here scores anything. The level on every row is Cloudflare's, verbatim.
 // The one thing we compute is what each level appears to REQUIRE, and it is
 // derived from the scanned hosts: a level's gate is every check passed by 100%
-// of hosts at or above it. Cloudflare's own `nextLevel.requirements` is NOT used
-// and must never be: its entries carry a `prompt` and a `skillUrl`, which makes
-// it a list of suggested fixes for a coding agent, not the gate. It is also
-// demonstrably not the gate on this data. It names Link headers for INTMAX's
-// 1/5, yet every host sitting at 1/5 fails Link headers.
+// of hosts at or above it.
+//
+// Cloudflare's own `nextLevel.requirements` must never derive a score, a level
+// or a gate. Its entries carry a `prompt` and a `skillUrl`, which makes it a
+// list of suggested fixes for a coding agent rather than the gate, and on this
+// data it is demonstrably not the gate: it names Link headers for INTMAX's 1/5,
+// yet every host sitting at 1/5 fails Link headers. That reasoning is why the
+// gates above are derived and it still stands.
+//
+// Quoting it is a different act and is allowed. The board prints Cloudflare's
+// requirement descriptions verbatim on the next rung pip, attributed to them,
+// as their advice about one host. Nothing reads those strings back into a
+// level, a gate or an ordering.
 // ---------------------------------------------------------------------------
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -196,7 +204,40 @@ function hostFrom(row) {
     scannedAt: row.scannedAt,
     reportUrl: row.reportUrl,
     checks: flattenChecks(ar),
+    next: nextFrom(ar),
   };
+}
+
+// Cloudflare's own guidance for the one rung above this host, quoted not derived.
+// Only the target, its name and which checks it names are kept per host: the
+// descriptions themselves go in a single lookup (see reqTextFrom), because they
+// are constant per check across all 44 hosts and repeating them 83 times cost
+// 8.1KB against 0.6KB for the table. `prompt` and `shortPrompt` are deliberately
+// left behind: `prompt` alone added 20KB of multi line shell and config examples
+// that no reader can use inside a pip, and `skillUrl` is an instruction to an
+// agent rather than something to show a person.
+// A host at 5/5 has no nextLevel, and gets null rather than an invented one.
+function nextFrom(ar) {
+  const nl = ar.nextLevel;
+  if (!nl) return null;
+  return { t: nl.target, n: nl.name, r: nl.requirements.map((q) => q.check) };
+}
+
+// One description per check, proven rather than assumed: if Cloudflare ever
+// words the same requirement differently for two hosts, the lookup would show
+// one host another host's text, so the build stops instead.
+function reqTextFrom(results) {
+  const out = {};
+  for (const row of results) {
+    const reqs = row.agentReadiness?.nextLevel?.requirements ?? [];
+    for (const q of reqs) {
+      if (out[q.check] !== undefined && out[q.check] !== q.description) {
+        die(`Cloudflare words the ${q.check} requirement differently on different hosts, so it cannot be baked once. Bake it per host instead.`);
+      }
+      out[q.check] = q.description;
+    }
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -275,6 +316,7 @@ function build(scanPath) {
     scannedAt: scan.scannedAt,
     source: 'Cloudflare URL Scanner, agent readiness scan',
     gates: deriveGates(rows.flatMap((r) => [r.site, r.docs])),
+    reqText: reqTextFrom(scan.results),
     rows,
   };
   return data;

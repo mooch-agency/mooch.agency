@@ -193,12 +193,20 @@ Two rules that are easy to break by accident:
 - **Never hand-edit the baked block or the static table.** `axbeat:check`
   regenerates both from the data and fails on any drift, including a level that no
   longer matches its own derived gates.
-- **Cloudflare's `nextLevel.requirements` is not the scoring rule** and must never
-  be used as one. Its entries carry a `prompt` and a `skillUrl`, which makes it a
-  list of suggested fixes for a coding agent. It does not match the observed data:
-  it names Link headers for a 1/5 site while every 1/5 site on the board fails Link
-  headers. What a level takes is derived instead, from the scan: every check passed
-  by 100% of hosts at or above it.
+- **Cloudflare's `nextLevel.requirements` must never derive a score, a level or a
+  gate.** Its entries carry a `prompt` and a `skillUrl`, which makes it a list of
+  suggested fixes for a coding agent rather than a rule. It also does not match the
+  observed data: it names Link headers for a 1/5 site while every 1/5 site on the
+  board fails Link headers. What a level takes is derived instead, from the scan:
+  every check passed by 100% of hosts at or above it.
+  **Quoting it is a different act and is allowed.** The opened row prints its
+  `description` strings verbatim on the next rung pip, attributed to Cloudflare as
+  its advice about that one host. Only `check` and `description` are baked.
+  `prompt` and `shortPrompt` stay in the scan because they are written for an
+  agent to execute and added 20KB of examples no reader can use inside a pip, and
+  `skillUrl` because it is an instruction to an agent rather than something to
+  show a person. Nothing reads any of it back into a level, a gate or an ordering,
+  and the gates are still derived from the scan alone.
 
 Display copy carrying a chain's name or a reader-facing caveat lives in
 `scripts/axbeat-chains.json`, keyed by the brand in ax-audit's targets file.
