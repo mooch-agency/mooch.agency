@@ -15,8 +15,8 @@ reuse what's there before inventing anything new.
 - `motion.css` entrance motion (`.reveal`, word stagger, `.rise`) plus the
   reduced-motion guards.
 - `ui.css` buttons (`.pill`, `.ghost`).
-- `motion.js` declarative entrances (`data-stagger`, `data-reveal`), loaded by the
-  homepage only.
+- `motion.js` declarative entrances (`data-stagger`, `data-reveal`), loaded only
+  by pages that use those attributes (homepage, axbeat).
 
 Full reference: `docs/design-system.md`. Rendered, living version: `/styleguide`.
 
@@ -191,22 +191,20 @@ committing the numbers makes a re-scan a reviewable diff and keeps builds hermet
 Two rules that are easy to break by accident:
 
 - **Never hand-edit the baked block or the static table.** `axbeat:check`
-  regenerates both from the data and fails on any drift, including a level that no
-  longer matches its own derived gates.
-- **Cloudflare's `nextLevel.requirements` must never derive a score, a level or a
-  gate.** Its entries carry a `prompt` and a `skillUrl`, which makes it a list of
-  suggested fixes for a coding agent rather than a rule. It also does not match the
-  observed data: it names Link headers for a 1/5 site while every 1/5 site on the
-  board fails Link headers. What a level takes is derived instead, from the scan:
-  every check passed by 100% of hosts at or above it.
-  **Quoting it is a different act and is allowed.** The opened row prints its
-  `description` strings verbatim on the next rung pip, attributed to Cloudflare as
-  its advice about that one host. Only `check` and `description` are baked.
-  `prompt` and `shortPrompt` stay in the scan because they are written for an
-  agent to execute and added 20KB of examples no reader can use inside a pip, and
-  `skillUrl` because it is an instruction to an agent rather than something to
-  show a person. Nothing reads any of it back into a level, a gate or an ordering,
-  and the gates are still derived from the scan alone.
+  regenerates both from the data and fails on any drift, including a row whose AI
+  access policy no longer matches the check message it was read from.
+- **Cloudflare's `nextLevel.requirements` must never derive a score, a level or an
+  ordering.** Its entries carry a `prompt` and a `skillUrl`, which makes it a list
+  of suggested fixes for a coding agent rather than a rule, and on this data it is
+  demonstrably not the gate: it names Link headers for a 1/5 site while every 1/5
+  site fails Link headers. It is not baked or shown anywhere as of 16 Sep 2026:
+  the opened row lists which scored checks passed and which did not, verbatim off
+  the baked block, with no level names and no advice. Two earlier panel designs
+  died and stay dead: derived per-level gates (retired 15 Sep: nothing scored 2/5,
+  so gates 2 and 3 came out byte-identical and five scored checks fell in no gate)
+  and a pip ladder quoting Cloudflare's advice on the next rung (retired 16 Sep
+  with the ladder itself). If the advice ever returns, quoting it attributed is
+  allowed; reading it back into a score, level or ordering is not.
 
 Display copy carrying a chain's name or a reader-facing caveat lives in
 `scripts/axbeat-chains.json`, keyed by the brand in ax-audit's targets file.
@@ -214,8 +212,10 @@ Nothing there can change a score.
 
 Leads land via `api/axbeat-lead.js` in the same Notion "Inbound Audit Leads" DB as
 the homepage audit band (Reviewer: Natalie), so there is one review queue. The
-endpoint reads its allowlist of domains out of `axbeat.html` itself, so the page
-and the endpoint move together on a re-scan.
+endpoint accepts any work email (the board-domain allowlist was deliberately
+dropped 17 Sep 2026: the board is public, so gating on it added nothing); its
+guards are local-part syntax, Mailchecker's disposable blocklist, an MX lookup
+that fails open on timeout, and per-domain plus global rate limits.
 
 ## Voice
 British English, terse, no em dashes. Full house style: MOOCHBOT.md in Notion.

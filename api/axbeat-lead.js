@@ -1,23 +1,30 @@
 // Vercel serverless function: AXBeat's report request.
 //
-// A row on /axbeat opens to a form that asks only for the bit before the @, and
-// fixes the domain to the chain's own. This writes one row to the same Notion
-// "Inbound Audit Leads" DB the homepage audit band uses (Status: New, Reviewer:
-// Natalie), so both inbound routes land in one review queue rather than two.
-// The report itself is written and sent by a human afterwards; nothing runs here.
+// The board carries one CTA now, at the foot of the page, not one rebuilt
+// inside every opened row. That means the field is a full work email address
+// rather than a local part typed against a chain's domain the form already
+// fixed. This writes one row to the same Notion "Inbound Audit Leads" DB the
+// homepage audit band uses (Status: New, Reviewer: Natalie), so both inbound
+// routes land in one review queue rather than two. The report itself is
+// written and sent by a human afterwards; nothing runs here.
 //
-// Why the domain is fixed, not typed
-//   The lead is only worth anything if it reaches someone who can act on the
-//   score, so the address has to be at the chain being scored. The client sends
-//   the local part and which row it came from; this rebuilds the address from
-//   the board's own copy of that chain's domain. A domain that is not on the
-//   board is rejected outright, which also means this endpoint cannot be used to
-//   write arbitrary rows into Notion.
+// The board is no longer an allowlist
+//   This used to read axbeat.html's own baked scan block back off disk and
+//   reject any email whose domain wasn't one of the 22 chains on the board.
+//   That doesn't fit a single, generic CTA: a real visitor at a real L2 that
+//   just isn't ranked here yet would bounce with no way to say so. Dropped
+//   deliberately, not by omission. What still guards the Notion queue,
+//   unchanged and in this order, is email syntax, the mailchecker blocklist,
+//   dns.resolveMx (failing open on timeout), and both rate limits below. None
+//   of that depends on knowing which chain, if any, an address belongs to, so
+//   losing the board lookup costs nothing. There is simply no chain on a row
+//   any more: "Coverage note" says only that a report was asked for, and
+//   Natalie triages who it's from the same way she would any lead that
+//   doesn't resolve to a known chain.
 //
-// Junk defence at the door, same ladder as api/audit.js:
-//   on-board domain -> local-part syntax -> mailchecker blocklist -> dns.resolveMx.
-// The MX check FAILS OPEN on timeout: one junk row reaching manual review beats
-// a lost real lead.
+// Junk defence at the door: local-part syntax -> mailchecker blocklist ->
+// dns.resolveMx -> rate limits. The MX check FAILS OPEN on timeout: one junk
+// row reaching manual review beats a lost real lead.
 //
 // Env (set on the Vercel `mooch.agency` project, none committed):
 //   NOTION_TOKEN        internal integration "moochbot" token (Keystore > Notion)
@@ -26,8 +33,6 @@
 //   AXBEAT_LEADS_KILL   optional "1" kill switch -> 503
 
 const dns = require("node:dns").promises;
-const fs = require("node:fs");
-const path = require("node:path");
 const Mailchecker = require("mailchecker");
 
 // The integration was created against this API version (Keystore > Notion).
@@ -49,8 +54,8 @@ const ALLOWED_HOSTS = ["mooch.agency", "www.mooch.agency", "localhost", "127.0.0
 // live in this lambda's memory, so on a scaled deploy each instance keeps its own
 // and GLOBAL_PER_DAY is a per-instance floor rather than a true global cap. It
 // stops casual loops, nothing more. The real containment is upstream of it: the
-// domain has to be on the board, the address has to be at that domain and resolve
-// MX, and every row waits for a human before anything is sent.
+// address has to pass syntax, blocklist and MX checks, and every row waits for
+// a human before anything is sent.
 const RATE_PER_MIN = 5;
 const RATE_PER_DAY = 30;
 const PER_CHAIN_PER_DAY = 10;
@@ -59,41 +64,6 @@ const DAY = 86_400_000;
 const hits = new Map();
 const chainHits = new Map();
 const globalDay = [];
-
-// ---------------------------------------------------------------------------
-// The board is the allowlist.
-//
-// Read once per instance out of the page's own baked scan block, so the set of
-// acceptable domains is always exactly what is published. A new weekly scan that
-// adds or drops a chain needs no change here: the page and the endpoint move
-// together because they read the same bytes. vercel.json includes axbeat.html
-// with this function for that reason.
-// ---------------------------------------------------------------------------
-let BOARD = null;
-function board() {
-  if (BOARD) return BOARD;
-  BOARD = new Map();
-  try {
-    const html = fs.readFileSync(path.join(process.cwd(), "axbeat.html"), "utf8");
-    const m = /<script type="application\/json" id="scan">([\s\S]*?)<\/script>/.exec(html);
-    for (const row of JSON.parse(m[1]).rows) {
-      // Both hosts come from the board, never from the request: a docs host is
-      // not reliably docs.<domain> (INTMAX's is docs.network.intmax.io, and
-      // Honeypot v2's docs sit on cartesi.io), so constructing it here would put
-      // a wrong address on the lead.
-      BOARD.set(String(row.domain).toLowerCase(), {
-        name: row.name,
-        site: row.site.url,
-        docs: row.docs.url,
-      });
-    }
-  } catch (e) {
-    // An empty map rejects every request, which is the safe direction: better a
-    // form that says it could not send than an open write endpoint.
-    console.error("axbeat-lead: could not read the board", e && e.message);
-  }
-  return BOARD;
-}
 
 function overCap(list, cap, windowMs, now) {
   const fresh = list.filter((t) => now - t < windowMs);
@@ -117,7 +87,10 @@ function rateLimited(ip) {
   return false;
 }
 
-// Per-chain daily cap so one row cannot be spammed, plus a global daily floor.
+// Daily cap per email domain so one address (or one company) can't be spammed,
+// plus a global daily floor. Used to key off a board-verified chain domain;
+// now it's simply whatever domain the submitted address carries, which is the
+// same map and the same caps, just no longer backed by a lookup.
 function chainOrGlobalLimited(domain) {
   const now = Date.now();
   const list = chainHits.get(domain) || [];
@@ -167,7 +140,7 @@ async function hasMx(domain) {
   }
 }
 
-async function createLeadRow({ email, chain, view, host, leadId }) {
+async function createLeadRow({ email, domain, leadId }) {
   const res = await fetch("https://api.notion.com/v1/pages", {
     method: "POST",
     headers: {
@@ -178,13 +151,16 @@ async function createLeadRow({ email, chain, view, host, leadId }) {
     body: JSON.stringify({
       parent: { data_source_id: DATA_SOURCE_ID },
       properties: {
-        "Site URL": { title: [{ text: { content: `https://${host}` } }] },
+        // Best-effort, from the address alone: there is no board lookup any
+        // more to confirm this is a real chain's working host, only what the
+        // domain itself says. Natalie triages from here.
+        "Site URL": { title: [{ text: { content: `https://${domain}` } }] },
         Email: { email },
         "Audit ID": { rich_text: [{ text: { content: leadId } }] },
-        // What Natalie needs at a glance: which board, which chain, which of the
-        // two views the visitor was looking at when they asked.
+        // No chain to name: one generic CTA, not one per row, so this just
+        // says a report was asked for. Left blank rather than guessed.
         "Coverage note": {
-          rich_text: [{ text: { content: `AXBeat: ${chain}, ${view === "docs" ? "docs" : "website"} report` } }],
+          rich_text: [{ text: { content: "AXBeat: full report request" } }],
         },
         Status: { select: { name: "New" } },
         Reviewer: { people: [{ id: NATALIE_USER_ID }] },
@@ -233,17 +209,23 @@ module.exports = async (req, res) => {
   }
   body = body || {};
 
-  // The chain has to be on the board, and the name has to be the one the board
-  // publishes for that domain. Anything else is not a request this page made.
-  const domain = String(body.domain || "").trim().toLowerCase();
-  const known = board().get(domain);
-  if (!known) return res.status(400).json({ ok: false, error: "chain" });
-
-  const view = body.view === "docs" ? "docs" : "site";
-  if (!localPartOk(body.local)) {
+  // One generic CTA takes a whole work email address now; there is no chain
+  // to fix the domain to, and no board to check it against either (see the
+  // header note). Split on the LAST "@": a local part is never supposed to
+  // carry one unescaped, but failing safe here is free and simpler than
+  // parsing quoted-local-part edge cases nothing downstream needs.
+  const rawEmail = String(body.email || "").trim();
+  const at = rawEmail.lastIndexOf("@");
+  if (at < 1 || at === rawEmail.length - 1) {
     return res.status(400).json({ ok: false, error: "email", reason: "syntax" });
   }
-  const email = `${body.local}@${domain}`;
+  const local = rawEmail.slice(0, at);
+  const domain = rawEmail.slice(at + 1).toLowerCase();
+
+  if (!localPartOk(local)) {
+    return res.status(400).json({ ok: false, error: "email", reason: "syntax" });
+  }
+  const email = `${local}@${domain}`;
   if (!Mailchecker.isValid(email)) {
     return res.status(400).json({ ok: false, error: "email", reason: "blocklist" });
   }
@@ -259,9 +241,7 @@ module.exports = async (req, res) => {
 
   const leadId = makeLeadId();
   try {
-    // The host the report is about: the website or the docs row they opened,
-    // exactly as the board scored it.
-    await createLeadRow({ email, chain: known.name, view, host: known[view], leadId });
+    await createLeadRow({ email, domain, leadId });
   } catch (e) {
     console.error("axbeat-lead: Notion write failed", e && e.message);
     return res.status(502).json({ ok: false, error: "store" });

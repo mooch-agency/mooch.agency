@@ -33,22 +33,20 @@
 //
 // What derives the levels
 // -----------------------
-// Nothing here scores anything. The level on every row is Cloudflare's, verbatim.
-// The one thing we compute is what each level appears to REQUIRE, and it is
-// derived from the scanned hosts: a level's gate is every check passed by 100%
-// of hosts at or above it.
+// Nothing. The level on every row is Cloudflare's, verbatim, and the opened row
+// simply lists which scored checks passed and which did not, straight off the
+// baked block. Two earlier designs died here and stay dead:
 //
-// Cloudflare's own `nextLevel.requirements` must never derive a score, a level
-// or a gate. Its entries carry a `prompt` and a `skillUrl`, which makes it a
-// list of suggested fixes for a coding agent rather than the gate, and on this
-// data it is demonstrably not the gate: it names Link headers for INTMAX's 1/5,
-// yet every host sitting at 1/5 fails Link headers. That reasoning is why the
-// gates above are derived and it still stands.
+// A derived gate per level (every check passed by 100% of hosts at or above it)
+// was retired 16 Sep: nothing scored 2/5, so gates 2 and 3 came out identical,
+// and five scored checks landed in no gate at all. A derivation with holes that
+// size looked more certain than it was.
 //
-// Quoting it is a different act and is allowed. The board prints Cloudflare's
-// requirement descriptions verbatim on the next rung pip, attributed to them,
-// as their advice about one host. Nothing reads those strings back into a
-// level, a gate or an ordering.
+// Quoting Cloudflare's `nextLevel.requirements` on a next-rung pip went with the
+// pip ladder itself, so the field is no longer baked at all. The ban on it stays
+// for any future revival: it is a list of suggested fixes for a coding agent,
+// demonstrably not the gate on this data, and must never derive a score, a
+// level or an ordering.
 // ---------------------------------------------------------------------------
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -70,28 +68,34 @@ const CLOSE = '</script>';
 const STATIC_OPEN = '<!-- @AXBEAT-STATIC@ -->';
 const STATIC_CLOSE = '<!-- @/AXBEAT-STATIC@ -->';
 
-// Cloudflare runs these but never scores them, so they are excluded from gate
-// derivation. They stay in the baked data: the method notes count them, and
-// counting them from the data is what stops that sentence going stale.
-const COMMERCE = new Set(['x402', 'mpp', 'ucp', 'acp', 'ap2']);
-
-// The builders the board names, and the whole test for being on this list: the
+// What the board names in its "Built with" column, in two tiers, because the
+// column now runs on both views and a website has no docs tool to name.
+//
+// DOC_TOOLS come first and win a tie. The test for being here is unchanged: the
 // tool has a documented, default mechanism for the checks Cloudflare scores, so
 // its presence can move a score with nobody configuring anything. GitBook is the
 // clearest case on the current scan: all five GitBook hosts pass both Content
 // Signals and Markdown negotiation, and all five sit on exactly 3/5.
 //
-// A framework that merely builds the pages (Next.js, Gatsby, Nuxt, Sanity,
-// Contentful) is deliberately absent: it publishes none of these files on its
-// own, so naming it would suggest a cause that is not operating. Those rows read
-// "Custom", which is the honest answer: somebody's own setup.
+// SITE_FRAMEWORKS were deliberately absent while this was a docs-only column,
+// on the grounds that naming one would suggest a cause that is not operating.
+// That reasoning still holds and the fix is in the copy, not the list: the
+// column describes a stack, it never explains a score, and the method note
+// says so with the numbers. Without them the website view reads "Custom" on 12
+// of 22 rows, which tells a reader nothing at all.
 //
-// Order matters only as a tiebreak if a host somehow reports two builders; the
-// first match wins.
-const BUILDERS = [
+// Order matters only as a tiebreak when a host reports two; the first match
+// wins, which is why a Docusaurus site on Next.js still reads Docusaurus.
+const DOC_TOOLS = [
   'Docusaurus', 'GitBook', 'MkDocs', 'Mintlify', 'VitePress',
-  'Nextra', 'Docsify', 'Sphinx', 'Read the Docs', 'Redocly', 'Framer Sites',
+  'Nextra', 'Docsify', 'Sphinx', 'Read the Docs', 'Redocly',
 ];
+const SITE_FRAMEWORKS = [
+  'Framer Sites', 'Next.js', 'Nuxt.js', 'Astro', 'SvelteKit', 'Remix',
+  'Gatsby', 'Hugo', 'Jekyll', 'Eleventy', 'WordPress', 'Webflow', 'Squarespace',
+  'Wix', 'Sanity', 'Contentful', 'Vue.js', 'React',
+];
+const BUILDERS = [...DOC_TOOLS, ...SITE_FRAMEWORKS];
 
 // Hosting and CDN names, used for one thing only: showing that Cloudflare being
 // detected on a host does not mean Cloudflare serves it. See the platform note.
@@ -131,8 +135,8 @@ function readTargets(scanPath, scan) {
 // Cloudflare's checks arrive nested by category; the board addresses them by
 // key (every key is unique across categories), but keeps the category too, so
 // the page can group by Cloudflare's own taxonomy instead of inventing one.
-// Flattened to four fields: status, message, the address actually requested,
-// and the category key.
+// Flattened to five fields: status, message, the address actually requested,
+// the category key, and the panel's own status value (see checkValueFrom).
 function flattenChecks(agentReadiness) {
   const out = {};
   for (const [category, byKey] of Object.entries(agentReadiness.checks || {})) {
@@ -147,10 +151,173 @@ function flattenChecks(agentReadiness) {
         m: check.message,
         a: first.request?.url || first.label || null,
         c: category,
+        v: checkValueFrom(key, check),
       };
     }
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// Panel status value: the short "200" / "absent" / "html only" shown beside
+// each check name in the opened row's Found/Missing columns. Two families,
+// matching how each check actually reaches its verdict:
+//
+//   HTTP_STATUS_KEYS  the verdict IS a fetch's response code, the resource is
+//                      there or it isn't, so the panel shows that code
+//                      straight off the scan's own evidence. Never invented:
+//                      if a check named here carries no fetch evidence, the
+//                      build dies rather than making one up.
+//   WORD_RULES         the verdict comes from parsing what was fetched (or,
+//                      for dnsAid, from a DNS-over-HTTPS lookup that always
+//                      answers 200 whatever it finds, which would actively
+//                      mislead as a "status"). These map Cloudflare's own
+//                      message to one of a fixed, exhaustively-listed words,
+//                      the same pattern as policyFromMessage above: a
+//                      reworded message dies the build instead of a guess.
+//
+// Checks in neither family (the payment checks, and webBotAuth's neutral
+// informational check) carry no panel value; scoredChecks() never shows them.
+// ---------------------------------------------------------------------------
+const HTTP_STATUS_KEYS = new Set([
+  'robotsTxt', 'sitemap', 'apiCatalog', 'authMd', 'mcpServerCard',
+  'a2aAgentCard', 'agentSkills', 'oauthDiscovery', 'oauthProtectedResource', 'ard',
+]);
+
+// Which path each check is actually asking for. A check's evidence is not
+// only its own target: several of them fetch a page as context too, and the
+// order is not stable across hosts. oauthProtectedResource is the clearest
+// case on this scan: base.org and optimism.io record the context GET first
+// and the well-known path second, while mantle.xyz and docs.arbitrum.io
+// record them the other way round. Taking the first fetch, or the last one,
+// therefore reports 200 for a check that 404d on some hosts and not others.
+// Matching the path instead is the only reading that holds for all 44.
+//
+// Every key in HTTP_STATUS_KEYS has an entry, and the paths are the ones this
+// scan actually requests. A check whose target path never appears in its own
+// evidence stops the build rather than falling back to a fetch that answers a
+// different question.
+const TARGET_PATHS = {
+  robotsTxt: /\/robots\.txt/i,
+  sitemap: /sitemap/i,
+  apiCatalog: /\/\.well-known\/api-catalog/i,
+  authMd: /\/auth\.md/i,
+  mcpServerCard: /\/\.well-known\/mcp/i,
+  a2aAgentCard: /\/\.well-known\/agent-card/i,
+  agentSkills: /\/\.well-known\/(agent-)?skills/i,
+  oauthDiscovery: /openid-configuration|oauth-authorization-server/i,
+  oauthProtectedResource: /\/\.well-known\/oauth-protected-resource/i,
+  ard: /ai-catalog/i,
+};
+
+// The status shown is the one the check's own target answered with. Two things
+// are filtered out before anything is chosen: DNS-over-HTTPS lookups, which
+// answer 200 from the resolver whatever they find, and any fetch whose path is
+// not what this check is looking for (see TARGET_PATHS).
+// On a pass, a multi-candidate check (three MCP paths, two OAuth discovery
+// paths) may not win on its first try, so the first 2xx is preferred. On a
+// fail every candidate failed, so the first is as true as any and is the
+// canonical location the check tried first.
+function httpStatusFrom(key, check) {
+  const wanted = TARGET_PATHS[key];
+  const fetches = (check.evidence || []).filter((e) =>
+    e.response && typeof e.response.status === 'number' &&
+    !String(e.request?.url || '').includes('cloudflare-dns.com') &&
+    (!wanted || wanted.test(String(e.request?.url || ''))));
+  if (!fetches.length) return null;
+  if (check.status === 'pass') {
+    const ok = fetches.find((e) => e.response.status >= 200 && e.response.status < 300);
+    if (ok) return String(ok.response.status);
+  }
+  return String(fetches[0].response.status);
+}
+
+// One array of [pattern, word] per WORD_RULES check, tested in order. Every
+// message this scan is known to produce for that check is listed; anything
+// else is unrecognised (see checkValueFrom) rather than defaulted.
+const WORD_RULES = {
+  robotsTxtAiRules: [
+    [/^Found rules for AI bots/i, 'named'],
+    [/^No AI-specific bot rules; wildcard rules apply/i, 'blanket'],
+    [/^No AI-specific bot rules and no wildcard rules/i, 'absent'],
+    [/^Cannot check AI rules without robots\.txt/i, 'absent'],
+  ],
+  contentSignals: [
+    [/^Content Signals found in robots\.txt/i, 'present'],
+    [/^No Content Signals found in robots\.txt/i, 'absent'],
+    [/^Cannot check Content Signals without robots\.txt/i, 'n/a'],
+  ],
+  markdownNegotiation: [
+    [/^Site supports Markdown for Agents/i, 'md'],
+    [/^Site does not support Markdown for Agents/i, 'html only'],
+  ],
+  linkHeaders: [
+    [/^Found agent-useful Link relations:/i, 'found'],
+    [/^No Link headers found on target page/i, 'absent'],
+    [/^Link headers present but no agent-useful relation types found/i, 'unhelpful'],
+    [/^Target page returned status \d+/i, 'blocked'],
+  ],
+  dnsAid: [
+    [/^DNS for AI Discovery \(DNS-AID\) discovery record found at/i, 'named'],
+    [/^DNS for AI Discovery \(DNS-AID\) well-known entrypoint records not found/i, 'absent'],
+    [/^DNS for AI Discovery \(DNS-AID\) records found, but DNSSEC was not validated/i, 'unverified'],
+  ],
+  webMcp: [
+    [/^Found \d+ WebMCP tools/i, 'found'],
+    [/^No WebMCP tools detected/i, 'absent'],
+  ],
+};
+
+// Returns null on a message none of the rules for this key recognise, so the
+// two callers (the build, and --check re-verifying the bake) can each react
+// in their own way rather than carrying their own copy of the patterns.
+function wordFrom(key, message) {
+  for (const [re, word] of WORD_RULES[key] || []) {
+    if (typeof message === 'string' && re.test(message)) return word;
+  }
+  return null;
+}
+
+// A failed check whose own target answered 2xx. The code is then not the
+// reason it failed, and printing it in the Missing column reads as a pass:
+// "robots.txt not found" beside a green-looking 200 is the exact opposite of
+// what happened. Three sites here (Ink, Morph, Ethscriptions) answer 200 to
+// every path, so on those every Missing row would have read 200.
+// The failure itself is the value instead, in the message's own terms.
+const FAIL_2XX_RULES = [
+  [/returned HTML instead of/i, 'html'],
+  [/^No .*(found|metadata)/i, 'absent'],
+  [/not found/i, 'absent'],
+  [/exists but/i, 'invalid'],
+  [/appears invalid/i, 'invalid'],
+];
+function fail2xxWord(message) {
+  for (const [re, word] of FAIL_2XX_RULES) {
+    if (typeof message === 'string' && re.test(message)) return word;
+  }
+  return null;
+}
+
+function checkValueFrom(key, check) {
+  if (HTTP_STATUS_KEYS.has(key)) {
+    const v = httpStatusFrom(key, check);
+    if (v === null) die(`${key}: no fetch of its own target path to read a status from`);
+    if (check.status !== 'pass' && /^2/.test(v)) {
+      const word = fail2xxWord(check.message);
+      if (word === null) {
+        die(`${key} failed with HTTP ${v}, and its message is not one the panel knows how to ` +
+          `word, so it would print a passing-looking code under Missing: "${check.message}"`);
+      }
+      return word;
+    }
+    return v;
+  }
+  if (WORD_RULES[key]) {
+    const v = wordFrom(key, check.message);
+    if (v === null) die(`unrecognised ${key} message, so its panel value cannot be read: "${check.message}"`);
+    return v;
+  }
+  return null;
 }
 
 // The publication gate, mirroring ax-audit/bin/gate.mjs. See the header note.
@@ -204,57 +371,50 @@ function hostFrom(row) {
     scannedAt: row.scannedAt,
     reportUrl: row.reportUrl,
     checks: flattenChecks(ar),
-    next: nextFrom(ar),
+    ai: aiPolicyFrom(ar.checks?.botAccessControl?.robotsTxtAiRules),
   };
 }
 
-// Cloudflare's own guidance for the one rung above this host, quoted not derived.
-// Only the target, its name and which checks it names are kept per host: the
-// descriptions themselves go in a single lookup (see reqTextFrom), because they
-// are constant per check across all 44 hosts and repeating them 83 times cost
-// 8.1KB against 0.6KB for the table. `prompt` and `shortPrompt` are deliberately
-// left behind: `prompt` alone added 20KB of multi line shell and config examples
-// that no reader can use inside a pip, and `skillUrl` is an instruction to an
-// agent rather than something to show a person.
-// A host at 5/5 has no nextLevel, and gets null rather than an invented one.
-function nextFrom(ar) {
-  const nl = ar.nextLevel;
-  if (!nl) return null;
-  return { t: nl.target, n: nl.name, r: nl.requirements.map((q) => q.check) };
+// ---------------------------------------------------------------------------
+// AI access policy: what a site's robots.txt says to AI crawlers specifically.
+//
+// Read off Cloudflare's robotsTxtAiRules check rather than parsed here, and
+// derived at build time rather than in the page, so the page never has to
+// match on a scanner's prose at runtime. The known message forms are listed
+// exhaustively and an unrecognised one stops the build: a reworded message
+// that silently fell through to "missing" would misreport a site as having no
+// robots.txt at all.
+//
+//   explicit  robots.txt names AI crawlers (GPTBot, ClaudeBot and friends)
+//   generic   robots.txt exists, but one blanket rule covers every crawler
+//   missing   no robots.txt, or no rule that reaches a crawler at all
+//
+// The policy says which crawlers are addressed, never whether they are allowed:
+// naming a bot to block it and naming it to welcome it both read as explicit,
+// because that is as far as this check looks.
+// ---------------------------------------------------------------------------
+const AI_POLICIES = ['explicit', 'generic', 'missing'];
+
+// The one mapping, shared by the build and by --check. Returns null on a message
+// it does not know, so each caller can react in its own way rather than both
+// carrying their own copy of these patterns: an earlier version had --check
+// falling through to 'missing' on a message the build would have died on, which
+// is the exact drift this file exists to catch.
+function policyFromMessage(m) {
+  if (typeof m !== 'string') return null;
+  if (/^Found rules for AI bots/i.test(m)) return 'explicit';
+  if (/^No AI-specific bot rules; wildcard rules apply/i.test(m)) return 'generic';
+  if (/^No AI-specific bot rules and no wildcard rules/i.test(m)) return 'missing';
+  if (/^Cannot check AI rules without robots\.txt/i.test(m)) return 'missing';
+  return null;
 }
 
-// One description per check, proven rather than assumed: if Cloudflare ever
-// words the same requirement differently for two hosts, the lookup would show
-// one host another host's text, so the build stops instead.
-function reqTextFrom(results) {
-  const out = {};
-  for (const row of results) {
-    const reqs = row.agentReadiness?.nextLevel?.requirements ?? [];
-    for (const q of reqs) {
-      if (out[q.check] !== undefined && out[q.check] !== q.description) {
-        die(`Cloudflare words the ${q.check} requirement differently on different hosts, so it cannot be baked once. Bake it per host instead.`);
-      }
-      out[q.check] = q.description;
-    }
-  }
-  return out;
-}
-
-// ---------------------------------------------------------------------------
-// Derived gates. See the header note on why Cloudflare's nextLevel is not used.
-// ---------------------------------------------------------------------------
-function deriveGates(hosts) {
-  const keys = [...new Set(hosts.flatMap((h) => Object.keys(h.checks)))].filter((k) => !COMMERCE.has(k));
-  const gates = {};
-  for (let lv = 1; lv <= 5; lv++) {
-    const atOrAbove = hosts.filter((h) => h.level >= lv);
-    // No host reached this level, so the data cannot say what it takes. Null,
-    // not an empty list: "unknown" and "nothing required" are different claims.
-    gates[lv] = atOrAbove.length
-      ? keys.filter((k) => atOrAbove.every((h) => h.checks[k]?.s === 'pass'))
-      : null;
-  }
-  return gates;
+function aiPolicyFrom(check) {
+  // No check at all is a scan that never ran it, which is genuinely "missing".
+  if (!check) return 'missing';
+  const policy = policyFromMessage(check.message);
+  if (policy) return policy;
+  return die(`unrecognised robotsTxtAiRules message, so the AI access policy cannot be read: "${check.message}"`);
 }
 
 // ---------------------------------------------------------------------------
@@ -298,11 +458,13 @@ function build(scanPath) {
     .map((e) => {
       if (!e.site || !e.docs) die(`${e.brand} is missing its ${e.site ? 'docs' : 'apex'} host`);
       const ed = overlay[e.brand] || {};
+      if (!ed.logo) die(`${e.brand} has no logo in scripts/axbeat-chains.json`);
       return {
         name: ed.name || e.brand,
         domain: e.site.url,
         tvs: e.tvs,
         note: ed.note || null,
+        logo: ed.logo,
         site: e.site,
         docs: e.docs,
       };
@@ -315,8 +477,6 @@ function build(scanPath) {
   const data = {
     scannedAt: scan.scannedAt,
     source: 'Cloudflare URL Scanner, agent readiness scan',
-    gates: deriveGates(rows.flatMap((r) => [r.site, r.docs])),
-    reqText: reqTextFrom(scan.results),
     rows,
   };
   return data;
@@ -350,20 +510,26 @@ function staticBoard(data) {
   // Ranked the way the board opens: website score, ties broken on value secured.
   const list = [...data.rows].sort((a, b) => (b.site.level - a.site.level) || (a.tvs - b.tvs));
 
-  return `<div class="pad">
+  // Kept in sync by hand with hero()'s own frontloaded copy in axbeat.html
+  // (there is no JS here to share it with): eyebrow text, the lede, and the
+  // one "how it works" fact (what the scan checks, and that onchain AX is a
+  // separate, unshipped measure). hero() tucks that fact behind "How it
+  // works"; a disclosure with no JS to open it would just be permanently
+  // missing copy, so the no-JS page states it plainly and stops.
+  return `<div class="pad pad-hero">
 <div>
-<p class="eyebrowrow"><span class="eyebrow">AXBeat</span><span class="scanline"><span class="dot"></span>Scanned ${esc(when)}</span></p>
+<p class="eyebrowrow"><span class="eyebrow">Agent Experience</span><span class="scanline"><span class="dot"></span>Scanned ${esc(when)}</span></p>
 <h1 class="display">How <em>agent friendly</em> is your Layer 2?</h1>
-<p class="lede">${data.rows.length} rollups, ranked on how well agents can read their website and docs.</p>
-<p class="caveat">AX, agent experience, is how easily an AI agent can find and read what you publish. It is not a test of whether an agent can complete an onchain transaction. A chain can be excellent to build on and still be unreadable at the front door.</p>
-<p class="caveat">Scores are <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s agent-readiness</a> levels, republished unaltered, re-scanned weekly. Equal scores are ordered by value secured, per L2Beat.</p>
+<p class="lede">L2Beat ranks security. AXBeat ranks AX, agent experience, how well agents can read a protocol’s website and docs.</p>
+<p class="caveat">We run <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s agent-readiness</a> scan against a protocol’s website and docs. It checks that agent signposts exist, not whether they’re correct. Onchain AX, how well an agent can take onchain actions, is TBD.</p>
 </div>
 <div class="tablewrap"><table class="board">
 <caption class="sr">The top ${data.rows.length} Layer 2 rollups by value secured, with their Cloudflare agent-readiness level out of 5 for their website and their docs, scanned ${esc(when)}.</caption>
 <thead><tr><th scope="col">#</th><th scope="col">Chain</th><th scope="col">Website score</th><th scope="col">Docs score</th></tr></thead>
 <tbody>
 ${list.map((r, i) => `<tr><td class="rank">${i + 1}</td>` +
-  `<td><span class="brand">${esc(r.name)}</span><span class="brandurl">${esc(r.site.url)}</span></td>` +
+  `<td><span class="chainname"><img class="chainlogo" src="${esc(r.logo)}" alt="" width="20" height="20" loading="lazy">` +
+  `<span class="brand">${esc(r.name)}</span></span><span class="brandurl">${esc(r.site.url)}</span></td>` +
   `<td><span class="snum">${r.site.level}/5</span> ${esc(r.site.levelName || LEVEL_NAME[r.site.level])}</td>` +
   `<td><span class="snum">${r.docs.level}/5</span> ${esc(r.docs.levelName || LEVEL_NAME[r.docs.level])}</td></tr>`).join('\n')}
 </tbody></table></div>
@@ -428,12 +594,71 @@ function check() {
     }
   }
 
-  // The gates must still be the ones this data implies. This catches a hand-edit
-  // of either half, and a build that wrote rows without rewriting gates.
-  if (Array.isArray(data.rows) && data.rows.length && data.rows.every((r) => r.site && r.docs)) {
-    const expect = deriveGates(data.rows.flatMap((r) => [r.site, r.docs]));
-    if (JSON.stringify(expect) !== JSON.stringify(data.gates || null)) {
-      problems.push('gates do not match the levels in the baked rows: rebuild with pnpm axbeat:build');
+  // The AI access policy is derived at build time from a check message, so it is
+  // the one baked field that could silently go stale against its own row. Both
+  // halves are asserted: the value is one the column can render, and it still
+  // agrees with the check it was read from.
+  for (const r of data.rows || []) {
+    for (const view of ['site', 'docs']) {
+      const h = r[view];
+      if (!h) continue;
+      want(AI_POLICIES.includes(h.ai),
+        `${r.name} ${view}: AI access policy "${h.ai}" is not one of ${AI_POLICIES.join(', ')}`);
+      const m = h.checks?.robotsTxtAiRules?.m;
+      if (typeof m !== 'string') continue;
+      const expect = policyFromMessage(m);
+      // Same verdict the build would reach, including its refusal to guess: a
+      // message neither of them recognises is a failure here, not a default.
+      want(expect !== null,
+        `${r.name} ${view}: robotsTxtAiRules message is one neither the build nor this check recognises, ` +
+        `so the AI access policy cannot be verified: "${m}"`);
+      if (expect !== null) {
+        want(h.ai === expect,
+          `${r.name} ${view}: AI access policy is "${h.ai}" but the check message reads "${expect}"`);
+      }
+    }
+  }
+
+  // The panel's status value (checks[key].v) is derived the same way the AI
+  // policy is, so it gets the same two-part check: it is a shape the panel can
+  // print, and it still agrees with the message it was read from. The fetch
+  // evidence itself is never baked, so an HTTP_STATUS_KEYS value cannot be
+  // re-derived from the block; what can be asserted is the invariant that
+  // matters, which is that a code never appears against a failed check. A
+  // failed check carries the word its message implies instead, so that half
+  // is re-derived in full.
+  for (const r of data.rows || []) {
+    for (const view of ['site', 'docs']) {
+      const h = r[view];
+      if (!h) continue;
+      for (const [key, c] of Object.entries(h.checks || {})) {
+        if (HTTP_STATUS_KEYS.has(key)) {
+          if (c.s === 'pass') {
+            want(/^2\d\d$/.test(c.v || ''),
+              `${r.name} ${view} ${key}: check passed but its panel value "${c.v}" is not a 2xx status`);
+          } else {
+            // A failed check shows either the code that failed it, or, when
+            // its own target answered 2xx, the word its message implies. It
+            // must never show a 2xx code: that reads as a pass.
+            const word = fail2xxWord(c.m);
+            want(!/^2\d\d$/.test(c.v || ''),
+              `${r.name} ${view} ${key}: check failed but its panel value "${c.v}" is a 2xx status, ` +
+              'which reads as a pass under Missing');
+            want(/^\d{3}$/.test(c.v || '') || (word !== null && c.v === word),
+              `${r.name} ${view} ${key}: panel value "${c.v}" is neither a status code nor the word ` +
+              `its message implies ("${word}"): "${c.m}"`);
+          }
+        } else if (WORD_RULES[key]) {
+          const expect = wordFrom(key, c.m);
+          want(expect !== null,
+            `${r.name} ${view} ${key}: message is one neither the build nor this check recognises, ` +
+            `so its panel value cannot be verified: "${c.m}"`);
+          if (expect !== null) {
+            want(c.v === expect,
+              `${r.name} ${view} ${key}: panel value is "${c.v}" but the check message reads "${expect}"`);
+          }
+        }
+      }
     }
   }
 
@@ -455,7 +680,7 @@ function check() {
     for (const p of problems) console.error(`  ${p}`);
     process.exit(1);
   }
-  console.log(`axbeat-data --check: ${data.rows.length} chains, scanned ${data.scannedAt.slice(0, 10)}, gates consistent. PASS`);
+  console.log(`axbeat-data --check: ${data.rows.length} chains, scanned ${data.scannedAt.slice(0, 10)}, AI policies consistent. PASS`);
 }
 
 // ---------------------------------------------------------------------------
@@ -491,6 +716,6 @@ if (CHECK) {
   console.log(
     `axbeat-data: baked ${data.rows.length} chains (${levels.length} hosts) from ${path.relative(ROOT, scanPath)}\n` +
     `  scanned ${data.scannedAt.slice(0, 10)}, levels ${Math.min(...levels)}-${Math.max(...levels)}, ` +
-    `gates derived for ${Object.values(data.gates).filter(Boolean).length} of 5 levels`
+    `AI access policy read on ${data.rows.flatMap((r) => [r.site, r.docs]).filter((h) => h.ai).length} hosts`
   );
 }
