@@ -64,8 +64,6 @@
     --muted:#9a9aa1; --muted-small:#a9a9b0;
     --hairline:#2b2b2e; --hairline-focus:#5b5b61;
     --error:#ff8080; --success:#5cc98d;
-    --shadow-border:0 0 0 1px rgba(255,255,255,.09);
-    --shadow-border-hover:0 0 0 1px rgba(255,255,255,.16);
     --band:#191a1c;
     --hi:color-mix(in srgb, var(--claude) 20%, transparent);
   }
@@ -189,11 +187,6 @@ button, input { font-family:inherit; }
    very first thing on the page just opened with more empty space than any
    other page on the site does. Bottom keeps --rhythm, unchanged. */
 .pad-hero { padding-top: clamp(64px, 10vw, 120px); }
-/* Foot band: the CTA only now the notes moved into the hero's "How it works"
-   disclosure, so it no longer needs a full section's worth of air on both
-   sides to separate one card from the table above and the colophon below. */
-.pad-foot { padding-top: clamp(48px, 8vw, 96px); padding-bottom: clamp(48px, 8vw, 96px); }
-
 /* --- hero ---------------------------------------------------------------- */
 /* Raised to the house display scale (styleguide's .t-display / index's
    .section-title: clamp(40,6vw,72), 0.95 line-height, -.02em tracking), not
@@ -335,30 +328,38 @@ table.board tr.row:focus-visible {
    (about 5.6:1 light, 9.2:1 dark) without hardcoding a second colour. */
 .fnmark { font-size:10px; vertical-align:super; color:color-mix(in srgb, var(--claude) 65%, var(--ink)); margin-left:2px; font-family:var(--mono); }
 
-/* score: a five-slice pie, one wedge per level, filled in --success up to the
-   host's level and --pip-off past it. This is the one colour on the whole
-   board, and deliberately: a check passing or failing is a genuine pass/fail,
-   unlike robots.txt's Explicit/Generic/Missing a few columns over, which says
-   who a site addresses and never whether they are welcome (see .aipill). One
-   is a result, the other is a fact, and only the result gets green. Real SVG
-   wedges rather than a conic-gradient, so the shape survives print and
-   engines that skip conic gradients; a wedge scales cleanly where a bar's
-   fixed-width segments wouldn't. The category breakdown still belongs to the
-   opened panel below, not this cell, which only has to say how far up the
-   board this host got.
+/* score: a segmented bar, one tick per scored check, filled left to right in
+   --success up to how many that host passed and --pip-off past it (concept 04
+   in the lo-fi score/16 mocks, Tahi's pick over thirteen alternatives on 17
+   Sep, replacing the five-slice pie that showed Cloudflare's level instead).
+   This is the one colour on the whole board, and deliberately: a check
+   passing or failing is a genuine pass/fail, unlike robots.txt's
+   Explicit/Generic/Missing a few columns over, which says who a site
+   addresses and never whether they are welcome (see .aipill). One is a
+   result, the other is a fact, and only the result gets green. Real SVG
+   <rect>s rather than a striped background or a conic-gradient, so the shape
+   survives print and engines that skip gradients. The category breakdown
+   still belongs to the opened panel below, not this cell, which only has to
+   say how many of the host's scored checks passed.
+   The number beside the bar changed meaning along with it: it used to be
+   Cloudflare's level out of 5 (still baked, still named in the sr text below,
+   just no longer the headline figure); it now reads "found/total" against
+   this host's own count of scored checks (scoredChecks() below), the same
+   figure the opened panel already prints as "Found x/16".
    line-height:1 on both the cell and the numeral, plus the svg's own fixed
-   box, is what actually centres the pie against the numeral and the row's
+   box, is what actually centres the bar against the numeral and the row's
    chain name: without it the font's own leading pushed the numeral a couple
-   of px below the pie's optical middle. */
+   of px below the bar's optical middle. */
 /* display:flex, not inline-flex, and that is the whole centring fix. As an
-   inline box this sat on the line's text baseline, which a flex box holding a
-   28px svg and 13px text resolves a couple of px above where a plain text cell
+   inline box this sat on the line's text baseline, which a flex box holding
+   the svg and 13px text resolves a couple of px above where a plain text cell
    does, so the score rode high against the chain name beside it. A block-level
    flex box has no baseline to sit on: the cell's own vertical-align:middle
    centres it, measured at 0.25px off .brand across every row, and no magic
-   number is carried. */
+   number is carried. Unchanged by the pie-to-bar swap: the fix is about the
+   flex box having no baseline, not about the svg's own size. */
 .score { display:flex; align-items:center; gap:9px; white-space:nowrap; line-height:1; }
-.piemeter { flex-shrink:0; display:block; }
+.barmeter { flex-shrink:0; display:block; }
 .snum { font-family:var(--mono); font-size:13px; font-variant-numeric:tabular-nums; line-height:1; }
 
 
@@ -396,30 +397,43 @@ table.board tr.row:focus-visible {
   display:flex; width:fit-content; align-items:center; font-family:var(--mono); font-size:11px;
   letter-spacing:.02em; white-space:nowrap; border-radius:7px;
 }
-/* Three states, three different shapes, on purpose: colour was ruled out
+/* Three states, three shapes, one hierarchy, on purpose: colour was ruled out
    (this check reports who a site addresses, never whether they are welcome,
-   and a hue would claim more than the scan tested), and a shared pill with
-   only the word and a weight change left Generic and Missing reading as the
-   same box at a glance, which a reader flagged twice. Container presence now
-   carries the tier instead of a hue:
+   and a hue would claim more than the scan tested), so container presence
+   and weight carry the tier instead of a hue:
      Explicit  solid, ink-filled, same weight as the site's own .pill button
                — the state worth stopping on gets the strongest shape on the
                row.
-     Generic   the outline this used to be for everyone: present, but
+     Generic   the outline this used to be for everyone: present, solid,
                nothing to single out.
-     Missing   no box at all. A pill promises "here is a value"; Missing is
-               the absence of one, so it gets the absence of a pill too, in
-               italic to read as a placeholder rather than a fact, the way a
-               null shows elsewhere in a table.
-   Same border-radius throughout so the eye reads it as one component with
-   three states, not three different chips. */
+     Missing   the same outline shape as Generic (so all three read as one
+               component, not three different chips), but visibly the
+               weakest of the three: a dashed rather than solid border, at a
+               lower mix of --hairline so the box itself recedes, plus the
+               italic Missing already carried, which now reads as
+               "placeholder" against Generic's plain fact.
+   The dash and the lighter mix are what a reader compares Generic and
+   Missing on, not the text: a solid vs. dashed edge is legible even where
+   the two borders sit close in luminance, so this survives both a light
+   and a dark rendering without a second value per theme. Missing's text
+   stays on --muted-small, the same token Generic sits on, and goes no
+   lighter: an earlier pass mixed Missing's text 72% toward paper to push it
+   back further, which read as 3.53:1 at 11px, under AA, and was reverted.
+   The tier now lives in the border and the italic, never the text colour,
+   so the row stays readable while still reading as the weakest of the
+   three. Same border-radius and padding throughout so the eye reads it as
+   one component with three states. */
 .aipill.ai-explicit {
   color:var(--paper); font-weight:600; background:var(--ink); padding:4px 10px;
 }
 .aipill.ai-generic {
   color:var(--muted-small); border:1px solid var(--hairline); padding:4px 10px;
 }
-.aipill.ai-missing { color:var(--muted-small); font-style:italic; padding:4px 0; }
+.aipill.ai-missing {
+  color:var(--muted-small); font-style:italic;
+  border:1px dashed color-mix(in srgb, var(--hairline) 70%, transparent);
+  padding:4px 10px;
+}
 /* On a phone all three describing columns fold into the chain cell, stacked
    url, Platform, then robots.txt, the same order they hold on the full table.
    robots.txt sits below Platform rather than beside it: the metalabel and its
@@ -448,9 +462,10 @@ table.board tr.row:focus-visible {
    nothing at all. 3.5em on the rank, not 2.5em, because fixed layout plus
    ellipsis clipped the two-digit ranks ("10" rendered as "1..."); 9.5em on
    score fits its own header ("Website score"/"Docs score") rather than the
-   30px pie and numeral it holds, which need far less.
+   63px bar and numeral it holds (16 ticks at 3px plus 1px gaps), which need
+   far less.
    Only rank and score carry a width, because only they hold something of a
-   fixed size: two digits, and a 30px pie beside "n/5". The four text columns
+   fixed size: two digits, and a 63px bar beside "n/16". The four text columns
    declare none at all, which is what makes them equidistant: table-layout:
    fixed splits whatever is left of the row evenly between every column with
    no declared width, so the four come out identical at any container width
@@ -531,10 +546,10 @@ table.board td.detail { background:var(--surface); padding:0; }
    sentence: "Found 3/16" and "Missing 13/16" already say everything the old
    "3 of 16 scored checks found" line did, in half the words. */
 .checkhead b { font-weight:400; color:var(--muted-small); font-variant-numeric:tabular-nums; }
-/* The score pie's own --success, echoed here rather than reinvented: filled
+/* The score bar's own --success, echoed here rather than reinvented: filled
    for Found, an outline in the same green for Missing, so a checked-off list
    and an outstanding one read as two states of the same fact, the way the
-   pie's own filled and unfilled wedges do. The check names beside it already
+   bar's own filled and unfilled ticks do. The check names beside it already
    carry the whole meaning; this is a glance, not a verdict. */
 .checkhead::before { content:""; width:7px; height:7px; border-radius:50%; flex:none; background:var(--success); }
 .checkcol-missing .checkhead::before { background:none; border:1px solid var(--success); }
@@ -557,23 +572,19 @@ table.board td.detail { background:var(--surface); padding:0; }
    time a panel is built. */
 .checkmore { margin-top:8px; font-size:11.5px; }
 
-/* --- CTA: one card, once, at the foot of the board -------------------------
-   Every opened panel used to rebuild its own copy of this card, carrying that
-   chain's name and domain. One board-wide ask replaces all of those: same
-   card, generic copy, a real email field instead of a local part with the
-   domain fixed after it (see ctaBand() and api/axbeat-lead.js).
-   Flat 1px borders are the page's biggest tell that it isn't shipped like the
-   rest of the site; shadow-border is what index.html and the prompt pages use
-   for exactly this, a card sitting on the page rather than boxed onto it. Capped
-   at --col (the same measure index's own audit-band form uses) rather than
-   stretched to the board's full width: a lead form reads better narrow. */
-.cta {
-  box-shadow: var(--shadow-border);
-  border-radius:24px; padding:20px 24px; background:var(--paper);
-  display:grid; gap:12px; max-width:var(--col);
-}
-.ctalabel { font-size:14px; font-weight:600; max-width:56ch; }
-.ctasub { font-size:13px; color:var(--muted); max-width:64ch; margin-top:-6px; }
+/* --- the report ask, inside the opened panel --------------------------------
+   The only lead form on the board (a board-wide card used to sit at the foot
+   too; killed 17 Sep, since nobody scrolls a 22-row board to reach it). It
+   lands in the found column's own empty space: found is usually the
+   shorter of the two lists here, and the grid stretches both columns to the
+   taller one's height, so a short Found list already leaves a blank run
+   underneath it. No card chrome (border, shadow, background), just a
+   hairline rule, so it reads as part of the panel rather than a pitch bolted
+   onto it. See rowCta() for the markup. */
+.rowcta { margin-top:16px; padding-top:14px; border-top:1px dashed var(--hairline); display:grid; gap:8px; }
+.rowcta .ctalabel { font-size:12.5px; font-weight:600; max-width:none; }
+.rowcta form.mail { gap:8px; }
+.rowcta .mailfield { max-width:none; }
 form.mail { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 .mailfield {
   font-family:inherit; font-size:14px; color:var(--ink); background:var(--paper);
@@ -654,7 +665,12 @@ form.mail { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 }
 @media (max-width:520px) {
   form.mail { flex-direction:column; align-items:stretch; }
-  .mailfield { max-width:none; }
+  /* .mailfield's flex-basis (200px) is a row-layout width; stacked here, the
+     main axis is vertical, so that same 200px was read as a minimum height
+     and inflated the field into a near-square box. flex-basis:auto lets it
+     size to its own content (the input's line height) instead, in both this
+     card and .rowcta's, which shares the same markup. */
+  .mailfield { max-width:none; flex-basis:auto; }
   .pill { width:100%; }
   /* Find and toggle still share a row down here (see the 960px block), so the
      room has to come from their own padding rather than from stacking them.
@@ -791,31 +807,31 @@ form.mail { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 <p class="caveat">We run <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s agent-readiness</a> scan against a protocol’s website and docs. It checks that agent signposts exist, not whether they’re correct. Onchain AX, how well an agent can take onchain actions, is TBD.</p>
 </div>
 <div class="tablewrap"><table class="board">
-<caption class="sr">The top 22 Layer 2 rollups by value secured, with their Cloudflare agent-readiness level out of 5 for their website and their docs, scanned 8 September 2026.</caption>
+<caption class="sr">The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's scored agent-readiness checks each passed for their website and their docs, scanned 8 September 2026.</caption>
 <thead><tr><th scope="col">#</th><th scope="col">Chain</th><th scope="col">Website score</th><th scope="col">Docs score</th></tr></thead>
 <tbody>
-<tr><td class="rank">1</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/bob.png" alt="" width="20" height="20" loading="lazy"><span class="brand">BOB</span></span><span class="brandurl">gobob.xyz</span></td><td><span class="snum">5/5</span> Agent-Native</td><td><span class="snum">1/5</span> Basic Web Presence</td></tr>
-<tr><td class="rank">2</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/base.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Base</span></span><span class="brandurl">base.org</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">4/5</span> Agent-Integrated</td></tr>
-<tr><td class="rank">3</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/op-mainnet.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Optimism</span></span><span class="brandurl">optimism.io</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">4/5</span> Agent-Integrated</td></tr>
-<tr><td class="rank">4</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/mantle.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Mantle</span></span><span class="brandurl">mantle.xyz</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">3/5</span> Agent-Readable</td></tr>
-<tr><td class="rank">5</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/lighter.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Lighter</span></span><span class="brandurl">lighter.xyz</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">3/5</span> Agent-Readable</td></tr>
-<tr><td class="rank">6</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/starknet.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Starknet</span></span><span class="brandurl">starknet.io</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">4/5</span> Agent-Integrated</td></tr>
-<tr><td class="rank">7</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/linea.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Linea</span></span><span class="brandurl">linea.build</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">4/5</span> Agent-Integrated</td></tr>
-<tr><td class="rank">8</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/ink.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Ink</span></span><span class="brandurl">inkonchain.com</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">1/5</span> Basic Web Presence</td></tr>
-<tr><td class="rank">9</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/zksync-era.png" alt="" width="20" height="20" loading="lazy"><span class="brand">ZKsync</span></span><span class="brandurl">zksync.io</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">1/5</span> Basic Web Presence</td></tr>
-<tr><td class="rank">10</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/morph.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Morph</span></span><span class="brandurl">morph.network</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">0/5</span> Not Ready</td></tr>
-<tr><td class="rank">11</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/katana.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Katana</span></span><span class="brandurl">katana.network</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">1/5</span> Basic Web Presence</td></tr>
-<tr><td class="rank">12</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/abstract.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Abstract</span></span><span class="brandurl">abs.xyz</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">4/5</span> Agent-Integrated</td></tr>
-<tr><td class="rank">13</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/scroll.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Scroll</span></span><span class="brandurl">scroll.io</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">0/5</span> Not Ready</td></tr>
-<tr><td class="rank">14</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/taiko.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Taiko</span></span><span class="brandurl">taiko.xyz</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">1/5</span> Basic Web Presence</td></tr>
-<tr><td class="rank">15</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/intmax.png" alt="" width="20" height="20" loading="lazy"><span class="brand">INTMAX</span></span><span class="brandurl">intmax.io</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">0/5</span> Not Ready</td></tr>
-<tr><td class="rank">16</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/cartesi-prt-honeypot-v2.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Honeypot v2</span></span><span class="brandurl">cartesi.io</span></td><td><span class="snum">1/5</span> Basic Web Presence</td><td><span class="snum">0/5</span> Not Ready</td></tr>
-<tr><td class="rank">17</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/arbitrum.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Arbitrum</span></span><span class="brandurl">arbitrum.io</span></td><td><span class="snum">0/5</span> Not Ready</td><td><span class="snum">4/5</span> Agent-Integrated</td></tr>
-<tr><td class="rank">18</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/unichain.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Unichain</span></span><span class="brandurl">unichain.org</span></td><td><span class="snum">0/5</span> Not Ready</td><td><span class="snum">4/5</span> Agent-Integrated</td></tr>
-<tr><td class="rank">19</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/adi.png" alt="" width="20" height="20" loading="lazy"><span class="brand">ADI Chain</span></span><span class="brandurl">adi.foundation</span></td><td><span class="snum">0/5</span> Not Ready</td><td><span class="snum">3/5</span> Agent-Readable</td></tr>
-<tr><td class="rank">20</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/facet.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Facet</span></span><span class="brandurl">facet.org</span></td><td><span class="snum">0/5</span> Not Ready</td><td><span class="snum">3/5</span> Agent-Readable</td></tr>
-<tr><td class="rank">21</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/aztecnetwork.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Aztec</span></span><span class="brandurl">aztec.network</span></td><td><span class="snum">0/5</span> Not Ready</td><td><span class="snum">1/5</span> Basic Web Presence</td></tr>
-<tr><td class="rank">22</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/ethscriptions.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Ethscriptions</span></span><span class="brandurl">ethscriptions.com</span></td><td><span class="snum">0/5</span> Not Ready</td><td><span class="snum">3/5</span> Agent-Readable</td></tr>
+<tr><td class="rank">1</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/bob.png" alt="" width="20" height="20" loading="lazy"><span class="brand">BOB</span></span><span class="brandurl">gobob.xyz</span></td><td><span class="snum">11/16</span> Agent-Native</td><td><span class="snum">3/16</span> Basic Web Presence</td></tr>
+<tr><td class="rank">2</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/lighter.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Lighter</span></span><span class="brandurl">lighter.xyz</span></td><td><span class="snum">4/16</span> Basic Web Presence</td><td><span class="snum">5/16</span> Agent-Readable</td></tr>
+<tr><td class="rank">3</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/intmax.png" alt="" width="20" height="20" loading="lazy"><span class="brand">INTMAX</span></span><span class="brandurl">intmax.io</span></td><td><span class="snum">4/16</span> Basic Web Presence</td><td><span class="snum">1/16</span> Not Ready</td></tr>
+<tr><td class="rank">4</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/base.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Base</span></span><span class="brandurl">base.org</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">9/16</span> Agent-Integrated</td></tr>
+<tr><td class="rank">5</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/op-mainnet.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Optimism</span></span><span class="brandurl">optimism.io</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">9/16</span> Agent-Integrated</td></tr>
+<tr><td class="rank">6</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/mantle.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Mantle</span></span><span class="brandurl">mantle.xyz</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">5/16</span> Agent-Readable</td></tr>
+<tr><td class="rank">7</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/starknet.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Starknet</span></span><span class="brandurl">starknet.io</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">9/16</span> Agent-Integrated</td></tr>
+<tr><td class="rank">8</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/linea.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Linea</span></span><span class="brandurl">linea.build</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">7/16</span> Agent-Integrated</td></tr>
+<tr><td class="rank">9</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/ink.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Ink</span></span><span class="brandurl">inkonchain.com</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">3/16</span> Basic Web Presence</td></tr>
+<tr><td class="rank">10</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/zksync-era.png" alt="" width="20" height="20" loading="lazy"><span class="brand">ZKsync</span></span><span class="brandurl">zksync.io</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">3/16</span> Basic Web Presence</td></tr>
+<tr><td class="rank">11</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/morph.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Morph</span></span><span class="brandurl">morph.network</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">1/16</span> Not Ready</td></tr>
+<tr><td class="rank">12</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/katana.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Katana</span></span><span class="brandurl">katana.network</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">3/16</span> Basic Web Presence</td></tr>
+<tr><td class="rank">13</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/abstract.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Abstract</span></span><span class="brandurl">abs.xyz</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">9/16</span> Agent-Integrated</td></tr>
+<tr><td class="rank">14</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/scroll.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Scroll</span></span><span class="brandurl">scroll.io</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">1/16</span> Not Ready</td></tr>
+<tr><td class="rank">15</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/taiko.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Taiko</span></span><span class="brandurl">taiko.xyz</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">3/16</span> Basic Web Presence</td></tr>
+<tr><td class="rank">16</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/cartesi-prt-honeypot-v2.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Honeypot v2</span></span><span class="brandurl">cartesi.io</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">1/16</span> Not Ready</td></tr>
+<tr><td class="rank">17</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/arbitrum.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Arbitrum</span></span><span class="brandurl">arbitrum.io</span></td><td><span class="snum">2/16</span> Not Ready</td><td><span class="snum">8/16</span> Agent-Integrated</td></tr>
+<tr><td class="rank">18</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/aztecnetwork.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Aztec</span></span><span class="brandurl">aztec.network</span></td><td><span class="snum">1/16</span> Not Ready</td><td><span class="snum">4/16</span> Basic Web Presence</td></tr>
+<tr><td class="rank">19</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/unichain.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Unichain</span></span><span class="brandurl">unichain.org</span></td><td><span class="snum">0/16</span> Not Ready</td><td><span class="snum">9/16</span> Agent-Integrated</td></tr>
+<tr><td class="rank">20</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/adi.png" alt="" width="20" height="20" loading="lazy"><span class="brand">ADI Chain</span></span><span class="brandurl">adi.foundation</span></td><td><span class="snum">0/16</span> Not Ready</td><td><span class="snum">5/16</span> Agent-Readable</td></tr>
+<tr><td class="rank">21</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/facet.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Facet</span></span><span class="brandurl">facet.org</span></td><td><span class="snum">0/16</span> Not Ready</td><td><span class="snum">5/16</span> Agent-Readable</td></tr>
+<tr><td class="rank">22</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/ethscriptions.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Ethscriptions</span></span><span class="brandurl">ethscriptions.com</span></td><td><span class="snum">0/16</span> Not Ready</td><td><span class="snum">5/16</span> Agent-Readable</td></tr>
 </tbody></table></div>
 </div>
 <!-- @/AXBEAT-STATIC@ -->
@@ -898,43 +914,46 @@ function esc(s) {
   });
 }
 function viewOf(row, view) { return view === "site" ? row.site : row.docs; }
-/* Pie plus the number. Five wedges, filled clockwise from 12 o'clock up to the
-   level, in --success (see :root, and the comment above .piemeter for why
-   this is the one column on the board allowed a colour). The level name is
-   not printed next to the score, so it is carried for screen readers only,
-   everywhere.
-   The name comes off the scanned host, which is Cloudflare's own word for that
-   level, because the page's whole claim is that the scores are theirs unaltered.
-   LEVEL_NAME is only the fallback, and only ever fills a level nothing reached. */
-/* pt: a point on the wedge circle at `deg` degrees clockwise from 12 o'clock.
-   Kept separate from meter() because a wedge needs two of these (its start and
-   end edge) and the polar-to-cartesian maths reads better named than inlined
-   twice. */
-function pt(cx, cy, r, deg) {
-  var rad = (deg - 90) * Math.PI / 180;
-  return (cx + r * Math.cos(rad)).toFixed(2) + "," + (cy + r * Math.sin(rad)).toFixed(2);
-}
-function meter(lv) {
-  /* Real wedges, not a conic-gradient: a gradient doesn't print and a couple
-     of engines still skip it, where an SVG path just draws. Unfilled wedges
-     use --pip-off, so a 0/5 host still reads as a present (if empty) circle
-     instead of a gap in the row. A hairline stroke keeps the filled and
-     unfilled wedges visually separate at 28px, where they would otherwise
-     bleed into one shape. */
-  var cx = 15, cy = 15, r = 14, svg = '<svg class="piemeter" width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">';
-  for (var i = 0; i < 5; i++) {
-    var a0 = i * 72, a1 = a0 + 72;
-    var fill = i < lv ? "var(--success)" : "var(--pip-off)";
-    svg += '<path d="M' + cx + "," + cy + " L" + pt(cx, cy, r, a0) + " A" + r + "," + r + " 0 0 1 " +
-      pt(cx, cy, r, a1) + ' Z" fill="' + fill + '" stroke="var(--hairline)" stroke-width="0.75"></path>';
+/* Bar plus the number. One tick per scored check (scoredChecks() below),
+   filled left to right in --success (see :root, and the comment above
+   .barmeter for why this is the one column on the board allowed a colour).
+   Replaces the five-wedge pie that showed Cloudflare's level (dropped 17
+   Sep, concept 04 of the lo-fi score/16 mocks, Tahi's pick): the visible
+   figure now reads "found/total" scored checks, the same count the opened
+   panel already prints as "Found x/16", not the level out of 5.
+   The level itself is not dropped, only demoted: it still decides the row's
+   rank (see sorted()) and still names the host's own tier, just for screen
+   readers now rather than as the headline figure. The name comes off the
+   scanned host, which is Cloudflare's own word for that level, because the
+   page's whole claim is that the scores are theirs unaltered. LEVEL_NAME is
+   only the fallback, and only ever fills a level nothing reached. */
+function bars(found, total) {
+  /* Real <rect>s, not a single fill on a striped background: a gradient or a
+     repeating pattern is one rendering engine away from not printing, where
+     rects always draw, the same reasoning the old pie used for real wedges
+     over a conic-gradient. Unfilled ticks use --pip-off so a 0/total host
+     still reads as a present (if empty) bar instead of a gap in the row.
+     `total` is this host's own count of scored checks, not a hardcoded 16:
+     every host on the current scan carries all sixteen (see scoredChecks()),
+     but the bar has to hold whatever count a future scan actually returns. */
+  var tw = 3, gap = 1, h = 16, w = total * (tw + gap) - gap;
+  var svg = '<svg class="barmeter" width="' + w + '" height="' + h +
+    '" viewBox="0 0 ' + w + ' ' + h + '" aria-hidden="true">';
+  for (var i = 0; i < total; i++) {
+    var fill = i < found ? "var(--success)" : "var(--pip-off)";
+    svg += '<rect x="' + (i * (tw + gap)) + '" y="0" width="' + tw + '" height="' + h +
+      '" fill="' + fill + '"></rect>';
   }
   return svg + "</svg>";
 }
 function score(v) {
-  var lv = v.level;
-  return '<span class="score">' + meter(lv) +
-    '<span class="snum">' + lv + "/5</span>" +
-    '<span class="sr">, ' + esc(v.levelName || LEVEL_NAME[lv]) + "</span></span>";
+  var ch = scoredChecks(v), keys = Object.keys(ch);
+  var total = keys.length;
+  var found = keys.filter(function (k) { return ch[k].s === "pass"; }).length;
+  return '<span class="score">' + bars(found, total) +
+    '<span class="snum">' + found + "/" + total + "</span>" +
+    '<span class="sr">, ' + found + " of " + total + " scored checks found; Cloudflare level " +
+    v.level + " of 5, " + esc(v.levelName || LEVEL_NAME[v.level]) + "</span></span>";
 }
 function plural(n, one, many) { return n + " " + (n === 1 ? one : (many || one + "s")); }
 
@@ -950,13 +969,6 @@ function scanDate() {
 }
 
 /* --- sorting and ranking ---------------------------------------------------- */
-function sorted(view) {
-  return ROWS.slice().sort(function (a, b) {
-    var d = viewOf(b, view).level - viewOf(a, view).level;
-    return d || a.tvs - b.tvs;
-  });
-}
-
 /* The checks Cloudflare scores: everything except the payment family, which it
    runs but never counts, and anything it reports as neutral. */
 function scoredChecks(view) {
@@ -968,15 +980,29 @@ function scoredChecks(view) {
   });
   return out;
 }
+/* How many of those checks passed. The board is ranked on this, not on
+   Cloudflare's level: the level no longer appears on the row (see bars() /
+   score()), and a board has to sort by the number it actually shows, or a
+   reader can watch a 4/16 sit under a 3/16 with no way to tell why. */
+function foundCount(view) {
+  var ch = scoredChecks(view);
+  return Object.keys(ch).filter(function (k) { return ch[k].s === "pass"; }).length;
+}
+function sorted(view) {
+  return ROWS.slice().sort(function (a, b) {
+    var d = foundCount(viewOf(b, view)) - foundCount(viewOf(a, view));
+    return d || a.tvs - b.tvs;
+  });
+}
 /* Two even columns: which of the scored checks this host has, and which it
    does not, each capped at five rows before the rest goes behind the shared
    disclosure pattern (see .moretoggle/.morewrap, used above for "How it
    works"). found is first in the markup and stays first at every width,
    including the stacked layout under 720px, matching the mock's own order. */
-function checkColumns(found, missing, ch, id) {
+function checkColumns(found, missing, ch, id, row) {
   var total = found.length + missing.length;
   return '<div class="checkcols">' +
-    checkCol(id, "found", "Found", found, ch, total) +
+    checkCol(id, "found", "Found", found, ch, total, rowCta(row, id)) +
     checkCol(id, "missing", "Missing", missing, ch, total) +
   "</div>";
 }
@@ -984,8 +1010,10 @@ function checkColumns(found, missing, ch, id) {
    ("Found 3/16"), up to five checks, then, when there are more, a "Show N
    more" toggle for the rest. moreId is unique per row and column, so opening
    Found never touches Missing and vice versa; fillPanel wires the button the
-   first time a panel is built (see wireDisclosures below). */
-function checkCol(id, kind, label, keys, ch, total) {
+   first time a panel is built (see wireDisclosures below). extra is the
+   report ask (see rowCta()): only Found ever gets one, so it's passed in
+   rather than given its own kind === "found" branch here. */
+function checkCol(id, kind, label, keys, ch, total, extra) {
   var shown = keys.slice(0, 5), rest = keys.slice(5);
   var html = '<div class="checkcol checkcol-' + kind + '">' +
     '<p class="checkhead">' + label + " <b>" + keys.length + "/" + total + "</b></p>" +
@@ -998,7 +1026,7 @@ function checkCol(id, kind, label, keys, ch, total) {
       '<button class="moretoggle checkmore" type="button" aria-expanded="false" aria-controls="' + moreId + '">' +
         '<span class="chev" aria-hidden="true">\u203a</span>Show ' + rest.length + " more</button>";
   }
-  return html + "</div>";
+  return html + (extra || "") + "</div>";
 }
 /* Name plus status value, dotted leader between them (CSS). The value is
    whatever checkValueFrom baked for this check in scripts/axbeat-data.mjs:
@@ -1025,7 +1053,32 @@ function checksPanel(view, row, id) {
      its own panel, where the row's "note" mark points a reader; there is no
      collected notes list anywhere else. */
   return (row.note ? '<p class="rownote">' + esc(row.note) + "</p>" : "") +
-    checkColumns(found, missing, ch, id);
+    checkColumns(found, missing, ch, id, row);
+}
+/* The report ask, back inside the panel (Tahi's call, 17 Sep), after a spell
+   living as one board-wide card at the foot, since retired: nobody scrolls a
+   22-row board to reach a card at the bottom of it. Adapted to the current
+   single-field wiring rather
+   than the old local-part-plus-fixed-domain split (rowCta/ctaForm): the
+   board is no longer a domain allowlist (see api/axbeat-lead.js), so there
+   is nothing left to fix the domain to, and wireReportForms just posts one
+   full email address the same way for every form.mail on the page. domain
+   only ever fills the placeholder here, a hint rather than a constraint.
+   data-chain is the one thing carried over from the old per-row version, so
+   axbeat_report_submit/ok/error can still say which chain's panel a lead
+   came from (see wireReportForms); id is the row's own panel id, so the
+   input's id stays unique across every open row plus the foot band. */
+function rowCta(row, id) {
+  var inputId = id + "-cta-email";
+  return '<div class="rowcta">' +
+    '<p class="ctalabel">Get ' + esc(row.name) + '’s full report.</p>' +
+    '<form class="mail" novalidate data-chain="' + esc(row.name) + '">' +
+      '<span class="mailfield"><label class="sr" for="' + inputId + '">Your work email</label>' +
+        '<input id="' + inputId + '" type="email" autocomplete="email" spellcheck="false" ' +
+          'placeholder="you@' + esc(row.domain || "yourchain.xyz") + '"></span>' +
+      '<button class="pill" type="submit">Get the report <span class="arrow">&rarr;</span></button>' +
+      '<span class="said" role="status" data-role="said"></span>' +
+    "</form></div>";
 }
 /* 30D: a column of dashes is a column of nothing, so it stays out until a second
    scan gives it something to say. The test is the data, not a flag, so the
@@ -1086,34 +1139,12 @@ function moveCell(cls, delta) {
     Math.abs(delta) + " in 30 days</span></td>";
 }
 
-/* --- the report request: one card, at the foot of the board, not one per row ---
-   Used to be built fresh inside every opened row (rowCta/ctaForm), with the
-   local part typed against the chain's own domain, fixed after the @, and the
-   server checking that domain against the board before accepting it. A single
-   board-wide CTA has no one chain to fix the domain to, and the board is no
-   longer an allowlist either (deliberately: see api/axbeat-lead.js), so the
-   field is just a full work email address. The endpoint still runs it through
-   syntax, blocklist, MX and rate-limit checks; it just no longer knows or
-   guesses which chain, if any, it belongs to. */
-function ctaBand() {
-  return '<div class="cta">' +
-    '<p class="ctalabel">Get the full report for your chain.</p>' +
-    '<p class="ctasub">Every check, the exact fix, and a weekly re-scan once you’re climbing.</p>' +
-    '<form class="mail" novalidate>' +
-      '<span class="mailfield"><label class="sr" for="cta-email">Your work email</label>' +
-        '<input id="cta-email" type="email" autocomplete="email" spellcheck="false" placeholder="you@yourchain.xyz"></span>' +
-      '<button class="pill" type="submit">Get the full report <span class="arrow">&rarr;</span></button>' +
-      '<span class="said" role="status" data-role="said"></span>' +
-    "</form>" +
-    missingLink("cta") +
-  "</div>";
-}
-
-/* The second lead action. A missing chain is a handful of messages a month and
-   needs a sentence from a human ("we're at this address, not that one"), not a
-   form: mail carries that, works with no backend and no new abuse surface, and
-   lands in the same inbox as everything else. The click is tracked so we can
-   see whether anyone uses it. */
+/* The one other lead action, alongside each row's own form (rowCta()). A
+   missing chain is a handful of messages a month and needs a sentence from a
+   human ("we're at this address, not that one"), not a form: mail carries
+   that, works with no backend and no new abuse surface, and lands in the
+   same inbox as everything else. The click is tracked so we can see whether
+   anyone uses it; `where` tags which spot on the page it was clicked from. */
 function missingLink(where) {
   return '<a class="secondary" data-ev="axbeat_missing_click" data-where="' + esc(where) + '" ' +
     'href="mailto:hey@mooch.agency?subject=' + encodeURIComponent("AXBeat: a missing L2") +
@@ -1149,6 +1180,7 @@ function hero(o) {
         "agent-readiness</a> scan against a protocol’s website and docs. It checks that agent signposts " +
         "exist, not whether they’re correct. Onchain AX, how well an agent can take onchain actions, is " +
         "TBD.</p>" +
+      missingLink("how") +
     "</div></div>" +
   "</div>";
 }
@@ -1175,7 +1207,8 @@ function segToggle(view) {
 /* ===========================================================================
    The board. Website is the default view; a segmented toggle switches to docs
    without moving a column; the whole row opens to the next-level panel and the
-   report request. Ties are numbered and broken on L2Beat value secured.
+   report request. Ranked on checks found (see sorted()); ties are numbered
+   and broken on L2Beat value secured.
    ========================================================================= */
 /* What fillPanel needs to build a row's panel later, keyed by the same id the
    detpad carries. Rebuilt on every render, because the view decides which host
@@ -1263,14 +1296,7 @@ function renderA(view) {
     '<div class="empty" data-role="empty" hidden><p>No chain on the board matches that.</p>' +
       missingLink("empty") + "</div>" +
     "</div>" +
-    "</div>" +
-    /* The foot band used to carry the CTA and a block of method notes, each
-       full paragraph of them repeating a fact the hero or "How it works"
-       already stated. The method now lives in the hero disclosure and each
-       chain's caveat in its own panel (see checksPanel), so this band is the
-       CTA alone, on .pad-foot's own lighter padding rather than a full
-       section --rhythm of air around a single card. */
-    '<div class="pad pad-foot">' + ctaBand() + "</div>";
+    "</div>";
   wire(s);
 }
 
@@ -1294,11 +1320,14 @@ function fillPanel(det) {
   pad.innerHTML = checksPanel(p.vw, p.row, pad.dataset.panel) +
     (p.row.note ? '<p class="findnote">Note: ' + esc(p.row.note) + "</p>" : "");
   pad.dataset.built = "1";
-  /* No report form in here any more (see ctaBand(), wired once with the rest
-     of the page in wire()), so this panel only ever grows its own "Show N
-     more" buttons. The page-load wireDisclosures(document) ran before this
-     row ever opened, so they still need their own wiring call. */
+  /* checksPanel() builds this row's own report form now (rowCta()), so it
+     needs the same two wiring calls the foot band gets in wire(): disclosures
+     for its "Show N more" buttons, and wireReportForms for the form itself.
+     Both are idempotent per element (dataset.wired), and pad.dataset.built
+     above means this whole function only ever runs once per row anyway, so
+     there's no risk of wiring either one twice or double-submitting. */
   wireDisclosures(pad);
+  wireReportForms(pad);
 }
 
 /* Disclosures: one button, one 0fr/1fr grid, wired once wherever they appear.
@@ -1385,19 +1414,21 @@ function wire(section) {
     });
   }
 
-  /* The report request and the tracked links are wired through helpers, because
-     a row's panel is now built the first time it opens rather than up front, so
-     both have to be wirable against a subtree that did not exist at render. */
-  wireReportForms(section);
+  /* Every form.mail is now built lazily, inside a row's own panel the first
+     time it opens (fillPanel calls wireReportForms(pad) itself), so there is
+     nothing of that kind to wire here at render. The tracked links are not
+     lazy (both missingLink() calls above are in the initial markup), so
+     wireEvLinks still runs once, here, against the whole section. */
   wireEvLinks(section);
 }
 
 /* Pessimistic: the button locks while the request is in flight and only says it
    worked once the server says so, because the whole promise of this form is
-   that something arrives. Used to read the chain off the form's own dataset
-   (built fresh per row, checked against the board); now there's one form,
-   built once, and no chain lookup at all any more (see api/axbeat-lead.js),
-   so the client only ever needs the address the visitor typed. */
+   that something arrives. Runs against every form.mail under root: one
+   compact form per opened row (rowCta()), wired exactly once via the
+   dataset.wired guard below regardless of how many times fillPanel calls in.
+   No chain lookup on the server side (see api/axbeat-lead.js); data-chain
+   only ever rides along in analytics. */
 function wireReportForms(root) {
   root.querySelectorAll("form.mail").forEach(function (f) {
     if (f.dataset.wired) return;
@@ -1413,6 +1444,7 @@ function wireReportForms(root) {
       // from it any more (no board lookup left to check it against).
       var domain = at > 0 ? email.slice(at + 1).toLowerCase() : "";
       var ctx = { domain: domain };
+      if (f.dataset.chain) ctx.chain = f.dataset.chain;
 
       if (!email) {
         said.textContent = "Add your work email first.";
@@ -1453,11 +1485,13 @@ function wireReportForms(root) {
           why === "rate" ? "That’s a few too many at once. Try again in a minute." :
           "That didn’t send. Mail hey@mooch.agency and we’ll sort it.";
         btn.disabled = false;
-        track("axbeat_report_error", { domain: domain, reason: why });
+        ctx.reason = why;
+        track("axbeat_report_error", ctx);
       }).catch(function () {
         said.textContent = "That didn’t send. Mail hey@mooch.agency and we’ll sort it.";
         btn.disabled = false;
-        track("axbeat_report_error", { domain: domain, reason: "network" });
+        ctx.reason = "network";
+        track("axbeat_report_error", ctx);
       });
     });
   });

@@ -499,6 +499,25 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
 // is what renders; this fills a level nothing on the board reached.
 const LEVEL_NAME = ['Not Ready', 'Basic Web Presence', 'Bot-Aware', 'Agent-Readable', 'Agent-Integrated', 'Agent-Native'];
 
+// Mirrors scoredChecks()/score() in axbeat.html: the same payment-family
+// exclusion and neutral filter, so the no-JS score text ("x/16") agrees with
+// the interactive board's bar and the opened panel's "Found x/16" for every
+// host, not just an approximation of them. Kept as a second copy rather than
+// imported, the same as the held-publication check above: this file has to
+// build standing alone, with nothing shared at runtime with the page it bakes.
+const PAYMENT_KEYS = ['x402', 'mpp', 'ucp', 'acp', 'ap2'];
+function scoredCount(view) {
+  let found = 0;
+  let total = 0;
+  for (const [key, check] of Object.entries(view.checks || {})) {
+    if (PAYMENT_KEYS.includes(key)) continue;
+    if (check.s === 'neutral') continue;
+    total += 1;
+    if (check.s === 'pass') found += 1;
+  }
+  return { found, total };
+}
+
 function staticBoard(data) {
   // Pinned to UTC, because this string is baked into the file and then compared
   // byte for byte by --check. Without it the date follows the machine's zone, so
@@ -507,8 +526,12 @@ function staticBoard(data) {
   const when = new Date(data.scannedAt).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
   });
-  // Ranked the way the board opens: website score, ties broken on value secured.
-  const list = [...data.rows].sort((a, b) => (b.site.level - a.site.level) || (a.tvs - b.tvs));
+  // Ranked the way the board opens: checks found on the website view, not
+  // Cloudflare's level (see scoredCount above and axbeat.html's own sorted()):
+  // the row shows a checks-found count, so it has to sort on that count or a
+  // 4/16 could sit under a 3/16 with nothing on the page explaining why. Ties
+  // broken on value secured.
+  const list = [...data.rows].sort((a, b) => (scoredCount(b.site).found - scoredCount(a.site).found) || (a.tvs - b.tvs));
 
   // Kept in sync by hand with hero()'s own frontloaded copy in axbeat.html
   // (there is no JS here to share it with): eyebrow text, the lede, and the
@@ -524,14 +547,18 @@ function staticBoard(data) {
 <p class="caveat">We run <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s agent-readiness</a> scan against a protocol’s website and docs. It checks that agent signposts exist, not whether they’re correct. Onchain AX, how well an agent can take onchain actions, is TBD.</p>
 </div>
 <div class="tablewrap"><table class="board">
-<caption class="sr">The top ${data.rows.length} Layer 2 rollups by value secured, with their Cloudflare agent-readiness level out of 5 for their website and their docs, scanned ${esc(when)}.</caption>
+<caption class="sr">The top ${data.rows.length} Layer 2 rollups by value secured, with how many of Cloudflare's scored agent-readiness checks each passed for their website and their docs, scanned ${esc(when)}.</caption>
 <thead><tr><th scope="col">#</th><th scope="col">Chain</th><th scope="col">Website score</th><th scope="col">Docs score</th></tr></thead>
 <tbody>
-${list.map((r, i) => `<tr><td class="rank">${i + 1}</td>` +
-  `<td><span class="chainname"><img class="chainlogo" src="${esc(r.logo)}" alt="" width="20" height="20" loading="lazy">` +
-  `<span class="brand">${esc(r.name)}</span></span><span class="brandurl">${esc(r.site.url)}</span></td>` +
-  `<td><span class="snum">${r.site.level}/5</span> ${esc(r.site.levelName || LEVEL_NAME[r.site.level])}</td>` +
-  `<td><span class="snum">${r.docs.level}/5</span> ${esc(r.docs.levelName || LEVEL_NAME[r.docs.level])}</td></tr>`).join('\n')}
+${list.map((r, i) => {
+  const site = scoredCount(r.site);
+  const docs = scoredCount(r.docs);
+  return `<tr><td class="rank">${i + 1}</td>` +
+    `<td><span class="chainname"><img class="chainlogo" src="${esc(r.logo)}" alt="" width="20" height="20" loading="lazy">` +
+    `<span class="brand">${esc(r.name)}</span></span><span class="brandurl">${esc(r.site.url)}</span></td>` +
+    `<td><span class="snum">${site.found}/${site.total}</span> ${esc(r.site.levelName || LEVEL_NAME[r.site.level])}</td>` +
+    `<td><span class="snum">${docs.found}/${docs.total}</span> ${esc(r.docs.levelName || LEVEL_NAME[r.docs.level])}</td></tr>`;
+}).join('\n')}
 </tbody></table></div>
 </div>`;
 }
