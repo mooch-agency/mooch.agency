@@ -133,24 +133,36 @@ function readTargets(scanPath, scan) {
 }
 
 // Cloudflare's checks arrive nested by category; the board addresses them by
-// key (every key is unique across categories), but keeps the category too, so
-// the page can group by Cloudflare's own taxonomy instead of inventing one.
-// Flattened to five fields: status, message, the address actually requested,
-// the category key, and the panel's own status value (see checkValueFrom).
+// key, which is safe because every key is unique across categories.
+//
+// Flattened to three fields, and only three on purpose. The block is 65% of
+// the page's bytes, so a field nobody reads is weight on a page whose whole
+// argument is that a site should be cheap to read:
+//
+//   s  the status, which decides pass/fail everywhere
+//   m  Cloudflare's own message. Not displayed, but --check re-derives both
+//      derived values from it, so it is the evidence that keeps the bake
+//      honest and it stays whatever else goes.
+//   v  the short value beside the check name in an opened row (checkValueFrom)
+//
+// Two fields were dropped on 18 Sep because nothing read them, in the page or
+// in --check, and together they were 62KB, a quarter of the whole page:
+//
+//   a  the address the check actually requested. Baked for a per-check address
+//      list that moved into the emailed report, which is written from ax-audit
+//      itself, where the full evidence lives.
+//   c  Cloudflare's category key. Baked for the category-card panel, retired
+//      16 Sep.
+//
+// Either comes back by re-adding its line here and rebuilding; the scan they
+// come from is re-read weekly, so nothing is lost by not carrying them now.
 function flattenChecks(agentReadiness) {
   const out = {};
-  for (const [category, byKey] of Object.entries(agentReadiness.checks || {})) {
+  for (const byKey of Object.values(agentReadiness.checks || {})) {
     for (const [key, check] of Object.entries(byKey || {})) {
-      // The first evidence entry is what the scanner did first: a fetch carries
-      // the URL it asked for, a parse carries only its own label ("Extract
-      // Sitemap directives from robots.txt"). Either way it is the honest answer
-      // to "where did you look", which is what the row shows.
-      const first = (check.evidence || [])[0] || {};
       out[key] = {
         s: check.status,
         m: check.message,
-        a: first.request?.url || first.label || null,
-        c: category,
         v: checkValueFrom(key, check),
       };
     }
