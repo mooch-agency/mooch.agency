@@ -362,10 +362,12 @@ function heldReason(row) {
 //   cloudflare / otherHost
 //             whether Cloudflare was detected, and whether another hosting
 //             provider was detected alongside it. Both are facts about the
-//             detection, never a claim about who serves the host: on this scan
-//             Cloudflare is detected on 25 of the 44 hosts and 15 of those also
-//             report Vercel, Netlify, AWS, Firebase or Google Cloud. That is why
-//             the board has no host column and the method note says so.
+//             detection, never a claim about who serves the host: on the 18 Sep
+//             2026 scan Cloudflare is detected on 23 of the 44 hosts and 15 of
+//             those also report Vercel, Netlify, AWS, Firebase or Google Cloud.
+//             That is why the board has no host column and the method note says
+//             so. The count moves with the scan (it was 25 on 8 Sep, and Ink
+//             dropped off it), so treat it as a snapshot, not a constant.
 //
 // `detected` keeps Cloudflare's full string, so nothing is lost and any future
 // reading of it starts from the original.
