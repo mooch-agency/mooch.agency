@@ -37,11 +37,11 @@
    AXBeat, mooch.agency/axbeat.
 
    The 01 Ranked design, picked by Tahi on 10 Sep 2026 out of four iterations
-   built on 9 Sep, and shipped here unchanged in form. What changed on the way
-   out of .scratch is production only: the mock frame and the design-deck title
-   are gone, the page carries the house strip and colophon, the scan data is
-   baked in by scripts/axbeat-data.mjs rather than pasted, and both lead actions
-   are real.
+   built on 9 Sep. The form survives; the surface has moved on. As it ships:
+   the hero is a lede plus one "How it works" disclosure, the score column is a
+   16-tick bar of checks found (the board ranks on that count), robots.txt is a
+   three-state pill, and the only lead form lives inside an opened row. The scan
+   data is baked in by scripts/axbeat-data.mjs, never pasted.
 
    Shared CSS is linked, never copied. Everything below is specific to this page.
    ========================================================================== */
@@ -163,10 +163,13 @@ button, input { font-family:inherit; }
 .eyebrowrow .eyebrow { display:inline-flex; align-items:center; gap:10px; }
 .eyebrowrow .eyebrow::before { content:''; width:24px; height:1px; background:var(--ink); flex:none; }
 /* --- band: one measure, shared with every other page --------------------
-   Used three times (hero+board, the CTA, the method notes), each a full
-   band between the strip and the colophon, styled exactly like index.html's
-   .section: house rhythm for vertical air, --pad-x for the gutter, a
-   hairline underneath to mark the next band starting. Used to be a flat
+   One band now (hero plus board), between the strip and the colophon, styled
+   exactly like index.html's .section: house rhythm for vertical air, --pad-x
+   for the gutter, a hairline underneath to mark the next band starting. The
+   CTA band and the method-notes band it also used to carry are both gone, the
+   first into each opened row and the second behind the hero's own "How it
+   works" disclosure. Kept as a class rather than folded into the section: the
+   no-JS board baked above uses it too. Used to be a flat
    clamp() that boxed the whole page's content narrower than the hero text
    sitting above it in .strip; --pad-x here matches that hero's own gutter
    instead, so the two share a left edge.
@@ -480,7 +483,6 @@ table.board col.c-url { width:auto; }
 table.board col.c-ai { width:auto; }
 table.board col.c-plat { width:auto; }
 table.board col.c-score { width:9.5em; }
-table.board col.c-30 { width:4.5em; }
 
 /* Iteration 01 only. Its Docs platform column comes and goes with the view,
    so its widths have to be law rather than a hint: with the default
@@ -490,11 +492,6 @@ table.board col.c-30 { width:4.5em; }
    layout pins the colgroup widths, so the two views line up exactly. */
 #p-a table.board { table-layout:fixed; }
 #p-a table.board td, #p-a table.board th { overflow:hidden; text-overflow:ellipsis; }
-/* The 30D delta: a coloured triangle and a number once there is a second scan
-   to diff against, a flat muted dash until then. */
-.movecell { font-family:var(--mono); font-size:13px; font-variant-numeric:tabular-nums; color:var(--muted-small); }
-.movecell.up { color:var(--success); }
-.movecell.down { color:var(--error); }
 /* Padding lives on the inner element, not the cell, so a closed row collapses
    to nothing instead of holding 48px of empty surface. */
 table.board td.detail { background:var(--surface); padding:0; }
@@ -580,16 +577,18 @@ table.board td.detail { background:var(--surface); padding:0; }
    taller one's height, so a short Found list already leaves a blank run
    underneath it. No card chrome (border, shadow, background), just a
    hairline rule, so it reads as part of the panel rather than a pitch bolted
-   onto it. See rowCta() for the markup. */
+   onto it. See rowCta() for the markup.
+   .rowcta is the only place these three ever render, so each carries its
+   panel-width values directly. They used to be base rules sized for the foot
+   card with a .rowcta override on top of each; with the card gone that was two
+   values per property and only ever one of them winning. */
 .rowcta { margin-top:16px; padding-top:14px; border-top:1px dashed var(--hairline); display:grid; gap:8px; }
-.rowcta .ctalabel { font-size:12.5px; font-weight:600; max-width:none; }
-.rowcta form.mail { gap:8px; }
-.rowcta .mailfield { max-width:none; }
-form.mail { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.ctalabel { font-size:12.5px; font-weight:600; }
+form.mail { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .mailfield {
   font-family:inherit; font-size:14px; color:var(--ink); background:var(--paper);
   border:1px solid var(--hairline-focus); border-radius:10px;
-  display:inline-flex; align-items:center; flex:1 1 200px; min-width:0; max-width:330px; padding:0 12px;
+  display:inline-flex; align-items:center; flex:1 1 200px; min-width:0; padding:0 12px;
 }
 /* The input drops its own outline so the ring can sit on the whole field, which is
    what reads as one address. The ring has to be here or the primary CTA has no
@@ -644,14 +643,13 @@ form.mail { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
   .ctrl-left { flex:0 0 auto; flex-wrap:nowrap; margin-left:0; }
 }
 @media (max-width:720px) {
-  .opt2 { display:none; }
   /* Found/missing stack instead of sitting side by side below this width.
      Found stays first: matching the mock's own DOM order at every width beat
      the earlier "Missing first on mobile" reorder, which needed its own
      order:-1 rule and existed for a reason (read-one-list-only) the mock
      doesn't share. */
   .checkcols { grid-template-columns:1fr; gap:16px; }
-  /* Nothing to redeclare for chain here: the 780px block's width:100% already
+  /* Nothing to redeclare for chain here: the 940px block's width:100% already
      means "whatever the fixed columns leave", which is the right answer at
      every width below it too. */
   /* .boardcol and .pad need no override here either: .pad's padding is
@@ -668,11 +666,10 @@ form.mail { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
   /* .mailfield's flex-basis (200px) is a row-layout width; stacked here, the
      main axis is vertical, so that same 200px was read as a minimum height
      and inflated the field into a near-square box. flex-basis:auto lets it
-     size to its own content (the input's line height) instead, in both this
-     card and .rowcta's, which shares the same markup. */
-  .mailfield { max-width:none; flex-basis:auto; }
+     size to its own content (the input's line height) instead. */
+  .mailfield { flex-basis:auto; }
   .pill { width:100%; }
-  /* Find and toggle still share a row down here (see the 960px block), so the
+  /* Find and toggle still share a row down here (see the 940px block), so the
      room has to come from their own padding rather than from stacking them.
      Trimmed to what "Find your chain" needs beside the toggle at 320px, the
      narrowest width the board is built for: without this the placeholder
@@ -772,7 +769,7 @@ form.mail { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 }
 
 @media print {
-  .strip, .colophon, .cta, .controls { display:none; }
+  .strip, .colophon, .controls { display:none; }
   a { color:#000; text-decoration:underline; }
   .detwrap { grid-template-rows:1fr !important; }
   .detwrap > .detin { visibility:visible !important; }
@@ -874,11 +871,6 @@ form.mail { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 var DATA = JSON.parse(document.getElementById("scan").textContent);
 var ROWS = DATA.rows;
 
-/* Every number in the copy comes from here. The board is re-scanned weekly and
-   rows come and go, so a literal count in a sentence is a bug waiting to ship. */
-var N = ROWS.length;                                  /* chains on the board */
-var SITES = N * 2;                                    /* two doors each */
-
 /* Vercel Analytics custom events, guarded so a blocked script never throws into
    the page. Names are scoped to this surface, one name per intent: opening a row
    and opening the full check list are different things a visitor did, so they
@@ -902,10 +894,9 @@ var LEVEL_NAME = ["Not Ready","Basic Web Presence","Bot-Aware","Agent-Readable",
    the footnote is however many of these the scan actually returned. */
 var PAYMENT_KEYS = ["x402","mpp","ucp","acp","ap2"];
 
-var VIEW_COPY = {
-  site: { label: "Website", of: "website" },
-  docs: { label: "Docs", of: "docs" }
-};
+/* The one place each view is named in reader-facing copy: the score column's
+   own header ("Website score" / "Docs score"). */
+var VIEW_COPY = { site: { label: "Website" }, docs: { label: "Docs" } };
 
 /* --- helpers --------------------------------------------------------------- */
 function esc(s) {
@@ -1055,19 +1046,15 @@ function checksPanel(view, row, id) {
   return (row.note ? '<p class="rownote">' + esc(row.note) + "</p>" : "") +
     checkColumns(found, missing, ch, id, row);
 }
-/* The report ask, back inside the panel (Tahi's call, 17 Sep), after a spell
-   living as one board-wide card at the foot, since retired: nobody scrolls a
-   22-row board to reach a card at the bottom of it. Adapted to the current
-   single-field wiring rather
-   than the old local-part-plus-fixed-domain split (rowCta/ctaForm): the
-   board is no longer a domain allowlist (see api/axbeat-lead.js), so there
-   is nothing left to fix the domain to, and wireReportForms just posts one
-   full email address the same way for every form.mail on the page. domain
-   only ever fills the placeholder here, a hint rather than a constraint.
-   data-chain is the one thing carried over from the old per-row version, so
-   axbeat_report_submit/ok/error can still say which chain's panel a lead
-   came from (see wireReportForms); id is the row's own panel id, so the
-   input's id stays unique across every open row plus the foot band. */
+/* The report ask, inside the panel (Tahi's call, 17 Sep), after a spell living
+   as one board-wide card at the foot, since retired: nobody scrolls a 22-row
+   board to reach a card at the bottom of it.
+   One field, a whole work email. The board is no longer a domain allowlist
+   (see api/axbeat-lead.js), so there is nothing left to fix a domain to, and
+   row.domain only ever fills the placeholder, a hint rather than a constraint.
+   data-chain names the panel the lead came from, for analytics alone: it never
+   leaves the browser (see wireReportForms). id is the row's own panel id, which
+   is what keeps the input's id unique across every open row. */
 function rowCta(row, id) {
   var inputId = id + "-cta-email";
   return '<div class="rowcta">' +
@@ -1080,18 +1067,6 @@ function rowCta(row, id) {
       '<span class="said" role="status" data-role="said"></span>' +
     "</form></div>";
 }
-/* 30D: a column of dashes is a column of nothing, so it stays out until a second
-   scan gives it something to say. The test is the data, not a flag, so the
-   column appears on its own the week a row first carries a delta.
-   The cell renderer below is kept for that week: it already handles up and down
-   (green triangle, red triangle, the delta), and the dash is the no-history
-   case it falls back to. */
-function hasHistory() {
-  return ROWS.some(function (r) {
-    return r.site.delta != null || r.docs.delta != null;
-  });
-}
-var HISTORY = hasHistory();
 /* What built the docs, or "Custom" when nothing on the builder list was found.
    The build script picks this out of Cloudflare's detection list; see
    scripts/axbeat-data.mjs for what qualifies as a builder and why the host is
@@ -1126,19 +1101,6 @@ function aiCell(view, labelled) {
     '<span class="aipill ai-' + esc(key) + '">' +
     esc(p.label) + '<span class="sr">, ' + esc(p.sr) + "</span></span>";
 }
-function moveCell(cls, delta) {
-  if (delta == null) {
-    return '<td class="' + cls + '"><span class="movecell flat" aria-hidden="true">&#8211;</span>' +
-      '<span class="sr">No history yet</span></td>';
-  }
-  var dir = delta > 0 ? "up" : delta < 0 ? "down" : "flat";
-  var mark = delta > 0 ? "▲" : delta < 0 ? "▼" : "–";
-  return '<td class="' + cls + '"><span class="movecell ' + dir + '" aria-hidden="true">' +
-    mark + Math.abs(delta) + "</span>" +
-    '<span class="sr">' + (delta > 0 ? "Up " : delta < 0 ? "Down " : "No change, ") +
-    Math.abs(delta) + " in 30 days</span></td>";
-}
-
 /* The one other lead action, alongside each row's own form (rowCta()). A
    missing chain is a handful of messages a month and needs a sentence from a
    human ("we're at this address, not that one"), not a form: mail carries
@@ -1155,11 +1117,12 @@ function missingLink(where) {
 
 /* --- shared page furniture --------------------------------------------------- */
 /* The fold, in order: eyebrow (with the scan date right-justified against it),
-   headline, lede, the scope line, method disclosure. */
-/* Frontloads only what a first-time reader needs before scrolling: what this
-   is, where the scores come from, and the scan date (in the eyebrow row).
-   The disclosure holds the whole method in three short paragraphs; anything
-   about one chain lives in that chain's own row panel, not here. */
+   headline, lede, then the "How it works" pill and what it discloses.
+   Frontloads only what a first-time reader needs before scrolling: what this
+   is and the scan date. The disclosure holds the method in one paragraph plus
+   the missing-chain link; anything about one chain lives in that chain's own
+   row panel, not here. The no-JS board states the same method fact in the open
+   (see .caveat), since there is no JS there to open a disclosure with. */
 function hero(o) {
   return "<div>" +
     '<p class="eyebrowrow"><span class="eyebrow">Agent Experience</span>' +
@@ -1240,14 +1203,13 @@ function renderA(view) {
     '<div class="tablewrap"><table class="board">' +
     '<colgroup><col class="c-rank"><col class="c-chain">' +
       '<col class="opt c-url"><col class="opt c-plat"><col class="opt c-ai"><col class="c-score">' +
-      (HISTORY ? '<col class="opt2 c-30">' : "") + "</colgroup>" +
+      "</colgroup>" +
     "<thead><tr>" +
       '<th scope="col">#</th><th scope="col">Chain</th>' +
       '<th scope="col" class="opt">URL</th>' +
       '<th scope="col" class="opt">Platform</th>' +
       '<th scope="col" class="opt">robots.txt</th>' +
       '<th scope="col">' + VIEW_COPY[view].label + " score</th>" +
-      (HISTORY ? '<th scope="col" class="opt2">30D</th>' : "") +
     /* Rows settle in the page's own scroll-reveal language rather than just
        appearing, capped at 5 like every other list on the site so a
        22-row board doesn't take forever to finish arriving. */
@@ -1265,7 +1227,7 @@ function renderA(view) {
         "<td><span class='chainname'><img class='chainlogo' src='" + esc(r.logo) + "' alt='' width='20' height='20' loading='lazy'>" +
           "<span class='brand'>" + esc(r.name) + (r.note ? '<span class="fnmark">note</span>' : "") +
           "</span></span>" +
-          /* Below 960px url, Platform and robots.txt all fold in here, stacked
+          /* Below 940px url, Platform and robots.txt all fold in here, stacked
              under the chain name in the same order they hold on the full table. */
           "<span class='onsm rowmeta'><span class='brandurl'>" + esc(vw.url) + "</span>" +
           "<span class='platpill'>" + esc(platformText(vw.platform)) + "</span>" + aiCell(vw, true) +
@@ -1274,16 +1236,14 @@ function renderA(view) {
         '<td class="opt platcell"><span class="platpill">' + esc(platformText(vw.platform)) + "</span></td>" +
         '<td class="opt aicell">' + aiCell(vw) + "</td>" +
         "<td>" + score(vw) + "</td>" +
-        (HISTORY ? moveCell("opt2", vw.delta) : "") +
       "</tr>" +
         /* Not [hidden]: that snapped a full panel in and out with nothing to
            interrupt. Same 0fr/1fr grid the page already uses for its other
            disclosures, so the row opens in the page's own motion language. */
-        /* Rank, chain, url, Platform, robots.txt and score are always there;
-           30D only once there is history, so the span is counted rather than
-           written down. */
-        '<tr class="detailrow"><td class="detail" colspan="' +
-        (6 + (HISTORY ? 1 : 0)) + '">' +
+        /* Six columns: rank, chain, url, Platform, robots.txt, score. Three of
+           them are .opt and drop out below 940px, but a hidden column still
+           counts for colspan, so this is the full six at every width. */
+        '<tr class="detailrow"><td class="detail" colspan="6">' +
         '<div class="detwrap" id="' + id + '" data-open="false"><div class="detin">' +
         /* Empty on purpose. Built by fillPanel the first time the row opens:
            these panels were half of every node on the page, 876 of 1765, all of
@@ -1317,22 +1277,24 @@ function fillPanel(det) {
   if (!pad || pad.dataset.built) return;
   var p = PANELS[pad.dataset.panel];
   if (!p) return;
-  pad.innerHTML = checksPanel(p.vw, p.row, pad.dataset.panel) +
-    (p.row.note ? '<p class="findnote">Note: ' + esc(p.row.note) + "</p>" : "");
+  /* checksPanel() renders row.note itself, at the top of the panel where the
+     row's "note" mark points. This used to append a second copy underneath,
+     so the four chains that carry a caveat printed it twice in one panel. */
+  pad.innerHTML = checksPanel(p.vw, p.row, pad.dataset.panel);
   pad.dataset.built = "1";
-  /* checksPanel() builds this row's own report form now (rowCta()), so it
-     needs the same two wiring calls the foot band gets in wire(): disclosures
-     for its "Show N more" buttons, and wireReportForms for the form itself.
-     Both are idempotent per element (dataset.wired), and pad.dataset.built
-     above means this whole function only ever runs once per row anyway, so
-     there's no risk of wiring either one twice or double-submitting. */
+  /* checksPanel() builds this row's own report form (rowCta()), so the panel
+     needs two wiring calls of its own: disclosures for its "Show N more"
+     buttons, and wireReportForms for the form. Both are idempotent per element
+     (dataset.wired), and pad.dataset.built above means this whole function only
+     ever runs once per row anyway, so neither can be wired twice. */
   wireDisclosures(pad);
   wireReportForms(pad);
 }
 
 /* Disclosures: one button, one 0fr/1fr grid, wired once wherever they appear.
-   This now serves only the method note in the hero; the category cards and
-   the rung pips it also used to wire are both gone. */
+   Two callers: wire() for the hero's "How it works" pill at render, and
+   fillPanel() for a row panel's "Show N more" buttons the first time that row
+   opens. The category cards and the rung pips it also used to wire are gone. */
 function wireDisclosures(root) {
   root.querySelectorAll(".moretoggle").forEach(function (b) {
     if (b.dataset.wired) return;
@@ -1507,8 +1469,11 @@ function wireEvLinks(root) {
 }
 
 
+/* Website is the view the board opens on. renderA replaces the baked no-JS
+   board with the interactive one and wires everything inside it, which is
+   everything on the page: there is no disclosure, form or tracked link outside
+   #p-a, so there is nothing left to wire at document level afterwards. */
 renderA("site");
-wireDisclosures(document);
 })();
 </script>
 

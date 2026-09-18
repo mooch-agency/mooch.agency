@@ -235,13 +235,20 @@ function httpStatusFrom(key, check) {
 // One array of [pattern, word] per WORD_RULES check, tested in order. Every
 // message this scan is known to produce for that check is listed; anything
 // else is unrecognised (see checkValueFrom) rather than defaulted.
+// Cloudflare's robotsTxtAiRules message is read twice over, for two different
+// columns: the board's robots.txt pill (explicit / generic / missing, see
+// aiPolicyFrom) and the opened panel's status word (named / blanket / absent).
+// One table, three columns, so a reworded message is caught in one place rather
+// than needing the same four patterns corrected in two lists that must agree.
+const AI_RULE_FORMS = [
+  [/^Found rules for AI bots/i, 'explicit', 'named'],
+  [/^No AI-specific bot rules; wildcard rules apply/i, 'generic', 'blanket'],
+  [/^No AI-specific bot rules and no wildcard rules/i, 'missing', 'absent'],
+  [/^Cannot check AI rules without robots\.txt/i, 'missing', 'absent'],
+];
+
 const WORD_RULES = {
-  robotsTxtAiRules: [
-    [/^Found rules for AI bots/i, 'named'],
-    [/^No AI-specific bot rules; wildcard rules apply/i, 'blanket'],
-    [/^No AI-specific bot rules and no wildcard rules/i, 'absent'],
-    [/^Cannot check AI rules without robots\.txt/i, 'absent'],
-  ],
+  robotsTxtAiRules: AI_RULE_FORMS.map(([re, , word]) => [re, word]),
   contentSignals: [
     [/^Content Signals found in robots\.txt/i, 'present'],
     [/^No Content Signals found in robots\.txt/i, 'absent'],
@@ -395,18 +402,16 @@ function hostFrom(row) {
 // ---------------------------------------------------------------------------
 const AI_POLICIES = ['explicit', 'generic', 'missing'];
 
-// The one mapping, shared by the build and by --check. Returns null on a message
+// The one mapping, shared by the build and by --check, and reading the same
+// AI_RULE_FORMS table the panel's own word comes off. Returns null on a message
 // it does not know, so each caller can react in its own way rather than both
 // carrying their own copy of these patterns: an earlier version had --check
 // falling through to 'missing' on a message the build would have died on, which
 // is the exact drift this file exists to catch.
 function policyFromMessage(m) {
   if (typeof m !== 'string') return null;
-  if (/^Found rules for AI bots/i.test(m)) return 'explicit';
-  if (/^No AI-specific bot rules; wildcard rules apply/i.test(m)) return 'generic';
-  if (/^No AI-specific bot rules and no wildcard rules/i.test(m)) return 'missing';
-  if (/^Cannot check AI rules without robots\.txt/i.test(m)) return 'missing';
-  return null;
+  const hit = AI_RULE_FORMS.find(([re]) => re.test(m));
+  return hit ? hit[1] : null;
 }
 
 function aiPolicyFrom(check) {

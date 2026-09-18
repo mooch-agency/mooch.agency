@@ -1,26 +1,26 @@
 // Vercel serverless function: AXBeat's report request.
 //
-// The board carries one CTA now, at the foot of the page, not one rebuilt
-// inside every opened row. That means the field is a full work email address
-// rather than a local part typed against a chain's domain the form already
-// fixed. This writes one row to the same Notion "Inbound Audit Leads" DB the
-// homepage audit band uses (Status: New, Reviewer: Natalie), so both inbound
-// routes land in one review queue rather than two. The report itself is
-// written and sent by a human afterwards; nothing runs here.
+// The board's only lead form lives inside each opened row (axbeat.html's
+// rowCta). It takes one field, a whole work email address, and posts exactly
+// that: the row's chain name stays in the browser as analytics context and
+// never reaches this endpoint. This writes one row to the same Notion "Inbound
+// Audit Leads" DB the homepage audit band uses (Status: New, Reviewer:
+// Natalie), so both inbound routes land in one review queue rather than two.
+// The report itself is written and sent by a human afterwards; nothing runs
+// here.
 //
 // The board is no longer an allowlist
 //   This used to read axbeat.html's own baked scan block back off disk and
 //   reject any email whose domain wasn't one of the 22 chains on the board.
-//   That doesn't fit a single, generic CTA: a real visitor at a real L2 that
-//   just isn't ranked here yet would bounce with no way to say so. Dropped
-//   deliberately, not by omission. What still guards the Notion queue,
-//   unchanged and in this order, is email syntax, the mailchecker blocklist,
-//   dns.resolveMx (failing open on timeout), and both rate limits below. None
-//   of that depends on knowing which chain, if any, an address belongs to, so
-//   losing the board lookup costs nothing. There is simply no chain on a row
-//   any more: "Coverage note" says only that a report was asked for, and
-//   Natalie triages who it's from the same way she would any lead that
-//   doesn't resolve to a known chain.
+//   Dropped deliberately on 17 Sep, not by omission: the board is public, so a
+//   real visitor at a real L2 that just isn't ranked yet would have bounced
+//   with no way to say so. What still guards the Notion queue, unchanged and in
+//   this order, is email syntax, the mailchecker blocklist, dns.resolveMx
+//   (failing open on timeout), and both rate limits below. None of that depends
+//   on knowing which chain, if any, an address belongs to, so losing the board
+//   lookup costs nothing. Nothing here names a chain: "Coverage note" says only
+//   that a report was asked for, and Natalie triages who it's from the same way
+//   she would any lead that doesn't resolve to a known chain.
 //
 // Junk defence at the door: local-part syntax -> mailchecker blocklist ->
 // dns.resolveMx -> rate limits. The MX check FAILS OPEN on timeout: one junk
@@ -58,11 +58,11 @@ const ALLOWED_HOSTS = ["mooch.agency", "www.mooch.agency", "localhost", "127.0.0
 // a human before anything is sent.
 const RATE_PER_MIN = 5;
 const RATE_PER_DAY = 30;
-const PER_CHAIN_PER_DAY = 10;
+const PER_DOMAIN_PER_DAY = 10;
 const GLOBAL_PER_DAY = 300;
 const DAY = 86_400_000;
 const hits = new Map();
-const chainHits = new Map();
+const domainHits = new Map();
 const globalDay = [];
 
 function overCap(list, cap, windowMs, now) {
@@ -88,19 +88,18 @@ function rateLimited(ip) {
 }
 
 // Daily cap per email domain so one address (or one company) can't be spammed,
-// plus a global daily floor. Used to key off a board-verified chain domain;
-// now it's simply whatever domain the submitted address carries, which is the
-// same map and the same caps, just no longer backed by a lookup.
-function chainOrGlobalLimited(domain) {
+// plus a global daily floor. The domain is simply whatever the submitted
+// address carries; nothing verifies it against the board any more.
+function domainOrGlobalLimited(domain) {
   const now = Date.now();
-  const list = chainHits.get(domain) || [];
-  if (overCap(list, PER_CHAIN_PER_DAY, DAY, now)) {
-    chainHits.set(domain, list);
+  const list = domainHits.get(domain) || [];
+  if (overCap(list, PER_DOMAIN_PER_DAY, DAY, now)) {
+    domainHits.set(domain, list);
     return true;
   }
   if (overCap(globalDay, GLOBAL_PER_DAY, DAY, now)) return true;
   list.push(now);
-  chainHits.set(domain, list);
+  domainHits.set(domain, list);
   globalDay.push(now);
   return false;
 }
@@ -157,8 +156,8 @@ async function createLeadRow({ email, domain, leadId }) {
         "Site URL": { title: [{ text: { content: `https://${domain}` } }] },
         Email: { email },
         "Audit ID": { rich_text: [{ text: { content: leadId } }] },
-        // No chain to name: one generic CTA, not one per row, so this just
-        // says a report was asked for. Left blank rather than guessed.
+        // No chain to name: the row's chain never leaves the browser, so this
+        // just says a report was asked for rather than guessing at one.
         "Coverage note": {
           rich_text: [{ text: { content: "AXBeat: full report request" } }],
         },
@@ -209,9 +208,9 @@ module.exports = async (req, res) => {
   }
   body = body || {};
 
-  // One generic CTA takes a whole work email address now; there is no chain
-  // to fix the domain to, and no board to check it against either (see the
-  // header note). Split on the LAST "@": a local part is never supposed to
+  // One field, a whole work email address: there is no chain to fix the domain
+  // to, and no board to check it against either (see the header note). Split on
+  // the LAST "@": a local part is never supposed to
   // carry one unescaped, but failing safe here is free and simpler than
   // parsing quoted-local-part edge cases nothing downstream needs.
   const rawEmail = String(body.email || "").trim();
@@ -232,7 +231,7 @@ module.exports = async (req, res) => {
   if (!(await hasMx(domain))) {
     return res.status(400).json({ ok: false, error: "email", reason: "mx" });
   }
-  if (chainOrGlobalLimited(domain)) return res.status(429).json({ ok: false, error: "rate" });
+  if (domainOrGlobalLimited(domain)) return res.status(429).json({ ok: false, error: "rate" });
 
   if (!process.env.NOTION_TOKEN) {
     console.error("axbeat-lead: NOTION_TOKEN is not set");
