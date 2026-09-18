@@ -1365,8 +1365,10 @@ function wire(section) {
         tr.classList.toggle("dim", !!q && !hit);
         if (hit) n++;
       });
-      /* Empty when nothing is typed: the total is already stated in the lede,
-         and repeating it here is the third place the board says the same number. */
+      /* Empty when nothing is typed. A resting "22 chains" would be a count of
+         what is already on screen and countable, and the rank column ends on it
+         anyway. The note earns its place only once a query has narrowed the
+         board to something the eye cannot total at a glance. */
       note.textContent = !q ? "" : plural(n, "match", "matches");
       empty.hidden = !(q && n === 0);
       if (q && n === 1) {
