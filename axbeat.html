@@ -212,13 +212,10 @@ h1.display, .display {
 .lede { margin-top:12px; font-size:clamp(15px,1.3vw,16.5px); color:var(--ink); max-width:70ch; text-wrap:balance; }
 
 .morein p { font-size:13.5px; color:var(--muted); text-wrap:pretty; max-width:62ch; }
-/* Eyebrow and scan date share a row, right-justified against each other. */
+/* Was a flex row sharing space with a right-justified scan date (see hero()'s
+   comment for where that went); one child now, but kept rather than un-nested
+   since .eyebrowrow .eyebrow below still targets it. */
 .eyebrowrow { display:flex; align-items:baseline; justify-content:space-between; gap:12px 20px; flex-wrap:wrap; }
-.scanline {
-  font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--muted-small);
-  white-space:nowrap; display:inline-flex; align-items:center; text-transform:uppercase;
-}
-.scanline .dot { width:6px; height:6px; border-radius:50%; background:var(--success); display:inline-block; margin-right:6px; }
 
 /* --- controls row: the toggle and the filter, directly above the header --- */
 .controls {
@@ -391,15 +388,11 @@ table.board tr.row:focus-visible {
    to allow it both read as "named"), and the score agrees, awarding the same
    pass to "named" and "blanket" alike. A reader comparing the two on sight
    would have learned a ranking neither the check nor the score makes. */
-/* On a phone all three describing columns fold into the chain cell, stacked
-   url, Built on, then AI Rules, the same order they hold on the full table.
-   AI Rules sits below Built on rather than beside it: the metalabel and its
-   value are separate elements with no space character between them (there is
-   none in the markup, only the metalabel's own margin), so white-space:normal
-   on a shared span once let them sit adjacent but never let the line actually
-   break there, and the pair ("AI Rules" + "Wildcard only") ran wider than the
-   column regardless. Block lines sidestep that rather than fighting for an
-   inline break. */
+/* On a phone only url and Built on fold into the chain cell, stacked in the
+   same order they hold on the full table. AI Rules used to be a third line
+   here with its own metalabel (18 Sep); dropped 18 Sep on Tahi's call, one
+   stacked fact too many on a row that already opens to the full panel, and
+   it is still there once opened. */
 .rowmeta { display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
 .metalabel {
   display:block; font-size:10px; letter-spacing:.06em; text-transform:uppercase;
@@ -649,6 +642,11 @@ form.mail { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .strip a:hover { border-bottom:1px solid var(--ink); }
 .strip .here { color:var(--muted-small); }
 .strip .state { display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
+/* The freshness dot, moved here from the hero's eyebrow row 18 Sep (see
+   hero()'s comment): same size and colour as before, just living next to
+   the claim it actually backs ("Scanning weekly") instead of a separate
+   line with a date on it. */
+.strip .state .dot { width:6px; height:6px; border-radius:50%; background:var(--success); display:inline-block; flex:none; }
 
 /* The no-JS board's "how it works" fact: no disclosure to tuck it behind
    there, so it sits in the open under the lede instead (baked by
@@ -734,7 +732,7 @@ form.mail { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 
 <header class="strip">
   <span class="nameplate"><a href="/">Mooch</a> &nbsp;/&nbsp; <span class="here">AXBeat</span></span>
-  <span class="state">Scanning weekly</span>
+  <span class="state"><span class="dot"></span>Scanning weekly</span>
 </header>
 
 <main>
@@ -752,7 +750,7 @@ form.mail { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 <!-- @AXBEAT-STATIC@ -->
 <div class="pad pad-hero">
 <div>
-<p class="eyebrowrow"><span class="eyebrow">Agent Experience</span><span class="scanline"><span class="dot"></span>Scanned 18 September 2026</span></p>
+<p class="eyebrowrow"><span class="eyebrow">Agent Experience</span></p>
 <h1 class="display">How <em>agent friendly</em> is your Layer 2?</h1>
 <p class="lede">L2Beat ranks security. AXBeat ranks AX, agent experience, how well agents can read a protocol’s website and docs.</p>
 <p class="caveat">We run <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s agent-readiness</a> scan against a protocol’s website and docs. It checks that agent signposts exist, not whether they’re correct. Onchain AX, how well an agent can take onchain actions, is TBD.</p>
@@ -803,6 +801,16 @@ form.mail { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
       <a href="https://github.com/mooch-agency/skills" target="_blank" rel="noopener">Open-source skills</a>
       <span class="colophon-sep">&middot;</span>
       <a href="https://toneofvoice.app">toneofvoice.app</a>
+      <span class="colophon-sep">&middot;</span>
+      <!-- Web3 credibility, for a reader who has just been told this is a
+           scoring tool and wants to know the studio has done real work in
+           this space: the three shipped case studies that are actually
+           web3, not the studio's whole portfolio. -->
+      <a href="/ethereum">Ethereum Foundation</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="/zksync">zkSync</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="/octant">Octant</a>
     </div>
 
     <div class="colophon-foot">
@@ -901,17 +909,6 @@ function score(v) {
     v.level + " of 5, " + esc(v.levelName || LEVEL_NAME[v.level]) + "</span></span>";
 }
 function plural(n, one, many) { return n + " " + (n === 1 ? one : (many || one + "s")); }
-
-/* The scan date, in the form the rest of the site writes dates. Pinned to UTC,
-   not the reader's zone: the scan happened at one instant, the static board above
-   bakes that same instant in UTC, and without this a reader far enough east would
-   watch the date change as the page finished loading. */
-function scanDate() {
-  var d = new Date(DATA.scannedAt);
-  return d.toLocaleDateString("en-GB", {
-    day: "numeric", month: "long", year: "numeric", timeZone: "UTC"
-  });
-}
 
 /* --- sorting and ranking ---------------------------------------------------- */
 /* The checks Cloudflare scores: everything except the payment family, which it
@@ -1047,18 +1044,14 @@ var AI_POLICY = {
   none: { label: "No rules", sr: "robots.txt exists but has no rule a crawler can use" },
   "no-robots": { label: "No robots.txt", sr: "no robots.txt to read at all" }
 };
-function aiCell(view, labelled) {
+function aiCell(view) {
   var key = AI_POLICY[view.ai] ? view.ai : "no-robots";
   var p = AI_POLICY[key];
-  /* labelled is the phone copy, which has no column header over it. A label
-     on its own under a chain name ("Wildcard only") says nothing; the header
-     is what made it mean something, so the header comes with it.
-     A second element, not a modifier on the pill: "AI Rules Wildcard only" is
-     wider than the phone column, and the pill's own nowrap (needed so
-     "No robots.txt" never breaks mid-phrase) would otherwise force that whole
-     run onto one line and push it into the next column instead of wrapping. */
-  return (labelled ? '<span class="metalabel">AI rules</span>' : "") +
-    '<span class="platpill">' +
+  /* No phone copy: this used to take a labelled flag and print a metalabel
+     for the stacked-under-chain-name view (18 Sep), but AI Rules dropped
+     out of that stack on Tahi's call, so only the desktop .opt column ever
+     calls this now and no caller needs the label branch. */
+  return '<span class="platpill">' +
     esc(p.label) + '<span class="sr">, ' + esc(p.sr) + "</span></span>";
 }
 /* The one other lead action, alongside each row's own form (rowCta()). A
@@ -1076,17 +1069,22 @@ function missingLink(where) {
 }
 
 /* --- shared page furniture --------------------------------------------------- */
-/* The fold, in order: eyebrow (with the scan date right-justified against it),
-   headline, lede, then the "How it works" pill and what it discloses.
-   Frontloads only what a first-time reader needs before scrolling: what this
-   is and the scan date. The disclosure holds the method in one paragraph plus
-   the missing-chain link; anything about one chain lives in that chain's own
-   row panel, not here. The no-JS board states the same method fact in the open
-   (see .caveat), since there is no JS there to open a disclosure with. */
+/* The fold, in order: eyebrow, headline, lede, then the "How it works" pill
+   and what it discloses. The scan date used to sit right-justified against
+   the eyebrow here (dot plus "Scanned 18 September 2026"); dropped 18 Sep on
+   Tahi's call, a second freshness signal next to the nav's own "Scanning
+   weekly" was one too many. The dot moved to the nav instead (see .strip
+   .state below); the date itself stays machine-readable in the no-JS
+   board's table caption, baked by scripts/axbeat-data.mjs, just no longer
+   spelled out for a human reader here.
+   Frontloads only what a first-time reader needs before scrolling. The
+   disclosure holds the method in one paragraph plus the missing-chain link;
+   anything about one chain lives in that chain's own row panel, not here.
+   The no-JS board states the same method fact in the open (see .caveat),
+   since there is no JS there to open a disclosure with. */
 function hero(o) {
   return "<div>" +
-    '<p class="eyebrowrow"><span class="eyebrow">Agent Experience</span>' +
-      '<span class="scanline"><span class="dot"></span>Scanned ' + esc(scanDate()) + "</span></p>" +
+    '<p class="eyebrowrow"><span class="eyebrow">Agent Experience</span></p>' +
     /* House entrance motion, same recipe as index.html's h1: words settle in
        one at a time rather than the whole line appearing at once. */
     '<h1 class="display reveal-words" data-stagger="0.2">' + o.headline + "</h1>" +
@@ -1187,10 +1185,13 @@ function renderA(view) {
         "<td><span class='chainname'><img class='chainlogo' src='" + esc(r.logo) + "' alt='' width='20' height='20' loading='lazy'>" +
           "<span class='brand'>" + esc(r.name) + (r.note ? '<span class="fnmark">note</span>' : "") +
           "</span></span>" +
-          /* Below 940px url, Built on and AI Rules all fold in here, stacked
-             under the chain name in the same order they hold on the full table. */
+          /* Below 940px only url and Built on fold in here, stacked under the
+             chain name. AI Rules used to join them (Tahi's call, 18 Sep): three
+             stacked facts on top of a row that already opens to the full panel
+             was too much on a phone, and AI Rules is the one a reader can live
+             without at a glance, since it's still in the opened panel. */
           "<span class='onsm rowmeta'><span class='brandurl'>" + esc(vw.url) + "</span>" +
-          "<span class='platpill'>" + esc(platformText(vw.platform)) + "</span>" + aiCell(vw, true) +
+          "<span class='platpill'>" + esc(platformText(vw.platform)) + "</span>" +
           "</span></td>" +
         '<td class="opt urlcell"><span class="brandurl">' + esc(vw.url) + "</span></td>" +
         '<td class="opt platcell"><span class="platpill">' + esc(platformText(vw.platform)) + "</span></td>" +
