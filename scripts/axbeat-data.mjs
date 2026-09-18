@@ -248,15 +248,20 @@ function httpStatusFrom(key, check) {
 // message this scan is known to produce for that check is listed; anything
 // else is unrecognised (see checkValueFrom) rather than defaulted.
 // Cloudflare's robotsTxtAiRules message is read twice over, for two different
-// columns: the board's robots.txt pill (explicit / generic / missing, see
-// aiPolicyFrom) and the opened panel's status word (named / blanket / absent).
-// One table, three columns, so a reworded message is caught in one place rather
-// than needing the same four patterns corrected in two lists that must agree.
+// columns: the board's AI Rules cell (named / blanket / none / no-robots, see
+// aiPolicyFrom) and the opened panel's status word (named / blanket / no
+// rules / no robots.txt). Four states because Cloudflare's check produces
+// four distinct messages, kept distinct rather than folded to three: an
+// earlier version merged "robots.txt exists but has no usable rule" and "no
+// robots.txt at all" into one "missing" bucket, which is two different facts
+// about a host wearing one label. One table, four columns, so a reworded
+// message is caught in one place rather than needing the same four patterns
+// corrected in two lists that must agree.
 const AI_RULE_FORMS = [
-  [/^Found rules for AI bots/i, 'explicit', 'named'],
-  [/^No AI-specific bot rules; wildcard rules apply/i, 'generic', 'blanket'],
-  [/^No AI-specific bot rules and no wildcard rules/i, 'missing', 'absent'],
-  [/^Cannot check AI rules without robots\.txt/i, 'missing', 'absent'],
+  [/^Found rules for AI bots/i, 'named', 'named'],
+  [/^No AI-specific bot rules; wildcard rules apply/i, 'blanket', 'blanket'],
+  [/^No AI-specific bot rules and no wildcard rules/i, 'none', 'no rules'],
+  [/^Cannot check AI rules without robots\.txt/i, 'no-robots', 'no robots.txt'],
 ];
 
 const WORD_RULES = {
@@ -403,18 +408,26 @@ function hostFrom(row) {
 // derived at build time rather than in the page, so the page never has to
 // match on a scanner's prose at runtime. The known message forms are listed
 // exhaustively and an unrecognised one stops the build: a reworded message
-// that silently fell through to "missing" would misreport a site as having no
-// robots.txt at all.
+// that silently fell through to a default would misreport what a host's
+// robots.txt actually says.
 //
-//   explicit  robots.txt names AI crawlers (GPTBot, ClaudeBot and friends)
-//   generic   robots.txt exists, but one blanket rule covers every crawler
-//   missing   no robots.txt, or no rule that reaches a crawler at all
+//   named      robots.txt names AI crawlers (GPTBot, ClaudeBot and friends)
+//   blanket    robots.txt exists, one wildcard rule covers every crawler
+//   none       robots.txt exists but has no rule that reaches a crawler
+//   no-robots  no robots.txt to read at all
 //
-// The policy says which crawlers are addressed, never whether they are allowed:
-// naming a bot to block it and naming it to welcome it both read as explicit,
-// because that is as far as this check looks.
+// Four states, not three: an earlier version folded "has a file but nothing
+// in it for a crawler" and "has no file" into one "missing" bucket, on the
+// reasoning that both fail the same scored check. They are still two
+// different facts about a host, so the column keeps them apart and names
+// them off Cloudflare's own message rather than inventing a tier between
+// them (see the .aipill comment in axbeat.html for why no state is
+// highlighted over another).
+// The policy says which crawlers are addressed, never whether they are
+// allowed: naming a bot to block it and naming it to welcome it both read as
+// "named", because that is as far as this check looks.
 // ---------------------------------------------------------------------------
-const AI_POLICIES = ['explicit', 'generic', 'missing'];
+const AI_POLICIES = ['named', 'blanket', 'none', 'no-robots'];
 
 // The one mapping, shared by the build and by --check, and reading the same
 // AI_RULE_FORMS table the panel's own word comes off. Returns null on a message
@@ -429,8 +442,9 @@ function policyFromMessage(m) {
 }
 
 function aiPolicyFrom(check) {
-  // No check at all is a scan that never ran it, which is genuinely "missing".
-  if (!check) return 'missing';
+  // No check at all is a scan that never ran it: no evidence of a robots.txt
+  // either way, so this is the same bucket as an explicit "no robots.txt".
+  if (!check) return 'no-robots';
   const policy = policyFromMessage(check.message);
   if (policy) return policy;
   return die(`unrecognised robotsTxtAiRules message, so the AI access policy cannot be read: "${check.message}"`);
