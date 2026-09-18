@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AXBeat: agent experience for the top L2s | Mooch</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
+<meta name="description" content="AXBeat ranks the top 22 Layer 2 rollups on how easily an AI agent can read their website and docs, using Cloudflare's agent-readiness scan.">
+<!-- Canonical, and the reason this page is the only AXBeat there is. If a short
+     AXBeat domain is ever bought it becomes a permanent redirect here, never a
+     second copy of the board: two hosts would split the links and hand search a
+     duplicate to choose between. -->
+<link rel="canonical" href="https://mooch.agency/axbeat">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mooch.agency/axbeat">
+<meta property="og:title" content="AXBeat: agent experience for the top L2s | Mooch">
+<meta property="og:description" content="AXBeat ranks the top 22 Layer 2 rollups on how easily an AI agent can read their website and docs, using Cloudflare's agent-readiness scan.">
+<meta property="og:image" content="https://mooch.agency/og-axbeat.png?v=fdc41616">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="How agent friendly is your Layer 2? The top 22 rollups, ranked on how well agents can read their website and docs.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AXBeat: agent experience for the top L2s | Mooch">
+<meta name="twitter:description" content="AXBeat ranks the top 22 Layer 2 rollups on how easily an AI agent can read their website and docs, using Cloudflare's agent-readiness scan.">
+<meta name="twitter:image" content="https://mooch.agency/og-axbeat.png?v=fdc41616">
+<meta name="twitter:image:alt" content="How agent friendly is your Layer 2? The top 22 rollups, ranked on how well agents can read their website and docs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/motion.css">
+<link rel="stylesheet" href="/ui.css">
+<style>
+/* ============================================================================
+   AXBeat, mooch.agency/axbeat.
+
+   The 01 Ranked design, picked by Tahi on 10 Sep 2026 out of four iterations
+   built on 9 Sep. The form survives; the surface has moved on. As it ships:
+   the hero is a lede plus one "How it works" disclosure, the score column is a
+   16-tick bar of checks found (the board ranks on that count), robots.txt is a
+   three-state pill, and the only lead form lives inside an opened row. The scan
+   data is baked in by scripts/axbeat-data.mjs, never pasted.
+
+   Shared CSS is linked, never copied. Everything below is specific to this page.
+   ========================================================================== */
+
+/* --- page-local tokens ----------------------------------------------------
+   tokens.css says a page may override or add tokens in its own :root. --band
+   and --t-disclose are the two genuinely new values; the rest derive from
+   shared tokens so they follow any palette change automatically. */
+:root {
+  --t-disclose:.34s;
+  --band:#f3f3f5;                 /* group-header ground, between --paper and --surface */
+  --pip-off:var(--hairline);      /* an unfilled slice in the row's score meter */
+  --hi:color-mix(in srgb, var(--claude) 14%, transparent); /* find-your-chain highlight */
+}
+/* Dark. Only values change, never rules; the pip colours follow automatically
+   because they point at shared tokens. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --black:#f2f2f4; --ink:#f2f2f4; --paper:#0b0b0c; --surface:#141416;
+    --muted:#9a9aa1; --muted-small:#a9a9b0;
+    --hairline:#2b2b2e; --hairline-focus:#5b5b61;
+    --error:#ff8080; --success:#5cc98d;
+    --band:#191a1c;
+    --hi:color-mix(in srgb, var(--claude) 20%, transparent);
+  }
+}
+
+/* --- base -------------------------------------------------------------- */
+*,*::before,*::after { box-sizing:border-box; }
+body {
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--sans); font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  overflow-x:hidden; /* nothing on this page may scroll the page sideways */
+}
+p { margin:0; }
+a { color:inherit; }
+/* ui.css's .pill sets no font-family, so form controls fall back to the UA
+   font without this. */
+button, input { font-family:inherit; }
+/* .empty and td.detail set display, which out-ranks the UA sheet's [hidden]
+   rule and left the "no match" block on screen at all times. */
+[hidden] { display:none !important; }
+:focus-visible { outline:2px solid var(--claude); outline-offset:2px; }
+.sr {
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
+@media (prefers-reduced-motion:reduce) {
+  * { transition-duration:.01ms !important; animation-duration:.01ms !important; }
+  /* The disclosures hide their content with a delayed visibility flip. Without
+     this the content would stay unreadable for a third of a second after it
+     has already finished opening. */
+  .morewrap > .morein, .detwrap > .detin { transition-delay:0s !important; }
+}
+
+/* --- disclosure (shared) ------------------------------------------------ */
+/* A button plus a 0fr/1fr grid. The button keeps real button semantics, so
+   Enter and Space work without a keydown handler; the grid animates height
+   without ever measuring anything, so the collapsed state cannot jump. */
+.moretoggle {
+  appearance:none; background:none; border:0; padding:9px 0; margin:0;
+  font:inherit; font-size:13px; color:var(--ink); cursor:pointer;
+  display:inline-flex; align-items:center; gap:8px; text-align:left;
+  text-decoration:underline; text-underline-offset:4px;
+  text-decoration-color:var(--hairline-focus);
+  transition:text-decoration-color var(--t-deliver) var(--ease-deliver);
+}
+.moretoggle:hover { text-decoration-color:var(--ink); }
+.moretoggle .chev {
+  display:inline-block; font-family:var(--mono); color:var(--muted-small);
+  transition:transform var(--t-deliver) var(--ease-deliver);
+}
+.moretoggle[aria-expanded="true"] .chev { transform:rotate(90deg); }
+/* The hero's only disclosure trigger. Same button, same .moretoggle wiring
+   (aria-expanded, the .chev rotate), but a bordered mono pill on top rather
+   than an underlined link, adapted from paulgraham.mooch.agency's "Who?"
+   pill (paulgraham.html's .who): one hero-level control earns a heavier
+   affordance than the per-row "Show N more" toggles, which keep the plain
+   .moretoggle look. */
+.pilltoggle {
+  border:1px solid var(--hairline); border-radius:999px;
+  padding:7px 14px; margin-top:14px;
+  font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--muted-small); text-decoration:none;
+  transition:color var(--t-deliver) var(--ease-deliver), border-color var(--t-deliver) var(--ease-deliver);
+}
+.pilltoggle:hover, .pilltoggle:focus-visible { color:var(--ink); border-color:var(--hairline-focus); }
+.pilltoggle[aria-expanded="true"] { color:var(--ink); border-color:var(--ink); }
+/* .detwrap (below) is the same recipe wrapped around an opened row. */
+/* margin-top only applies once open, so the hero's "How it works" pill and
+   the per-row "Show N more" toggle both keep their own tight padding when
+   collapsed and only gain breathing room against the trigger once there is
+   something below it to breathe against. Transitioned alongside the row
+   height so it grows in step, not as a jump the instant data-open flips. */
+.morewrap {
+  display:grid; grid-template-rows:0fr; margin-top:0;
+  transition:grid-template-rows var(--t-disclose) var(--ease-decide),
+    margin-top var(--t-disclose) var(--ease-decide);
+}
+.morewrap[data-open="true"] { grid-template-rows:1fr; margin-top:14px; }
+/* visibility, not just clipping: collapsed copy must leave the accessibility
+   tree too, or a screen reader reads a note the eye cannot see. */
+.morewrap > .morein {
+  overflow:hidden; min-height:0; visibility:hidden;
+  transition:visibility 0s linear var(--t-disclose);
+}
+.morewrap[data-open="true"] > .morein { visibility:visible; transition-delay:0s; }
+.morein > * + * { margin-top:9px; }
+
+.eyebrow {
+  font-family:var(--mono); font-size:11px; text-transform:uppercase;
+  letter-spacing:.14em; color:var(--muted-small); margin:0;
+}
+/* Hero eyebrow only (not the "Notes on…" ones inside the disclosure): the
+   short rule-plus-text mark index.html's .hero-eyebrow and paulgraham.html's
+   .eyebrow both open with, so the page reads as one of the site's, not a
+   one-off. 24px/gap 10px match those two exactly. */
+.eyebrowrow .eyebrow { display:inline-flex; align-items:center; gap:10px; }
+.eyebrowrow .eyebrow::before { content:''; width:24px; height:1px; background:var(--ink); flex:none; }
+/* --- band: one measure, shared with every other page --------------------
+   One band now (hero plus board), between the strip and the colophon, styled
+   exactly like index.html's .section: house rhythm for vertical air, --pad-x
+   for the gutter, a hairline underneath to mark the next band starting. The
+   CTA band and the method-notes band it also used to carry are both gone, the
+   first into each opened row and the second behind the hero's own "How it
+   works" disclosure. Kept as a class rather than folded into the section: the
+   no-JS board baked above uses it too. Used to be a flat
+   clamp() that boxed the whole page's content narrower than the hero text
+   sitting above it in .strip; --pad-x here matches that hero's own gutter
+   instead, so the two share a left edge.
+   max-width adds the gutter back on both sides (box-sizing:border-box) so
+   the CONTENT measure still caps at --max, the same as .section-inner does
+   with a separate element: one box does both jobs here because .pad has no
+   spare wrapper to split them across. */
+.pad {
+  box-sizing: border-box;
+  max-width: calc(var(--max) + 2 * var(--pad-x));
+  margin: 0 auto;
+  padding: var(--rhythm) var(--pad-x);
+  border-bottom: 1px solid var(--hairline);
+}
+/* Hero band only: the site's usual hero top gap (case-study-template.html's
+   own clamp(64,10vw,120)), not the full section --rhythm .pad uses everywhere
+   else. --rhythm is tuned for the air BETWEEN sections; using it above the
+   very first thing on the page just opened with more empty space than any
+   other page on the site does. Bottom keeps --rhythm, unchanged. */
+.pad-hero { padding-top: clamp(64px, 10vw, 120px); }
+/* --- hero ---------------------------------------------------------------- */
+/* Raised to the house display scale (styleguide's .t-display / index's
+   .section-title: clamp(40,6vw,72), 0.95 line-height, -.02em tracking), not
+   the full hero clamp(56,13vw,200) index.html's "Hey, we're Mooch." uses:
+   that one is sized for two words, and this h1 is a full question, so the
+   mega scale would overflow at anything but a wide desktop. This is still a
+   real jump from the old clamp(28,3.6vw,40), which read more like a lede
+   than the page's headline. */
+h1.display, .display {
+  font-family:var(--serif); font-weight:400; letter-spacing:-.02em;
+  font-size:clamp(40px,6vw,72px); line-height:0.95; margin:10px 0 0;
+  text-wrap:balance; max-width:34ch;
+}
+.display em { font-style:italic; }
+/* balance, not pretty: pretty only stops a single stray word on its own
+   line, so a two-sentence lede like this one still broke into one full-width
+   line plus a short trailing clause that read as orphaned. balance spreads
+   both lines to a similar length instead. */
+.lede { margin-top:12px; font-size:clamp(15px,1.3vw,16.5px); color:var(--ink); max-width:70ch; text-wrap:balance; }
+
+.morein p { font-size:13.5px; color:var(--muted); text-wrap:pretty; max-width:62ch; }
+/* Eyebrow and scan date share a row, right-justified against each other. */
+.eyebrowrow { display:flex; align-items:baseline; justify-content:space-between; gap:12px 20px; flex-wrap:wrap; }
+.scanline {
+  font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--muted-small);
+  white-space:nowrap; display:inline-flex; align-items:center; text-transform:uppercase;
+}
+.scanline .dot { width:6px; height:6px; border-radius:50%; background:var(--success); display:inline-block; margin-right:6px; }
+
+/* --- controls row: the toggle and the filter, directly above the header --- */
+.controls {
+  display:flex; gap:12px 20px; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; margin-top:20px;
+}
+.ctrl-left { display:flex; gap:10px; align-items:center; flex-wrap:wrap; flex:0 0 auto; margin-left:auto; min-width:0; }
+.ctrl-left .eyebrow { flex:0 0 auto; }
+
+/* Radius, border colour and press scale match ui.css's .pill/.ghost (980px,
+   hairline-focus, 0.96 on :active), so the toggle reads as the same control
+   vocabulary as every button on the rest of the site, just segmented. Hover
+   gets a --band tint rather than a bare colour swap, the same quiet lift a
+   table row gets on hover, so pointing at an inactive option feels like
+   pointing at a row rather than nothing happening. */
+.seg {
+  display:inline-flex; border:1px solid var(--hairline-focus); border-radius:980px;
+  padding:3px; gap:2px; background:var(--paper);
+}
+.seg button {
+  appearance:none; border:0; background:none; font-family:inherit; font-size:14px;
+  font-weight:500; color:var(--muted); padding:10px 18px; border-radius:980px; cursor:pointer;
+  transition:background var(--t-deliver) var(--ease-deliver), color var(--t-deliver) var(--ease-deliver);
+}
+.seg button:hover { color:var(--ink); background:var(--band); }
+.seg button:active { transform:scale(.96); }
+.seg button[aria-pressed="true"] { background:var(--ink); color:var(--paper); }
+.seg button[aria-pressed="true"]:hover { background:var(--ink); }
+
+/* --- find your chain ----------------------------------------------------- */
+.find { display:flex; gap:10px; align-items:center; flex:0 1 auto; min-width:0; }
+/* Same field vocabulary as index.html's .audit-input: 12px radius, a
+   hairline-focus border that only darkens on focus, deliver-speed transition.
+   Was a full 980px pill before, which read as a search chrome the rest of
+   the site doesn't otherwise use; a form field looks like a form field here. */
+.find input {
+  font-family:inherit; font-size:14px; color:var(--ink); background:var(--paper);
+  border:1px solid var(--hairline-focus); border-radius:12px; padding:13px 16px;
+  min-width:0; width:min(240px,52vw);
+  transition:border-color var(--t-deliver) var(--ease-deliver);
+}
+.find input:focus-visible { border-color:var(--ink); }
+.find input::placeholder { color:var(--muted); }
+.findnote { font-family:var(--mono); font-size:11px; color:var(--muted-small); letter-spacing:.06em; }
+
+/* --- board table --------------------------------------------------------- */
+/* overflow-y:visible does not work here: the spec forces both axes into the
+   same visible/non-visible category when only one is set, so overflow-x:auto
+   alone was already computing overflow-y as auto, and a table 22 rows tall
+   accumulates enough subpixel rounding (measured 14px on this scan) to trip
+   it, painting a near-invisible vertical scrollbar nobody asked for.
+   overflow-y:clip is the value the spec exempts from that pairing, so it does
+   not get coerced to auto: the stray 14px is clipped instead of scrolled,
+   which costs nothing since it was rounding noise, not content. Horizontal
+   scroll is the only thing this wrapper is for, on a narrow phone the table
+   itself doesn't collapse for. */
+.tablewrap { margin-top:14px; overflow-x:auto; overflow-y:clip; border-top:1px solid var(--hairline); }
+table.board { width:100%; border-collapse:collapse; font-size:14px; }
+table.board th, table.board td {
+  padding:12px 14px; border-bottom:1px solid var(--hairline);
+}
+table.board th {
+  text-align:left; font-family:var(--mono); font-size:10.5px; text-transform:uppercase;
+  letter-spacing:.12em; color:var(--muted-small); font-weight:400; white-space:nowrap;
+}
+table.board td { vertical-align:middle; }
+table.board tr.row { transition:background var(--t-deliver) var(--ease-deliver); }
+table.board tr.row:hover { background:var(--surface); }
+table.board tr.row.dim { opacity:.34; }
+table.board tr.row.hit { background:var(--hi); box-shadow:inset 3px 0 0 var(--claude); }
+/* The whole row is the hit target. The chevron stays the real button, so the
+   row keeps its table semantics and the control keeps its aria state; a click
+   anywhere on the row is forwarded to it, and its focus ring is drawn on the
+   whole row so keyboard and mouse land in the same place. */
+table.board tr.row[data-open] { cursor:pointer; }
+/* An open row has to look open. Without this the only signal is aria-expanded
+   and the panel below, so a row you just opened is identical to one you did
+   not. The inset bar matches the one the find filter uses for a hit. */
+table.board tr.row[aria-expanded="true"] {
+  background:var(--surface); box-shadow:inset 3px 0 0 var(--hairline-focus);
+}
+table.board tr.row[data-open]:active { background:var(--band); }
+table.board tr.row:focus-visible {
+  outline:2px solid var(--claude); outline-offset:-2px; background:var(--surface);
+}
+.rank { font-family:var(--mono); font-size:13px; color:var(--muted-small); font-variant-numeric:tabular-nums; width:1%; white-space:nowrap; }
+/* line-height:1 keeps the name's own text tight; it does not, on its own,
+   centre the row (see .chainname below for the part that does). */
+.brand { font-weight:600; letter-spacing:-.01em; line-height:1; }
+/* Chain mark beside the name. Every vendored logo (axbeat-logos/) already
+   carries its own brand-colour backdrop (a filled square or circle baked into
+   the PNG, per L2Beat's icon set), so it reads the same on the paper and the
+   dark start-screen without a second dark-mode treatment; the radius here just
+   softens the few square ones to match the page's own 7px pill/tag corners.
+   display:flex + width:fit-content, not inline-flex: as an inline-level box
+   this sat on the row's text baseline, which the body's 1.5 line-height
+   parks a couple of px above the row's true middle (measured -2.8px against
+   .rank and .score, both already block-level for the same reason). A
+   block-level flex box has no baseline to sit on, so table.board td's own
+   vertical-align:middle centres it directly instead, matching .score exactly;
+   width:fit-content stops the now-block box stretching to the cell's width. */
+.chainname { display:flex; width:fit-content; align-items:center; gap:8px; }
+.chainlogo { width:20px; height:20px; border-radius:6px; flex-shrink:0; display:block; }
+.brandurl { display:block; font-family:var(--mono); font-size:11px; color:var(--muted-small); margin-top:2px; }
+/* The url's own column has nothing above it to hang the brand cell's 2px gap
+   off, so it would otherwise just push the text off the row's centre line. */
+.urlcell .brandurl { margin-top:0; }
+/* The "note" marker beside a chain's name. Flat --claude is 2.9:1 on white at
+   10px, which axe fails and a reader squints at; mixing it toward whichever ink
+   is current keeps the accent legible as an accent and passes AA in both themes
+   (about 5.6:1 light, 9.2:1 dark) without hardcoding a second colour. */
+.fnmark { font-size:10px; vertical-align:super; color:color-mix(in srgb, var(--claude) 65%, var(--ink)); margin-left:2px; font-family:var(--mono); }
+
+/* score: a segmented bar, one tick per scored check, filled left to right in
+   --success up to how many that host passed and --pip-off past it (concept 04
+   in the lo-fi score/16 mocks, Tahi's pick over thirteen alternatives on 17
+   Sep, replacing the five-slice pie that showed Cloudflare's level instead).
+   This is the one colour on the whole board, and deliberately: a check
+   passing or failing is a genuine pass/fail, unlike robots.txt's
+   Explicit/Generic/Missing a few columns over, which says who a site
+   addresses and never whether they are welcome (see .aipill). One is a
+   result, the other is a fact, and only the result gets green. Real SVG
+   <rect>s rather than a striped background or a conic-gradient, so the shape
+   survives print and engines that skip gradients. The category breakdown
+   still belongs to the opened panel below, not this cell, which only has to
+   say how many of the host's scored checks passed.
+   The number beside the bar changed meaning along with it: it used to be
+   Cloudflare's level out of 5 (still baked, still named in the sr text below,
+   just no longer the headline figure); it now reads "found/total" against
+   this host's own count of scored checks (scoredChecks() below), the same
+   figure the opened panel already prints as "Found x/16".
+   line-height:1 on both the cell and the numeral, plus the svg's own fixed
+   box, is what actually centres the bar against the numeral and the row's
+   chain name: without it the font's own leading pushed the numeral a couple
+   of px below the bar's optical middle. */
+/* display:flex, not inline-flex, and that is the whole centring fix. As an
+   inline box this sat on the line's text baseline, which a flex box holding
+   the svg and 13px text resolves a couple of px above where a plain text cell
+   does, so the score rode high against the chain name beside it. A block-level
+   flex box has no baseline to sit on: the cell's own vertical-align:middle
+   centres it, measured at 0.25px off .brand across every row, and no magic
+   number is carried. Unchanged by the pie-to-bar swap: the fix is about the
+   flex box having no baseline, not about the svg's own size. */
+.score { display:flex; align-items:center; gap:9px; white-space:nowrap; line-height:1; }
+.barmeter { flex-shrink:0; display:block; }
+.snum { font-family:var(--mono); font-size:13px; font-variant-numeric:tabular-nums; line-height:1; }
+
+
+/* The builder name as a bordered tag, not loose mono text: it is a different
+   kind of fact from the chain name and the url above it, and the outline is
+   what separates it from the rest of the row's copy at a glance.
+   display:flex + width:fit-content, not inline-block, for the same reason as
+   .chainname above: inline-block baseline-aligns to the row's 1.5 line-height
+   strut and rode 2.8px above the row's true middle. Block-level removes the
+   baseline entirely and lets the td's own vertical-align:middle centre it. */
+.platpill {
+  display:flex; width:fit-content; align-items:center;
+  font-family:var(--mono); font-size:11px; color:var(--muted-small);
+  border:1px solid var(--hairline); border-radius:7px; padding:4px 10px; white-space:nowrap;
+  max-width:100%; overflow:hidden; text-overflow:ellipsis;
+}
+/* robots.txt, read for what it says to AI crawlers specifically. Headed by
+   the file rather than the abstraction ("AI access") because the file is the
+   thing a reader can go and look at; the states still need their own words,
+   which is what the pill text and the method note below are for.
+   Three states, and only the first is worth a reader stopping on, so only the
+   first carries ink: Explicit is a site that named AI crawlers at all, which
+   two of 22 websites did. Generic and Missing stay muted, because a
+   column where every row shouts is a column nobody reads. No green and no red:
+   the check reports who is addressed, never whether they are welcome, and a
+   colour would make a claim the scan did not test.
+   Generic and Missing sit on --muted-small and go no lighter. An earlier pass
+   mixed Missing 72% toward paper to push it back further, which read as 3.53:1
+   at 11px: under AA, and against the whole point of that token. Weight and ink
+   carry the hierarchy instead, on the one state that earns it. */
+/* display:flex + width:fit-content, not inline-flex: same row-centring fix as
+   .chainname and .platpill above, applied here so all three describing
+   columns land on the same optical middle as the rank and score cells. */
+.aipill {
+  display:flex; width:fit-content; align-items:center; font-family:var(--mono); font-size:11px;
+  letter-spacing:.02em; white-space:nowrap; border-radius:7px;
+}
+/* Three states, three shapes, one hierarchy, on purpose: colour was ruled out
+   (this check reports who a site addresses, never whether they are welcome,
+   and a hue would claim more than the scan tested), so container presence
+   and weight carry the tier instead of a hue:
+     Explicit  solid, ink-filled, same weight as the site's own .pill button
+               — the state worth stopping on gets the strongest shape on the
+               row.
+     Generic   the outline this used to be for everyone: present, solid,
+               nothing to single out.
+     Missing   the same outline shape as Generic (so all three read as one
+               component, not three different chips), but visibly the
+               weakest of the three: a dashed rather than solid border, at a
+               lower mix of --hairline so the box itself recedes, plus the
+               italic Missing already carried, which now reads as
+               "placeholder" against Generic's plain fact.
+   The dash and the lighter mix are what a reader compares Generic and
+   Missing on, not the text: a solid vs. dashed edge is legible even where
+   the two borders sit close in luminance, so this survives both a light
+   and a dark rendering without a second value per theme. Missing's text
+   stays on --muted-small, the same token Generic sits on, and goes no
+   lighter: an earlier pass mixed Missing's text 72% toward paper to push it
+   back further, which read as 3.53:1 at 11px, under AA, and was reverted.
+   The tier now lives in the border and the italic, never the text colour,
+   so the row stays readable while still reading as the weakest of the
+   three. Same border-radius and padding throughout so the eye reads it as
+   one component with three states. */
+.aipill.ai-explicit {
+  color:var(--paper); font-weight:600; background:var(--ink); padding:4px 10px;
+}
+.aipill.ai-generic {
+  color:var(--muted-small); border:1px solid var(--hairline); padding:4px 10px;
+}
+.aipill.ai-missing {
+  color:var(--muted-small); font-style:italic;
+  border:1px dashed color-mix(in srgb, var(--hairline) 70%, transparent);
+  padding:4px 10px;
+}
+/* On a phone all three describing columns fold into the chain cell, stacked
+   url, Platform, then robots.txt, the same order they hold on the full table.
+   robots.txt sits below Platform rather than beside it: the metalabel and its
+   value are separate elements with no space character between them (there is
+   none in the markup, only the metalabel's own margin), so white-space:normal
+   on a shared span once let them sit adjacent but never let the line actually
+   break there, and the pair ("robots.txt" + "Generic") ran wider than the
+   column regardless. Block lines sidestep that rather than fighting for an
+   inline break. */
+.rowmeta { display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
+.metalabel {
+  display:block; font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--muted-small);
+}
+/* The board column. Controls and table share one measure with the hero and
+   everything else on the page now (see .pad): no width of its own here, just
+   the 14px font-size base so the colgroup's em widths (col.c-chain etc.)
+   resolve against the table's size rather than whatever .pad happens to
+   inherit. It used to carry its own capped measure, narrower than the page's;
+   that mismatch is exactly what made the board float centred under
+   left-aligned hero text, so the cap is gone and one measure governs. */
+.boardcol { font-size:14px; }
+/* Column widths live here rather than on the colgroup, because an inline style
+   on a <col> outranks every stylesheet rule: the first attempt at narrowing
+   these for a phone was written as a media query against inline widths and did
+   nothing at all. 3.5em on the rank, not 2.5em, because fixed layout plus
+   ellipsis clipped the two-digit ranks ("10" rendered as "1..."); 9.5em on
+   score fits its own header ("Website score"/"Docs score") rather than the
+   63px bar and numeral it holds (16 ticks at 3px plus 1px gaps), which need
+   far less.
+   Only rank and score carry a width, because only they hold something of a
+   fixed size: two digits, and a 63px bar beside "n/16". The four text columns
+   declare none at all, which is what makes them equidistant: table-layout:
+   fixed splits whatever is left of the row evenly between every column with
+   no declared width, so the four come out identical at any container width
+   (measured at 940px: 166/166/166/166) without this file guessing a number.
+   An earlier pass left ai and plat on fixed ems while chain and url were
+   auto, so those two swallowed the whole slack and the row read as two fat
+   columns and three thin ones. Declared in reading order (rank, chain, url,
+   plat, ai, score), matching the colgroup and markup below. */
+table.board col.c-rank { width:3.5em; }
+table.board col.c-chain { width:auto; }
+table.board col.c-url { width:auto; }
+table.board col.c-ai { width:auto; }
+table.board col.c-plat { width:auto; }
+table.board col.c-score { width:9.5em; }
+
+/* Iteration 01 only. Its Docs platform column comes and goes with the view,
+   so its widths have to be law rather than a hint: with the default
+   table-layout:auto the browser re-measures every column against its content,
+   and a long platform string ("Docusaurus \u00b7 Vercel") widens that column,
+   takes the space out of Chain and drags the score column sideways. Fixed
+   layout pins the colgroup widths, so the two views line up exactly. */
+#p-a table.board { table-layout:fixed; }
+#p-a table.board td, #p-a table.board th { overflow:hidden; text-overflow:ellipsis; }
+/* Padding lives on the inner element, not the cell, so a closed row collapses
+   to nothing instead of holding 48px of empty surface. */
+table.board td.detail { background:var(--surface); padding:0; }
+.detwrap {
+  display:grid; grid-template-rows:0fr;
+  transition:grid-template-rows var(--t-disclose) var(--ease-decide);
+}
+.detwrap[data-open="true"] { grid-template-rows:1fr; }
+/* visibility, delayed, so collapsed content leaves the accessibility tree
+   rather than merely being clipped. */
+.detwrap > .detin {
+  overflow:hidden; min-height:0; visibility:hidden;
+  transition:visibility 0s linear var(--t-disclose);
+}
+.detwrap[data-open="true"] > .detin { visibility:visible; transition-delay:0s; }
+/* Left/right pinned to the row's own edges rather than picked to look about
+   right: left is the rank column's 3.5em (table.board col.c-rank) plus the
+   table's own 14px cell padding, so panel copy starts under the chain name,
+   not the rank digit; right is just that same 14px, so it ends flush with
+   the last column. Top/bottom are equal, unlike the 22/26 split this used to
+   carry for no reason a reviewer could see either ("margin mismatched"). */
+.detpad { padding:24px 14px 24px calc(3.5em + 14px); display:grid; gap:20px; }
+
+
+/* --- the open row: found and missing, in words -----------------------------
+   Replaces the five-pip rung ladder (dropped 16 Sep), then reworked again to
+   match the approved hi-fi mock (axbeat_typeonly_hifi.html): balanced
+   columns, dotted leaders and a real status value per check, rather than a
+   found/missing tick.
+
+   Found is first in the markup and stays first at every width, including
+   the stack under 720px (see the media query below): the mock keeps one DOM
+   order throughout, and an earlier version of this panel reordered Missing
+   to the top on mobile, which is no longer the rule.
+
+   Columns are even 1fr/1fr now, not weighted by count: the mock reads two
+   matched lists, and a Missing column stretched to fit thirteen items while
+   Found sat cramped at three was drift from that, not a refinement of it. */
+.checkcols {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px 26px; margin-top:16px;
+}
+/* A chain's caveat, shown only in that chain's panel (see checksPanel). */
+.rownote { margin:0; font-size:13px; color:var(--muted); max-width:62ch; text-wrap:pretty; }
+.checkcol { min-width:0; }
+.checkhead { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:600; margin:0 0 8px; }
+/* The count rides in the same line as the label, not a separate tally
+   sentence: "Found 3/16" and "Missing 13/16" already say everything the old
+   "3 of 16 scored checks found" line did, in half the words. */
+.checkhead b { font-weight:400; color:var(--muted-small); font-variant-numeric:tabular-nums; }
+/* The score bar's own --success, echoed here rather than reinvented: filled
+   for Found, an outline in the same green for Missing, so a checked-off list
+   and an outstanding one read as two states of the same fact, the way the
+   bar's own filled and unfilled ticks do. The check names beside it already
+   carry the whole meaning; this is a glance, not a verdict. */
+.checkhead::before { content:""; width:7px; height:7px; border-radius:50%; flex:none; background:var(--success); }
+.checkcol-missing .checkhead::before { background:none; border:1px solid var(--success); }
+.checklist { list-style:none; margin:0; padding:0; font-size:12px; line-height:1.7; }
+.checklist li {
+  display:flex; justify-content:space-between; gap:10px;
+  border-bottom:1px dotted var(--hairline); padding:2px 0;
+}
+.checklist li .v {
+  font-family:var(--mono); font-size:10px; color:var(--muted-small); white-space:nowrap;
+}
+/* Flipped from the tick-mark version on purpose (Tahi's call): Found is the
+   settled state, so it takes the full-strength ink; Missing is what still
+   needs doing, so it recedes rather than nags. The status value stays
+   var(--muted-small) either way, so it never competes with the name. */
+.checkcol-found .checklist li .name { color:var(--ink); }
+.checkcol-missing .checklist li .name { color:var(--muted); }
+/* "Show N more": the same disclosure button used for "How it works" above,
+   just scoped to one column. fillPanel wires it the same way, the first
+   time a panel is built. */
+.checkmore { margin-top:8px; font-size:11.5px; }
+
+/* --- the report ask, inside the opened panel --------------------------------
+   The only lead form on the board (a board-wide card used to sit at the foot
+   too; killed 17 Sep, since nobody scrolls a 22-row board to reach it). It
+   lands in the found column's own empty space: found is usually the
+   shorter of the two lists here, and the grid stretches both columns to the
+   taller one's height, so a short Found list already leaves a blank run
+   underneath it. No card chrome (border, shadow, background), just a
+   hairline rule, so it reads as part of the panel rather than a pitch bolted
+   onto it. See rowCta() for the markup.
+   .rowcta is the only place these three ever render, so each carries its
+   panel-width values directly. They used to be base rules sized for the foot
+   card with a .rowcta override on top of each; with the card gone that was two
+   values per property and only ever one of them winning. */
+.rowcta { margin-top:16px; padding-top:14px; border-top:1px dashed var(--hairline); display:grid; gap:8px; }
+.ctalabel { font-size:12.5px; font-weight:600; }
+form.mail { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.mailfield {
+  font-family:inherit; font-size:14px; color:var(--ink); background:var(--paper);
+  border:1px solid var(--hairline-focus); border-radius:10px;
+  display:inline-flex; align-items:center; flex:1 1 200px; min-width:0; padding:0 12px;
+}
+/* The input drops its own outline so the ring can sit on the whole field, which is
+   what reads as one address. The ring has to be here or the primary CTA has no
+   visible focus at all. */
+.mailfield:focus-within { outline:2px solid var(--claude); outline-offset:2px; }
+.mailfield input {
+  border:0; background:none; font-family:inherit; font-size:14px; color:var(--ink);
+  padding:10px 0; min-width:40px; flex:1 1 auto; width:100%; outline:none;
+}
+.secondary { font-size:13px; color:var(--muted); text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--hairline-focus); }
+.secondary:hover { color:var(--ink); text-decoration-color:var(--ink); }
+.said { font-size:13px; color:var(--success); }
+
+/* Column names bolded inside the "How it works" disclosure, so a scanner can
+   jump to the sentence about the column they are squinting at. */
+.morein b { color:var(--ink); font-weight:600; }
+.empty { padding:26px 12px; font-size:14px; color:var(--muted); display:grid; gap:10px; justify-items:start; }
+
+/* --- responsive ------------------------------------------------------------- */
+.onsm { display:none; }
+@media (max-width:940px) {
+  .opt { display:none; }
+  /* A col's own specified width still counts toward table-layout:fixed's
+     sizing even once display:none takes it out of view — measured, this was
+     splitting the row's remaining space four ways (chain plus the three
+     hidden columns) instead of giving all of it to chain, the one column
+     actually left on screen. Zeroing every hidden column's width here, not
+     just relying on .opt's display:none, is what actually hands that space
+     back. */
+  table.board col.c-url, table.board col.c-ai, table.board col.c-plat { width:0; }
+  /* width:100%, not auto and not a fixed em. Under table-layout:fixed the
+     fixed columns are laid out first and a 100% column takes exactly what is
+     left, so chain absorbs the whole of the hidden columns' space: measured
+     at 956px, rank 49 + chain 678 + score 133 = 860, the table's own width,
+     with nothing stranded. auto lands at about a quarter of the remainder
+     here, and the fixed ems this replaced left the table filling a fraction
+     of its container with a long blank run after the score. */
+  table.board col.c-chain { width:100%; }
+  .onsm { display:block; margin-top:5px; }
+  /* Two classes, so it beats .onsm's own display whatever the source order:
+     as one class it lost the cascade and the two pills rendered flush. */
+  .onsm.rowmeta { display:flex; }
+  /* Find and toggle stay on one row here, not stacked. The board is narrower
+     from this width down, so the find field gives up its fixed 240px and
+     takes whatever is left beside the toggle instead: the toggle is the one
+     with a fixed size (two words in a pill), so it keeps it and the field
+     flexes. nowrap stops the pair half-wrapping into find-alone-then-toggle,
+     which was the state that made this look broken. */
+  .controls { flex-wrap:nowrap; align-items:center; }
+  .find { flex:1 1 auto; }
+  .find input { width:100%; min-width:0; }
+  .ctrl-left { flex:0 0 auto; flex-wrap:nowrap; margin-left:0; }
+}
+@media (max-width:720px) {
+  /* Found/missing stack instead of sitting side by side below this width.
+     Found stays first: matching the mock's own DOM order at every width beat
+     the earlier "Missing first on mobile" reorder, which needed its own
+     order:-1 rule and existed for a reason (read-one-list-only) the mock
+     doesn't share. */
+  .checkcols { grid-template-columns:1fr; gap:16px; }
+  /* Nothing to redeclare for chain here: the 940px block's width:100% already
+     means "whatever the fixed columns leave", which is the right answer at
+     every width below it too. */
+  /* .boardcol and .pad need no override here either: .pad's padding is
+     already fluid (--rhythm/--pad-x are both clamp()s) and .boardcol carries
+     no width of its own any more, so both settle correctly on their own. */
+  table.board th, table.board td { padding:10px 8px; }
+  /* Cell padding just dropped to 8px above, so the panel's own edges have to
+     follow it down or the "aligned to the row" claim stops being true right
+     at the width where the panel is most likely to be read stacked. */
+  .detpad { padding:20px 8px 20px calc(3.5em + 8px); }
+}
+@media (max-width:520px) {
+  form.mail { flex-direction:column; align-items:stretch; }
+  /* .mailfield's flex-basis (200px) is a row-layout width; stacked here, the
+     main axis is vertical, so that same 200px was read as a minimum height
+     and inflated the field into a near-square box. flex-basis:auto lets it
+     size to its own content (the input's line height) instead. */
+  .mailfield { flex-basis:auto; }
+  .pill { width:100%; }
+  /* Find and toggle still share a row down here (see the 940px block), so the
+     room has to come from their own padding rather than from stacking them.
+     Trimmed to what "Find your chain" needs beside the toggle at 320px, the
+     narrowest width the board is built for: without this the placeholder
+     truncated to "Find yo" while the toggle kept its desktop padding. */
+  .controls { gap:12px 10px; }
+  .seg button { padding:10px 13px; }
+  .find input { padding:13px 13px; }
+}
+
+/* --- production chrome ----------------------------------------------------
+   The strip and colophon are the house header and footer, carried across from
+   the other pages. The colophon measures against the shared --max here: the
+   narrower token it uses on /say-less is local to that page. */
+.strip {
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  min-height:44px; padding:0 var(--pad-x);
+  border-bottom:1px solid var(--hairline);
+  font-family:var(--mono); font-size:10px;
+  text-transform:uppercase; letter-spacing:.16em; color:var(--muted-small);
+}
+/* Inline-block so the link's hit area fills the 44px bar, not just its text. */
+.strip a { color:var(--ink); display:inline-block; padding:15px 0; }
+.strip a:hover { border-bottom:1px solid var(--ink); }
+.strip .here { color:var(--muted-small); }
+.strip .state { display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
+
+/* The no-JS board's "how it works" fact: no disclosure to tuck it behind
+   there, so it sits in the open under the lede instead (baked by
+   scripts/axbeat-data.mjs). The JS page's own copy of this fact lives inside
+   hero()'s "How it works" .morein paragraph, not under this class. */
+.caveat {
+  margin-top:10px; font-size:13.5px; color:var(--muted);
+  max-width:66ch; text-wrap:pretty;
+}
+
+.colophon { padding:48px var(--pad-x) 40px; }
+.colophon-inner { max-width:var(--max); margin:0 auto; display:grid; grid-template-columns:1fr; gap:32px; }
+.colophon-mark { font-family:var(--serif); font-style:italic; font-size:clamp(72px,15vw,220px); line-height:.85; letter-spacing:-.04em; color:var(--paper); }
+.colophon-mark em { font-style:italic; }
+.colophon-links {
+  display:flex; flex-wrap:wrap; align-items:center; gap:12px;
+  padding-top:32px; border-top:1px solid var(--colophon-rule);
+  font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.12em;
+}
+.colophon-links a { color:var(--paper); border-bottom:1px solid transparent; transition:border-color .15s ease; }
+.colophon-links a:hover { border-bottom-color:var(--paper); }
+.colophon-sep { color:var(--muted); font-size:10px; }
+.colophon-foot {
+  border-top:1px solid var(--colophon-rule); margin-top:32px; padding-top:20px;
+  display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px;
+  font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.18em; color:var(--muted);
+}
+.colophon-credits { max-width:48ch; text-align:center; }
+.colophon-version { color:var(--muted); border-bottom:1px solid transparent; transition:border-color .15s ease; }
+.colophon-version:hover { border-bottom-color:var(--paper); color:var(--paper); }
+
+/* ui.css's .colophon-dark is written for a light-mode palette: it paints
+   var(--black) and writes in var(--paper), which is a dark slab on a white page.
+   This page swaps both of those tokens in dark mode, so without this the footer
+   inverts into a LIGHT slab at the bottom of a dark page, and its --muted text
+   lands at 2.91:1. Repoint the footer at this page's dark values instead, so it
+   stays what it is meant to be. Everything here is a token, never a literal.
+   Worth knowing: CI's axe job runs in the default light scheme, so it does not
+   see this. It was found by running axe with the dark scheme emulated. */
+@media (prefers-color-scheme: dark) {
+  .colophon-dark {
+    background:var(--surface); color:var(--ink);
+    border-top:1px solid var(--hairline);
+    --muted:var(--muted-small);
+    --colophon-rule:var(--hairline);
+  }
+  .colophon-mark { color:var(--ink); }
+  .colophon-links a { color:var(--ink); }
+  .colophon-links a:hover { border-bottom-color:var(--ink); }
+  .colophon-version:hover { border-bottom-color:var(--ink); color:var(--ink); }
+}
+
+/* Touch targets. The segmented toggle and the find field are laid out for a
+   pointer, which leaves them at 31px and 37px: under the 44px a thumb needs, and
+   these two are the whole control surface of the board on a phone. Raised for
+   coarse pointers only, so the desktop proportions are untouched. The table rows
+   are already well over 44px from their own cell padding. */
+@media (pointer:coarse) {
+  .seg button { min-height:44px; }
+  .find input { min-height:44px; }
+  .moretoggle { min-height:44px; }
+}
+
+@media (max-width:420px) {
+  .strip { letter-spacing:.12em; }
+  /* The last of the room, at the one width where "Find your chain" still did
+     not fit beside the toggle. The seg keeps its 44px touch height; only the
+     horizontal padding and the gap give way. */
+  .controls { gap:12px 8px; }
+  .seg button { padding:10px 11px; }
+  .find input { padding:13px 11px; }
+}
+
+@media print {
+  .strip, .colophon, .controls { display:none; }
+  a { color:#000; text-decoration:underline; }
+  .detwrap { grid-template-rows:1fr !important; }
+  .detwrap > .detin { visibility:visible !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="strip">
+  <span class="nameplate"><a href="/">Mooch</a> &nbsp;/&nbsp; <span class="here">AXBeat</span></span>
+  <span class="state">Scanning weekly</span>
+</header>
+
+<main>
+  <!-- The board, twice over, and deliberately.
+
+       What sits between the markers below is baked into the file by
+       scripts/axbeat-data.mjs: the headline, the scan date and a plain table of
+       every chain with both scores. It is what anything that does not run
+       JavaScript reads, which on a page arguing that agents should be able to
+       read your site is not an edge case, it is the argument. It is generated
+       from the same block the interactive board reads, so the two cannot drift.
+
+       The script below replaces it with the sortable, openable version. -->
+  <section id="p-a">
+<!-- @AXBEAT-STATIC@ -->
+<div class="pad pad-hero">
+<div>
+<p class="eyebrowrow"><span class="eyebrow">Agent Experience</span><span class="scanline"><span class="dot"></span>Scanned 18 September 2026</span></p>
+<h1 class="display">How <em>agent friendly</em> is your Layer 2?</h1>
+<p class="lede">L2Beat ranks security. AXBeat ranks AX, agent experience, how well agents can read a protocol’s website and docs.</p>
+<p class="caveat">We run <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s agent-readiness</a> scan against a protocol’s website and docs. It checks that agent signposts exist, not whether they’re correct. Onchain AX, how well an agent can take onchain actions, is TBD.</p>
+</div>
+<div class="tablewrap"><table class="board">
+<caption class="sr">The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's scored agent-readiness checks each passed for their website and their docs, scanned 18 September 2026.</caption>
+<thead><tr><th scope="col">#</th><th scope="col">Chain</th><th scope="col">Website score</th><th scope="col">Docs score</th></tr></thead>
+<tbody>
+<tr><td class="rank">1</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/bob.png" alt="" width="20" height="20" loading="lazy"><span class="brand">BOB</span></span><span class="brandurl">gobob.xyz</span></td><td><span class="snum">11/16</span> Agent-Native</td><td><span class="snum">3/16</span> Basic Web Presence</td></tr>
+<tr><td class="rank">2</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/lighter.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Lighter</span></span><span class="brandurl">lighter.xyz</span></td><td><span class="snum">4/16</span> Basic Web Presence</td><td><span class="snum">5/16</span> Agent-Readable</td></tr>
+<tr><td class="rank">3</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/intmax.png" alt="" width="20" height="20" loading="lazy"><span class="brand">INTMAX</span></span><span class="brandurl">intmax.io</span></td><td><span class="snum">4/16</span> Basic Web Presence</td><td><span class="snum">1/16</span> Not Ready</td></tr>
+<tr><td class="rank">4</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/base.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Base</span></span><span class="brandurl">base.org</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">9/16</span> Agent-Integrated</td></tr>
+<tr><td class="rank">5</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/op-mainnet.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Optimism</span></span><span class="brandurl">optimism.io</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">9/16</span> Agent-Integrated</td></tr>
+<tr><td class="rank">6</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/mantle.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Mantle</span></span><span class="brandurl">mantle.xyz</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">5/16</span> Agent-Readable</td></tr>
+<tr><td class="rank">7</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/starknet.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Starknet</span></span><span class="brandurl">starknet.io</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">9/16</span> Agent-Integrated</td></tr>
+<tr><td class="rank">8</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/linea.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Linea</span></span><span class="brandurl">linea.build</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">7/16</span> Agent-Integrated</td></tr>
+<tr><td class="rank">9</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/ink.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Ink</span></span><span class="brandurl">inkonchain.com</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">3/16</span> Basic Web Presence</td></tr>
+<tr><td class="rank">10</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/zksync-era.png" alt="" width="20" height="20" loading="lazy"><span class="brand">ZKsync</span></span><span class="brandurl">zksync.io</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">3/16</span> Basic Web Presence</td></tr>
+<tr><td class="rank">11</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/morph.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Morph</span></span><span class="brandurl">morph.network</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">1/16</span> Not Ready</td></tr>
+<tr><td class="rank">12</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/katana.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Katana</span></span><span class="brandurl">katana.network</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">3/16</span> Basic Web Presence</td></tr>
+<tr><td class="rank">13</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/abstract.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Abstract</span></span><span class="brandurl">abs.xyz</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">9/16</span> Agent-Integrated</td></tr>
+<tr><td class="rank">14</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/scroll.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Scroll</span></span><span class="brandurl">scroll.io</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">1/16</span> Not Ready</td></tr>
+<tr><td class="rank">15</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/taiko.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Taiko</span></span><span class="brandurl">taiko.xyz</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">3/16</span> Basic Web Presence</td></tr>
+<tr><td class="rank">16</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/cartesi-prt-honeypot-v2.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Honeypot v2</span></span><span class="brandurl">cartesi.io</span></td><td><span class="snum">3/16</span> Basic Web Presence</td><td><span class="snum">1/16</span> Not Ready</td></tr>
+<tr><td class="rank">17</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/arbitrum.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Arbitrum</span></span><span class="brandurl">arbitrum.io</span></td><td><span class="snum">2/16</span> Not Ready</td><td><span class="snum">8/16</span> Agent-Integrated</td></tr>
+<tr><td class="rank">18</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/aztecnetwork.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Aztec</span></span><span class="brandurl">aztec.network</span></td><td><span class="snum">1/16</span> Not Ready</td><td><span class="snum">4/16</span> Basic Web Presence</td></tr>
+<tr><td class="rank">19</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/unichain.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Unichain</span></span><span class="brandurl">unichain.org</span></td><td><span class="snum">0/16</span> Not Ready</td><td><span class="snum">9/16</span> Agent-Integrated</td></tr>
+<tr><td class="rank">20</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/adi.png" alt="" width="20" height="20" loading="lazy"><span class="brand">ADI Chain</span></span><span class="brandurl">adi.foundation</span></td><td><span class="snum">0/16</span> Not Ready</td><td><span class="snum">5/16</span> Agent-Readable</td></tr>
+<tr><td class="rank">21</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/facet.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Facet</span></span><span class="brandurl">facet.org</span></td><td><span class="snum">0/16</span> Not Ready</td><td><span class="snum">5/16</span> Agent-Readable</td></tr>
+<tr><td class="rank">22</td><td><span class="chainname"><img class="chainlogo" src="/axbeat-logos/ethscriptions.png" alt="" width="20" height="20" loading="lazy"><span class="brand">Ethscriptions</span></span><span class="brandurl">ethscriptions.com</span></td><td><span class="snum">0/16</span> Not Ready</td><td><span class="snum">5/16</span> Agent-Readable</td></tr>
+</tbody></table></div>
+</div>
+<!-- @/AXBEAT-STATIC@ -->
+  </section>
+</main>
+
+<footer class="colophon colophon-dark">
+  <div class="colophon-inner">
+    <div class="colophon-mark">Mooch<em>.</em></div>
+
+    <div class="colophon-links">
+      <a href="mailto:hey@mooch.agency?subject=AXBeat">hey@mooch.agency</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://x.com/tahigichigi">X / @tahigichigi</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://moochagency.substack.com">Substack</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://github.com/mooch-agency/skills" target="_blank" rel="noopener">Open-source skills</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://toneofvoice.app">toneofvoice.app</a>
+    </div>
+
+    <div class="colophon-foot">
+      <span>&copy; 2026 Mooch Agency Ltd.</span>
+      <span class="colophon-credits">Scores are Cloudflare's, republished unaltered. Set in Instrument Serif &amp; SF Pro.</span>
+      <a href="/privacy" class="colophon-version">Privacy</a>
+      <span class="colophon-version">N&deg; 01</span>
+    </div>
+  </div>
+</footer>
+
+<!-- The board data, baked at build time by scripts/axbeat-data.mjs from the
+     private ax-audit scan. Never hand-edit this: `pnpm axbeat:check` fails on a
+     block whose rows no longer match the data that produced them. -->
+<script type="application/json" id="scan">{"scannedAt":"2026-09-18T07:14:08.381Z","source":"Cloudflare URL Scanner, agent readiness scan","rows":[{"name":"Base","domain":"base.org","tvs":1,"note":null,"logo":"/axbeat-logos/base.png","site":{"url":"base.org","level":1,"levelName":"Basic Web Presence","platform":{"builder":null,"cloudflare":true,"otherHost":false,"detected":"OneTrust, HSTS, Google Analytics, Cloudflare"},"scannedAt":"2026-09-18T06:35:09.771Z","reportUrl":"https://radar.cloudflare.com/scan/7f2cde6d-9ee7-409b-b93f-97eff4f39fa5","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"fail","m":"x402 payment protocol not detected","v":null},"mpp":{"s":"fail","m":"MPP payment discovery not detected","v":null},"ucp":{"s":"fail","m":"UCP profile not found","v":null},"acp":{"s":"fail","m":"ACP discovery document not found","v":null},"ap2":{"s":"fail","m":"AP2 not detected (no A2A Agent Card)","v":null}},"ai":"generic"},"docs":{"url":"docs.base.org","level":4,"levelName":"Agent-Integrated","platform":{"builder":null,"cloudflare":true,"otherHost":true,"detected":"Vercel, HSTS, Google Analytics, Cloudflare Browser Insights, Cloudflare"},"scannedAt":"2026-09-18T06:37:45.209Z","reportUrl":"https://radar.cloudflare.com/scan/6eccc19a-f9d6-41ef-a6a9-edc389e6e7be","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"pass","m":"Found agent-useful Link relations: api-catalog","v":"found"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"pass","m":"Content Signals found in robots.txt","v":"present"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"pass","m":"MCP Server Card found at /.well-known/mcp/server-card.json","v":"200"},"a2aAgentCard":{"s":"pass","m":"A2A Agent Card found: \"Base Documentation\" (v1.0.0)","v":"200"},"agentSkills":{"s":"pass","m":"Agent Skills index exists with valid JSON","v":"200"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not declared in A2A Agent Card (not a commerce site)","v":null}},"ai":"generic"}},{"name":"Arbitrum","domain":"arbitrum.io","tvs":2,"note":null,"logo":"/axbeat-logos/arbitrum.png","site":{"url":"arbitrum.io","level":0,"levelName":"Not Ready","platform":{"builder":"Next.js","cloudflare":true,"otherHost":true,"detected":"Node.js, React, Vercel, Next.js, jsDelivr, HSTS, CookieYes, Cloudflare Browser Insights, Cloudflare, Webpack"},"scannedAt":"2026-09-18T06:35:29.638Z","reportUrl":"https://radar.cloudflare.com/scan/a94d3833-08c8-4158-82c1-505b007c704d","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"fail","m":"sitemap.xml not found","v":"403"},"linkHeaders":{"s":"fail","m":"Target page returned status 403","v":"blocked"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md returned status 403","v":"403"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"},"docs":{"url":"docs.arbitrum.io","level":4,"levelName":"Agent-Integrated","platform":{"builder":"Docusaurus","cloudflare":false,"otherHost":true,"detected":"Docusaurus, React, Vercel, PostHog, HSTS, Webpack"},"scannedAt":"2026-09-18T06:36:51.485Z","reportUrl":"https://radar.cloudflare.com/scan/94afba9e-0143-4391-94e4-93629d655fa4","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"pass","m":"Found agent-useful Link relations: service-doc","v":"found"},"dnsAid":{"s":"pass","m":"DNS for AI Discovery (DNS-AID) discovery record found at _mcp._agents.docs.arbitrum.io","v":"named"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"pass","m":"Content Signals found in robots.txt","v":"present"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"pass","m":"MCP Server Card found at /.well-known/mcp/server-card.json","v":"200"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"}},{"name":"Optimism","domain":"optimism.io","tvs":3,"note":null,"logo":"/axbeat-logos/op-mainnet.png","site":{"url":"optimism.io","level":1,"levelName":"Basic Web Presence","platform":{"builder":"Sanity","cloudflare":false,"otherHost":true,"detected":"Sanity, Netlify, Linkedin Ads, HubSpot, HSTS, Google Analytics"},"scannedAt":"2026-09-18T06:35:57.208Z","reportUrl":"https://radar.cloudflare.com/scan/ab28bd66-fed3-4023-af96-cc2414971a4a","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"Found rules for AI bots: gptbot, chatgpt-user, google-extended, ccbot, anthropic-ai, claude-web, bytespider, perplexitybot, cohere-ai, applebot-extended, amazonbot, meta-externalagent, facebookbot, omgilibot, diffbot","v":"named"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"explicit"},"docs":{"url":"docs.optimism.io","level":4,"levelName":"Agent-Integrated","platform":{"builder":null,"cloudflare":true,"otherHost":true,"detected":"Vercel, HSTS, Cloudflare Browser Insights, Cloudflare"},"scannedAt":"2026-09-18T06:37:10.967Z","reportUrl":"https://radar.cloudflare.com/scan/203d661c-24c5-49e0-a932-e48ba93867e5","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"pass","m":"Found agent-useful Link relations: api-catalog","v":"found"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"pass","m":"Content Signals found in robots.txt","v":"present"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"pass","m":"MCP Server Card found at /.well-known/mcp/server-card.json","v":"200"},"a2aAgentCard":{"s":"pass","m":"A2A Agent Card found: \"Optimism Documentation\" (v1.0.0)","v":"200"},"agentSkills":{"s":"pass","m":"Agent Skills index exists with valid JSON","v":"200"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not declared in A2A Agent Card (not a commerce site)","v":null}},"ai":"generic"}},{"name":"Mantle","domain":"mantle.xyz","tvs":4,"note":null,"logo":"/axbeat-logos/mantle.png","site":{"url":"mantle.xyz","level":1,"levelName":"Basic Web Presence","platform":{"builder":"Next.js","cloudflare":false,"otherHost":true,"detected":"Node.js, React, Vercel, Next.js, HSTS, Webpack"},"scannedAt":"2026-09-18T06:36:16.795Z","reportUrl":"https://radar.cloudflare.com/scan/41eba48a-6594-4cf3-bbb1-0f03a2f2f012","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"},"docs":{"url":"docs.mantle.xyz","level":3,"levelName":"Agent-Readable","platform":{"builder":"GitBook","cloudflare":true,"otherHost":true,"detected":"GitBook, Google Cloud, Vercel, HSTS, Google Cloud Trace, Cloudflare"},"scannedAt":"2026-09-18T06:53:53.894Z","reportUrl":"https://radar.cloudflare.com/scan/dd050439-7687-4fbf-bbe8-8597667782a7","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"pass","m":"Content Signals found in robots.txt","v":"present"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md exists but is missing the expected Auth.md heading","v":"invalid"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"}},{"name":"Lighter","domain":"lighter.xyz","tvs":5,"note":null,"logo":"/axbeat-logos/lighter.png","site":{"url":"lighter.xyz","level":1,"levelName":"Basic Web Presence","platform":{"builder":"Framer Sites","cloudflare":false,"otherHost":false,"detected":"Framer Sites, React, HSTS, HTTP/3"},"scannedAt":"2026-09-18T06:38:14.861Z","reportUrl":"https://radar.cloudflare.com/scan/fa9a4aaf-b14a-4e2c-b5d0-fc1c87b4d1dd","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"Link headers present but no agent-useful relation types found","v":"unhelpful"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"},"docs":{"url":"docs.lighter.xyz","level":3,"levelName":"Agent-Readable","platform":{"builder":"GitBook","cloudflare":true,"otherHost":true,"detected":"GitBook, Google Cloud, Vercel, HSTS, Google Cloud Trace, Cloudflare, HTTP/3"},"scannedAt":"2026-09-18T06:50:01.976Z","reportUrl":"https://radar.cloudflare.com/scan/5a591b3d-ba66-4577-971e-44e79aec022c","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"pass","m":"Content Signals found in robots.txt","v":"present"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md exists but is missing the expected Auth.md heading","v":"invalid"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"}},{"name":"Starknet","domain":"starknet.io","tvs":6,"note":null,"logo":"/axbeat-logos/starknet.png","site":{"url":"starknet.io","level":1,"levelName":"Basic Web Presence","platform":{"builder":"WordPress","cloudflare":true,"otherHost":false,"detected":"WordPress, MySQL, PHP, Cloudways, Slick, reCAPTCHA, jQuery Migrate, jQuery, Google Tag Manager, Google Analytics, Cookiebot, Cloudflare, Clipboard.js, Prism, HTTP/3"},"scannedAt":"2026-09-18T07:13:02.425Z","reportUrl":"https://radar.cloudflare.com/scan/e9350e36-b490-4f8d-8f5b-3d0ac4290a62","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"},"docs":{"url":"docs.starknet.io","level":4,"levelName":"Agent-Integrated","platform":{"builder":null,"cloudflare":true,"otherHost":true,"detected":"Vercel, HSTS, Google Analytics, Cloudflare Browser Insights, Cloudflare"},"scannedAt":"2026-09-18T06:38:58.634Z","reportUrl":"https://radar.cloudflare.com/scan/a4d63bad-8088-4d9b-b075-e3eccfc81250","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"pass","m":"Found agent-useful Link relations: api-catalog","v":"found"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"pass","m":"Content Signals found in robots.txt","v":"present"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"pass","m":"MCP Server Card found at /.well-known/mcp/server-card.json","v":"200"},"a2aAgentCard":{"s":"pass","m":"A2A Agent Card found: \"Starknet Documentation\" (v1.0.0)","v":"200"},"agentSkills":{"s":"pass","m":"Agent Skills index exists with valid JSON","v":"200"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not declared in A2A Agent Card (not a commerce site)","v":null}},"ai":"generic"}},{"name":"Linea","domain":"linea.build","tvs":7,"note":null,"logo":"/axbeat-logos/linea.png","site":{"url":"linea.build","level":1,"levelName":"Basic Web Presence","platform":{"builder":"Contentful","cloudflare":true,"otherHost":true,"detected":"Contentful, Vercel, Osano, LaunchDarkly, HubSpot, HSTS, Google Tag Manager, Google Analytics, Cloudflare Browser Insights, Cloudflare"},"scannedAt":"2026-09-18T06:38:04.837Z","reportUrl":"https://radar.cloudflare.com/scan/048f695d-e485-4f8a-90ab-770ec26ee9a7","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"},"docs":{"url":"docs.linea.build","level":4,"levelName":"Agent-Integrated","platform":{"builder":"Docusaurus","cloudflare":false,"otherHost":true,"detected":"Docusaurus, React, Vercel, Osano, HubSpot Analytics, HSTS, Google Tag Manager, Google Analytics, Webpack"},"scannedAt":"2026-09-18T06:39:32.089Z","reportUrl":"https://radar.cloudflare.com/scan/12865b65-6406-481c-8555-de41bac23561","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"pass","m":"Found agent-useful Link relations: api-catalog, alternate","v":"found"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"Found rules for AI bots: gptbot, chatgpt-user, google-extended, ccbot, anthropic-ai, bytespider, perplexitybot, cohere-ai","v":"named"},"contentSignals":{"s":"pass","m":"Content Signals found in robots.txt","v":"present"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"pass","m":"API Catalog found with 3 APIs listed","v":"200"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"explicit"}},{"name":"Ink","domain":"inkonchain.com","tvs":8,"note":null,"logo":"/axbeat-logos/ink.png","site":{"url":"inkonchain.com","level":1,"levelName":"Basic Web Presence","platform":{"builder":"Next.js","cloudflare":false,"otherHost":true,"detected":"Node.js, React, Vercel, Next.js, OneTrust, hCaptcha, HSTS, Webpack"},"scannedAt":"2026-09-18T06:38:39.235Z","reportUrl":"https://radar.cloudflare.com/scan/31b56075-c2a1-4e73-91cd-eed8ef124139","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"Link headers present but no agent-useful relation types found","v":"unhelpful"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory returned HTML instead of JSON (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog returned HTML instead of JSON","v":"html"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"absent"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"absent"},"authMd":{"s":"fail","m":"auth.md returned HTML instead of Markdown","v":"html"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"absent"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card returned HTML instead of JSON","v":"html"},"agentSkills":{"s":"fail","m":"Agent Skills index returned HTML instead of JSON","v":"html"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest returned HTML instead of JSON","v":"html"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile returned HTML instead of expected format (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document returned HTML instead of JSON (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"},"docs":{"url":"docs.inkonchain.com","level":1,"levelName":"Basic Web Presence","platform":{"builder":null,"cloudflare":false,"otherHost":true,"detected":"Vercel, HSTS"},"scannedAt":"2026-09-18T06:40:26.158Z","reportUrl":"https://radar.cloudflare.com/scan/6b43e96f-b504-412f-a98a-c63dab1da33c","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"}},{"name":"ZKsync","domain":"zksync.io","tvs":9,"note":null,"logo":"/axbeat-logos/zksync-era.png","site":{"url":"zksync.io","level":1,"levelName":"Basic Web Presence","platform":{"builder":"Next.js","cloudflare":false,"otherHost":true,"detected":"Node.js, Vercel, React, Next.js, Linkedin Insight Tag, HSTS, Google Analytics, Webpack"},"scannedAt":"2026-09-18T06:39:18.664Z","reportUrl":"https://radar.cloudflare.com/scan/d6e03f8a-c553-4062-bded-5e5ec5799449","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"Found rules for AI bots: gptbot, chatgpt-user, google-extended, ccbot, anthropic-ai, claude-web, bytespider, perplexitybot, cohere-ai, applebot-extended, amazonbot, diffbot","v":"named"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"explicit"},"docs":{"url":"docs.zksync.io","level":1,"levelName":"Basic Web Presence","platform":{"builder":"Nuxt.js","cloudflare":false,"otherHost":true,"detected":"Node.js, Firebase, particles.js, Vue.js, Nuxt.js, HSTS, Google Analytics, HTTP/3"},"scannedAt":"2026-09-18T06:40:55.960Z","reportUrl":"https://radar.cloudflare.com/scan/99ab9acd-73dc-46e4-86c1-9e8fdead862d","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"}},{"name":"Morph","domain":"morph.network","tvs":10,"note":"Morph moved to morph.network during 2026; the old morphl2.io address redirects there.","logo":"/axbeat-logos/morph.png","site":{"url":"morph.network","level":1,"levelName":"Basic Web Presence","platform":{"builder":null,"cloudflare":true,"otherHost":false,"detected":"Cloudflare, Calendly, HTTP/3"},"scannedAt":"2026-09-18T06:39:51.799Z","reportUrl":"https://radar.cloudflare.com/scan/d682474d-05aa-4609-81fc-578b757ef614","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"},"docs":{"url":"docs.morph.network","level":0,"levelName":"Not Ready","platform":{"builder":"Docusaurus","cloudflare":true,"otherHost":false,"detected":"Docusaurus, React, Cloudflare, Webpack, HTTP/3"},"scannedAt":"2026-09-18T06:40:02.409Z","reportUrl":"https://radar.cloudflare.com/scan/5210421a-9edf-49e1-8da2-32e037bce778","checks":{"robotsTxt":{"s":"fail","m":"robots.txt not found","v":"absent"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"fail","m":"Cannot check AI rules without robots.txt","v":"absent"},"contentSignals":{"s":"fail","m":"Cannot check Content Signals without robots.txt","v":"n/a"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory returned HTML instead of JSON (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog returned HTML instead of JSON","v":"html"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"absent"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"absent"},"authMd":{"s":"fail","m":"auth.md returned HTML instead of Markdown","v":"html"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"absent"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card returned HTML instead of JSON","v":"html"},"agentSkills":{"s":"fail","m":"Agent Skills index returned HTML instead of JSON","v":"html"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest returned HTML instead of JSON","v":"html"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile returned HTML instead of expected format (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document returned HTML instead of JSON (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"missing"}},{"name":"Unichain","domain":"unichain.org","tvs":11,"note":"The docs address redirects to Uniswap’s developer portal, so the docs score belongs to Uniswap’s site, not one Unichain runs.","logo":"/axbeat-logos/unichain.png","site":{"url":"unichain.org","level":0,"levelName":"Not Ready","platform":{"builder":null,"cloudflare":false,"otherHost":true,"detected":"Vercel, HSTS, Google Analytics"},"scannedAt":"2026-09-18T06:57:01.559Z","reportUrl":"https://radar.cloudflare.com/scan/0fecf51e-e6ae-4aa6-8c97-c8898c6df72b","checks":{"robotsTxt":{"s":"fail","m":"robots.txt not found","v":"404"},"sitemap":{"s":"fail","m":"sitemap.xml not found","v":"404"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"fail","m":"Cannot check AI rules without robots.txt","v":"absent"},"contentSignals":{"s":"fail","m":"Cannot check Content Signals without robots.txt","v":"n/a"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"missing"},"docs":{"url":"docs.unichain.org","level":4,"levelName":"Agent-Integrated","platform":{"builder":null,"cloudflare":true,"otherHost":false,"detected":"HSTS, Cloudflare"},"scannedAt":"2026-09-18T06:40:45.953Z","reportUrl":"https://radar.cloudflare.com/scan/a57441ba-3997-44e7-a0e5-2f5f0b8204dd","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"pass","m":"Found agent-useful Link relations: alternate, api-catalog, service-doc","v":"found"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"pass","m":"Content Signals found in robots.txt","v":"present"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"pass","m":"API Catalog found with 1 API listed","v":"200"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"pass","m":"MCP Server Card found at /.well-known/mcp.json","v":"200"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"pass","m":"Agent Skills index exists with valid JSON","v":"200"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"}},{"name":"Katana","domain":"katana.network","tvs":12,"note":null,"logo":"/axbeat-logos/katana.png","site":{"url":"katana.network","level":1,"levelName":"Basic Web Presence","platform":{"builder":null,"cloudflare":false,"otherHost":true,"detected":"Amazon Web Services, Vercel, HubSpot, HSTS, Amazon SES, DocuSign"},"scannedAt":"2026-09-18T06:41:05.967Z","reportUrl":"https://radar.cloudflare.com/scan/e81c4561-ec01-454c-91a2-990cb8e3dbfd","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"},"docs":{"url":"docs.katana.network","level":1,"levelName":"Basic Web Presence","platform":{"builder":"MkDocs","cloudflare":true,"otherHost":false,"detected":"MkDocs, Python, MathJax, KaTeX, jsDelivr, HSTS, Google Tag Manager, cdnjs, Cloudflare"},"scannedAt":"2026-09-18T06:41:18.147Z","reportUrl":"https://radar.cloudflare.com/scan/072cc2fa-f2d4-45ad-bb2f-fee23ede232a","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"}},{"name":"BOB","domain":"gobob.xyz","tvs":13,"note":null,"logo":"/axbeat-logos/bob.png","site":{"url":"gobob.xyz","level":5,"levelName":"Agent-Native","platform":{"builder":"Next.js","cloudflare":false,"otherHost":true,"detected":"Node.js, React, Vercel, Next.js, Simple Analytics, HSTS, Google Tag Manager, Google Analytics, CookieYes, Webpack"},"scannedAt":"2026-09-18T06:42:41.859Z","reportUrl":"https://radar.cloudflare.com/scan/203a8db8-90e0-4e20-a48f-6a2c620af5ab","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"pass","m":"Found agent-useful Link relations: api-catalog, service-doc","v":"found"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"pass","m":"Content Signals found in robots.txt","v":"present"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"pass","m":"API Catalog found with 1 API listed","v":"200"},"oauthDiscovery":{"s":"pass","m":"OAuth 2.0 (RFC 8414) discovery metadata found","v":"200"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md exists but agent_auth metadata was not found","v":"absent"},"mcpServerCard":{"s":"pass","m":"MCP Server Card found at /.well-known/mcp/server-card.json","v":"200"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"pass","m":"Agent Skills index exists with valid JSON","v":"200"},"webMcp":{"s":"pass","m":"Found 3 WebMCP tools via navigator.modelContext","v":"found"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"},"docs":{"url":"docs.gobob.xyz","level":1,"levelName":"Basic Web Presence","platform":{"builder":"Docusaurus","cloudflare":false,"otherHost":true,"detected":"Docusaurus, React, Vercel, Simple Analytics, HSTS, Google Tag Manager, Google Analytics, Fathom, Webpack"},"scannedAt":"2026-09-18T06:41:37.934Z","reportUrl":"https://radar.cloudflare.com/scan/594393e3-e722-47b6-9cc2-99ea6092f0fa","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"}},{"name":"Abstract","domain":"abs.xyz","tvs":14,"note":null,"logo":"/axbeat-logos/abstract.png","site":{"url":"abs.xyz","level":1,"levelName":"Basic Web Presence","platform":{"builder":null,"cloudflare":true,"otherHost":true,"detected":"Vercel, HSTS, Cloudflare Browser Insights, Cloudflare"},"scannedAt":"2026-09-18T06:42:12.148Z","reportUrl":"https://radar.cloudflare.com/scan/a520bd99-9b7a-4590-aeb2-f6c4630b3a6a","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) records found, but DNSSEC was not validated","v":"unverified"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"},"docs":{"url":"docs.abs.xyz","level":4,"levelName":"Agent-Integrated","platform":{"builder":null,"cloudflare":true,"otherHost":true,"detected":"Vercel, HSTS, Cloudflare Browser Insights, Cloudflare"},"scannedAt":"2026-09-18T06:46:08.069Z","reportUrl":"https://radar.cloudflare.com/scan/f294245f-4ff7-4ae6-9561-422255f458f0","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"pass","m":"Found agent-useful Link relations: api-catalog","v":"found"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"pass","m":"Content Signals found in robots.txt","v":"present"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"pass","m":"MCP Server Card found at /.well-known/mcp/server-card.json","v":"200"},"a2aAgentCard":{"s":"pass","m":"A2A Agent Card found: \"Abstract\" (v1.0.0)","v":"200"},"agentSkills":{"s":"pass","m":"Agent Skills index exists with valid JSON","v":"200"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not declared in A2A Agent Card (not a commerce site)","v":null}},"ai":"generic"}},{"name":"Scroll","domain":"scroll.io","tvs":15,"note":null,"logo":"/axbeat-logos/scroll.png","site":{"url":"scroll.io","level":1,"levelName":"Basic Web Presence","platform":{"builder":null,"cloudflare":true,"otherHost":true,"detected":"PHP, Three.js, Laravel, Vercel, HSTS, cdnjs, Cloudflare Browser Insights, Cloudflare, Livewire, HTTP/3"},"scannedAt":"2026-09-18T06:42:31.805Z","reportUrl":"https://radar.cloudflare.com/scan/96481602-68c7-48da-b5e4-a50751a9c370","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"},"docs":{"url":"docs.scroll.io","level":0,"levelName":"Not Ready","platform":{"builder":null,"cloudflare":false,"otherHost":true,"detected":"Vercel, HSTS, Google Tag Manager, Google Analytics"},"scannedAt":"2026-09-18T06:45:23.900Z","reportUrl":"https://radar.cloudflare.com/scan/726d3f5e-f271-43ba-a07e-e5aad9668895","checks":{"robotsTxt":{"s":"fail","m":"robots.txt not found","v":"404"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"fail","m":"Cannot check AI rules without robots.txt","v":"absent"},"contentSignals":{"s":"fail","m":"Cannot check Content Signals without robots.txt","v":"n/a"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"missing"}},{"name":"Taiko","domain":"taiko.xyz","tvs":16,"note":null,"logo":"/axbeat-logos/taiko.png","site":{"url":"taiko.xyz","level":1,"levelName":"Basic Web Presence","platform":{"builder":null,"cloudflare":false,"otherHost":true,"detected":"Vercel, HSTS"},"scannedAt":"2026-09-18T06:43:25.818Z","reportUrl":"https://radar.cloudflare.com/scan/71e013c9-aa44-4208-9c61-0a284b85b608","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"},"docs":{"url":"docs.taiko.xyz","level":1,"levelName":"Basic Web Presence","platform":{"builder":null,"cloudflare":false,"otherHost":true,"detected":"Vercel, HSTS"},"scannedAt":"2026-09-18T06:44:54.623Z","reportUrl":"https://radar.cloudflare.com/scan/1efded19-1b92-4e83-b220-603e9ce12604","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"}},{"name":"ADI Chain","domain":"adi.foundation","tvs":17,"note":null,"logo":"/axbeat-logos/adi.png","site":{"url":"adi.foundation","level":0,"levelName":"Not Ready","platform":{"builder":"Next.js","cloudflare":false,"otherHost":true,"detected":"Node.js, React, Vercel, Next.js, OneTrust, HSTS, Google Analytics, Webpack"},"scannedAt":"2026-09-18T06:43:45.787Z","reportUrl":"https://radar.cloudflare.com/scan/171a51b3-b240-4529-ae6a-67155b8c1d4f","checks":{"robotsTxt":{"s":"fail","m":"robots.txt not found","v":"404"},"sitemap":{"s":"fail","m":"sitemap.xml not found","v":"404"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"fail","m":"Cannot check AI rules without robots.txt","v":"absent"},"contentSignals":{"s":"fail","m":"Cannot check Content Signals without robots.txt","v":"n/a"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"missing"},"docs":{"url":"docs.adi.foundation","level":3,"levelName":"Agent-Readable","platform":{"builder":"GitBook","cloudflare":true,"otherHost":true,"detected":"GitBook, Google Cloud, Vercel, HSTS, Google Cloud Trace, Cloudflare, HTTP/3, Google Cloud Storage"},"scannedAt":"2026-09-18T06:50:38.759Z","reportUrl":"https://radar.cloudflare.com/scan/2068a95a-fcd6-44d8-a90b-7df5a14c9d8c","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"pass","m":"Content Signals found in robots.txt","v":"present"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md exists but is missing the expected Auth.md heading","v":"invalid"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"}},{"name":"Facet","domain":"facet.org","tvs":18,"note":null,"logo":"/axbeat-logos/facet.png","site":{"url":"facet.org","level":0,"levelName":"Not Ready","platform":{"builder":null,"cloudflare":true,"otherHost":true,"detected":"Vercel, HSTS, Cloudflare Browser Insights, Cloudflare"},"scannedAt":"2026-09-18T06:44:20.566Z","reportUrl":"https://radar.cloudflare.com/scan/efda7716-dc4f-4546-8b5e-a1481e212013","checks":{"robotsTxt":{"s":"fail","m":"robots.txt not found","v":"404"},"sitemap":{"s":"fail","m":"sitemap.xml not found","v":"404"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"fail","m":"Cannot check AI rules without robots.txt","v":"absent"},"contentSignals":{"s":"fail","m":"Cannot check Content Signals without robots.txt","v":"n/a"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"missing"},"docs":{"url":"docs.facet.org","level":3,"levelName":"Agent-Readable","platform":{"builder":"GitBook","cloudflare":true,"otherHost":true,"detected":"GitBook, Google Cloud, Vercel, HSTS, Google Cloud Trace, Cloudflare Browser Insights, Cloudflare"},"scannedAt":"2026-09-18T06:51:42.185Z","reportUrl":"https://radar.cloudflare.com/scan/e2273655-c32b-47f9-bd25-234e775a58fa","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"pass","m":"Content Signals found in robots.txt","v":"present"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md exists but is missing the expected Auth.md heading","v":"invalid"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"}},{"name":"INTMAX","domain":"intmax.io","tvs":19,"note":"Docs scored at docs.network.intmax.io, the address INTMAX links to. docs.intmax.io does not resolve.","logo":"/axbeat-logos/intmax.png","site":{"url":"intmax.io","level":1,"levelName":"Basic Web Presence","platform":{"builder":"Framer Sites","cloudflare":true,"otherHost":false,"detected":"Framer Sites, YouTube, React, Zendesk, Sendgrid, HSTS, Cloudflare"},"scannedAt":"2026-09-18T06:47:22.356Z","reportUrl":"https://radar.cloudflare.com/scan/d72160d0-961f-40ea-ae46-0948ff65985d","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"Link headers present but no agent-useful relation types found","v":"unhelpful"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"},"docs":{"url":"docs.network.intmax.io","level":0,"levelName":"Not Ready","platform":{"builder":"Docusaurus","cloudflare":false,"otherHost":true,"detected":"Docusaurus, React, Vercel, HSTS, Webpack"},"scannedAt":"2026-09-18T06:45:13.908Z","reportUrl":"https://radar.cloudflare.com/scan/d0a30a27-affa-4286-9b77-125de97da374","checks":{"robotsTxt":{"s":"fail","m":"robots.txt not found","v":"404"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"fail","m":"Cannot check AI rules without robots.txt","v":"absent"},"contentSignals":{"s":"fail","m":"Cannot check Content Signals without robots.txt","v":"n/a"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"missing"}},{"name":"Honeypot v2","domain":"cartesi.io","tvs":20,"note":"Scanned as Cartesi (cartesi.io and docs.cartesi.io). Honeypot v2 is Cartesi’s bug-bounty chain and has no site of its own.","logo":"/axbeat-logos/cartesi-prt-honeypot-v2.png","site":{"url":"cartesi.io","level":1,"levelName":"Basic Web Presence","platform":{"builder":"Gatsby","cloudflare":false,"otherHost":true,"detected":"Cart Functionality, Amazon Web Services, React, Gatsby, Twitter Ads, Hotjar, Google Tag Manager, Google Analytics, Crazy Egg, AppNexus, Amazon S3, Amazon CloudFront, Webpack, HTTP/3"},"scannedAt":"2026-09-18T06:47:36.298Z","reportUrl":"https://radar.cloudflare.com/scan/22730a75-750f-4779-8fbd-9ab04eb96ed7","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"},"docs":{"url":"docs.cartesi.io","level":0,"levelName":"Not Ready","platform":{"builder":"Docusaurus","cloudflare":false,"otherHost":true,"detected":"Docusaurus, React, Amazon Web Services, Woopra, Google Tag Manager, Google Analytics, Amazon S3, Amazon CloudFront, Webpack"},"scannedAt":"2026-09-18T06:45:48.357Z","reportUrl":"https://radar.cloudflare.com/scan/83fe1a5c-9501-40ce-99ff-64055b01618b","checks":{"robotsTxt":{"s":"fail","m":"robots.txt not found","v":"404"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"fail","m":"Cannot check AI rules without robots.txt","v":"absent"},"contentSignals":{"s":"fail","m":"Cannot check Content Signals without robots.txt","v":"n/a"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"missing"}},{"name":"Aztec","domain":"aztec.network","tvs":21,"note":null,"logo":"/axbeat-logos/aztecnetwork.png","site":{"url":"aztec.network","level":0,"levelName":"Not Ready","platform":{"builder":null,"cloudflare":true,"otherHost":false,"detected":"HSTS, Google Hosted Libraries, Google Font API, cdnjs, Cloudflare, HTTP/3"},"scannedAt":"2026-09-18T06:48:30.539Z","reportUrl":"https://radar.cloudflare.com/scan/7eb6051e-e524-4d20-92f7-44d102bd9c41","checks":{"robotsTxt":{"s":"fail","m":"robots.txt exists but appears invalid (no User-agent directive)","v":"invalid"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"Link headers present but no agent-useful relation types found","v":"unhelpful"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"fail","m":"No AI-specific bot rules and no wildcard rules in robots.txt","v":"absent"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"missing"},"docs":{"url":"docs.aztec.network","level":1,"levelName":"Basic Web Presence","platform":{"builder":"Docusaurus","cloudflare":false,"otherHost":true,"detected":"Docusaurus, React, Netlify, HSTS, Webpack"},"scannedAt":"2026-09-18T06:46:28.067Z","reportUrl":"https://radar.cloudflare.com/scan/ceb2eb4c-1493-439a-a295-65996b7f68fa","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"fail","m":"No Content Signals found in robots.txt","v":"absent"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md not found","v":"404"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"}},{"name":"Ethscriptions","domain":"ethscriptions.com","tvs":22,"note":null,"logo":"/axbeat-logos/ethscriptions.png","site":{"url":"ethscriptions.com","level":0,"levelName":"Not Ready","platform":{"builder":null,"cloudflare":true,"otherHost":true,"detected":"Vercel, HSTS, Cloudflare Browser Insights, Cloudflare"},"scannedAt":"2026-09-18T06:46:42.604Z","reportUrl":"https://radar.cloudflare.com/scan/33ffca0d-62f1-4439-aa85-a3eb55c3f2b9","checks":{"robotsTxt":{"s":"fail","m":"robots.txt not found","v":"absent"},"sitemap":{"s":"fail","m":"sitemap.xml not found","v":"absent"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"fail","m":"Site does not support Markdown for Agents","v":"html only"},"robotsTxtAiRules":{"s":"fail","m":"Cannot check AI rules without robots.txt","v":"absent"},"contentSignals":{"s":"fail","m":"Cannot check Content Signals without robots.txt","v":"n/a"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md returned HTML instead of Markdown","v":"html"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"missing"},"docs":{"url":"docs.ethscriptions.com","level":3,"levelName":"Agent-Readable","platform":{"builder":"GitBook","cloudflare":true,"otherHost":true,"detected":"GitBook, Google Cloud, Vercel, HSTS, Google Cloud Trace, Cloudflare Browser Insights, Cloudflare"},"scannedAt":"2026-09-18T06:50:58.671Z","reportUrl":"https://radar.cloudflare.com/scan/c8019baa-9806-4872-8180-24d80da28c41","checks":{"robotsTxt":{"s":"pass","m":"robots.txt exists with valid format","v":"200"},"sitemap":{"s":"pass","m":"sitemap.xml exists with valid structure","v":"200"},"linkHeaders":{"s":"fail","m":"No Link headers found on target page","v":"absent"},"dnsAid":{"s":"fail","m":"DNS for AI Discovery (DNS-AID) well-known entrypoint records not found","v":"absent"},"markdownNegotiation":{"s":"pass","m":"Site supports Markdown for Agents","v":"md"},"robotsTxtAiRules":{"s":"pass","m":"No AI-specific bot rules; wildcard rules apply to all crawlers including AI bots","v":"blanket"},"contentSignals":{"s":"pass","m":"Content Signals found in robots.txt","v":"present"},"webBotAuth":{"s":"neutral","m":"Web Bot Auth directory not found (informational only)","v":null},"apiCatalog":{"s":"fail","m":"API Catalog not found","v":"404"},"oauthDiscovery":{"s":"fail","m":"No OAuth/OIDC discovery metadata found","v":"404"},"oauthProtectedResource":{"s":"fail","m":"No OAuth Protected Resource Metadata found","v":"404"},"authMd":{"s":"fail","m":"auth.md exists but is missing the expected Auth.md heading","v":"invalid"},"mcpServerCard":{"s":"fail","m":"MCP Server Card not found","v":"404"},"a2aAgentCard":{"s":"fail","m":"A2A Agent Card not found","v":"404"},"agentSkills":{"s":"fail","m":"Agent Skills index not found","v":"404"},"webMcp":{"s":"fail","m":"No WebMCP tools detected on page load","v":"absent"},"ard":{"s":"fail","m":"ARD capability manifest not found","v":"404"},"x402":{"s":"neutral","m":"x402 payment protocol not detected (not a commerce site)","v":null},"mpp":{"s":"neutral","m":"MPP payment discovery not detected (not a commerce site)","v":null},"ucp":{"s":"neutral","m":"UCP profile not found (not a commerce site)","v":null},"acp":{"s":"neutral","m":"ACP discovery document not found (not a commerce site)","v":null},"ap2":{"s":"neutral","m":"AP2 not detected (no A2A Agent Card) (not a commerce site)","v":null}},"ai":"generic"}}]}</script>
+<script>
+(function () {
+"use strict";
+
+var DATA = JSON.parse(document.getElementById("scan").textContent);
+var ROWS = DATA.rows;
+
+/* Vercel Analytics custom events, guarded so a blocked script never throws into
+   the page. Names are scoped to this surface, one name per intent: opening a row
+   and opening the full check list are different things a visitor did, so they
+   are never merged. */
+function track(name, data) {
+  try { if (window.va) window.va("event", { name: name, data: data || {} }); } catch (e) {}
+}
+
+var CHECK_NAME = {
+  robotsTxt: "robots.txt reachable", sitemap: "sitemap.xml reachable",
+  robotsTxtAiRules: "Rules for AI crawlers", contentSignals: "Content Signals",
+  markdownNegotiation: "Markdown version",
+  linkHeaders: "Link headers", dnsAid: "Agent records in DNS",
+  mcpServerCard: "Tool card", a2aAgentCard: "Agent card", agentSkills: "Skills index",
+  apiCatalog: "API catalogue", authMd: "Sign-in guide", oauthDiscovery: "Sign-in metadata",
+  oauthProtectedResource: "Protected resource metadata", webMcp: "Tools built into the page",
+  ard: "Capability manifest"
+};
+var LEVEL_NAME = ["Not Ready","Basic Web Presence","Bot-Aware","Agent-Readable","Agent-Integrated","Agent-Native"];
+/* Checks Cloudflare runs but never scores. Derived, not asserted: the count in
+   the footnote is however many of these the scan actually returned. */
+var PAYMENT_KEYS = ["x402","mpp","ucp","acp","ap2"];
+
+/* The one place each view is named in reader-facing copy: the score column's
+   own header ("Website score" / "Docs score"). */
+var VIEW_COPY = { site: { label: "Website" }, docs: { label: "Docs" } };
+
+/* --- helpers --------------------------------------------------------------- */
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c];
+  });
+}
+function viewOf(row, view) { return view === "site" ? row.site : row.docs; }
+/* Bar plus the number. One tick per scored check (scoredChecks() below),
+   filled left to right in --success (see :root, and the comment above
+   .barmeter for why this is the one column on the board allowed a colour).
+   Replaces the five-wedge pie that showed Cloudflare's level (dropped 17
+   Sep, concept 04 of the lo-fi score/16 mocks, Tahi's pick): the visible
+   figure now reads "found/total" scored checks, the same count the opened
+   panel already prints as "Found x/16", not the level out of 5.
+   The level itself is not dropped, only demoted: it still decides the row's
+   rank (see sorted()) and still names the host's own tier, just for screen
+   readers now rather than as the headline figure. The name comes off the
+   scanned host, which is Cloudflare's own word for that level, because the
+   page's whole claim is that the scores are theirs unaltered. LEVEL_NAME is
+   only the fallback, and only ever fills a level nothing reached. */
+function bars(found, total) {
+  /* Real <rect>s, not a single fill on a striped background: a gradient or a
+     repeating pattern is one rendering engine away from not printing, where
+     rects always draw, the same reasoning the old pie used for real wedges
+     over a conic-gradient. Unfilled ticks use --pip-off so a 0/total host
+     still reads as a present (if empty) bar instead of a gap in the row.
+     `total` is this host's own count of scored checks, not a hardcoded 16:
+     every host on the current scan carries all sixteen (see scoredChecks()),
+     but the bar has to hold whatever count a future scan actually returns. */
+  var tw = 3, gap = 1, h = 16, w = total * (tw + gap) - gap;
+  var svg = '<svg class="barmeter" width="' + w + '" height="' + h +
+    '" viewBox="0 0 ' + w + ' ' + h + '" aria-hidden="true">';
+  for (var i = 0; i < total; i++) {
+    var fill = i < found ? "var(--success)" : "var(--pip-off)";
+    svg += '<rect x="' + (i * (tw + gap)) + '" y="0" width="' + tw + '" height="' + h +
+      '" fill="' + fill + '"></rect>';
+  }
+  return svg + "</svg>";
+}
+function score(v) {
+  var ch = scoredChecks(v), keys = Object.keys(ch);
+  var total = keys.length;
+  var found = keys.filter(function (k) { return ch[k].s === "pass"; }).length;
+  return '<span class="score">' + bars(found, total) +
+    '<span class="snum">' + found + "/" + total + "</span>" +
+    '<span class="sr">, ' + found + " of " + total + " scored checks found; Cloudflare level " +
+    v.level + " of 5, " + esc(v.levelName || LEVEL_NAME[v.level]) + "</span></span>";
+}
+function plural(n, one, many) { return n + " " + (n === 1 ? one : (many || one + "s")); }
+
+/* The scan date, in the form the rest of the site writes dates. Pinned to UTC,
+   not the reader's zone: the scan happened at one instant, the static board above
+   bakes that same instant in UTC, and without this a reader far enough east would
+   watch the date change as the page finished loading. */
+function scanDate() {
+  var d = new Date(DATA.scannedAt);
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric", month: "long", year: "numeric", timeZone: "UTC"
+  });
+}
+
+/* --- sorting and ranking ---------------------------------------------------- */
+/* The checks Cloudflare scores: everything except the payment family, which it
+   runs but never counts, and anything it reports as neutral. */
+function scoredChecks(view) {
+  var out = {};
+  Object.keys(view.checks).forEach(function (k) {
+    if (PAYMENT_KEYS.indexOf(k) !== -1) return;
+    if (view.checks[k].s === "neutral") return;
+    out[k] = view.checks[k];
+  });
+  return out;
+}
+/* How many of those checks passed. The board is ranked on this, not on
+   Cloudflare's level: the level no longer appears on the row (see bars() /
+   score()), and a board has to sort by the number it actually shows, or a
+   reader can watch a 4/16 sit under a 3/16 with no way to tell why. */
+function foundCount(view) {
+  var ch = scoredChecks(view);
+  return Object.keys(ch).filter(function (k) { return ch[k].s === "pass"; }).length;
+}
+function sorted(view) {
+  return ROWS.slice().sort(function (a, b) {
+    var d = foundCount(viewOf(b, view)) - foundCount(viewOf(a, view));
+    return d || a.tvs - b.tvs;
+  });
+}
+/* Two even columns: which of the scored checks this host has, and which it
+   does not, each capped at five rows before the rest goes behind the shared
+   disclosure pattern (see .moretoggle/.morewrap, used above for "How it
+   works"). found is first in the markup and stays first at every width,
+   including the stacked layout under 720px, matching the mock's own order. */
+function checkColumns(found, missing, ch, id, row) {
+  var total = found.length + missing.length;
+  return '<div class="checkcols">' +
+    checkCol(id, "found", "Found", found, ch, total, rowCta(row, id)) +
+    checkCol(id, "missing", "Missing", missing, ch, total) +
+  "</div>";
+}
+/* One column: a heading carrying its own count against the scored total
+   ("Found 3/16"), up to five checks, then, when there are more, a "Show N
+   more" toggle for the rest. moreId is unique per row and column, so opening
+   Found never touches Missing and vice versa; fillPanel wires the button the
+   first time a panel is built (see wireDisclosures below). extra is the
+   report ask (see rowCta()): only Found ever gets one, so it's passed in
+   rather than given its own kind === "found" branch here. */
+function checkCol(id, kind, label, keys, ch, total, extra) {
+  var shown = keys.slice(0, 5), rest = keys.slice(5);
+  var html = '<div class="checkcol checkcol-' + kind + '">' +
+    '<p class="checkhead">' + label + " <b>" + keys.length + "/" + total + "</b></p>" +
+    checkList(shown, ch);
+  if (rest.length) {
+    var moreId = id + "-" + kind + "-more";
+    html += '<div class="morewrap" id="' + moreId + '" data-open="false"><div class="morein">' +
+        checkList(rest, ch) +
+      "</div></div>" +
+      '<button class="moretoggle checkmore" type="button" aria-expanded="false" aria-controls="' + moreId + '">' +
+        '<span class="chev" aria-hidden="true">\u203a</span>Show ' + rest.length + " more</button>";
+  }
+  return html + (extra || "") + "</div>";
+}
+/* Name plus status value, dotted leader between them (CSS). The value is
+   whatever checkValueFrom baked for this check in scripts/axbeat-data.mjs:
+   a real HTTP code where the check's verdict is a fetch result, otherwise a
+   short word read off Cloudflare's own message. Never invented here. */
+function checkList(keys, ch) {
+  return '<ul class="checklist">' + keys.map(function (k) {
+    var v = (ch[k] && ch[k].v != null) ? esc(ch[k].v) : "";
+    return '<li><span class="name">' + esc(CHECK_NAME[k] || k) + '</span>' +
+      '<span class="v">' + v + "</span></li>";
+  }).join("") + "</ul>";
+}
+
+function checksPanel(view, row, id) {
+  var ch = scoredChecks(view), keys = Object.keys(ch);
+  var found = keys.filter(function (k) { return ch[k].s === "pass"; });
+  var missing = keys.filter(function (k) { return ch[k].s !== "pass"; });
+  /* No link out to Cloudflare's own scan report here on purpose: it read as a
+     second "report" beside the CTA's "full report" a few lines down, and a
+     reader who followed it left the page before reaching the email field.
+     reportUrl stays baked regardless (nothing else consumes it either, but it
+     costs nothing to keep and removing it would be its own separate change). */
+  /* A chain with a caveat (from scripts/axbeat-chains.json) says it here, in
+     its own panel, where the row's "note" mark points a reader; there is no
+     collected notes list anywhere else. */
+  return (row.note ? '<p class="rownote">' + esc(row.note) + "</p>" : "") +
+    checkColumns(found, missing, ch, id, row);
+}
+/* The report ask, inside the panel (Tahi's call, 17 Sep), after a spell living
+   as one board-wide card at the foot, since retired: nobody scrolls a 22-row
+   board to reach a card at the bottom of it.
+   One field, a whole work email. The board is no longer a domain allowlist
+   (see api/axbeat-lead.js), so there is nothing left to fix a domain to, and
+   row.domain only ever fills the placeholder, a hint rather than a constraint.
+   data-chain names the panel the lead came from, for analytics alone: it never
+   leaves the browser (see wireReportForms). id is the row's own panel id, which
+   is what keeps the input's id unique across every open row. */
+function rowCta(row, id) {
+  var inputId = id + "-cta-email";
+  return '<div class="rowcta">' +
+    '<p class="ctalabel">Get ' + esc(row.name) + '’s full report.</p>' +
+    '<form class="mail" novalidate data-chain="' + esc(row.name) + '">' +
+      '<span class="mailfield"><label class="sr" for="' + inputId + '">Your work email</label>' +
+        '<input id="' + inputId + '" type="email" autocomplete="email" spellcheck="false" ' +
+          'placeholder="you@' + esc(row.domain || "yourchain.xyz") + '"></span>' +
+      '<button class="pill" type="submit">Get the report <span class="arrow">&rarr;</span></button>' +
+      '<span class="said" role="status" data-role="said"></span>' +
+    "</form></div>";
+}
+/* What built the docs, or "Custom" when nothing on the builder list was found.
+   The build script picks this out of Cloudflare's detection list; see
+   scripts/axbeat-data.mjs for what qualifies as a builder and why the host is
+   deliberately not shown. */
+function platformText(p) {
+  return (p && p.builder) || "Custom";
+}
+/* The AI access policy, read at build time off Cloudflare's robotsTxtAiRules
+   check (see aiPolicyFrom in scripts/axbeat-data.mjs) and only labelled here.
+   Explicit says a site addresses AI crawlers by name, never that it welcomes
+   them: naming GPTBot to block it and naming it to allow it both land here,
+   because that is as far as the check looks. The long form goes in the cell's
+   screen-reader text, so the three-word column is never the only thing saying
+   what it means. No title on top of it: the two strings are identical, and
+   some screen readers announce both. */
+var AI_POLICY = {
+  explicit: { label: "Explicit", sr: "names AI crawlers specifically" },
+  generic: { label: "Generic", sr: "one blanket crawler rule, nothing AI specific" },
+  missing: { label: "Missing", sr: "no crawler rules an agent can read" }
+};
+function aiCell(view, labelled) {
+  var key = AI_POLICY[view.ai] ? view.ai : "missing";
+  var p = AI_POLICY[key];
+  /* labelled is the phone copy, which has no column header over it. One word
+     on its own under a chain name ("Generic") says nothing; the header is what
+     made it mean something, so the header comes with it.
+     A second element, not a modifier on the pill: "robots.txt Generic" is two
+     words wider than the phone column, and the pill's own nowrap (needed so
+     "Explicit" never breaks mid-word) would otherwise force that whole run
+     onto one line and push it into the next column instead of wrapping. */
+  return (labelled ? '<span class="metalabel">robots.txt</span>' : "") +
+    '<span class="aipill ai-' + esc(key) + '">' +
+    esc(p.label) + '<span class="sr">, ' + esc(p.sr) + "</span></span>";
+}
+/* The one other lead action, alongside each row's own form (rowCta()). A
+   missing chain is a handful of messages a month and needs a sentence from a
+   human ("we're at this address, not that one"), not a form: mail carries
+   that, works with no backend and no new abuse surface, and lands in the
+   same inbox as everything else. The click is tracked so we can see whether
+   anyone uses it; `where` tags which spot on the page it was clicked from. */
+function missingLink(where) {
+  return '<a class="secondary" data-ev="axbeat_missing_click" data-where="' + esc(where) + '" ' +
+    'href="mailto:hey@mooch.agency?subject=' + encodeURIComponent("AXBeat: a missing L2") +
+    "&body=" + encodeURIComponent(
+      "Which chain is missing:\n\nIts website:\nIts docs:\n\nAnything we should know about which address is the real one:\n"
+    ) + '">Your L2 missing? Let us know.</a>';
+}
+
+/* --- shared page furniture --------------------------------------------------- */
+/* The fold, in order: eyebrow (with the scan date right-justified against it),
+   headline, lede, then the "How it works" pill and what it discloses.
+   Frontloads only what a first-time reader needs before scrolling: what this
+   is and the scan date. The disclosure holds the method in one paragraph plus
+   the missing-chain link; anything about one chain lives in that chain's own
+   row panel, not here. The no-JS board states the same method fact in the open
+   (see .caveat), since there is no JS there to open a disclosure with. */
+function hero(o) {
+  return "<div>" +
+    '<p class="eyebrowrow"><span class="eyebrow">Agent Experience</span>' +
+      '<span class="scanline"><span class="dot"></span>Scanned ' + esc(scanDate()) + "</span></p>" +
+    /* House entrance motion, same recipe as index.html's h1: words settle in
+       one at a time rather than the whole line appearing at once. */
+    '<h1 class="display reveal-words" data-stagger="0.2">' + o.headline + "</h1>" +
+    '<p class="lede">' + esc(o.lede) + "</p>" +
+    '<button class="moretoggle pilltoggle" type="button" aria-expanded="false" aria-controls="' + o.methodId + '" ' +
+      'data-ev="axbeat_method_open">' +
+      '<span class="chev" aria-hidden="true">&rsaquo;</span>How it works</button>' +
+    '<div class="morewrap" id="' + o.methodId + '" data-open="false"><div class="morein">' +
+      /* Onchain AX (can an agent transact) is a separate, unshipped measure;
+         naming it here is what stops a skim-reader assuming this scan covers
+         it, doing the old .caveat paragraph's job in one clause instead of
+         its own paragraph. */
+      '<p>We run <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s ' +
+        "agent-readiness</a> scan against a protocol’s website and docs. It checks that agent signposts " +
+        "exist, not whether they’re correct. Onchain AX, how well an agent can take onchain actions, is " +
+        "TBD.</p>" +
+      missingLink("how") +
+    "</div></div>" +
+  "</div>";
+}
+
+/* The toggle and the filter on one row, directly above the table header. */
+function controls(o) {
+  return '<div class="controls">' +
+    '<div class="find">' +
+      '<label class="sr" for="' + o.findId + '">Find your chain</label>' +
+      '<input id="' + o.findId + '" type="search" placeholder="Find your chain" ' +
+        'aria-label="Find your chain" autocomplete="off" data-role="find">' +
+      '<span class="findnote" role="status" data-role="findnote"></span>' +
+    "</div>" +
+    '<div class="ctrl-left">' + o.toggle + "</div>" +
+  "</div>";
+}
+function segToggle(view) {
+  return '<div class="seg" role="group" aria-label="Which site to rank">' +
+    '<button type="button" data-view="site" aria-pressed="' + (view === "site") + '">Website</button>' +
+    '<button type="button" data-view="docs" aria-pressed="' + (view === "docs") + '">Docs</button></div>';
+}
+
+
+/* ===========================================================================
+   The board. Website is the default view; a segmented toggle switches to docs
+   without moving a column; the whole row opens to the next-level panel and the
+   report request. Ranked on checks found (see sorted()); ties are numbered
+   and broken on L2Beat value secured.
+   ========================================================================= */
+/* What fillPanel needs to build a row's panel later, keyed by the same id the
+   detpad carries. Rebuilt on every render, because the view decides which host
+   a panel describes. */
+var PANELS = {};
+
+function renderA(view) {
+  var s = document.getElementById("p-a");
+  var list = sorted(view);
+  PANELS = {};
+  /* Every column is now on both views: robots.txt and Platform both describe
+     a host rather than a view, so nothing appears or disappears with the
+     toggle and the score cannot move sideways when it flips.
+     This used to compute a board width and a chain width here and carry them
+     in as custom properties, so the table could be pinned narrower than the
+     page; it now just fills .pad's own measure (see .boardcol/.pad), so there
+     is nothing left to compute. */
+  s.innerHTML = '<div class="pad pad-hero">' +
+    hero({
+      headline: 'How <em>agent friendly</em> is your Layer 2?',
+      lede: "L2Beat ranks security. AXBeat ranks AX, agent experience, how well agents can read a protocol’s website and docs.",
+      methodId: "method-a"
+    }) +
+    '<div class="boardcol">' +
+    controls({
+      findId: "find-a",
+      toggle: segToggle(view)
+    }) +
+    '<div class="tablewrap"><table class="board">' +
+    '<colgroup><col class="c-rank"><col class="c-chain">' +
+      '<col class="opt c-url"><col class="opt c-plat"><col class="opt c-ai"><col class="c-score">' +
+      "</colgroup>" +
+    "<thead><tr>" +
+      '<th scope="col">#</th><th scope="col">Chain</th>' +
+      '<th scope="col" class="opt">URL</th>' +
+      '<th scope="col" class="opt">Platform</th>' +
+      '<th scope="col" class="opt">robots.txt</th>' +
+      '<th scope="col">' + VIEW_COPY[view].label + " score</th>" +
+    /* Rows settle in the page's own scroll-reveal language rather than just
+       appearing, capped at 5 like every other list on the site so a
+       22-row board doesn't take forever to finish arriving. */
+    '</tr></thead><tbody data-reveal="child: tr.row; cap: 5">' +
+    list.map(function (r, i) {
+      var vw = viewOf(r, view), id = "a-" + r.tvs;
+      PANELS[id] = { vw: vw, row: r, view: view };
+      /* No chevron: it repeated what the row already does. The row is the
+         control instead (role=button, tabindex, aria-expanded, wired below). */
+      return '<tr class="row" data-open data-name="' + esc(r.name.toLowerCase()) + '" ' +
+        'data-chain="' + esc(r.name) + '" ' +
+        'role="button" tabindex="0" aria-expanded="false" aria-controls="' + id + '" ' +
+        'aria-label="Open the details for ' + esc(r.name) + '">' +
+        '<td class="rank">' + (i + 1) + "</td>" +
+        "<td><span class='chainname'><img class='chainlogo' src='" + esc(r.logo) + "' alt='' width='20' height='20' loading='lazy'>" +
+          "<span class='brand'>" + esc(r.name) + (r.note ? '<span class="fnmark">note</span>' : "") +
+          "</span></span>" +
+          /* Below 940px url, Platform and robots.txt all fold in here, stacked
+             under the chain name in the same order they hold on the full table. */
+          "<span class='onsm rowmeta'><span class='brandurl'>" + esc(vw.url) + "</span>" +
+          "<span class='platpill'>" + esc(platformText(vw.platform)) + "</span>" + aiCell(vw, true) +
+          "</span></td>" +
+        '<td class="opt urlcell"><span class="brandurl">' + esc(vw.url) + "</span></td>" +
+        '<td class="opt platcell"><span class="platpill">' + esc(platformText(vw.platform)) + "</span></td>" +
+        '<td class="opt aicell">' + aiCell(vw) + "</td>" +
+        "<td>" + score(vw) + "</td>" +
+      "</tr>" +
+        /* Not [hidden]: that snapped a full panel in and out with nothing to
+           interrupt. Same 0fr/1fr grid the page already uses for its other
+           disclosures, so the row opens in the page's own motion language. */
+        /* Six columns: rank, chain, url, Platform, robots.txt, score. Three of
+           them are .opt and drop out below 940px, but a hidden column still
+           counts for colspan, so this is the full six at every width. */
+        '<tr class="detailrow"><td class="detail" colspan="6">' +
+        '<div class="detwrap" id="' + id + '" data-open="false"><div class="detin">' +
+        /* Empty on purpose. Built by fillPanel the first time the row opens:
+           these panels were half of every node on the page, 876 of 1765, all of
+           them for rows nobody had touched, and Lighthouse was reading the cost
+           in LCP. */
+        '<div class="detpad" data-panel="' + id + '"></div>' +
+        "</div></div></td></tr>";
+    }).join("") +
+    "</tbody></table></div>" +
+    '<div class="empty" data-role="empty" hidden><p>No chain on the board matches that.</p>' +
+      missingLink("empty") + "</div>" +
+    "</div>" +
+    "</div>";
+  wire(s);
+}
+
+
+/* --- wiring ------------------------------------------------------------------ */
+
+/* Walk to the detail row rather than assuming it is the next sibling. */
+function detailOf(tr) {
+  var n = tr.nextElementSibling;
+  while (n && !n.classList.contains("detailrow")) n = n.nextElementSibling;
+  return n;
+}
+
+/* Build a row's panel the first time it is opened, then wire the parts of it
+   that carry behaviour. Idempotent: a second open finds it built and returns. */
+function fillPanel(det) {
+  var pad = det && det.querySelector(".detpad");
+  if (!pad || pad.dataset.built) return;
+  var p = PANELS[pad.dataset.panel];
+  if (!p) return;
+  /* checksPanel() renders row.note itself, at the top of the panel where the
+     row's "note" mark points. This used to append a second copy underneath,
+     so the four chains that carry a caveat printed it twice in one panel. */
+  pad.innerHTML = checksPanel(p.vw, p.row, pad.dataset.panel);
+  pad.dataset.built = "1";
+  /* checksPanel() builds this row's own report form (rowCta()), so the panel
+     needs two wiring calls of its own: disclosures for its "Show N more"
+     buttons, and wireReportForms for the form. Both are idempotent per element
+     (dataset.wired), and pad.dataset.built above means this whole function only
+     ever runs once per row anyway, so neither can be wired twice. */
+  wireDisclosures(pad);
+  wireReportForms(pad);
+}
+
+/* Disclosures: one button, one 0fr/1fr grid, wired once wherever they appear.
+   Two callers: wire() for the hero's "How it works" pill at render, and
+   fillPanel() for a row panel's "Show N more" buttons the first time that row
+   opens. The category cards and the rung pips it also used to wire are gone. */
+function wireDisclosures(root) {
+  root.querySelectorAll(".moretoggle").forEach(function (b) {
+    if (b.dataset.wired) return;
+    b.dataset.wired = "1";
+    b.addEventListener("click", function () {
+      var w = document.getElementById(b.getAttribute("aria-controls"));
+      if (!w) return;
+      var open = b.getAttribute("aria-expanded") === "true";
+      b.setAttribute("aria-expanded", String(!open));
+      w.dataset.open = String(!open);
+      /* Only the opening is worth an event. A close is the same intent undone. */
+      if (!open && b.dataset.ev) track(b.dataset.ev, b.dataset.chain ? { chain: b.dataset.chain } : {});
+    });
+  });
+}
+
+function wire(section) {
+  wireDisclosures(section);
+  var currentView = section.querySelector("[data-view][aria-pressed=true]");
+  currentView = currentView ? currentView.dataset.view : "site";
+
+  /* view switches */
+  section.querySelectorAll("[data-view]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (b.getAttribute("aria-pressed") === "true") return;
+      track("axbeat_view_switch", { view: b.dataset.view });
+      renderA(b.dataset.view);
+    });
+  });
+
+  /* Rows that open. The row is the control: its own aria-expanded, tabindex and
+     keydown, so Enter and Space work without a native <button>. */
+  function toggleRow(tr) {
+    var det = detailOf(tr);
+    fillPanel(det);
+    var open = tr.getAttribute("aria-expanded") === "true";
+    tr.setAttribute("aria-expanded", String(!open));
+    det.querySelector(".detwrap").dataset.open = String(!open);
+    if (!open) track("axbeat_row_open", { chain: tr.dataset.chain, view: currentView });
+  }
+  section.querySelectorAll("tr.row[data-open]").forEach(function (tr) {
+    tr.addEventListener("click", function (e) {
+      if (e.target.closest("a,button,input,select,label")) return;
+      var sel = window.getSelection && window.getSelection().toString();
+      if (sel) return;
+      toggleRow(tr);
+    });
+    tr.addEventListener("keydown", function (e) {
+      if (e.target !== tr) return;
+      if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+        e.preventDefault();
+        toggleRow(tr);
+      }
+    });
+  });
+
+  /* find your chain: highlight and dim, never hide, so your neighbours stay on
+     screen. That is the whole point of a leaderboard. */
+  var find = section.querySelector("[data-role=find]");
+  if (find) {
+    var note = section.querySelector("[data-role=findnote]");
+    var empty = section.querySelector("[data-role=empty]");
+    find.addEventListener("input", function () {
+      var q = find.value.trim().toLowerCase(), n = 0;
+      section.querySelectorAll("tr.row").forEach(function (tr) {
+        var hit = q && tr.dataset.name.indexOf(q) !== -1;
+        tr.classList.toggle("hit", !!hit);
+        tr.classList.toggle("dim", !!q && !hit);
+        if (hit) n++;
+      });
+      /* Empty when nothing is typed. A resting "22 chains" would be a count of
+         what is already on screen and countable, and the rank column ends on it
+         anyway. The note earns its place only once a query has narrowed the
+         board to something the eye cannot total at a glance. */
+      note.textContent = !q ? "" : plural(n, "match", "matches");
+      empty.hidden = !(q && n === 0);
+      if (q && n === 1) {
+        var f = section.querySelector("tr.row.hit");
+        if (f) f.scrollIntoView({ block: "center" });
+      }
+    });
+  }
+
+  /* Every form.mail is now built lazily, inside a row's own panel the first
+     time it opens (fillPanel calls wireReportForms(pad) itself), so there is
+     nothing of that kind to wire here at render. The tracked links are not
+     lazy (both missingLink() calls above are in the initial markup), so
+     wireEvLinks still runs once, here, against the whole section. */
+  wireEvLinks(section);
+}
+
+/* Pessimistic: the button locks while the request is in flight and only says it
+   worked once the server says so, because the whole promise of this form is
+   that something arrives. Runs against every form.mail under root: one
+   compact form per opened row (rowCta()), wired exactly once via the
+   dataset.wired guard below regardless of how many times fillPanel calls in.
+   No chain lookup on the server side (see api/axbeat-lead.js); data-chain
+   only ever rides along in analytics. */
+function wireReportForms(root) {
+  root.querySelectorAll("form.mail").forEach(function (f) {
+    if (f.dataset.wired) return;
+    f.dataset.wired = "1";
+    f.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var said = f.querySelector("[data-role=said]");
+      var input = f.querySelector("input");
+      var btn = f.querySelector("button");
+      var email = input.value.trim();
+      var at = email.lastIndexOf("@");
+      // Domain is for analytics context only; the server derives nothing
+      // from it any more (no board lookup left to check it against).
+      var domain = at > 0 ? email.slice(at + 1).toLowerCase() : "";
+      var ctx = { domain: domain };
+      if (f.dataset.chain) ctx.chain = f.dataset.chain;
+
+      if (!email) {
+        said.textContent = "Add your work email first.";
+        input.focus();
+        return;
+      }
+      if (at < 1 || at === email.length - 1 || /\s/.test(email)) {
+        said.textContent = "That doesn’t look like an email address.";
+        input.focus();
+        return;
+      }
+      if (btn.disabled) return;
+
+      btn.disabled = true;
+      said.textContent = "Sending…";
+      track("axbeat_report_submit", ctx);
+
+      fetch("/api/axbeat-lead", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: email })
+      }).then(function (res) {
+        return res.json().catch(function () { return { ok: false, error: "server" }; });
+      }).then(function (out) {
+        if (out && out.ok) {
+          /* Replace the form with the confirmation: leaving a live field under
+             a "we got it" line invites a second identical request. */
+          f.innerHTML = '<p class="said" role="status">On its way to ' +
+            esc(email) + ". We send these by hand, so give it a day.</p>";
+          track("axbeat_report_ok", ctx);
+          return;
+        }
+        // Prefer the granular reason (syntax/blocklist/mx) so analytics can tell
+        // typos from disposable domains; the user-facing copy keys off error alone.
+        var why = (out && (out.reason || out.error)) || "server";
+        said.textContent =
+          why === "email" ? "That address didn’t check out. Try another." :
+          why === "rate" ? "That’s a few too many at once. Try again in a minute." :
+          "That didn’t send. Mail hey@mooch.agency and we’ll sort it.";
+        btn.disabled = false;
+        ctx.reason = why;
+        track("axbeat_report_error", ctx);
+      }).catch(function () {
+        said.textContent = "That didn’t send. Mail hey@mooch.agency and we’ll sort it.";
+        btn.disabled = false;
+        ctx.reason = "network";
+        track("axbeat_report_error", ctx);
+      });
+    });
+  });
+}
+
+/* Plain links that carry an event, the missing-chain mail among them. */
+function wireEvLinks(root) {
+  root.querySelectorAll("a[data-ev]").forEach(function (a) {
+    if (a.dataset.wired) return;
+    a.dataset.wired = "1";
+    a.addEventListener("click", function () { track(a.dataset.ev, { where: a.dataset.where || "" }); });
+  });
+}
+
+
+/* Website is the view the board opens on. renderA replaces the baked no-JS
+   board with the interactive one and wires everything inside it, which is
+   everything on the page: there is no disclosure, form or tracked link outside
+   #p-a, so there is nothing left to wire at document level afterwards. */
+renderA("site");
+})();
+</script>
+
+<!-- Runs after renderA above, same as index.html's own placement: motion.js
+     reads the DOM for [data-stagger]/[data-reveal] synchronously, so it has
+     to load after the board it's meant to animate exists. motion.css is
+     already linked in <head>; this is the behaviour half of the pair. -->
+<script src="/motion.js"></script>
+
+<!-- Vercel Web Analytics and Speed Insights. analytics.js injects both, unless
+     this browser has opted out via ?notrack=1; see analytics.js. -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/analytics.js"></script>
+</body>
+</html>

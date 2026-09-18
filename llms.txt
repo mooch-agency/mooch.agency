@@ -20,6 +20,10 @@ We figure out what people actually need, then build the AI to deliver it. Most o
 - [Lisbon Restaurant Group](https://mooch.agency/lisbon-restaurant-group): AI-powered review automation for a Lisbon restaurant group.
 - [Ethereum UX](https://mooch.agency/ethereum): UX teardown of Ethereum wallet interactions, scoring clarity and confidence at every step.
 
+## Measures
+
+- [AXBeat](https://mooch.agency/axbeat): The top 22 Ethereum Layer 2 rollups ranked on agent experience, website and docs scored separately. Each host scores on how many of Cloudflare's 16 scored agent-readiness checks it passes, republished unaltered, re-scanned weekly.
+
 ## Products
 
 - [toneofvoice.app](https://toneofvoice.app): Generate professional tone of voice guidelines.

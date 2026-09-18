@@ -112,6 +112,18 @@ card frwa \
 # No `ready` card: /ready was retired in the Phase 0 roadmap decision and now
 # 301s to /, so a sharer never reaches a page that would use one.
 
+echo "Measures"
+
+# Subtitle is the board's own lede, minus the chain count: the card outlives a
+# weekly re-scan, and a number baked into artwork is the one thing on this page
+# that cannot re-derive itself.
+card axbeat \
+  --eyebrow "Agent experience" \
+  --title "How *agent friendly*\nis your Layer 2?" \
+  --subtitle "The top 22 rollups, ranked on how well agents can read their website and docs." \
+  --domain "mooch.agency/axbeat" \
+  --scale 1.15
+
 echo "Selected work"
 
 card gov-uk \

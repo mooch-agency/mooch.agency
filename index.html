@@ -1093,6 +1093,22 @@
     </div>
 
     <div class="bento-grid" data-reveal="child: .bento-card; cap: 5">
+      <!-- AXBeat leads the grid: it is the newest thing we ship and the only one
+           that publishes a public measurement, so it takes a tall tile at the
+           top rather than a regular one further down. The grid was packed
+           exactly four rows before this (12 cells, no gaps); a tall card adds
+           two, so the last cell of row five is now empty. That is the smallest
+           gap any addition could leave, and it sits bottom-right where it reads
+           as whitespace rather than as a missing tile.
+           No new CSS or JS: .bento-card.tall is the same tile Say Less and
+           toneofvoice.app already use, and the bento_click event picks up the
+           card's own .name text automatically (see the script at the foot). -->
+      <a class="bento-card tall" data-cat="product" href="/axbeat">
+        <span class="label">Product &middot; Live</span>
+        <span class="name">AXBeat</span>
+        <span class="blurb">The top 22 L2s, ranked on how well agents read their website and docs.</span>
+        <span class="cta"><span>See the board</span><span class="arrow">&rarr;</span></span>
+      </a>
       <a class="bento-card tall" data-cat="prompt" href="/say-less">
         <span class="label">Prompt</span>
         <span class="name">Say Less</span>
@@ -1255,6 +1271,7 @@
       </div>
       <div class="colophon-col">
         <h4>Products</h4>
+        <a href="/axbeat">AXBeat</a>
         <a href="https://toneofvoice.app">tone of voice</a>
         <a href="https://joinhighway.xyz/">highway</a>
         <a href="https://usefortress.vercel.app">fortress</a>

@@ -262,6 +262,7 @@ function checkPage(rel, seenTitles, seenDescs) {
 
   // --- Design tokens: no hardcoded colours in inline CSS ---
   checkColours(rel, raw);
+  checkStaleComments(rel, raw);
 
   // --- Social cards ---
   checkSocial(rel, raw, $);
@@ -280,6 +281,56 @@ function checkPage(rel, seenTitles, seenDescs) {
 }
 
 // Colour literals in inline CSS, minus documented exceptions.
+// ---------------------------------------------------------------------------
+// Stale comments. This codebase carries its reasoning in comments rather than
+// in a wiki, which is the point, but a comment that names something the file no
+// longer has is worse than no comment: it sends the next reader looking for a
+// rule that was deleted. Four of them went false in one afternoon's work on
+// /axbeat (a removed pip ladder, a retired gate derivation, a renamed column, a
+// custom property that no longer exists), and nothing caught any of them.
+//
+// Only identifiers are checked, never prose: a --custom-property or a fn() named
+// in a comment has to still exist in this page or in the shared stylesheets it
+// links. That catches the mechanical half of the drift and is silent about the
+// rest, which no linter can see. Names are resolved against the page plus
+// tokens/ui/motion, so a comment pointing at a shared class is fine.
+// ---------------------------------------------------------------------------
+const SHARED_CSS = ['tokens.css', 'ui.css', 'motion.css']
+  .map((f) => path.join(ROOT, f))
+  .filter((f) => existsSync(f))
+  .map((f) => readFileSync(f, 'utf8'))
+  .join('\n');
+
+function checkStaleComments(rel, raw) {
+  // Comments only, and only the ones this repo writes by hand: /* */ in CSS and
+  // JS. The baked <script type="application/json"> block carries none.
+  const comments = [];
+  const block = /\/\*[\s\S]*?\*\//g;
+  let m;
+  while ((m = block.exec(raw))) comments.push({ start: m.index, text: m[0] });
+
+  const body = raw + SHARED_CSS;
+  for (const { start, text } of comments) {
+    const named = new Set();
+    for (const t of text.match(/--[a-z][a-z0-9-]*/g) || []) named.add(t);
+    for (const t of text.match(/\b[a-zA-Z_$][\w$]*\(\)/g) || []) named.add(t.slice(0, -2));
+    for (const name of named) {
+      // A property is live if it is declared or read anywhere; a function is
+      // live if it is declared or called. Either way: does the name appear
+      // outside the comments at all?
+      const bare = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const uses = (body.match(new RegExp(bare, 'g')) || []).length;
+      const inComments = comments.reduce(
+        (n, c) => n + (c.text.match(new RegExp(bare, 'g')) || []).length, 0);
+      if (uses <= inComments) {
+        fail('Stale comments', rel,
+          `a comment names \`${name}\`, which this page and the shared stylesheets no longer have`,
+          offsetToLine(raw, start));
+      }
+    }
+  }
+}
+
 function checkColours(rel, raw) {
   const chunks = inlineCssChunks(raw);
   const colour = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})\b|(?:rgba?|hsla?)\([^)]*\)/g;
@@ -526,7 +577,7 @@ checkFragments(pages);
 // ---------------------------------------------------------------------------
 // Output, grouped by discipline, file + line where feasible.
 // ---------------------------------------------------------------------------
-const DISCIPLINES = ['SEO & Meta', 'Content hygiene', 'Trust & contactability', 'Mobile', 'Design tokens', 'Social cards', 'Fragments', 'Index hygiene', 'Uniqueness & structure'];
+const DISCIPLINES = ['SEO & Meta', 'Content hygiene', 'Trust & contactability', 'Mobile', 'Design tokens', 'Stale comments', 'Social cards', 'Fragments', 'Index hygiene', 'Uniqueness & structure'];
 console.log(`check-site: ${pages.length} shipped pages under ${ROOT}`);
 console.log(pages.map((p) => `  - ${p}`).join('\n'));
 console.log('');
