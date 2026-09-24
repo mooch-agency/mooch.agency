@@ -33,6 +33,7 @@
 // workflow stays green before the secret exists.
 // ---------------------------------------------------------------------------
 
+import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -242,6 +243,27 @@ async function refreshStats(data, fetchImpl) {
 
 // --- bake ----------------------------------------------------------------------
 
+// The colours live in tokens.css so the marks follow the design system, and
+// so check-site's no-colour-literals rule holds even for baked markup.
+const GRID_COLOURS = ['var(--credit-c)', 'var(--credit-m)', 'var(--credit-y)', 'var(--credit-k)'];
+
+// Each card's tile is an 8x8 CMYK grid drawn from a SHA-256 of the project's
+// id, the same move as the collection itself: a Credit is drawn from its
+// hashed transaction ID. Cell on/off comes from the hash's first 64 bits;
+// colour from a second hash so the two choices stay independent. Pure
+// function of the id, so the bake stays byte-stable run to run.
+function gridSvg(id) {
+  const on = createHash('sha256').update(id).digest();
+  const colour = createHash('sha256').update(`${id}:colour`).digest();
+  let rects = '';
+  for (let i = 0; i < 64; i++) {
+    if (!((on[i >> 3] >> (i & 7)) & 1)) continue;
+    const fill = GRID_COLOURS[colour[i % 32] & 3];
+    rects += `<rect x="${(i % 8) * 10 + 1}" y="${Math.floor(i / 8) * 10 + 1}" width="8" height="8" fill="${fill}"/>`;
+  }
+  return `<svg class="proj-art" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${rects}</svg>`;
+}
+
 function renderProjects(projects) {
   const approved = projects
     .filter((p) => p.status === 'approved')
@@ -258,12 +280,14 @@ function renderProjects(projects) {
       const name = escapeHtml(stripDashes(p.name));
       const blurb = escapeHtml(stripDashes(p.blurb));
       const handle = escapeHtml(p.x);
+      const url = escapeHtml(p.url);
       const by = p.x
         ? `by <a href="${escapeHtml(p.post)}" target="_blank" rel="noopener" data-event="creditcards_post_click">@${handle}</a> &middot; `
         : '';
       return [
-        '      <li>',
-        `        <a class="proj-name" href="${escapeHtml(p.url)}" target="_blank" rel="noopener" data-event="creditcards_project_click">${name}</a>`,
+        '      <li class="proj-card">',
+        `        ${gridSvg(p.id)}`,
+        `        <a class="proj-name" href="${url}" target="_blank" rel="noopener" data-event="creditcards_project_click">${name}</a>`,
         blurb ? `        <p class="proj-blurb">${blurb}</p>` : null,
         `        <p class="proj-by">${by}added ${fmtDate(p.added)}</p>`,
         '      </li>',
