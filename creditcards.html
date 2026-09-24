@@ -60,193 +60,158 @@
   .topbar a:hover { border-bottom: 1px solid var(--ink); }
   .topbar .you { color: var(--muted); }
 
-  .case-hero {
-    padding: clamp(64px, 10vw, 120px) var(--pad-x) clamp(48px, 8vw, 96px);
-    border-bottom: 1px solid var(--hairline);
+  /* Grid first. Title, live numbers and the explainer share one compact
+     header so the first cards land on the first screen, desktop and phone
+     (the old hero, stat band and prose put them 2.5 screens down). The
+     explainer sits behind a native <details>, so it works with no JS. */
+  .cc-head { padding: clamp(28px, 4vw, 44px) var(--pad-x) 0; }
+  .cc-head-inner { max-width: var(--max); margin: 0 auto; }
+  .cc-split {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: end;
+    padding-bottom: 24px;
   }
-  .case-hero-inner { max-width: var(--max); margin: 0 auto; }
-  .case-hero .eyebrow {
+  @media (min-width: 900px) { .cc-split { grid-template-columns: 1.2fr 1fr; gap: 40px; } }
+  .eyebrow {
     font-family: var(--mono);
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.18em;
     color: var(--muted);
-    margin-bottom: 48px;
     display: flex;
     align-items: center;
     gap: 12px;
   }
-  .case-hero .eyebrow .rule { flex: 0 0 60px; height: 1px; background: var(--ink); }
-  .case-hero h1 {
+  .eyebrow .rule { flex: 0 0 40px; height: 1px; background: var(--ink); }
+  .cc-head h1 {
     font-family: var(--serif);
     font-weight: 400;
-    font-size: clamp(56px, 11vw, 168px);
+    font-size: clamp(44px, 5.4vw, 76px);
     line-height: 0.95;
     letter-spacing: -0.025em;
     color: var(--black);
-    margin-bottom: clamp(28px, 4vw, 48px);
-    max-width: 16ch;
-    text-wrap: balance;
+    margin: 12px 0 10px;
   }
-  .case-hero h1 em { font-style: italic; }
-  .case-hero .standfirst {
+  .cc-head h1 em { font-style: italic; }
+  .cc-standfirst { font-size: 16px; color: var(--muted-small); max-width: 46ch; text-wrap: pretty; }
+
+  /* Live numbers. Fixed tiles and textContent-only swaps, so the runtime
+     refresh can't shift layout (Lighthouse CLS runs where /api 404s). */
+  .stat-tiles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--hairline);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow-border);
+  }
+  .stat-tile { background: var(--paper); padding: 12px 14px; min-width: 0; }
+  .stat-label, .stat-sub, .stat-note {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted-small);
+  }
+  .stat-value {
     font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(22px, 2.4vw, 32px);
-    font-style: italic;
-    line-height: 1.3;
-    color: var(--ink);
-    max-width: 36ch;
-    margin-bottom: clamp(40px, 6vw, 64px);
-    text-wrap: pretty;
+    font-size: clamp(22px, 2.2vw, 30px);
+    line-height: 1.15;
+    color: var(--black);
+    white-space: nowrap;
+    margin: 4px 0 2px;
   }
-  .case-meta {
+  .stat-value .unit { font-size: 0.55em; color: var(--muted); }
+  .stat-note { margin-top: 8px; color: var(--muted); }
+
+  .about { border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
+  .about summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    min-height: 44px;
+    padding: 10px 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink);
+  }
+  .about summary::-webkit-details-marker { display: none; }
+  .about summary::after { content: "+"; font-size: 16px; color: var(--muted); }
+  .about[open] summary::after { content: "\2212"; }
+  .about summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+  .about-body { padding: 4px 0 24px; max-width: var(--col); font-size: 17px; line-height: 1.65; }
+  .about-body p { margin-bottom: 1em; text-wrap: pretty; }
+  .about-body a { border-bottom: 1px solid var(--hairline); transition: border-color 0.15s ease; }
+  .about-body a:hover { border-bottom-color: var(--ink); }
+  .about-facts {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-    padding-top: 28px;
+    gap: 16px 24px;
+    padding-top: 18px;
     border-top: 1px solid var(--hairline);
     font-family: var(--mono);
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.1em;
   }
-  .case-meta dt { color: var(--muted); margin-bottom: 4px; }
-  .case-meta dd { color: var(--ink); }
-  @media (min-width: 720px) { .case-meta { grid-template-columns: repeat(3, 1fr); } }
-  @media (min-width: 1080px) { .case-meta { grid-template-columns: repeat(5, 1fr); } }
+  @media (min-width: 720px) { .about-facts { grid-template-columns: repeat(4, 1fr); } }
+  .about-facts dt { color: var(--muted); margin-bottom: 4px; }
+  .about-facts dd { color: var(--ink); }
 
-  /* Live numbers. Values sit in fixed grid cells and JS only ever swaps
-     textContent, so the runtime refresh can't shift layout (the Lighthouse
-     CLS budget is checked against a static server where /api 404s, and the
-     page has to look identical in that world). */
-  .stat-band {
-    padding: clamp(40px, 6vw, 72px) var(--pad-x);
-    border-bottom: 1px solid var(--hairline);
-    background: var(--surface);
-  }
-  .stat-band-inner { max-width: var(--max); margin: 0 auto; }
-  .stat-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2px;
-    max-width: 720px;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: var(--shadow-border);
-  }
-  @media (min-width: 560px) { .stat-grid { grid-template-columns: repeat(3, 1fr); } }
-  .stat-cell { background: var(--paper); padding: 22px 20px; }
-  .stat-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: var(--muted-small);
-    margin-bottom: 10px;
-  }
-  .stat-value { font-family: var(--serif); font-size: 34px; line-height: 1.1; white-space: nowrap; }
-  .stat-value .unit { font-size: 20px; color: var(--muted); }
-  .stat-supply { margin-top: 24px; max-width: 56ch; text-wrap: pretty; }
-  .stat-supply strong { font-weight: 600; color: var(--black); }
-  .stat-note {
-    margin-top: 10px;
-    font-family: var(--mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--muted);
-  }
-
-  .case-body {
-    padding: clamp(64px, 10vw, 120px) var(--pad-x) clamp(96px, 12vw, 160px);
-    border-bottom: 1px solid var(--hairline);
-  }
-  .case-body-inner {
-    max-width: var(--col);
-    margin: 0 auto;
-    font-size: 18px;
-    line-height: 1.65;
-    color: var(--ink);
-  }
-  .case-body h2 {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(36px, 4.6vw, 56px);
-    line-height: 1;
-    letter-spacing: -0.02em;
-    color: var(--black);
-    margin-top: clamp(64px, 8vw, 112px);
-    margin-bottom: 28px;
-    scroll-margin-top: 40px;
-    text-wrap: balance;
-  }
-  .case-body h2 em { font-style: italic; }
-  .case-body h2:first-child { margin-top: 0; }
-  .case-body h2 .num {
-    font-family: var(--mono);
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--muted);
-    display: block;
-    font-style: normal;
-    margin-bottom: 28px;
-    font-weight: 400;
-  }
-  .case-body p { margin-bottom: 1.1em; hanging-punctuation: first last; text-wrap: pretty; }
-  .case-body p strong { font-weight: 600; color: var(--black); }
-  .case-body p em { font-style: italic; }
-  .case-body a { border-bottom: 1px solid var(--hairline); transition: border-color 0.15s ease; }
-  .case-body a:hover { border-bottom-color: var(--ink); }
-
-  /* The index itself: one card per project, in its own full-width band so
-     the grid isn't squeezed into the prose column. Each tile carries an 8x8
-     CMYK grid drawn from a SHA-256 of the project's id (baked by
+  /* The index itself: one card per project. Each tile carries an 8x8 CMYK
+     grid drawn from a SHA-256 of the project's id (baked by
      scripts/creditcards-update.mjs), the way a Credit is drawn from its
      hashed transaction ID: every card gets a permanent mark without
      depending on anyone else's og:image, and most of these sites ship none. */
-  .projects-band {
-    padding: clamp(64px, 10vw, 120px) var(--pad-x) clamp(96px, 12vw, 160px);
-    border-bottom: 1px solid var(--hairline);
-  }
+  .projects-band { padding: 24px var(--pad-x) clamp(80px, 10vw, 128px); border-bottom: 1px solid var(--hairline); }
   .projects-band-inner { max-width: var(--max); margin: 0 auto; }
-  .projects-band h2 {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(36px, 4.6vw, 56px);
-    line-height: 1;
-    letter-spacing: -0.02em;
-    color: var(--black);
-    margin-bottom: 28px;
-    scroll-margin-top: 40px;
-    text-wrap: balance;
+  .projects-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px 24px;
+    margin-bottom: 18px;
   }
-  .projects-band h2 .num {
+  .projects-head h2 {
     font-family: var(--mono);
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--muted);
-    display: block;
-    margin-bottom: 28px;
+    font-size: 11px;
     font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink);
+    scroll-margin-top: 24px;
   }
-  .projects-lead, .projects-foot {
-    font-size: 18px;
-    line-height: 1.65;
-    max-width: var(--col);
-    text-wrap: pretty;
-    margin: 0;
+  .projects-head p { font-size: 14px; color: var(--muted-small); max-width: 80ch; }
+  /* Phones are where most X links land, so the header gives up everything
+     that isn't the title or a number. */
+  @media (max-width: 599px) {
+    .cc-head { padding-top: 22px; }
+    .cc-head .eyebrow { display: none; }
+    .cc-head h1 { margin-top: 0; }
+    .cc-split { gap: 14px; padding-bottom: 16px; }
+    .stat-note { display: none; }
+    .projects-band { padding-top: 16px; }
+    .projects-head { margin-bottom: 14px; }
+    .projects .proj-card { min-height: 0; padding: 20px 18px 18px; }
   }
-  .projects-lead a, .projects-foot a { border-bottom: 1px solid var(--hairline); transition: border-color 0.15s ease; }
-  .projects-lead a:hover, .projects-foot a:hover { border-bottom-color: var(--ink); }
+  .projects-foot { font-size: 17px; max-width: var(--col); text-wrap: pretty; }
+  .projects-foot a { border-bottom: 1px solid var(--hairline); transition: border-color 0.15s ease; }
+  .projects-foot a:hover { border-bottom-color: var(--ink); }
   .projects {
     list-style: none;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 22px;
-    margin: 48px 0;
+    margin: 0 0 40px;
     padding: 0;
   }
   .proj-card {
@@ -304,7 +269,7 @@
   }
   .proj-by a { color: var(--ink); border-bottom: 1px solid transparent; }
   .proj-by a:hover { border-bottom-color: var(--ink); }
-  .projects-empty { color: var(--muted); font-style: italic; margin: 48px 0; }
+  .projects-empty { color: var(--muted); font-style: italic; margin: 0 0 40px; }
 
   .colophon {
     padding: 56px var(--pad-x) 40px;
@@ -360,12 +325,10 @@
   @media print {
     body { background: #fff; color: #000; }
     .topbar, .colophon { display: none; }
-    .case-hero { padding: 24px 0; border: none; }
-    .case-body { padding: 0; max-width: 100%; }
-    .case-body-inner { max-width: 100%; }
+    .cc-head, .projects-band { padding: 24px 0; border: none; }
     a { color: #000; text-decoration: underline; }
     .reveal { opacity: 1; transform: none; animation: none; }
-    .stat-grid { break-inside: avoid; border: 1px solid #000; }
+    .stat-tiles, .proj-card { break-inside: avoid; border: 1px solid #000; }
     * { box-shadow: none !important; }
   }
 </style>
@@ -381,57 +344,58 @@
 
 <main>
 
-<section class="case-hero">
-  <div class="case-hero-inner">
-    <div class="eyebrow reveal d1"><span class="rule"></span> Community index</div>
-    <h1 class="reveal d2">Credit <em>Cards</em></h1>
-    <p class="standfirst reveal d3">Jack Butcher turned 122,154 payments of $8 into generative art. People keep building things on top. This page keeps track.</p>
-    <dl class="case-meta reveal d4">
-      <div><dt>Collection</dt><dd>Credits by Jack Butcher</dd></div>
-      <div><dt>Chain</dt><dd>Ethereum</dd></div>
-      <div><dt>Minted</dt><dd>122,154 at $8 each</dd></div>
-      <div><dt>The burn</dt><dd>80 Credits = 1 Statement</dd></div>
-      <div><dt>Statements cap</dt><dd>1,526</dd></div>
-    </dl>
-  </div>
-</section>
-
-<section class="stat-band" aria-label="Live market numbers">
-  <div class="stat-band-inner">
-    <div class="stat-grid">
-      <div class="stat-cell">
-        <div class="stat-label">Floor</div>
-        <div class="stat-value"><span data-stat="floorEth">0.0295</span> <span class="unit">ETH</span></div>
+<section class="cc-head">
+  <div class="cc-head-inner">
+    <div class="cc-split">
+      <div>
+        <div class="eyebrow reveal d1"><span class="rule"></span> Community index</div>
+        <h1 class="reveal d2">Credit <em>Cards</em></h1>
+        <p class="cc-standfirst reveal d3">Every project built on Jack Butcher's Credits, in one place.</p>
       </div>
-      <div class="stat-cell">
-        <div class="stat-label">In USD</div>
-        <div class="stat-value"><span class="unit">$</span><span data-stat="floorUsd">79</span></div>
-      </div>
-      <div class="stat-cell">
-        <div class="stat-label">Holders</div>
-        <div class="stat-value"><span data-stat="owners">16,293</span></div>
+      <div class="reveal d4">
+        <div class="stat-tiles" role="group" aria-label="Live market numbers">
+          <div class="stat-tile">
+            <div class="stat-label">Floor</div>
+            <div class="stat-value"><span data-stat="floorEth">0.0295</span> <span class="unit">ETH</span></div>
+            <div class="stat-sub">$<span data-stat="floorUsd">79</span></div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-label">Holders</div>
+            <div class="stat-value"><span data-stat="owners">16,293</span></div>
+            <div class="stat-sub">Wallets</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-label">Supply</div>
+            <div class="stat-value"><span data-stat="supply">122,153</span></div>
+            <div class="stat-sub">Of 122,154</div>
+          </div>
+        </div>
+        <p class="stat-note">Live from OpenSea, every half hour</p>
       </div>
     </div>
-    <p class="stat-supply"><strong><span data-stat="supply">122,153</span></strong> of the 122,154 Credits minted still exist. Every Statement assembled burns 80 more, so that number only goes down.</p>
-    <p class="stat-note">Live from OpenSea, refreshed every half hour</p>
+    <details class="about">
+      <summary>What are Credits?</summary>
+      <div class="about-body">
+        <p>Credits is Jack Butcher's work, and this page is a fan index, not an official one. Each Credit began as one $8 payment through X Money. The transaction ID, hashed with SHA-256, draws four 8x8 grids in cyan, magenta, yellow and black, so the receipt is the artwork. 122,154 payments made it in before the window closed.</p>
+        <p>From 1 October 2026, any 80 Credits can be burned to assemble one Statement. At most 1,526 Statements can ever exist, and every one made shrinks the supply for good, so the number above only goes down.</p>
+        <p>Start at <a href="https://jack.art/credits" target="_blank" rel="noopener" data-event="creditcards_credits_click">jack.art/credits</a>. Trade on <a href="https://opensea.io/collection/credits" target="_blank" rel="noopener" data-event="creditcards_credits_click">OpenSea</a>. Follow <a href="https://x.com/jackbutcher" target="_blank" rel="noopener" data-event="creditcards_credits_click">@jackbutcher</a>. Verify the <a href="https://etherscan.io/address/0x97630aa70ab14ed9883b41dafccbc11349723043" target="_blank" rel="noopener" data-event="creditcards_credits_click">contract</a>.</p>
+        <dl class="about-facts">
+          <div><dt>Chain</dt><dd>Ethereum</dd></div>
+          <div><dt>Minted</dt><dd>122,154 at $8 each</dd></div>
+          <div><dt>The burn</dt><dd>80 Credits = 1 Statement</dd></div>
+          <div><dt>Statements cap</dt><dd>1,526</dd></div>
+        </dl>
+      </div>
+    </details>
   </div>
 </section>
-
-<article class="case-body">
-  <div class="case-body-inner">
-
-    <h2><span class="num">&sect; 01</span>The collection</h2>
-    <p>Credits is Jack Butcher's work, and this page is a fan index, not an official one. Each Credit began as one $8 payment through X Money. The transaction ID, hashed with SHA-256, draws four 8x8 grids in cyan, magenta, yellow and black, so the receipt is the artwork. 122,154 payments made it in before the window closed.</p>
-    <p>From 1 October 2026, any 80 Credits can be burned to assemble one Statement. At most 1,526 Statements can ever exist, and every one made shrinks the supply for good.</p>
-    <p>Start at <a href="https://jack.art/credits" target="_blank" rel="noopener" data-event="creditcards_credits_click">jack.art/credits</a>. Trade on <a href="https://opensea.io/collection/credits" target="_blank" rel="noopener" data-event="creditcards_credits_click">OpenSea</a>. Follow <a href="https://x.com/jackbutcher" target="_blank" rel="noopener" data-event="creditcards_credits_click">@jackbutcher</a>. Verify the <a href="https://etherscan.io/address/0x97630aa70ab14ed9883b41dafccbc11349723043" target="_blank" rel="noopener" data-event="creditcards_credits_click">contract</a>.</p>
-
-  </div>
-</article>
 
 <section class="projects-band">
   <div class="projects-band-inner">
-    <h2 id="projects"><span class="num">&sect; 02</span>The projects</h2>
-    <p class="projects-lead">Holders keep shipping tools, galleries and derivatives, and they announce them on X. A daily search brings candidates in; a human approves every listing before it appears here. None of it is Jack's and none of it is ours, so read what a site asks of your wallet before you connect it.</p>
+    <div class="projects-head">
+      <h2 id="projects">The projects</h2>
+      <p>Found daily on X, approved by a human. Unofficial: check what a site asks of your wallet.</p>
+    </div>
     <!-- creditcards:projects:start -->
     <ol class="projects">
       <li class="proj-card">
