@@ -109,6 +109,13 @@ card frwa \
   --domain "mooch.agency/frwa" \
   --dark --scale 1.15
 
+card creditcards \
+  --eyebrow "Community index" \
+  --title "Credit *Cards*" \
+  --subtitle "Every project built on Jack Butcher's\nCredits, in one place. Refreshed daily." \
+  --domain "mooch.agency/creditcards" \
+  --tint plaything --scale 1.3
+
 # No `ready` card: /ready was retired in the Phase 0 roadmap decision and now
 # 301s to /, so a sharer never reaches a page that would use one.
 

@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "sinceId": null,
+    "lastRun": "2026-09-24T21:26:06.965Z",
+    "stats": {
+      "floorEth": 0.0297,
+      "floorUsd": 80,
+      "supply": 122153,
+      "owners": 16368,
+      "fetchedAt": "2026-09-24T21:26:06.951Z"
+    }
+  },
+  "projects": []
+}
