@@ -146,25 +146,51 @@
   .about summary::-webkit-details-marker { display: none; }
   .about summary::after { content: "+"; font-size: 16px; color: var(--muted); }
   .about[open] summary::after { content: "\2212"; }
-  .about summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+  /* Underline rather than an outline box: Safari treats a clicked summary
+     as focus-visible, and a hard box round it read as broken. Keyboard
+     users still get a clear marker. */
+  .about summary:focus { outline: none; }
+  .about summary:focus-visible { text-decoration: underline; text-underline-offset: 4px; }
   .about-body { padding: 4px 0 24px; max-width: var(--col); font-size: 17px; line-height: 1.65; }
   .about-body p { margin-bottom: 1em; text-wrap: pretty; }
-  .about-body a { border-bottom: 1px solid var(--hairline); transition: border-color 0.15s ease; }
-  .about-body a:hover { border-bottom-color: var(--ink); }
+
+  /* Same anatomy as the stat tiles up top (mono label, serif number) so the
+     two sets of figures read as one system. Values kept short enough that
+     no cell wraps at any width. */
   .about-facts {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px 24px;
-    padding-top: 18px;
+    gap: 18px 24px;
+    margin: 8px 0 0;
+    padding: 18px 0;
     border-top: 1px solid var(--hairline);
-    font-family: var(--mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--hairline);
   }
   @media (min-width: 720px) { .about-facts { grid-template-columns: repeat(4, 1fr); } }
-  .about-facts dt { color: var(--muted); margin-bottom: 4px; }
-  .about-facts dd { color: var(--ink); }
+  .about-facts dt {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted-small);
+    margin-bottom: 4px;
+  }
+  .about-facts dd {
+    font-family: var(--serif);
+    font-size: 26px;
+    line-height: 1.1;
+    color: var(--black);
+    white-space: nowrap;
+  }
+  .about-links { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 18px; }
+  .about-body .about-note {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
 
   /* The index itself: one card per project. Each tile carries an 8x8 CMYK
      grid drawn from a SHA-256 of the project's id (baked by
@@ -202,6 +228,7 @@
     .projects-band { padding-top: 16px; }
     .projects-head { margin-bottom: 14px; }
     .projects .proj-card { min-height: 0; padding: 20px 18px 18px; }
+    .projects .proj-by { margin: 0 -18px -18px; padding: 12px 18px 16px; }
   }
   .projects-foot { font-size: 17px; max-width: var(--col); text-wrap: pretty; }
   .projects-foot a { border-bottom: 1px solid var(--hairline); transition: border-color 0.15s ease; }
@@ -256,18 +283,34 @@
   }
   .proj-name:hover { border-bottom-color: var(--ink); }
   .proj-blurb { position: relative; margin: 0; font-size: 15px; line-height: 1.5; color: var(--muted-small); flex: 1; max-width: 88%; text-wrap: pretty; }
+  /* Handle left, date right, never wrapping: a byline that breaks onto a
+     second line in some cards and not others makes the row look ragged. */
   .proj-by {
     position: relative;
-    margin: 0;
-    padding-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    /* A solid footer strip, bleeding to the card edges, so the watermark
+       stops at the divider instead of sitting under the date. */
+    margin: 0 -22px -20px;
+    padding: 12px 22px 18px;
+    background: var(--paper);
     border-top: 1px solid var(--hairline);
     font-family: var(--mono);
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--muted);
+    white-space: nowrap;
   }
-  .proj-by a { color: var(--ink); border-bottom: 1px solid transparent; }
+  .proj-by a {
+    color: var(--ink);
+    border-bottom: 1px solid transparent;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
   .proj-by a:hover { border-bottom-color: var(--ink); }
   .projects-empty { color: var(--muted); font-style: italic; margin: 0 0 40px; }
 
@@ -337,7 +380,7 @@
 
 <header class="topbar">
   <div class="left">
-    <a href="/">Mooch</a> &nbsp;/&nbsp; <span class="you">/creditcards</span>
+    <a href="/">Mooch</a> &nbsp;/&nbsp; <span class="you">Credit Cards</span>
   </div>
   <div class="right">2026</div>
 </header>
@@ -376,15 +419,21 @@
     <details class="about">
       <summary>What are Credits?</summary>
       <div class="about-body">
-        <p>Credits is Jack Butcher's work, and this page is a fan index, not an official one. Each Credit began as one $8 payment through X Money. The transaction ID, hashed with SHA-256, draws four 8x8 grids in cyan, magenta, yellow and black, so the receipt is the artwork. 122,154 payments made it in before the window closed.</p>
-        <p>From 1 October 2026, any 80 Credits can be burned to assemble one Statement. At most 1,526 Statements can ever exist, and every one made shrinks the supply for good, so the number above only goes down.</p>
-        <p>Start at <a href="https://jack.art/credits" target="_blank" rel="noopener" data-event="creditcards_credits_click">jack.art/credits</a>. Trade on <a href="https://opensea.io/collection/credits" target="_blank" rel="noopener" data-event="creditcards_credits_click">OpenSea</a>. Follow <a href="https://x.com/jackbutcher" target="_blank" rel="noopener" data-event="creditcards_credits_click">@jackbutcher</a>. Verify the <a href="https://etherscan.io/address/0x97630aa70ab14ed9883b41dafccbc11349723043" target="_blank" rel="noopener" data-event="creditcards_credits_click">contract</a>.</p>
+        <p>Credits is an open edition by Jack Butcher. Each $8 payment through X Money minted one Credit, and its transaction ID, hashed with SHA-256, draws the artwork: four 8x8 grids in cyan, magenta, yellow and black.</p>
+        <p>From 1 October 2026, any 80 Credits can be burned to make one Statement. Every burn shrinks the supply for good.</p>
         <dl class="about-facts">
-          <div><dt>Chain</dt><dd>Ethereum</dd></div>
-          <div><dt>Minted</dt><dd>122,154 at $8 each</dd></div>
-          <div><dt>The burn</dt><dd>80 Credits = 1 Statement</dd></div>
+          <div><dt>Minted</dt><dd>122,154</dd></div>
+          <div><dt>Mint price</dt><dd>$8</dd></div>
+          <div><dt>One Statement</dt><dd>80 Credits</dd></div>
           <div><dt>Statements cap</dt><dd>1,526</dd></div>
         </dl>
+        <div class="about-links">
+          <a class="pill" href="https://jack.art/credits" target="_blank" rel="noopener" data-event="creditcards_credits_click">jack.art/credits <span class="arrow">&rarr;</span></a>
+          <a class="ghost" href="https://opensea.io/collection/credits" target="_blank" rel="noopener" data-event="creditcards_credits_click">OpenSea &nearr;</a>
+          <a class="ghost" href="https://x.com/jackbutcher" target="_blank" rel="noopener" data-event="creditcards_credits_click">@jackbutcher &nearr;</a>
+          <a class="ghost" href="https://etherscan.io/address/0x97630aa70ab14ed9883b41dafccbc11349723043" target="_blank" rel="noopener" data-event="creditcards_credits_click">Contract &nearr;</a>
+        </div>
+        <p class="about-note">Unofficial fan index. Not affiliated with Jack Butcher.</p>
       </div>
     </details>
   </div>
@@ -402,49 +451,49 @@
         <svg class="proj-art" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="11" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="31" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="51" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="61" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="71" y="1" width="8" height="8" fill="var(--credit-c)"/><rect x="11" y="11" width="8" height="8" fill="var(--credit-k)"/><rect x="21" y="11" width="8" height="8" fill="var(--credit-y)"/><rect x="41" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="11" y="21" width="8" height="8" fill="var(--credit-k)"/><rect x="21" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="21" width="8" height="8" fill="var(--credit-m)"/><rect x="71" y="21" width="8" height="8" fill="var(--credit-y)"/><rect x="1" y="31" width="8" height="8" fill="var(--credit-k)"/><rect x="11" y="31" width="8" height="8" fill="var(--credit-y)"/><rect x="31" y="31" width="8" height="8" fill="var(--credit-m)"/><rect x="51" y="31" width="8" height="8" fill="var(--credit-m)"/><rect x="1" y="41" width="8" height="8" fill="var(--credit-c)"/><rect x="11" y="41" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="41" width="8" height="8" fill="var(--credit-m)"/><rect x="1" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="41" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="51" width="8" height="8" fill="var(--credit-y)"/><rect x="61" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="1" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="21" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="31" y="61" width="8" height="8" fill="var(--credit-y)"/><rect x="41" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="61" width="8" height="8" fill="var(--credit-k)"/><rect x="21" y="71" width="8" height="8" fill="var(--credit-y)"/><rect x="41" y="71" width="8" height="8" fill="var(--credit-m)"/></svg>
         <a class="proj-name" href="https://3dcredits.vercel.app" target="_blank" rel="noopener" data-event="creditcards_project_click">3D Credits</a>
         <p class="proj-blurb">Your Credit as 3D voxels. Enter a token ID, export a snapshot or a video.</p>
-        <p class="proj-by">by <a href="https://x.com/melonbuskk/status/2102977797560111589" target="_blank" rel="noopener" data-event="creditcards_post_click">@melonbuskk</a> &middot; added 24 Sept 2026</p>
+        <p class="proj-by"><a href="https://x.com/melonbuskk/status/2102977797560111589" target="_blank" rel="noopener" data-event="creditcards_post_click">@melonbuskk</a><span>24 Sept 2026</span></p>
       </li>
       <li class="proj-card">
         <svg class="proj-art" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="11" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="31" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="41" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="1" width="8" height="8" fill="var(--credit-c)"/><rect x="1" y="11" width="8" height="8" fill="var(--credit-m)"/><rect x="21" y="11" width="8" height="8" fill="var(--credit-m)"/><rect x="31" y="11" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="11" width="8" height="8" fill="var(--credit-m)"/><rect x="1" y="21" width="8" height="8" fill="var(--credit-y)"/><rect x="11" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="21" y="21" width="8" height="8" fill="var(--credit-y)"/><rect x="1" y="31" width="8" height="8" fill="var(--credit-m)"/><rect x="21" y="31" width="8" height="8" fill="var(--credit-m)"/><rect x="31" y="31" width="8" height="8" fill="var(--credit-y)"/><rect x="41" y="31" width="8" height="8" fill="var(--credit-y)"/><rect x="51" y="31" width="8" height="8" fill="var(--credit-m)"/><rect x="61" y="31" width="8" height="8" fill="var(--credit-k)"/><rect x="11" y="41" width="8" height="8" fill="var(--credit-y)"/><rect x="21" y="41" width="8" height="8" fill="var(--credit-y)"/><rect x="71" y="41" width="8" height="8" fill="var(--credit-m)"/><rect x="1" y="51" width="8" height="8" fill="var(--credit-m)"/><rect x="11" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="11" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="71" width="8" height="8" fill="var(--credit-m)"/><rect x="71" y="71" width="8" height="8" fill="var(--credit-m)"/></svg>
         <a class="proj-name" href="https://mantra-coral-mr7v.here.now" target="_blank" rel="noopener" data-event="creditcards_project_click">Credits Factory</a>
         <p class="proj-blurb">Describe the Statement you want and an AI picks the 80 Credits, priced from live listings.</p>
-        <p class="proj-by">by <a href="https://x.com/4484/status/2103209362206654605" target="_blank" rel="noopener" data-event="creditcards_post_click">@4484</a> &middot; added 24 Sept 2026</p>
+        <p class="proj-by"><a href="https://x.com/4484/status/2103209362206654605" target="_blank" rel="noopener" data-event="creditcards_post_click">@4484</a><span>24 Sept 2026</span></p>
       </li>
       <li class="proj-card">
         <svg class="proj-art" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="11" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="21" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="31" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="41" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="51" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="61" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="71" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="1" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="21" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="41" y="11" width="8" height="8" fill="var(--credit-y)"/><rect x="51" y="11" width="8" height="8" fill="var(--credit-y)"/><rect x="11" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="1" y="31" width="8" height="8" fill="var(--credit-m)"/><rect x="21" y="31" width="8" height="8" fill="var(--credit-y)"/><rect x="41" y="31" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="31" width="8" height="8" fill="var(--credit-m)"/><rect x="61" y="31" width="8" height="8" fill="var(--credit-m)"/><rect x="11" y="41" width="8" height="8" fill="var(--credit-y)"/><rect x="71" y="41" width="8" height="8" fill="var(--credit-y)"/><rect x="1" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="41" y="51" width="8" height="8" fill="var(--credit-y)"/><rect x="51" y="51" width="8" height="8" fill="var(--credit-y)"/><rect x="61" y="51" width="8" height="8" fill="var(--credit-y)"/><rect x="31" y="61" width="8" height="8" fill="var(--credit-y)"/><rect x="61" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="1" y="71" width="8" height="8" fill="var(--credit-m)"/><rect x="11" y="71" width="8" height="8" fill="var(--credit-y)"/><rect x="21" y="71" width="8" height="8" fill="var(--credit-y)"/></svg>
         <a class="proj-name" href="https://credits-intelligence.netlify.app" target="_blank" rel="noopener" data-event="creditcards_project_click">Credits Intelligence</a>
         <p class="proj-blurb">A dashboard for the collection: supply, burns and expected Statements.</p>
-        <p class="proj-by">by <a href="https://x.com/SickAssPen/status/2103093920972312602" target="_blank" rel="noopener" data-event="creditcards_post_click">@SickAssPen</a> &middot; added 24 Sept 2026</p>
+        <p class="proj-by"><a href="https://x.com/SickAssPen/status/2103093920972312602" target="_blank" rel="noopener" data-event="creditcards_post_click">@SickAssPen</a><span>24 Sept 2026</span></p>
       </li>
       <li class="proj-card">
         <svg class="proj-art" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="21" y="1" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="71" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="1" y="11" width="8" height="8" fill="var(--credit-k)"/><rect x="31" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="41" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="11" width="8" height="8" fill="var(--credit-y)"/><rect x="11" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="21" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="31" y="21" width="8" height="8" fill="var(--credit-m)"/><rect x="51" y="21" width="8" height="8" fill="var(--credit-y)"/><rect x="61" y="21" width="8" height="8" fill="var(--credit-k)"/><rect x="21" y="31" width="8" height="8" fill="var(--credit-y)"/><rect x="51" y="31" width="8" height="8" fill="var(--credit-k)"/><rect x="61" y="31" width="8" height="8" fill="var(--credit-y)"/><rect x="21" y="41" width="8" height="8" fill="var(--credit-c)"/><rect x="31" y="41" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="41" width="8" height="8" fill="var(--credit-y)"/><rect x="61" y="41" width="8" height="8" fill="var(--credit-m)"/><rect x="71" y="41" width="8" height="8" fill="var(--credit-m)"/><rect x="1" y="51" width="8" height="8" fill="var(--credit-k)"/><rect x="31" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="51" width="8" height="8" fill="var(--credit-y)"/><rect x="41" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="61" width="8" height="8" fill="var(--credit-y)"/><rect x="61" y="61" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="71" width="8" height="8" fill="var(--credit-y)"/><rect x="11" y="71" width="8" height="8" fill="var(--credit-c)"/><rect x="21" y="71" width="8" height="8" fill="var(--credit-y)"/></svg>
         <a class="proj-name" href="https://credits-lab.vercel.app" target="_blank" rel="noopener" data-event="creditcards_project_click">Credits Lab</a>
         <p class="proj-blurb">Metadata explorer for Credits: traits, rarity and renders by token ID.</p>
-        <p class="proj-by">by <a href="https://x.com/0xJohnB/status/2103058107240759350" target="_blank" rel="noopener" data-event="creditcards_post_click">@0xJohnB</a> &middot; added 24 Sept 2026</p>
+        <p class="proj-by"><a href="https://x.com/0xJohnB/status/2103058107240759350" target="_blank" rel="noopener" data-event="creditcards_post_click">@0xJohnB</a><span>24 Sept 2026</span></p>
       </li>
       <li class="proj-card">
         <svg class="proj-art" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="11" y="1" width="8" height="8" fill="var(--credit-c)"/><rect x="21" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="31" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="41" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="61" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="71" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="11" y="11" width="8" height="8" fill="var(--credit-m)"/><rect x="31" y="11" width="8" height="8" fill="var(--credit-y)"/><rect x="41" y="11" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="21" width="8" height="8" fill="var(--credit-y)"/><rect x="11" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="21" y="21" width="8" height="8" fill="var(--credit-y)"/><rect x="31" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="11" y="31" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="31" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="31" width="8" height="8" fill="var(--credit-y)"/><rect x="11" y="41" width="8" height="8" fill="var(--credit-c)"/><rect x="21" y="41" width="8" height="8" fill="var(--credit-y)"/><rect x="31" y="41" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="41" width="8" height="8" fill="var(--credit-m)"/><rect x="71" y="41" width="8" height="8" fill="var(--credit-y)"/><rect x="11" y="51" width="8" height="8" fill="var(--credit-m)"/><rect x="21" y="51" width="8" height="8" fill="var(--credit-k)"/><rect x="41" y="51" width="8" height="8" fill="var(--credit-k)"/><rect x="71" y="51" width="8" height="8" fill="var(--credit-y)"/><rect x="1" y="61" width="8" height="8" fill="var(--credit-y)"/><rect x="41" y="61" width="8" height="8" fill="var(--credit-y)"/><rect x="51" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="21" y="71" width="8" height="8" fill="var(--credit-k)"/><rect x="31" y="71" width="8" height="8" fill="var(--credit-k)"/><rect x="41" y="71" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="71" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="71" width="8" height="8" fill="var(--credit-y)"/></svg>
         <a class="proj-name" href="https://credits.ninja" target="_blank" rel="noopener" data-event="creditcards_project_click">credits.ninja</a>
         <p class="proj-blurb">Rarity for all 122,154 Credits, live sales, holder rankings and wallet compares. Paste an address, nothing to connect.</p>
-        <p class="proj-by">by <a href="https://x.com/itsmemeworks/status/2103163283482304667" target="_blank" rel="noopener" data-event="creditcards_post_click">@itsmemeworks</a> &middot; added 24 Sept 2026</p>
+        <p class="proj-by"><a href="https://x.com/itsmemeworks/status/2103163283482304667" target="_blank" rel="noopener" data-event="creditcards_post_click">@itsmemeworks</a><span>24 Sept 2026</span></p>
       </li>
       <li class="proj-card">
         <svg class="proj-art" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="11" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="31" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="61" y="1" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="11" width="8" height="8" fill="var(--credit-m)"/><rect x="21" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="31" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="41" y="11" width="8" height="8" fill="var(--credit-y)"/><rect x="51" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="11" width="8" height="8" fill="var(--credit-k)"/><rect x="11" y="21" width="8" height="8" fill="var(--credit-k)"/><rect x="31" y="21" width="8" height="8" fill="var(--credit-k)"/><rect x="41" y="21" width="8" height="8" fill="var(--credit-y)"/><rect x="51" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="11" y="31" width="8" height="8" fill="var(--credit-k)"/><rect x="31" y="31" width="8" height="8" fill="var(--credit-y)"/><rect x="51" y="31" width="8" height="8" fill="var(--credit-m)"/><rect x="61" y="31" width="8" height="8" fill="var(--credit-k)"/><rect x="71" y="31" width="8" height="8" fill="var(--credit-c)"/><rect x="1" y="41" width="8" height="8" fill="var(--credit-k)"/><rect x="11" y="41" width="8" height="8" fill="var(--credit-k)"/><rect x="21" y="41" width="8" height="8" fill="var(--credit-y)"/><rect x="61" y="41" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="41" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="51" width="8" height="8" fill="var(--credit-m)"/><rect x="11" y="51" width="8" height="8" fill="var(--credit-m)"/><rect x="31" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="51" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="61" width="8" height="8" fill="var(--credit-k)"/><rect x="11" y="61" width="8" height="8" fill="var(--credit-k)"/><rect x="31" y="61" width="8" height="8" fill="var(--credit-k)"/><rect x="41" y="61" width="8" height="8" fill="var(--credit-y)"/><rect x="51" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="61" width="8" height="8" fill="var(--credit-m)"/><rect x="71" y="61" width="8" height="8" fill="var(--credit-k)"/><rect x="31" y="71" width="8" height="8" fill="var(--credit-y)"/></svg>
         <a class="proj-name" href="https://creditsmoonmath.xyz" target="_blank" rel="noopener" data-event="creditcards_project_click">creditsmoonmath.xyz</a>
         <p class="proj-blurb">Paste a wallet, get a rarity rating for every Credit in it. Nothing to connect.</p>
-        <p class="proj-by">by <a href="https://x.com/himars/status/2103250902656118893" target="_blank" rel="noopener" data-event="creditcards_post_click">@himars</a> &middot; added 24 Sept 2026</p>
+        <p class="proj-by"><a href="https://x.com/himars/status/2103250902656118893" target="_blank" rel="noopener" data-event="creditcards_post_click">@himars</a><span>24 Sept 2026</span></p>
       </li>
       <li class="proj-card">
         <svg class="proj-art" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="11" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="21" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="31" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="61" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="71" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="1" y="11" width="8" height="8" fill="var(--credit-y)"/><rect x="41" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="11" width="8" height="8" fill="var(--credit-k)"/><rect x="61" y="11" width="8" height="8" fill="var(--credit-m)"/><rect x="71" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="1" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="11" y="21" width="8" height="8" fill="var(--credit-m)"/><rect x="31" y="21" width="8" height="8" fill="var(--credit-m)"/><rect x="51" y="21" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="31" width="8" height="8" fill="var(--credit-k)"/><rect x="61" y="31" width="8" height="8" fill="var(--credit-m)"/><rect x="11" y="41" width="8" height="8" fill="var(--credit-m)"/><rect x="31" y="41" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="41" width="8" height="8" fill="var(--credit-m)"/><rect x="71" y="41" width="8" height="8" fill="var(--credit-m)"/><rect x="31" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="41" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="51" width="8" height="8" fill="var(--credit-m)"/><rect x="71" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="11" y="61" width="8" height="8" fill="var(--credit-m)"/><rect x="21" y="61" width="8" height="8" fill="var(--credit-k)"/><rect x="41" y="61" width="8" height="8" fill="var(--credit-y)"/><rect x="71" y="61" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="71" width="8" height="8" fill="var(--credit-k)"/><rect x="31" y="71" width="8" height="8" fill="var(--credit-k)"/><rect x="41" y="71" width="8" height="8" fill="var(--credit-y)"/><rect x="71" y="71" width="8" height="8" fill="var(--credit-k)"/></svg>
         <a class="proj-name" href="https://sighthood.com" target="_blank" rel="noopener" data-event="creditcards_project_click">Sight</a>
         <p class="proj-blurb">A prediction market on where the Credits floor lands. Wallet connected, real money.</p>
-        <p class="proj-by">by <a href="https://x.com/sight_hood/status/2103147553948626961" target="_blank" rel="noopener" data-event="creditcards_post_click">@sight_hood</a> &middot; added 24 Sept 2026</p>
+        <p class="proj-by"><a href="https://x.com/sight_hood/status/2103147553948626961" target="_blank" rel="noopener" data-event="creditcards_post_click">@sight_hood</a><span>24 Sept 2026</span></p>
       </li>
       <li class="proj-card">
         <svg class="proj-art" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="21" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="41" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="51" y="1" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="21" y="11" width="8" height="8" fill="var(--credit-y)"/><rect x="31" y="11" width="8" height="8" fill="var(--credit-y)"/><rect x="41" y="11" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="1" y="21" width="8" height="8" fill="var(--credit-m)"/><rect x="11" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="31" y="21" width="8" height="8" fill="var(--credit-k)"/><rect x="41" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="21" width="8" height="8" fill="var(--credit-y)"/><rect x="11" y="31" width="8" height="8" fill="var(--credit-k)"/><rect x="21" y="31" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="31" width="8" height="8" fill="var(--credit-y)"/><rect x="61" y="31" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="41" width="8" height="8" fill="var(--credit-y)"/><rect x="21" y="41" width="8" height="8" fill="var(--credit-k)"/><rect x="61" y="41" width="8" height="8" fill="var(--credit-y)"/><rect x="21" y="51" width="8" height="8" fill="var(--credit-y)"/><rect x="51" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="51" width="8" height="8" fill="var(--credit-y)"/><rect x="11" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="31" y="61" width="8" height="8" fill="var(--credit-k)"/><rect x="41" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="61" width="8" height="8" fill="var(--credit-y)"/><rect x="11" y="71" width="8" height="8" fill="var(--credit-k)"/><rect x="21" y="71" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="71" width="8" height="8" fill="var(--credit-k)"/><rect x="71" y="71" width="8" height="8" fill="var(--credit-y)"/></svg>
         <a class="proj-name" href="https://credits-statement-studio.vercel.app" target="_blank" rel="noopener" data-event="creditcards_project_click">Statement Studio</a>
         <p class="proj-blurb">Arrange your 80 before you burn anything, with read-only lookup of your holdings.</p>
-        <p class="proj-by">by <a href="https://x.com/ivdoublex/status/2103242384775471375" target="_blank" rel="noopener" data-event="creditcards_post_click">@ivdoublex</a> &middot; added 24 Sept 2026</p>
+        <p class="proj-by"><a href="https://x.com/ivdoublex/status/2103242384775471375" target="_blank" rel="noopener" data-event="creditcards_post_click">@ivdoublex</a><span>24 Sept 2026</span></p>
       </li>
     </ol>
     <!-- creditcards:projects:end -->
