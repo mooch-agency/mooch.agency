@@ -17,44 +17,41 @@
       "url": "https://creditsmoonmath.xyz",
       "x": "himars",
       "post": "https://x.com/himars/status/2103250902656118893",
-      "blurb": "",
-      "status": "pending",
+      "blurb": "Paste a wallet, get a rarity rating for every Credit in it. Nothing to connect.",
+      "status": "approved",
       "added": "2026-09-24",
       "metrics": {
         "likes": 1,
         "reposts": 0
-      },
-      "tweetText": "HOW RARE ARE YOUR CREDITS?\n\npaste your wallet\n\ncheck every Credits NFT you hold in 1 click\n\nget @jackbutcher official CREDIT RATING\n\nyour bag might be rarer than you think\n\nDON’T FUMBLE IT\n\nhttps://t."
+      }
     },
     {
       "id": "credits-statement-studio-vercel-app",
-      "name": "credits-statement-studio.vercel.app",
+      "name": "Statement Studio",
       "url": "https://credits-statement-studio.vercel.app",
       "x": "ivdoublex",
       "post": "https://x.com/ivdoublex/status/2103242384775471375",
-      "blurb": "",
-      "status": "pending",
+      "blurb": "Arrange your 80 before you burn anything, with read-only lookup of your holdings.",
+      "status": "approved",
       "added": "2026-09-24",
       "metrics": {
         "likes": 1,
         "reposts": 0
-      },
-      "tweetText": "Made a little something for credits by @jackbutcher \n\nhttps://t.co/NNSjxwi3ai https://t.co/qF1ZnJn4P2"
+      }
     },
     {
       "id": "mantra-coral-mr7v-here-now",
-      "name": "mantra-coral-mr7v.here.now",
+      "name": "Credits Factory",
       "url": "https://mantra-coral-mr7v.here.now",
       "x": "4484",
       "post": "https://x.com/4484/status/2103209362206654605",
-      "blurb": "",
-      "status": "pending",
+      "blurb": "Describe the Statement you want and an AI picks the 80 Credits, priced from live listings.",
+      "status": "approved",
       "added": "2026-09-24",
       "metrics": {
         "likes": 76,
         "reposts": 3
-      },
-      "tweetText": "built a composer for @jackbutcher credits. \n\ndescribe the Statement you want and JEV model interprets the brief and the app selects 80 credits. (opensea-only mode adds up their current asking prices.)"
+      }
     },
     {
       "id": "credits-ninja",
@@ -62,29 +59,27 @@
       "url": "https://credits.ninja",
       "x": "itsmemeworks",
       "post": "https://x.com/itsmemeworks/status/2103163283482304667",
-      "blurb": "",
-      "status": "pending",
+      "blurb": "Rarity for all 122,154 Credits, live sales, holder rankings and wallet compares. Paste an address, nothing to connect.",
+      "status": "approved",
       "added": "2026-09-24",
       "metrics": {
         "likes": 2,
         "reposts": 0
-      },
-      "tweetText": "Free tool for @jackbutcher's Credits. Paste any wallet. No connecting needed.\n\n→ Live sales and listings\n→ Rarity for all 122,154 Credits\n→ Holder rankings\n→ Compare wallets\n→ Build and export your ow"
+      }
     },
     {
       "id": "sighthood-com",
-      "name": "sighthood.com",
+      "name": "Sight",
       "url": "https://sighthood.com",
       "x": "sight_hood",
       "post": "https://x.com/sight_hood/status/2103147553948626961",
-      "blurb": "",
-      "status": "pending",
+      "blurb": "A prediction market on where the Credits floor lands. Wallet connected, real money.",
+      "status": "approved",
       "added": "2026-09-24",
       "metrics": {
         "likes": 86,
         "reposts": 16
-      },
-      "tweetText": "A new market and a new category are live.\nNFT predictions.\nCheck it out: https://t.co/NtZSramovP\n\nFirst market: @jackbutcher Credits floor.\n\nThis is the start of Sight’s AMM based prediction markets.\n"
+      }
     },
     {
       "id": "ponsfamily-com-launchpad-0x5458b19214caba7ebbd550d1514a674c3bbfe2b1",
@@ -93,58 +88,54 @@
       "x": "kenZaii7",
       "post": "https://x.com/kenZaii7/status/2103142300276941293",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-24",
       "metrics": {
         "likes": 0,
         "reposts": 0
-      },
-      "tweetText": "Let’s see what @tradesgiving cooks up🚀\n\nThe play: use creator fees to buy @jackbutcher Credits and then distribute any trading profits with @SpaceX stock tokens.\n\nCA: 0x5458B19214CaBa7eBbD550D1514a67"
+      }
     },
     {
       "id": "credits-intelligence-netlify-app",
-      "name": "credits-intelligence.netlify.app",
+      "name": "Credits Intelligence",
       "url": "https://credits-intelligence.netlify.app",
       "x": "SickAssPen",
       "post": "https://x.com/SickAssPen/status/2103093920972312602",
-      "blurb": "",
-      "status": "pending",
+      "blurb": "A dashboard for the collection: supply, burns and expected Statements.",
+      "status": "approved",
       "added": "2026-09-24",
       "metrics": {
         "likes": 6,
         "reposts": 0
-      },
-      "tweetText": "Made a dashboard for @jackbutcher credits\n\nhttps://t.co/7XVGivgPn7\n\nMaking one change to how it calculates expected statements so that will be corrected, but this is the info I am interested in \n\nIt u"
+      }
     },
     {
       "id": "credits-lab-vercel-app",
-      "name": "credits-lab.vercel.app",
+      "name": "Credits Lab",
       "url": "https://credits-lab.vercel.app",
       "x": "0xJohnB",
       "post": "https://x.com/0xJohnB/status/2103058107240759350",
-      "blurb": "",
-      "status": "pending",
+      "blurb": "Metadata explorer for Credits: traits, rarity and renders by token ID.",
+      "status": "approved",
       "added": "2026-09-24",
       "metrics": {
         "likes": 4,
         "reposts": 0
-      },
-      "tweetText": "playing around with Credits by @jackbutcher\n👉 https://t.co/1zSpjCG87B https://t.co/zHhIFtSEjY"
+      }
     },
     {
       "id": "3dcredits-vercel-app",
-      "name": "3dcredits.vercel.app",
+      "name": "3D Credits",
       "url": "https://3dcredits.vercel.app",
       "x": "melonbuskk",
       "post": "https://x.com/melonbuskk/status/2102977797560111589",
-      "blurb": "",
-      "status": "pending",
+      "blurb": "Your Credit as 3D voxels. Enter a token ID, export a snapshot or a video.",
+      "status": "approved",
       "added": "2026-09-24",
       "metrics": {
         "likes": 4,
         "reposts": 0
-      },
-      "tweetText": "damn my credits looks cool in 3D @jackbutcher \n\ntry here with your credits ID:\nhttps://t.co/FxjAicdUXj https://t.co/aTH6dmJsLU"
+      }
     },
     {
       "id": "gmgn-ai-robinhood-address-mjhhuwaq-0x63623d092e67fd2529e11dd6e74503748b00865b",
@@ -153,13 +144,12 @@
       "x": "qkdsb666",
       "post": "https://x.com/qkdsb666/status/2102835394706346043",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-24",
       "metrics": {
         "likes": 0,
         "reposts": 0
-      },
-      "tweetText": "🔥$CREDITS｜现价378K DYOR\n\nGMGN扫链精准命中黑马Meme！从$667一路拉到$16.4K，抓住早期红利。\n\n查看对应钱包：\n[https://t.co/NtcZGxCJ7F]\n\n玩Meme不要靠感觉，工具+情报才是捕捉暴涨机会的秘密武器。\n\n合约：0x39679b59289cce7c7f6e0feacdf39a1e543de751\n\n项目故事：Jack https://t."
+      }
     },
     {
       "id": "gmgn-ai-robinhood-token-3mfzmyuy-0x39679b59289cce7c7f6e0feacdf39a1e543de751",
@@ -168,13 +158,12 @@
       "x": "tony080226",
       "post": "https://x.com/tony080226/status/2102796915771642197",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-24",
       "metrics": {
         "likes": 0,
         "reposts": 0
-      },
-      "tweetText": "$Credits\n\nChart: https://t.co/WNxwX5h9st\nCA: 0x39679b59289CcE7C7f6e0fEacDF39A1e543dE751\n\nCREDITS on Robinhood Chain is showing signs of a potential reversal after some sideways action, with liquidity "
+      }
     },
     {
       "id": "oncave-io-labs-credited-punks",
@@ -183,13 +172,12 @@
       "x": "defimaestro90",
       "post": "https://x.com/defimaestro90/status/2102792764765188313",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-24",
       "metrics": {
         "likes": 35,
         "reposts": 8
-      },
-      "tweetText": "bro just kick started a new meta 🔥🔥\n\nmint credited punks if you hold Credits by @jackbutcher\n\nmint link: https://t.co/5Bq8Vuk9pD\n\nNFA\nDYOR\n\nggs https://t.co/tDdo4gcTMz https://t.co/uSAFrgUwPr"
+      }
     },
     {
       "id": "homeofficeos-com",
@@ -198,13 +186,12 @@
       "x": "ErvistheGreat",
       "post": "https://x.com/ErvistheGreat/status/2102787056976220242",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-24",
       "metrics": {
         "likes": 1,
         "reposts": 0
-      },
-      "tweetText": "My fellow web3 degens who aped the @jackbutcher Credits, take the rest of your financial plan private with my local-first/local-only Home Office OS. Free for most. Lmk what you think 🙃\nhttps://t.co/b"
+      }
     },
     {
       "id": "8str-art",
@@ -213,13 +200,12 @@
       "x": "_8str",
       "post": "https://x.com/_8str/status/2102770734317879654",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-24",
       "metrics": {
         "likes": 1,
         "reposts": 0
-      },
-      "tweetText": "8 Strategy is live\nCA: 0x8d1ef48ba2e99be56795ca1ffc2fc9b430f51848\n\n$8STR turns trading into a growing treasury of @jackbutcher Credits\n\nLearn more: https://t.co/zJ94oWCwLB"
+      }
     },
     {
       "id": "trover-tech-machine-0x8e607209899b5d12bd3167a6cd0e8e11feb053d6",
@@ -228,13 +214,12 @@
       "x": "troverdottech",
       "post": "https://x.com/troverdottech/status/2102768907346129292",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-24",
       "metrics": {
         "likes": 2,
         "reposts": 0
-      },
-      "tweetText": "3% left until all credits are airdropped for @jackbutcher’s mint\n\ntrack it all on our website with on-chain evidence\n\n https://t.co/qsmV8rD3Nf https://t.co/3ic5pmztsw"
+      }
     },
     {
       "id": "dex-trover-tech-nfts-ethereum-credits",
@@ -243,13 +228,12 @@
       "x": "troverdottech",
       "post": "https://x.com/troverdottech/status/2102766895980269592",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-24",
       "metrics": {
         "likes": 1,
         "reposts": 0
-      },
-      "tweetText": "@opensea is down\n\nyou can trade and view activity including sales, mints, etcetera straight on our platform\n\nwant to track @jackbutcher credits?\n\nhttps://t.co/TqZttmgWqr \n\nhead on and simply view it u"
+      }
     },
     {
       "id": "gmgn-ai-robinhood-address-tx168-0x63623d092e67fd2529e11dd6e74503748b00865b",
@@ -258,13 +242,12 @@
       "x": "linda6248130564",
       "post": "https://x.com/linda6248130564/status/2102754103785103761",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-24",
       "metrics": {
         "likes": 0,
         "reposts": 0
-      },
-      "tweetText": "$CREDITS\n \n现价352K DYOR\n \n依托GMGN链上工具精准捕捉机会\n本金$667.9，最终套利斩获$15K\n \n币圈掘金核心逻辑：\n优质工具叠加情报分析\n更容易捕捉meme币爆发行情\n \n一键追踪优质钱包：\nhttps://t.co/fexvsxprjz\n \n合约地址：\n0x39679b59289cce7c7f6e0feacdf39a1e543de751\n \n核心项目叙事 http"
+      }
     }
   ]
 }
