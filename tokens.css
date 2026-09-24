@@ -94,4 +94,12 @@
   --cat-prompt: hsl(270, 30%, 94%);
   --cat-plaything: hsl(35, 40%, 93%);
   --cat-ai: hsl(200, 30%, 94%);
+
+  /* Process colours for the /creditcards card art, mirroring the CMYK
+     grids of the Credits collection itself. Decorative marks only, never
+     text: the yellow has nowhere near text contrast on paper. */
+  --credit-c: #00aeef;
+  --credit-m: #ec008c;
+  --credit-y: #fff200;
+  --credit-k: #1a1a1a;
 }
