@@ -34,6 +34,11 @@ on:
       # so it sat outside this filter and audit-only PRs merged with no checks at
       # all (#22, #23). Its unit tests run in the audit-tests job below.
       - 'audit/**'
+      # api/ and data/ ship to production (serverless functions and the
+      # creditcards data file that gets baked into HTML), so a PR touching only
+      # them must still run the gate.
+      - 'api/**'
+      - 'data/**'
     # ┌────────────────────────────────────────────────────────────────────────┐
     # │ DECISION NEEDED (Tahi) — required-check + path-filter deadlock.         │
     # │                                                                        │

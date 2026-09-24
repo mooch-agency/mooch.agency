@@ -1,0 +1,78 @@
+name: Credit Cards daily
+
+# Keeps /creditcards fresh: one X API search a day for new Credits community
+# projects (landing as "pending" in data/creditcards.json for human review),
+# a re-bake of the approved list and the fallback stat numbers, then a commit
+# to master, which Vercel deploys.
+#
+# Three ways in:
+#   schedule            the daily run (discovery + stats + bake)
+#   workflow_dispatch   the same, on demand
+#   push                Tahi approving a pending entry by editing
+#                       data/creditcards.json on GitHub; bake-only, so an
+#                       approval never spends X API credits
+#
+# No loop: the commit below is pushed with the default GITHUB_TOKEN, and
+# GitHub never triggers `on: push` workflows from GITHUB_TOKEN pushes. Do not
+# swap in a PAT without adding an actor guard.
+#
+# Secrets: X_BEARER_TOKEN (pay-per-use, ~50 posts/day budget). Without it the
+# run stays green and just re-bakes. OPENSEA_API_KEY is optional and unset;
+# the stats endpoints answer keyless today.
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths: ['data/creditcards.json']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: creditcards-daily
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Discover and bake
+        env:
+          X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+          OPENSEA_API_KEY: ${{ secrets.OPENSEA_API_KEY }}
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            node scripts/creditcards-update.mjs --bake-only
+          else
+            node scripts/creditcards-update.mjs
+          fi
+
+      # The direct-to-master commit below never goes through the PR gate, so
+      # the gate runs here instead: a bake that breaks the page fails the job
+      # and nothing is committed or deployed.
+      - run: pnpm run ci:validate-html
+      - run: pnpm run ci:check
+
+      - name: Commit if changed
+        run: |
+          git config user.name "Claude"
+          git config user.email "noreply@anthropic.com"
+          git add data/creditcards.json creditcards.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Credit Cards: daily refresh"
+          git push

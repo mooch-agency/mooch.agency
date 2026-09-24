@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Credit Cards - Credits Projects - Mooch</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
+<meta name="description" content="Every community project built around Jack Butcher's Credits collection, in one place. Live floor price, supply and holders, refreshed daily.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://mooch.agency/creditcards">
+<link rel="canonical" href="https://mooch.agency/creditcards">
+<meta property="og:title" content="Credit Cards - Credits Projects - Mooch">
+<meta property="og:description" content="Every community project built around Jack Butcher's Credits collection, in one place. Live floor price, supply and holders, refreshed daily.">
+<meta property="og:image" content="https://mooch.agency/og-creditcards.png?v=df6f3218">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Credit Cards. Every project built on Jack Butcher's Credits, in one place. Refreshed daily.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Credit Cards - Credits Projects - Mooch">
+<meta name="twitter:description" content="Every community project built around Jack Butcher's Credits collection, in one place. Live floor price, supply and holders, refreshed daily.">
+<meta name="twitter:image" content="https://mooch.agency/og-creditcards.png?v=df6f3218">
+<meta name="twitter:image:alt" content="Credit Cards. Every project built on Jack Butcher's Credits, in one place. Refreshed daily.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/motion.css">
+<link rel="stylesheet" href="/ui.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+  body {
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--paper);
+    font-feature-settings: "tnum", "kern", "liga", "ss01";
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  .topbar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 24px var(--pad-x);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .topbar .left { justify-self: start; }
+  .topbar .right { justify-self: end; text-align: right; }
+  .topbar a { color: var(--ink); }
+  .topbar a:hover { border-bottom: 1px solid var(--ink); }
+  .topbar .you { color: var(--muted); }
+
+  .case-hero {
+    padding: clamp(64px, 10vw, 120px) var(--pad-x) clamp(48px, 8vw, 96px);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .case-hero-inner { max-width: var(--max); margin: 0 auto; }
+  .case-hero .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    margin-bottom: 48px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .case-hero .eyebrow .rule { flex: 0 0 60px; height: 1px; background: var(--ink); }
+  .case-hero h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(56px, 11vw, 168px);
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+    color: var(--black);
+    margin-bottom: clamp(28px, 4vw, 48px);
+    max-width: 16ch;
+    text-wrap: balance;
+  }
+  .case-hero h1 em { font-style: italic; }
+  .case-hero .standfirst {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(22px, 2.4vw, 32px);
+    font-style: italic;
+    line-height: 1.3;
+    color: var(--ink);
+    max-width: 36ch;
+    margin-bottom: clamp(40px, 6vw, 64px);
+    text-wrap: pretty;
+  }
+  .case-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    padding-top: 28px;
+    border-top: 1px solid var(--hairline);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .case-meta dt { color: var(--muted); margin-bottom: 4px; }
+  .case-meta dd { color: var(--ink); }
+  @media (min-width: 720px) { .case-meta { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1080px) { .case-meta { grid-template-columns: repeat(5, 1fr); } }
+
+  /* Live numbers. Values sit in fixed grid cells and JS only ever swaps
+     textContent, so the runtime refresh can't shift layout (the Lighthouse
+     CLS budget is checked against a static server where /api 404s, and the
+     page has to look identical in that world). */
+  .stat-band {
+    padding: clamp(40px, 6vw, 72px) var(--pad-x);
+    border-bottom: 1px solid var(--hairline);
+    background: var(--surface);
+  }
+  .stat-band-inner { max-width: var(--max); margin: 0 auto; }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px;
+    max-width: 720px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow-border);
+  }
+  @media (min-width: 560px) { .stat-grid { grid-template-columns: repeat(3, 1fr); } }
+  .stat-cell { background: var(--paper); padding: 22px 20px; }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted-small);
+    margin-bottom: 10px;
+  }
+  .stat-value { font-family: var(--serif); font-size: 34px; line-height: 1.1; white-space: nowrap; }
+  .stat-value .unit { font-size: 20px; color: var(--muted); }
+  .stat-supply { margin-top: 24px; max-width: 56ch; text-wrap: pretty; }
+  .stat-supply strong { font-weight: 600; color: var(--black); }
+  .stat-note {
+    margin-top: 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  .case-body {
+    padding: clamp(64px, 10vw, 120px) var(--pad-x) clamp(96px, 12vw, 160px);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .case-body-inner {
+    max-width: var(--col);
+    margin: 0 auto;
+    font-size: 18px;
+    line-height: 1.65;
+    color: var(--ink);
+  }
+  .case-body h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(36px, 4.6vw, 56px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--black);
+    margin-top: clamp(64px, 8vw, 112px);
+    margin-bottom: 28px;
+    scroll-margin-top: 40px;
+    text-wrap: balance;
+  }
+  .case-body h2 em { font-style: italic; }
+  .case-body h2:first-child { margin-top: 0; }
+  .case-body h2 .num {
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    display: block;
+    font-style: normal;
+    margin-bottom: 28px;
+    font-weight: 400;
+  }
+  .case-body p { margin-bottom: 1.1em; hanging-punctuation: first last; text-wrap: pretty; }
+  .case-body p strong { font-weight: 600; color: var(--black); }
+  .case-body p em { font-style: italic; }
+  .case-body a { border-bottom: 1px solid var(--hairline); transition: border-color 0.15s ease; }
+  .case-body a:hover { border-bottom-color: var(--ink); }
+
+  /* The index itself. Hairline rows, not cards: the list is the page and it
+     has to read cleanly at one entry or forty. */
+  .projects { list-style: none; margin: 24px 0 8px; padding: 0; }
+  .projects li { padding: 20px 0; border-top: 1px solid var(--hairline); }
+  .projects li:last-child { border-bottom: 1px solid var(--hairline); }
+  .proj-name { font-weight: 600; color: var(--black); }
+  .proj-blurb { margin: 6px 0 0; }
+  .case-body .proj-blurb { margin-bottom: 0; }
+  .proj-by {
+    margin: 10px 0 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .case-body .proj-by { margin-bottom: 0; }
+  .proj-by a { color: var(--ink); border-bottom: 1px solid transparent; }
+  .proj-by a:hover { border-bottom-color: var(--ink); }
+  .projects-empty { color: var(--muted); font-style: italic; }
+
+  .colophon {
+    padding: 56px var(--pad-x) 40px;
+  }
+  .colophon-inner {
+    max-width: 1320px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .colophon-mark {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(72px, 16vw, 240px);
+    line-height: 0.85;
+    letter-spacing: -0.04em;
+  }
+  .colophon-mark em { font-style: italic; }
+  .colophon-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding-top: 36px;
+    border-top: 1px solid var(--colophon-rule);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .colophon-links a { color: var(--paper); border-bottom: 1px solid transparent; transition: border-color 0.15s ease; }
+  .colophon-links a:hover { border-bottom-color: var(--paper); }
+  .colophon-sep { color: var(--muted); font-size: 10px; }
+  .colophon-foot {
+    border-top: 1px solid var(--colophon-rule);
+    margin-top: 36px;
+    padding-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+  }
+  .colophon-credits { max-width: 48ch; text-align: center; }
+  .colophon-version { color: var(--muted); border-bottom: 1px solid transparent; transition: border-color 0.15s ease; }
+  .colophon-version:hover { border-bottom-color: var(--paper); color: var(--paper); }
+
+  @media print {
+    body { background: #fff; color: #000; }
+    .topbar, .colophon { display: none; }
+    .case-hero { padding: 24px 0; border: none; }
+    .case-body { padding: 0; max-width: 100%; }
+    .case-body-inner { max-width: 100%; }
+    a { color: #000; text-decoration: underline; }
+    .reveal { opacity: 1; transform: none; animation: none; }
+    .stat-grid { break-inside: avoid; border: 1px solid #000; }
+    * { box-shadow: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="left">
+    <a href="/">Mooch</a> &nbsp;/&nbsp; <span class="you">/creditcards</span>
+  </div>
+  <div class="right">2026</div>
+</header>
+
+<main>
+
+<section class="case-hero">
+  <div class="case-hero-inner">
+    <div class="eyebrow reveal d1"><span class="rule"></span> Community index</div>
+    <h1 class="reveal d2">Credit <em>Cards</em></h1>
+    <p class="standfirst reveal d3">Jack Butcher turned 122,154 payments of $8 into generative art. People keep building things on top. This page keeps track.</p>
+    <dl class="case-meta reveal d4">
+      <div><dt>Collection</dt><dd>Credits by Jack Butcher</dd></div>
+      <div><dt>Chain</dt><dd>Ethereum</dd></div>
+      <div><dt>Minted</dt><dd>122,154 at $8 each</dd></div>
+      <div><dt>The burn</dt><dd>80 Credits = 1 Statement</dd></div>
+      <div><dt>Statements cap</dt><dd>1,526</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="stat-band" aria-label="Live market numbers">
+  <div class="stat-band-inner">
+    <div class="stat-grid">
+      <div class="stat-cell">
+        <div class="stat-label">Floor</div>
+        <div class="stat-value"><span data-stat="floorEth">0.0297</span> <span class="unit">ETH</span></div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">In USD</div>
+        <div class="stat-value"><span class="unit">$</span><span data-stat="floorUsd">80</span></div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">Holders</div>
+        <div class="stat-value"><span data-stat="owners">16,368</span></div>
+      </div>
+    </div>
+    <p class="stat-supply"><strong><span data-stat="supply">122,153</span></strong> of the 122,154 Credits minted still exist. Every Statement assembled burns 80 more, so that number only goes down.</p>
+    <p class="stat-note">Live from OpenSea, refreshed every half hour</p>
+  </div>
+</section>
+
+<article class="case-body">
+  <div class="case-body-inner">
+
+    <h2><span class="num">&sect; 01</span>The collection</h2>
+    <p>Credits is Jack Butcher's work, and this page is a fan index, not an official one. Each Credit began as one $8 payment through X Money. The transaction ID, hashed with SHA-256, draws four 8x8 grids in cyan, magenta, yellow and black, so the receipt is the artwork. 122,154 payments made it in before the window closed.</p>
+    <p>From 1 October 2026, any 80 Credits can be burned to assemble one Statement. At most 1,526 Statements can ever exist, and every one made shrinks the supply for good.</p>
+    <p>Start at <a href="https://jack.art/credits" target="_blank" rel="noopener" data-event="creditcards_credits_click">jack.art/credits</a>. Trade on <a href="https://opensea.io/collection/credits" target="_blank" rel="noopener" data-event="creditcards_credits_click">OpenSea</a>. Follow <a href="https://x.com/jackbutcher" target="_blank" rel="noopener" data-event="creditcards_credits_click">@jackbutcher</a>. Verify the <a href="https://etherscan.io/address/0x97630aa70ab14ed9883b41dafccbc11349723043" target="_blank" rel="noopener" data-event="creditcards_credits_click">contract</a>.</p>
+
+    <h2 id="projects"><span class="num">&sect; 02</span>The projects</h2>
+    <p>Holders keep shipping tools, galleries and derivatives, and they announce them on X. A daily search brings candidates in; a human approves every listing before it appears here. None of it is Jack's and none of it is ours, so read what a site asks of your wallet before you connect it.</p>
+    <!-- creditcards:projects:start -->
+    <p class="projects-empty">Nothing listed yet. The first finds land here once a human has looked at them.</p>
+    <!-- creditcards:projects:end -->
+    <p>Built something for Credits holders? <a href="mailto:hey@mooch.agency?subject=Credit%20Cards%3A%20a%20project%20for%20the%20index&amp;body=Hi%20guys%2C%0D%0A%0D%0AThe%20project%3A%0D%0AThe%20announcement%20post%3A%0D%0AWhat%20it%20does%3A">Send it over</a>.</p>
+
+  </div>
+</article>
+
+</main>
+
+<footer class="colophon colophon-dark">
+  <div class="colophon-inner">
+    <div class="colophon-mark">Mooch<em>.</em></div>
+
+    <div class="colophon-links">
+      <a href="mailto:hey@mooch.agency?subject=A%20project%2C%20an%20idea%2C%20or%20a%20coffee&amp;body=Hi%20guys%2C%0D%0A%0D%0AWhat%20I%27m%20working%20on%3A%0D%0AWhere%20you%20could%20help%3A%0D%0ARough%20timeline%3A">hey@mooch.agency</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://x.com/tahigichigi">X / @tahigichigi</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://instagram.com/mooch.agency">Instagram</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://moochagency.substack.com">Substack</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://github.com/mooch-agency/skills" target="_blank" rel="noopener">Open-source skills</a>
+      <span class="colophon-sep">&middot;</span>
+      <a href="https://toneofvoice.app">toneofvoice.app</a>
+    </div>
+
+    <div class="colophon-foot">
+      <span>&copy; 2026 Mooch Agency Ltd.</span>
+      <span class="colophon-credits">Set in Instrument Serif &amp; SF Pro. Built by two humans and one MoochBot. Hosted on Vercel because we're not animals.</span>
+      <a href="/privacy" class="colophon-version">Privacy</a>
+      <span class="colophon-version">N&deg; 01</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Vercel Web Analytics -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/analytics.js"></script>
+
+<script>
+  // Live numbers. The values on load are whatever scripts/creditcards-update.mjs
+  // baked in at the last daily run: real, at most a day old. This nudges them
+  // from /api/creditcards-stats (OpenSea behind a half-hour edge cache). A
+  // failure leaves the baked numbers exactly as they are, which also keeps the
+  // page honest on a static server with no functions at all.
+  //
+  // The formatters mirror scripts/creditcards-update.mjs so the refresh lands
+  // on the same string the bake produced and nothing visibly jumps.
+  document.addEventListener("DOMContentLoaded", function () {
+    function fmtEth(n) { return n.toFixed(4).replace(/0+$/, "").replace(/\.$/, ""); }
+    function fmtInt(n) { return n.toLocaleString("en-GB"); }
+    function set(key, value) {
+      var el = document.querySelector('[data-stat="' + key + '"]');
+      if (el && value) el.textContent = value;
+    }
+    fetch("/api/creditcards-stats")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) return;
+        if (typeof d.floorEth === "number") set("floorEth", fmtEth(d.floorEth));
+        if (typeof d.floorUsd === "number") set("floorUsd", fmtInt(d.floorUsd));
+        if (typeof d.supply === "number") set("supply", fmtInt(d.supply));
+        if (typeof d.owners === "number") set("owners", fmtInt(d.owners));
+      })
+      .catch(function () {});
+
+    // One delegated listener covers every outbound link, including project
+    // rows the daily bake adds later. One event name per intent: a project
+    // site, its announcement post, and the collection's own links are three
+    // different clicks.
+    document.addEventListener("click", function (e) {
+      var el = e.target.closest ? e.target.closest("[data-event]") : null;
+      if (!el) return;
+      try {
+        if (window.va) window.va("event", { name: el.getAttribute("data-event"), data: { url: el.href || "", label: (el.textContent || "").trim().slice(0, 80) } });
+      } catch (err) {}
+    });
+  });
+</script>
+</body>
+</html>
