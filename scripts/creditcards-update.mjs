@@ -282,14 +282,14 @@ function renderProjects(projects) {
       const handle = escapeHtml(p.x);
       const url = escapeHtml(p.url);
       const by = p.x
-        ? `by <a href="${escapeHtml(p.post)}" target="_blank" rel="noopener" data-event="creditcards_post_click">@${handle}</a> &middot; `
-        : '';
+        ? `<a href="${escapeHtml(p.post)}" target="_blank" rel="noopener" data-event="creditcards_post_click">@${handle}</a>`
+        : '<span></span>';
       return [
         '      <li class="proj-card">',
         `        ${gridSvg(p.id)}`,
         `        <a class="proj-name" href="${url}" target="_blank" rel="noopener" data-event="creditcards_project_click">${name}</a>`,
         blurb ? `        <p class="proj-blurb">${blurb}</p>` : null,
-        `        <p class="proj-by">${by}added ${fmtDate(p.added)}</p>`,
+        `        <p class="proj-by">${by}<span>${fmtDate(p.added)}</span></p>`,
         '      </li>',
       ]
         .filter(Boolean)
