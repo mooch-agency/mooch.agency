@@ -22,7 +22,12 @@ name: Credit Cards daily
 
 on:
   schedule:
+    # Twice daily. GitHub drops scheduled runs under load (the first 06:17
+    # run on 25 Sep never fired), so a second slot keeps "updated daily"
+    # true. since_id windows the X search, so the evening run only reads
+    # posts newer than the morning one: near-zero extra spend.
     - cron: '17 6 * * *'
+    - cron: '17 18 * * *'
   workflow_dispatch:
   push:
     branches: [master]
