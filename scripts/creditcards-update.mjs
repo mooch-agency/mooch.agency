@@ -4,8 +4,9 @@
 //
 // Three jobs, in order, each surviving the others' failure:
 //
-//   1. Discovery (needs X_BEARER_TOKEN): one recent-search request against the
-//      X API for new Credits-related projects. New external links land in
+//   1. Discovery (needs X_BEARER_TOKEN): two recent-search requests against the
+//      X API for new Credits-related projects (the main query, plus replies to
+//      @jesusdoteth's own posts, where builders submit to the index). New external links land in
 //      data/creditcards.json as status "pending". Nothing pending ever renders;
 //      a human flips it to "approved" (and tidies the blurb) first. Rejected
 //      entries stay as tombstones so a re-announced URL is never re-added.
@@ -58,6 +59,16 @@ const X_ENDPOINT = 'https://api.x.com/2/tweets/search/recent';
 const X_QUERY =
   '(credits ("jack butcher" OR jackbutcher OR @jackbutcher) OR url:"jack.art/credits") has:links -is:retweet -is:reply';
 const X_MAX_RESULTS = 50;
+
+// Second, smaller search: replies to @jesusdoteth's own posts. Builders often
+// submit a project by replying to the Credit Cards thread, and the main query
+// drops every reply. Scoped with to: so it only reads replies addressed to
+// Tahi, never replies across the rest of X. Links only, since a reply without
+// one gives the index nothing to add. Its own since_id window
+// (meta.replySinceId) so the two searches never skip each other's posts.
+const X_REPLY_HANDLE = 'jesusdoteth';
+const X_REPLY_QUERY = `to:${X_REPLY_HANDLE} is:reply has:links -is:retweet -from:${X_REPLY_HANDLE}`;
+const X_REPLY_MAX_RESULTS = 25;
 
 // Hosts that are never a community project: the collection's own surfaces,
 // marketplaces, explorers and link shorteners the search will hit constantly.
@@ -135,16 +146,16 @@ function hostOf(normalised) {
 
 // --- discovery ---------------------------------------------------------------
 
-async function discover(data, token, fetchImpl) {
+async function discover(data, token, fetchImpl, { query = X_QUERY, maxResults = X_MAX_RESULTS, sinceKey = 'sinceId' } = {}) {
   const params = new URLSearchParams({
-    query: X_QUERY,
-    max_results: String(X_MAX_RESULTS),
+    query,
+    max_results: String(maxResults),
     'tweet.fields': 'created_at,public_metrics,entities',
     expansions: 'author_id',
     'user.fields': 'username',
   });
-  if (data.meta.sinceId) {
-    params.set('since_id', data.meta.sinceId);
+  if (data.meta[sinceKey]) {
+    params.set('since_id', data.meta[sinceKey]);
     // Inside a since_id window the request is capped at 50 anyway; if a day
     // ever produces more, relevancy surfaces the announcements over the chat.
     params.set('sort_order', 'relevancy');
@@ -205,7 +216,7 @@ async function discover(data, token, fetchImpl) {
 
   // Advance the window even on a zero-find day, so tomorrow never re-reads
   // (and re-pays for) today's posts.
-  if (body.meta && body.meta.newest_id) data.meta.sinceId = body.meta.newest_id;
+  if (body.meta && body.meta.newest_id) data.meta[sinceKey] = body.meta.newest_id;
   return added;
 }
 
@@ -380,6 +391,16 @@ export async function run({ xToken, fetchImpl = fetch, root = ROOT, dry = DRY, b
         // A rate limit or auth blip must not kill the bake; the 7-day search
         // window means tomorrow's run covers today's gap.
         console.error(`✗ X search failed, continuing: ${e.message}`);
+      }
+      try {
+        const added = await discover(data, xToken, fetchImpl, {
+          query: X_REPLY_QUERY,
+          maxResults: X_REPLY_MAX_RESULTS,
+          sinceKey: 'replySinceId',
+        });
+        console.log(`✓ X replies to @${X_REPLY_HANDLE}: ${added} new candidate(s) pending review`);
+      } catch (e) {
+        console.error(`✗ X reply search failed, continuing: ${e.message}`);
       }
     }
     try {
