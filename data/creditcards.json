@@ -290,6 +290,34 @@
         "likes": 3,
         "reposts": 1
       }
+    },
+    {
+      "id": "creditscheck-xyz",
+      "name": "Credit Check",
+      "url": "https://creditscheck.xyz",
+      "x": "JimEagle_",
+      "post": "https://x.com/JimEagle_/status/2103297144015011852",
+      "blurb": "A report card for every Credit: rank, an AAA to CCC rating, why it's rare, live price and a Game of Life run. Read-only, wallet optional.",
+      "status": "approved",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "exaltedlove-com-debits",
+      "name": "Debits",
+      "url": "https://exaltedlove.com/debits/",
+      "x": "wubbushi",
+      "post": "https://x.com/wubbushi/status/2103321243831451817",
+      "blurb": "A Debit prints the plates your Credit didn't show; hold both for the full Total. Not on sale yet. Plus a gallery, Credit Score and rare finds, nothing to connect.",
+      "status": "approved",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
     }
   ]
 }
