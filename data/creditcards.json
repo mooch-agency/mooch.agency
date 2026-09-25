@@ -290,6 +290,62 @@
         "likes": 3,
         "reposts": 1
       }
+    },
+    {
+      "id": "creditscheck-xyz",
+      "name": "Credit Check",
+      "url": "https://creditscheck.xyz",
+      "x": "JimEagle_",
+      "post": "https://x.com/JimEagle_/status/2103297144015011852",
+      "blurb": "A report card for every Credit: rank, an AAA to CCC rating, why it's rare, live price and a Game of Life run. Read-only, wallet optional.",
+      "status": "approved",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "exaltedlove-com-debits",
+      "name": "Debits",
+      "url": "https://exaltedlove.com/debits/",
+      "x": "wubbushi",
+      "post": "https://x.com/wubbushi/status/2103321243831451817",
+      "blurb": "A Debit prints the plates your Credit didn't show; hold both for the full Total. Not on sale yet. Plus a gallery, Credit Score and rare finds, nothing to connect.",
+      "status": "approved",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "tokenstrategy-com",
+      "name": "Credit Strategy",
+      "url": "https://www.tokenstrategy.com",
+      "x": "token_works",
+      "post": "https://x.com/AlphaAltcoins/status/2103274156620124313",
+      "blurb": "A strategy token (CREDITSTR) that uses its trade tax to buy the cheapest Credits, relist them and burn the token. Not deployed by Jack. Wallet connected.",
+      "status": "approved",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "opensea-io-collection-creditcards",
+      "name": "Credit Cards (Jehoseph)",
+      "url": "https://opensea.io/collection/creditcards",
+      "x": "Jehoseph",
+      "post": "https://x.com/Jehoseph/status/2103013672541204483",
+      "blurb": "A separate paid collection inspired by Credits, not part of Credits or this index. 10,000 cards on OpenSea. Wallet connected to mint.",
+      "status": "approved",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 15,
+        "reposts": 2
+      }
     }
   ]
 }
