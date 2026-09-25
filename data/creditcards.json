@@ -251,18 +251,17 @@
     },
     {
       "id": "buybits-art",
-      "name": "buybits.art",
+      "name": "BITS",
       "url": "https://buybits.art",
       "x": "EightBits11",
       "post": "https://x.com/EightBits11/status/2103342460047085643",
-      "blurb": "",
-      "status": "pending",
+      "blurb": "Credits' $8 X Money mechanic, rebuilt on Solana. A separate collection, not part of Credits.",
+      "status": "approved",
       "added": "2026-09-25",
       "metrics": {
         "likes": 1,
         "reposts": 0
-      },
-      "tweetText": "Credits by @jackbutcher is taking off, so I built the Solana version: BITS 🟪\n\nSolana runs on bits, so the theme felt like a perfect fit.\n\n🔗 https://t.co/bOlwffyNwQ\n\nHow to mint:\n\nSend $8 to @Eightbi"
+      }
     },
     {
       "id": "chainhawk-io",
@@ -271,28 +270,26 @@
       "x": "Boomskite",
       "post": "https://x.com/Boomskite/status/2103276453282386379",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-25",
       "metrics": {
         "likes": 0,
         "reposts": 0
-      },
-      "tweetText": "https://t.co/3MfqoVY724 now supports the official credits rankings by @jackbutcher. Get alerts for low rank listings and see what's selling."
+      }
     },
     {
       "id": "laternow-app-futures",
-      "name": "laternow.app",
+      "name": "Futures",
       "url": "https://laternow.app/futures",
       "x": "LATE_FX",
       "post": "https://x.com/LATE_FX/status/2103269221111058849",
-      "blurb": "",
-      "status": "pending",
+      "blurb": "Free mint for Credits holders: a 1 of 1 magic 8 ball, gas only. Wallet connected.",
+      "status": "approved",
       "added": "2026-09-25",
       "metrics": {
         "likes": 3,
         "reposts": 1
-      },
-      "tweetText": "If you own @jackbutcher’s Credits, you can mint my new experimental collection called “Futures” , for free + gas.\n\n“Futures” features a magic 8 ball artwork that uses the traits from Credits to genera"
+      }
     }
   ]
 }
