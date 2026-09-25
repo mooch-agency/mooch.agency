@@ -1,14 +1,15 @@
 {
   "meta": {
-    "sinceId": "2103342460047085643",
-    "lastRun": "2026-09-25T08:41:03.201Z",
+    "sinceId": "2103438060784394652",
+    "lastRun": "2026-09-25T11:46:44.769Z",
     "stats": {
-      "floorEth": 0.0295,
-      "floorUsd": 79,
+      "floorEth": 0.02769,
+      "floorUsd": 75,
       "supply": 122153,
-      "owners": 16293,
-      "fetchedAt": "2026-09-24T22:34:39.225Z"
-    }
+      "owners": 16099,
+      "fetchedAt": "2026-09-25T11:46:44.736Z"
+    },
+    "replySinceId": "2103360834051149835"
   },
   "projects": [
     {
@@ -361,6 +362,36 @@
         "likes": 15,
         "reposts": 2
       }
+    },
+    {
+      "id": "creditscheck-xyz-browse-all",
+      "name": "creditscheck.xyz",
+      "url": "https://creditscheck.xyz/browse/all",
+      "x": "JimEagle_",
+      "post": "https://x.com/JimEagle_/status/2103300436945977671",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      },
+      "tweetText": "@jesusdoteth @jackbutcher @melonbuskk @4844 @SickAssPen @0xJohnB @itsmemeworks @himars @sight_hood just sent on your new thread. https://t.co/kbVhcrL9CI"
+    },
+    {
+      "id": "t-me-gainzys-22",
+      "name": "t.me",
+      "url": "https://t.me/gainzys_22",
+      "x": "gainzry22",
+      "post": "https://x.com/gainzry22/status/2102825813141823665",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "tweetText": "@jesusdoteth @dealer1943 @visualizevalue @jackbutcher @gainzy222 Join my free private mentorship program for best trading analysis, profitable trades and access to copy my trades.\n             👇💌\nht"
     }
   ]
 }
