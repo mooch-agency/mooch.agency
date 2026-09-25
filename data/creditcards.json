@@ -1,15 +1,15 @@
 {
   "meta": {
-    "sinceId": "2103438060784394652",
-    "lastRun": "2026-09-25T11:46:44.769Z",
+    "sinceId": "2103546358296932525",
+    "lastRun": "2026-09-25T18:47:06.243Z",
     "stats": {
-      "floorEth": 0.02769,
-      "floorUsd": 75,
+      "floorEth": 0.0256,
+      "floorUsd": 69,
       "supply": 122153,
-      "owners": 16099,
-      "fetchedAt": "2026-09-25T11:46:44.736Z"
+      "owners": 16011,
+      "fetchedAt": "2026-09-25T18:47:06.220Z"
     },
-    "replySinceId": "2103360834051149835"
+    "replySinceId": "2103492987892400638"
   },
   "projects": [
     {
@@ -392,6 +392,21 @@
         "reposts": 0
       },
       "tweetText": "@jesusdoteth @dealer1943 @visualizevalue @jackbutcher @gainzy222 Join my free private mentorship program for best trading analysis, profitable trades and access to copy my trades.\n             👇💌\nht"
+    },
+    {
+      "id": "creditscheck-xyz-life",
+      "name": "creditscheck.xyz",
+      "url": "https://creditscheck.xyz/life",
+      "x": "JimEagle_",
+      "post": "https://x.com/JimEagle_/status/2103546358296932525",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 2,
+        "reposts": 0
+      },
+      "tweetText": "@jackbutcher not sure if this was intentional but Credits make really good Game of Life seeds!  #66101 runs for like 3,700 generations. I put all of them on a site so people can play theirs!  https://"
     }
   ]
 }
