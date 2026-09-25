@@ -231,11 +231,12 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           git fetch --no-tags --depth=1 origin "$BASE_REF" || true
-          mapfile -t files < <(git diff --name-only "origin/$BASE_REF"...HEAD -- '*.html' 'prompts/*.html' || true)
+          # --diff-filter=d: a page this PR deletes has nothing left to test (it would 404).
+          mapfile -t files < <(git diff --name-only --diff-filter=d "origin/$BASE_REF"...HEAD -- '*.html' 'prompts/*.html' || true)
           urls=""
           for f in "${files[@]}"; do
             [ -z "$f" ] && continue
-            case "$f" in *-template.html|stagger-tuner.html|styleguide.html|paulgraham.html|portfolio-*.html|404.html|ready.html) continue;; esac
+            case "$f" in *-template.html|stagger-tuner.html|styleguide.html|portfolio-*.html|404.html|ready.html) continue;; esac
             slug="${f%.html}"; [ "$slug" = "index" ] && slug=""
             # Only allow a safe URL-path charset; skip anything else outright.
             case "$slug" in *[!a-zA-Z0-9/_-]*) echo "skip unsafe filename: $f"; continue;; esac

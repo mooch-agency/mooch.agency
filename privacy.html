@@ -132,38 +132,51 @@
 
 <main class="policy">
   <h1 class="reveal">Privacy policy</h1>
-  <p class="updated reveal d1">Last updated: 8 July 2026</p>
+  <p class="updated reveal d1">Last updated: 25 September 2026</p>
 
   <h2>Who we are</h2>
-  <p>Mooch Agency Ltd is a two-person UX and AI automation agency based in London and Lisbon. This policy covers mooch.agency and all subdomains we operate (paulgraham.mooch.agency, etc.).</p>
+  <p>Mooch Agency Ltd is a two-person UX and AI automation agency based in London and Lisbon. We decide how the data described here is used, and this policy covers mooch.agency and every subdomain we run, including frwa.mooch.agency, samantha.mooch.agency and mts.mooch.agency. Questions go to <a href="mailto:hey@mooch.agency">hey@mooch.agency</a>.</p>
 
   <h2>What we collect</h2>
   <p>We keep data collection minimal.</p>
   <ul>
-    <li><strong>Analytics:</strong> We use Vercel Web Analytics and Speed Insights. These collect anonymous, aggregated page-view data (page URL, referrer, country, device type, browser). No cookies are set. No personal data is collected. Vercel does not sell or share this data.</li>
-    <li><strong>Contact forms and email:</strong> If you email us at hey@mooch.agency or book a discovery call, we store your name and email address to respond and follow up. We do not add you to any marketing list.</li>
-    <li><strong>AI tools:</strong> Some pages (e.g. the Paul Graham rewriter) send text you enter to an AI API for processing. We do not store what you type after the request completes. The API provider (Anthropic) processes it under their own data policy and does not use it for training.</li>
-    <li><strong>Say Less demo:</strong> The <a href="/say-less">Say Less</a> comparison is the one exception. We store the question you submit and both answers it produces, so we can see which questions the demo handles well and check the published word-count claim against real use. These are kept in LangSmith, our tracing tool, for 12 months and then deleted. We store the country and referring site alongside them, but never your IP address, and we do not use any of it for training. To have yours deleted sooner, email <a href="mailto:hey@mooch.agency">hey@mooch.agency</a>. Please do not enter personal or confidential information.</li>
+    <li><strong>Analytics:</strong> We use Vercel Web Analytics and Speed Insights. They collect anonymous, aggregated data: the page, referrer, country, device type and browser, plus a few named clicks, such as copying a prompt. No cookies are set and nothing identifies you. To stop your own visits being counted, open any page with <code>?notrack=1</code> on the end of the address; that saves a flag in your browser and loads no analytics from then on.</li>
+    <li><strong>Email and calls:</strong> If you email us or book a call, we keep your name, email address and what you send us, so we can reply and follow up. We do not add you to any marketing list.</li>
+    <li><strong>Free content audit:</strong> If you request an audit on the homepage, we store your website address and email address in Notion, where we work, so we can review the request and email you the report. Before saving, we check that your email&rsquo;s domain can receive mail.</li>
+    <li><strong>AI tools:</strong> Some tools send the text or article you give them to an AI provider and show you the result. Write like Paul Graham and Samantha use OpenAI; <a href="/prompts/deslop">/deslop</a> and the Say Less demo use Anthropic. Apart from the Say Less demo below, we do not store what you send after the request completes. Both providers process it under their own policies, and neither trains on data sent through its API by default.</li>
+    <li><strong>Say Less demo:</strong> The <a href="/say-less">Say Less</a> comparison is the exception. We store the question you submit and both answers it produces, so we can see which questions the demo handles well and check the published word-count claim against real use. These are kept in LangSmith, our tracing tool, for 12 months and then deleted. We store the country and referring site alongside them, but never your IP address, and we do not use any of it for training. If you answer the short &ldquo;would you use it?&rdquo; question, we store your answer, and any note you add, in Notion, with no name, email or IP address attached. To have yours deleted sooner, email <a href="mailto:hey@mooch.agency">hey@mooch.agency</a>. Please do not enter personal or confidential information.</li>
+    <li><strong>Paid /deslop runs:</strong> Running <a href="/prompts/deslop">/deslop</a> through its API is paid in USDC on the Base blockchain, using the x402 payment protocol. Your wallet signs the payment, and Coinbase&rsquo;s payment service checks and settles it. Like any blockchain payment, the transaction and your wallet address are public. We do not link them to anything else about you.</li>
+    <li><strong>Monitoring the Situation:</strong> To subscribe at mts.mooch.agency, you give us your email address and pay through Stripe. We store your email address, your Stripe customer and subscription IDs and your subscription status, and use them only to send you a welcome email and the daily digest, through Resend. Stripe handles your card details; we never see them. If you cancel, we keep your record marked as cancelled so we stop emailing you. Email us to have it deleted.</li>
   </ul>
+
+  <h2>Why we use it</h2>
+  <p>We use analytics because we have a legitimate interest in knowing which pages work. We use everything else to do what you asked: reply to you, run your audit, send your digest or process your payment.</p>
 
   <h2>What we do not do</h2>
   <ul>
-    <li>Set cookies or use tracking pixels</li>
+    <li>Set cookies or use tracking pixels on our sites</li>
     <li>Run retargeting or third-party advertising</li>
-    <li>Sell, rent, or share personal data with anyone</li>
+    <li>Sell or rent personal data, or share it beyond the services listed below</li>
     <li>Use analytics data to identify individual visitors</li>
   </ul>
 
   <h2>Third-party services</h2>
   <ul>
-    <li><strong>Vercel:</strong> Hosting and analytics. <a href="https://vercel.com/legal/privacy-policy">Vercel privacy policy</a>.</li>
-    <li><strong>Google Fonts:</strong> Serves the Instrument Serif typeface. <a href="https://policies.google.com/privacy">Google privacy policy</a>.</li>
-    <li><strong>Cal.com:</strong> Handles discovery call bookings. <a href="https://cal.com/privacy">Cal.com privacy policy</a>.</li>
-    <li><strong>Anthropic:</strong> Powers AI features. <a href="https://www.anthropic.com/privacy">Anthropic privacy policy</a>.</li>
+    <li><strong>Vercel:</strong> Hosting, analytics, and subscriber storage for Monitoring the Situation. <a href="https://vercel.com/legal/privacy-notice">Vercel privacy notice</a>.</li>
+    <li><strong>Google:</strong> Google Fonts serves our typefaces, and Google Workspace runs our email. <a href="https://policies.google.com/privacy">Google privacy policy</a>.</li>
+    <li><strong>Cal.com:</strong> Discovery call bookings, on its EU instance. <a href="https://cal.com/privacy">Cal.com privacy policy</a>.</li>
+    <li><strong>Calendly:</strong> Office hours bookings. <a href="https://calendly.com/legal/privacy-notice">Calendly privacy notice</a>.</li>
+    <li><strong>Notion:</strong> Stores audit requests and Say Less feedback. <a href="https://www.notion.so/notion/Privacy-Policy-3468d120cf614d4c9014c09f6adc9091">Notion privacy policy</a>.</li>
+    <li><strong>Anthropic:</strong> Powers /deslop and the Say Less demo. <a href="https://www.anthropic.com/legal/privacy">Anthropic privacy policy</a>.</li>
+    <li><strong>OpenAI:</strong> Powers Write like Paul Graham and Samantha. <a href="https://openai.com/policies/privacy-policy/">OpenAI privacy policy</a>.</li>
+    <li><strong>LangSmith:</strong> Stores Say Less demo traces. <a href="https://www.langchain.com/privacy-policy">LangChain privacy policy</a>.</li>
+    <li><strong>Coinbase:</strong> Checks and settles /deslop payments. <a href="https://www.coinbase.com/legal/privacy">Coinbase privacy policy</a>.</li>
+    <li><strong>Stripe:</strong> Takes Monitoring the Situation payments. <a href="https://stripe.com/privacy">Stripe privacy policy</a>.</li>
+    <li><strong>Resend:</strong> Sends Monitoring the Situation emails. <a href="https://resend.com/legal/privacy-policy">Resend privacy policy</a>.</li>
   </ul>
 
   <h2>Your rights</h2>
-  <p>If you have contacted us and want your data deleted, email <a href="mailto:hey@mooch.agency">hey@mooch.agency</a>. We will delete your information within 30 days.</p>
+  <p>You can ask for a copy of the personal data we hold about you, or ask us to correct or delete it. Email <a href="mailto:hey@mooch.agency">hey@mooch.agency</a> and we will act on it within 30 days. If you are unhappy with how we handle your data, you can complain to the UK Information Commissioner&rsquo;s Office (<a href="https://ico.org.uk/make-a-complaint/">ico.org.uk</a>) or, in Portugal, the CNPD (<a href="https://www.cnpd.pt/">cnpd.pt</a>).</p>
 
   <h2>Changes</h2>
   <p>We will update this page if anything changes. No email notifications, just an updated date at the top.</p>

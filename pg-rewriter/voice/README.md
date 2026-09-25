@@ -1,6 +1,6 @@
 # PG voice profile build
 
-The voice profile that powers Write Like Paul Graham (paulgraham.mooch.agency).
+The voice profile that powers Write Like Paul Graham (mooch.agency/paulgraham).
 
 ## Files
 

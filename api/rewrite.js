@@ -22,7 +22,6 @@ const WORD_CAP = 500;               // server-enforced, reject before the API
 const RATE_PER_MIN = 8;             // best-effort, per warm instance
 const RATE_PER_DAY = 60;
 const ALLOWED_HOSTS = [
-  "paulgraham.mooch.agency",
   "mooch.agency",
   "localhost",
   "127.0.0.1",
@@ -62,7 +61,7 @@ function originOk(req) {
   try { host = new URL(src).hostname; } catch { return false; }
   return (
     ALLOWED_HOSTS.includes(host) ||
-    host.endsWith(".mooch.agency") ||   // paulgraham.mooch.agency and friends
+    host.endsWith(".mooch.agency") ||   // www and any other mooch subdomain
     host.endsWith(".vercel.app")        // preview deployments
   );
 }
