@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Unblocked. Generative banners by Mooch</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
+<meta name="description" content="Type a headline, get a banner. Unblocked turns any text into a composition of blockquote bars, and the same words always make the same one.">
+<link rel="canonical" href="https://mooch.agency/unblocked">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mooch.agency/unblocked">
+<meta property="og:title" content="Unblocked. Generative banners by Mooch">
+<meta property="og:description" content="Type a headline, get a banner. Any text becomes a composition of blockquote bars, and the same words always make the same one.">
+<meta property="og:image" content="https://mooch.agency/og-unblocked.png?v=1b6c3c52">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Unblocked. Type a headline, get a banner. Same words, same banner, every time.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Unblocked. Generative banners by Mooch">
+<meta name="twitter:description" content="Type a headline, get a banner. Any text becomes a composition of blockquote bars, and the same words always make the same one.">
+<meta name="twitter:image" content="https://mooch.agency/og-unblocked.png?v=1b6c3c52">
+<meta name="twitter:image:alt" content="Unblocked. Type a headline, get a banner. Same words, same banner, every time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/motion.css">
+<link rel="stylesheet" href="/ui.css">
+<style>
+  /* One screen, no page scroll. Phones stack title, banner and controls; from
+     900px the banner takes the left of the screen and the controls a column on
+     the right. If a screen is too short for everything, the content area
+     scrolls inside itself rather than the page, so nothing is ever cut off. */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+  body {
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--paper);
+    font-feature-settings: "tnum", "kern", "liga", "ss01";
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; }
+
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+
+  /* Page-level sizes. The seed headline scales with the viewport and grows
+     from one line to two; the banner column always reserves both, so the
+     banner never moves while you type. */
+  :root {
+    --gutter: 16px;
+    --title-size: 24px;
+    --title-lh: 1.1;
+    --seed-h: calc(var(--title-size) * var(--title-lh) * 2 + 8px);
+    --panel-w: clamp(320px, 26vw, 380px);
+    --panel-pad: clamp(24px, 2vw, 28px);
+    --top-pad: clamp(20px, 4vh, 36px);
+  }
+
+  /* ───────── Topbar (desktop; phones fold it into the title row) ───────── */
+  .topbar {
+    display: none;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    flex: none;
+    padding: 18px var(--pad-x);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .topbar .crumb { display: flex; align-items: center; }
+  .topbar a { color: var(--ink); letter-spacing: 0.18em; }
+  .topbar a:hover { border-bottom: 1px solid var(--ink); }
+  .topbar .sep { margin: 0 8px; }
+
+  /* ───────── App frame ───────── */
+  .app {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ───────── Intro ───────── */
+  .intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title story" "deck deck";
+    align-items: baseline;
+    column-gap: 16px;
+    padding: 14px var(--gutter) 0;
+  }
+  .eyebrow {
+    display: none;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted-small);
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .eyebrow::before { content: ''; width: 24px; height: 1px; background: var(--ink); }
+  .intro h1 {
+    grid-area: title;
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 34px;
+    line-height: 0.94;
+    letter-spacing: -0.025em;
+    color: var(--black);
+  }
+  .intro h1 em { font-style: italic; }
+  .deck {
+    grid-area: deck;
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--muted);
+    margin-top: 6px;
+    text-wrap: pretty;
+  }
+  .deck .more { display: none; }
+  .story {
+    grid-area: story;
+    justify-self: end;
+    font-size: 14px;
+    color: var(--ink);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--hairline);
+    transition: border-color var(--t-deliver) var(--ease-deliver);
+  }
+  .story:hover, .story:focus-visible { border-bottom-color: var(--ink); }
+  .story:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .story .arrow { display: inline-block; transition: transform var(--t-deliver) var(--ease-deliver); }
+  .story:hover .arrow { transform: translate(2px, -2px); }
+
+  /* ───────── Stage: the banner and the words that seed it ─────────
+     No entrance on the stage: the banner is the page, so it is simply there,
+     and a blur settle over a canvas this size is costly on phones. */
+  .stage { padding: 12px var(--gutter) 0; }
+  .stage-inner { width: 100%; }
+  #art {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    background: var(--paper);
+    box-shadow: var(--shadow-border);
+  }
+  .noscript { font-size: 14px; color: var(--muted); margin-top: 10px; }
+
+  .seed-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "label stepper" "field field";
+    align-items: center;
+    margin-top: 10px;
+    row-gap: 2px;
+  }
+  .seed-wrap > .label { grid-area: label; }
+  .seed-wrap > .stepper { grid-area: stepper; }
+  .seed-wrap > .seed { grid-area: field; }
+  .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted-small);
+  }
+  .stepper { display: inline-flex; align-items: center; gap: 2px; margin-right: -10px; }
+  .step {
+    width: 40px; height: 36px;
+    display: inline-grid; place-items: center;
+    border: 0; background: none;
+    border-radius: 999px;
+    font-size: 20px; line-height: 1;
+    color: var(--ink);
+    cursor: pointer;
+    transition: box-shadow var(--t-deliver) var(--ease-deliver),
+                transform var(--t-deliver) var(--ease-deliver),
+                opacity var(--t-deliver) var(--ease-deliver);
+  }
+  .step:hover { box-shadow: var(--shadow-border-hover); }
+  .step:active { transform: scale(0.96); }
+  .step:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .step[aria-disabled="true"] { opacity: 0.3; cursor: default; box-shadow: none; transform: none; }
+  .no {
+    min-width: 7ch;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The signature: you type the headline under its own banner, the way it
+     will sit on the post, quoted by the same bar the banner is built from.
+     The bar turns black while you type. Past two lines, the words shrink
+     to fit rather than push the controls down. */
+  .seed {
+    display: block;
+    width: 100%;
+    min-height: calc(var(--title-size) * var(--title-lh) + 8px);
+    max-height: var(--seed-h);
+    padding: 4px 0 4px 16px;
+    font-family: var(--serif);
+    font-size: var(--title-size);
+    line-height: var(--title-lh);
+    letter-spacing: -0.015em;
+    color: var(--black);
+    caret-color: var(--black);
+    background: transparent;
+    border: 0;
+    border-left: 2px solid var(--hairline-focus);
+    border-radius: 0;
+    resize: none;
+    overflow: hidden;
+    text-wrap: balance;
+    transition: border-color var(--t-deliver) var(--ease-deliver);
+  }
+  .seed::placeholder { color: var(--muted); opacity: 1; }
+  .seed:hover { border-left-color: var(--ink); }
+  .seed:focus { outline: none; border-left-color: var(--black); }
+
+  /* ───────── Panel: shape, download, footer ───────── */
+  .panel {
+    display: flex;
+    flex-direction: column;
+    padding: 14px var(--gutter) calc(12px + env(safe-area-inset-bottom));
+  }
+  .controls { display: grid; gap: 6px; }
+
+  /* Phones: label, control and value share one row. The panel column restacks
+     them (see the desktop block). */
+  .field {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr) 52px;
+    grid-template-areas: "label control trail";
+    align-items: center;
+    column-gap: 8px;
+    min-height: 40px;
+  }
+  .field > .label { grid-area: label; }
+  .field > .ctl { grid-area: control; }
+  .field > .trail { grid-area: trail; justify-self: end; }
+
+  /* Clusters: a segmented control. The black pill slides under the chosen
+     number, with :has() telling it which one. */
+  .seg {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    height: 36px;
+    padding: 3px;
+    border-radius: 999px;
+    box-shadow: var(--shadow-border);
+    --i: 1;
+  }
+  .seg::before {
+    content: '';
+    position: absolute;
+    top: 3px; bottom: 3px; left: 3px;
+    width: calc((100% - 6px) / 6);
+    border-radius: 999px;
+    background: var(--black);
+    transform: translateX(calc(var(--i) * 100%));
+    transition: transform var(--t-deliver) var(--ease-deliver);
+  }
+  .seg:has(input[value="1"]:checked) { --i: 0; }
+  .seg:has(input[value="2"]:checked) { --i: 1; }
+  .seg:has(input[value="3"]:checked) { --i: 2; }
+  .seg:has(input[value="4"]:checked) { --i: 3; }
+  .seg:has(input[value="5"]:checked) { --i: 4; }
+  .seg:has(input[value="6"]:checked) { --i: 5; }
+  .seg label { position: relative; z-index: 1; display: flex; cursor: pointer; }
+  .seg input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+  .seg span {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink);
+    transition: color var(--t-deliver) var(--ease-deliver);
+  }
+  .seg label:hover span { color: var(--black); }
+  .seg input:checked + span { color: var(--paper); }
+  .seg input:focus-visible + span { outline: 2px solid var(--ink); outline-offset: 2px; }
+  @supports not selector(:has(*)) {
+    .seg::before { display: none; }
+    .seg input:checked + span { background: var(--black); }
+  }
+
+  /* Sliders. The thumb is a bar, the same mark the banners are made of. */
+  .range {
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    width: 100%;
+    height: 36px;
+    background: transparent;
+    cursor: pointer;
+    --fill: 50%;
+  }
+  .range::-webkit-slider-runnable-track {
+    height: 2px;
+    border-radius: 1px;
+    background: linear-gradient(to right, var(--ink) var(--fill), var(--hairline) var(--fill));
+  }
+  .range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 6px;
+    height: 22px;
+    margin-top: -10px;
+    border-radius: 1px;
+    background: var(--black);
+    box-shadow: 0 0 0 3px var(--paper);
+    transition: transform var(--t-deliver) var(--ease-deliver);
+  }
+  .range:active::-webkit-slider-thumb { transform: scaleY(1.18); }
+  .range::-moz-range-track { height: 2px; border-radius: 1px; background: var(--hairline); }
+  .range::-moz-range-progress { height: 2px; border-radius: 1px; background: var(--ink); }
+  .range::-moz-range-thumb {
+    width: 6px;
+    height: 22px;
+    border: 0;
+    border-radius: 1px;
+    background: var(--black);
+    box-shadow: 0 0 0 3px var(--paper);
+  }
+  .range:focus { outline: none; }
+  .range:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
+
+  .val {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Reset reads as inert until there is something to reset. */
+  .text-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    padding: 12px 0;
+    margin: -12px 0;
+    text-decoration: underline;
+    text-decoration-color: var(--hairline);
+    text-underline-offset: 4px;
+    transition: text-decoration-color var(--t-deliver) var(--ease-deliver),
+                color var(--t-deliver) var(--ease-deliver);
+  }
+  .text-btn:hover { text-decoration-color: var(--ink); }
+  .text-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .text-btn[aria-disabled="true"] { opacity: 0.4; text-decoration-color: transparent; cursor: default; }
+
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
+  .actions .pill { flex: 1 1 auto; }
+  .actions .ghost { flex: none; }
+  .spec {
+    display: none;
+    flex-basis: 100%;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--muted-small);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted-small);
+  }
+  .foot a { color: var(--ink); white-space: nowrap; border-bottom: 1px solid transparent; transition: border-color var(--t-deliver) var(--ease-deliver); }
+  .foot a:hover { border-bottom-color: var(--ink); }
+  .foot a:focus-visible, .topbar a:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  /* Tablets in portrait: the banner still spans the width, and the panel
+     splits into shape controls on the left and the actions on the right. */
+  @media (min-width: 600px) and (max-width: 899px) and (min-height: 521px) {
+    :root { --gutter: 32px; --title-size: 30px; }
+    .intro h1 { font-size: 44px; }
+    .deck { font-size: 16px; }
+    .deck .more { display: inline; }
+    .stage { padding-top: 20px; }
+    .panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 220px;
+      grid-template-areas: "controls actions" "foot foot";
+      column-gap: 40px;
+      padding-top: 20px;
+    }
+    .controls { grid-area: controls; }
+    .actions { grid-area: actions; align-self: start; margin-top: 2px; flex-direction: column; align-items: stretch; }
+    .actions .pill, .actions .ghost { flex: none; }
+    .spec { display: block; text-align: center; }
+    .foot { grid-area: foot; margin-top: 28px; }
+  }
+
+  /* Shorter phones: tighten first, then drop the deck and the footer line
+     before anything scrolls. */
+  @media (max-width: 899px) and (max-height: 700px) {
+    .intro { padding-top: 10px; }
+    .seed-wrap { margin-top: 6px; }
+    .controls { gap: 2px; }
+    .actions { margin-top: 10px; }
+    .foot { margin-top: 10px; }
+  }
+  @media (max-width: 899px) and (max-height: 610px) {
+    :root { --title-size: 21px; }
+    .deck { display: none; }
+    .foot { display: none; }
+    .field { min-height: 38px; }
+  }
+
+  /* ───────── Two columns: banner left, controls right ───────── */
+  @media (min-width: 900px), (min-width: 640px) and (orientation: landscape) and (max-height: 520px) {
+    :root {
+      --title-size: clamp(26px, 1.2vw + 16px, 40px);
+      --stage-pad: clamp(20px, 3vw, 48px);
+      /* Everything under the banner: gap, seed label row, the two-line seed. */
+      --seed-block: calc(10px + 2px + 40px + var(--seed-h));
+    }
+    .topbar { display: grid; }
+    .app {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--panel-w);
+      grid-template-rows: auto minmax(0, 1fr);
+      grid-template-areas: "stage intro" "stage panel";
+      overflow: hidden;
+    }
+
+    .intro { grid-area: intro; display: block; padding: var(--top-pad) var(--panel-pad) 0; }
+    .eyebrow { display: flex; }
+    .intro h1 { font-size: clamp(44px, min(4.6vw, 9vh), 72px); }
+    .deck { font-size: 16px; margin-top: 14px; }
+    .deck .more { display: inline; }
+    .story { display: inline-block; margin-top: 12px; font-size: 15px; }
+
+    /* The banner fills whatever the column allows at 16:9, after leaving room
+       for the seed under it. Container units keep the seed the same width.
+       Its top edge lines up with the eyebrow across the rule. */
+    .stage {
+      grid-area: stage;
+      container-type: size;
+      display: grid;
+      align-content: start;
+      justify-content: center;
+      min-height: 0;
+      padding: var(--top-pad) var(--stage-pad) var(--stage-pad);
+      border-right: 1px solid var(--hairline);
+    }
+    .stage-inner { width: min(100cqw, calc((100cqh - var(--seed-block)) * 16 / 9), 1320px); }
+    .step { height: 40px; }
+
+    .panel { grid-area: panel; min-height: 0; overflow-y: auto; padding: var(--top-pad) var(--panel-pad) 22px; }
+    .controls { gap: clamp(16px, 3vh, 26px); }
+    .field {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas: "label trail" "control control";
+      row-gap: 10px;
+      min-height: 0;
+    }
+    .seg { height: 40px; }
+    .range { height: 28px; }
+    .actions { margin-top: clamp(20px, 4vh, 36px); }
+    .spec { display: block; }
+    .foot { margin-top: auto; padding-top: 20px; }
+  }
+
+  /* Phones on their side: every pixel of height goes to the banner. */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .topbar, .eyebrow, .deck, .spec { display: none; }
+    .intro h1 { font-size: 36px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .seg::before, .seg span, .step, .range::-webkit-slider-thumb { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="crumb"><a href="/">Mooch</a><span class="sep" aria-hidden="true">/</span><span>Unblocked</span></div>
+  <div>Algorithm 1</div>
+</header>
+
+<main class="app">
+
+  <section class="intro" aria-labelledby="title">
+    <p class="eyebrow reveal d1">Banner generator</p>
+    <h1 id="title" class="reveal d1"><em>Unblocked.</em></h1>
+    <p class="deck reveal d2">Type a headline, get a banner. <span class="more">Same words, same banner, every time.</span></p>
+    <a class="story reveal d2" href="https://moochagency.substack.com/p/unblockedbymooch" target="_blank" rel="noopener" data-event="unblocked_learn_more">How we made it <span class="arrow" aria-hidden="true">&#8599;</span></a>
+  </section>
+
+  <section class="stage" aria-label="Banner">
+    <div class="stage-inner">
+      <canvas id="art" width="1920" height="1080" role="img" aria-label="Generated banner"></canvas>
+      <noscript><p class="noscript">Unblocked draws each banner in your browser, so it needs JavaScript switched on.</p></noscript>
+      <div class="seed-wrap">
+        <label class="label" for="seed">Seed</label>
+        <textarea class="seed" id="seed" rows="1" maxlength="200" spellcheck="false" autocomplete="off" autocapitalize="sentences" enterkeyhint="done" placeholder="Type a headline">How we accidentally became generative artists</textarea>
+        <div class="stepper" role="group" aria-label="Variation">
+          <button type="button" class="step" id="prev" aria-label="Previous variation" title="Previous variation (&larr;)">&lsaquo;</button>
+          <output class="no" id="variation" aria-live="polite">N&deg; 1</output>
+          <button type="button" class="step" id="next" aria-label="Next variation" title="Next variation (&rarr;)">&rsaquo;</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel reveal d3" aria-label="Shape and download">
+    <div class="controls">
+      <div class="field">
+        <span class="label" id="clusters-label">Clusters</span>
+        <div class="seg ctl" role="radiogroup" aria-labelledby="clusters-label">
+          <label><input type="radio" name="clusters" value="1"><span>1</span></label>
+          <label><input type="radio" name="clusters" value="2" checked><span>2</span></label>
+          <label><input type="radio" name="clusters" value="3"><span>3</span></label>
+          <label><input type="radio" name="clusters" value="4"><span>4</span></label>
+          <label><input type="radio" name="clusters" value="5"><span>5</span></label>
+          <label><input type="radio" name="clusters" value="6"><span>6</span></label>
+        </div>
+        <button type="button" class="text-btn trail" id="reset" aria-disabled="true" aria-label="Reset clusters, scale and darkness">Reset</button>
+      </div>
+      <div class="field">
+        <label class="label" for="scale">Scale</label>
+        <input class="range ctl" type="range" id="scale" min="0.6" max="4" step="0.1" value="2">
+        <output class="val trail" id="scale-out" for="scale">2.0&times;</output>
+      </div>
+      <div class="field">
+        <label class="label" for="darkness">Darkness</label>
+        <input class="range ctl" type="range" id="darkness" min="0.5" max="1" step="0.05" value="0.9">
+        <output class="val trail" id="darkness-out" for="darkness">90%</output>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="pill" id="download">Download PNG</button>
+      <button type="button" class="ghost" id="copy">Copy link</button>
+      <p class="spec">1920 &times; 1080 PNG</p>
+    </div>
+
+    <div class="foot">
+      <a href="/">Made by Mooch</a>
+      <a href="mailto:hey@mooch.agency">hey@mooch.agency</a>
+    </div>
+    <p class="visually-hidden" id="status" role="status"></p>
+  </section>
+
+</main>
+
+<!-- Vercel Web Analytics and Speed Insights. analytics.js injects both,
+     unless this browser has opted out via ?notrack=1; see analytics.js.
+     A shared link carries its seed in the query string, which can be
+     someone's unpublished headline, so both report the bare path only. -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+  (function () {
+    function barePath(e) { return Object.assign({}, e, { url: String(e.url).replace(/[?#].*$/, '') }); }
+    window.va('beforeSend', barePath);
+    window.si('beforeSend', barePath);
+  })();
+</script>
+<script defer src="/analytics.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── The algorithm ─────────────────────────────────────────────────────
+     Unblocked's v9 composition, ported from p5.js to plain canvas. Every
+     random draw happens in the original order and every canvas call matches
+     what p5 1.7.0 made, so a seed paints the same pixels it always has: the
+     banners already published re-render byte for byte. Change nothing here
+     without re-running that comparison. */
+  var W = 1920, H = 1080;
+
+  function dualHash(s) {
+    var h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (var i = 0; i < s.length; i++) {
+      var c = s.charCodeAt(i);
+      h1 = Math.imul(h1 ^ c, 2654435761);
+      h2 = Math.imul(h2 ^ c, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return [h1 >>> 0, h2 >>> 0];
+  }
+  function sfc32(a, b, c, d) {
+    return function () {
+      a |= 0; b |= 0; c |= 0; d |= 0;
+      var t = (a + b | 0) + d | 0;
+      d = d + 1 | 0;
+      a = b ^ b >>> 9;
+      b = c + (c << 3) | 0;
+      c = (c << 21 | c >>> 11);
+      c = c + t | 0;
+      return (t >>> 0) / 4294967296;
+    };
+  }
+  function L(a, b, t) { return a + (b - a) * t; }
+  function C(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+
+  function paint(ctx, seed, p) {
+    var h = dualHash(seed);
+    var R = sfc32(h[0], h[1], h[0] ^ 0x12345678, h[1] ^ 0x9abcdef0);
+    for (var w = 0; w < 20; w++) R();
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = 'rgba(255,255,255,1)';
+    ctx.fillRect(0, 0, W, H);
+
+    // Scale tiers: one large cluster leads, the rest step down.
+    var n = p.clusters, tiers = [], i, j, tmp;
+    if (n === 1) tiers = ['large'];
+    else if (n === 2) tiers = ['large', 'small'];
+    else if (n === 3) tiers = ['large', 'medium', 'small'];
+    else {
+      for (i = 0; i < n; i++) {
+        var r = i / n;
+        tiers.push(r < 0.33 ? 'large' : r < 0.66 ? 'medium' : 'small');
+      }
+    }
+    for (i = tiers.length - 1; i > 0; i--) {
+      j = Math.floor(R() * (i + 1));
+      tmp = tiers[i]; tiers[i] = tiers[j]; tiers[j] = tmp;
+    }
+
+    var clusters = [], occupied = [];
+    for (i = 0; i < n; i++) {
+      var tier = tiers[i], cs;
+      if (tier === 'large') cs = L(0.85, 1.5, R());
+      else if (tier === 'medium') cs = L(0.4, 0.7, R());
+      else cs = L(0.08, 0.28, R());
+      cs *= p.scale;
+
+      // Bars share one height per cluster (a blockquote, not a bar chart),
+      // stay narrow enough to read as a mark, and sit further apart than
+      // they are wide.
+      var barH = H * L(0.3, 1.4, cs);
+      var minAspect = tier === 'large' ? 6 : tier === 'medium' ? 8 : 12;
+      var barW = Math.max(3, Math.min(barH / minAspect, L(8, 45, cs) * p.scale));
+      var gap = Math.max(4, barW * L(1.2, 3.0, R()));
+      var count = tier === 'small' ? Math.floor(L(3, 7, R())) : Math.floor(L(4, 14, Math.pow(R(), 0.5)));
+      var total = count * (barW + gap) - gap;
+
+      // Place across the width, keeping clear space between clusters. Large
+      // ones favour bleeding off an edge.
+      var cx, placed = false, attempts = 0, margin = 80;
+      while (attempts < 40 && !placed) {
+        if (tier === 'large') {
+          var edge = R();
+          if (edge < 0.45) cx = L(-total * 0.35, total * 0.2, R());
+          else if (edge < 0.75) cx = W - L(-total * 0.35, total * 0.2, R());
+          else cx = L(W * 0.15, W * 0.85, R());
+        } else if (tier === 'small') {
+          cx = L(W * 0.1, W * 0.9, R());
+        } else {
+          cx = L(W * 0.05, W * 0.95, R());
+        }
+        var left = cx - total / 2 - margin, right = cx + total / 2 + margin, overlaps = false;
+        for (var o = 0; o < occupied.length; o++) {
+          if (left < occupied[o].right && right > occupied[o].left) { overlaps = true; break; }
+        }
+        if (!overlaps) {
+          placed = true;
+          occupied.push({ left: cx - total / 2, right: cx + total / 2 });
+        }
+        attempts++;
+      }
+      if (!placed) occupied.push({ left: cx - total / 2, right: cx + total / 2 });
+
+      // Three in four clusters stand on the bottom edge.
+      var align, cy, ar = R();
+      if (ar < 0.75) { align = 'bottom'; cy = H - L(-5, barH * 0.06, R()); }
+      else if (ar < 0.92) { align = 'center'; cy = L(H * 0.35, H * 0.65, R()); }
+      else { align = 'top'; cy = L(-5, barH * 0.06, R()); }
+
+      // Mostly near-black, with the odd pale whisper for contrast.
+      var whisper = R() < 0.15;
+      var shadeBase = whisper ? L(0.10, 0.30, R()) : L(p.darkness * 0.6, p.darkness, R());
+      var flat = R() < 0.65;
+      var shadeEnd = shadeBase;
+      if (!flat) {
+        var dir = R() < 0.5 ? 1 : -1;
+        shadeEnd = C(shadeBase + dir * L(0.06, 0.2, R()), 0.05, 0.98);
+      }
+      clusters.push({ cx: cx, cy: cy, barH: barH, barW: barW, gap: gap, count: count, shadeBase: shadeBase, shadeEnd: shadeEnd, flat: flat, align: align, scale: cs });
+    }
+
+    // Larger clusters paint first, so smaller ones sit on top.
+    clusters.sort(function (a, b) { return b.scale - a.scale; });
+
+    for (var k = 0; k < clusters.length; k++) {
+      var cl = clusters[k];
+      var startX = cl.cx - (cl.count * (cl.barW + cl.gap) - cl.gap) / 2;
+      for (i = 0; i < cl.count; i++) {
+        var t = cl.count > 1 ? i / (cl.count - 1) : 0.5;
+        var bx = startX + i * (cl.barW + cl.gap) + cl.barW / 2;
+        var by = cl.align === 'bottom' ? cl.cy - cl.barH / 2 : cl.align === 'top' ? cl.cy + cl.barH / 2 : cl.cy;
+        var shade = cl.flat ? cl.shadeBase : L(cl.shadeBase, cl.shadeEnd, t);
+        var lv = Math.round((C(L(235, 5, shade), 0, 245) / 255) * 255);
+        ctx.fillStyle = 'rgba(' + lv + ',' + lv + ',' + lv + ',1)';
+        ctx.beginPath();
+        ctx.rect(bx - cl.barW * 0.5, by - cl.barH * 0.5, cl.barW, cl.barH);
+        ctx.fill();
+      }
+    }
+
+    // Grain, drawn from the same stream so it belongs to the seed too.
+    var img = ctx.getImageData(0, 0, W, H), px = img.data;
+    var gs = Math.floor(R() * 2147483647);
+    for (var q = 0, len = px.length; q < len; q += 4) {
+      gs = (gs * 1103515245 + 12345) & 0x7fffffff;
+      var g = (((gs >> 16) & 0xff) - 128) * 0.02;
+      px[q] += g;
+      px[q + 1] += g;
+      px[q + 2] += g;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  /* ── State ─────────────────────────────────────────────────────────────
+     A banner is its seed text, a variation number and three shape settings.
+     Variation 1 is the text on its own, so every seed from the original
+     tool (text or number) still makes its original banner; later variations
+     hash the text with "#n". With no text, the variation number is the
+     seed, which is how the old numeric seeds worked. Spaces at either end
+     don't count, so a pasted headline matches a typed one. */
+  var DEFAULTS = { text: 'How we accidentally became generative artists', n: 1, clusters: 2, scale: 2, darkness: 0.9 };
+  var MAX_N = 999999;
+
+  function snap(v, lo, hi, per) { return Math.round(Math.min(hi, Math.max(lo, v)) * per) / per; }
+
+  function fromUrl() {
+    var s = {
+      text: DEFAULTS.text, n: DEFAULTS.n,
+      clusters: DEFAULTS.clusters, scale: DEFAULTS.scale, darkness: DEFAULTS.darkness
+    };
+    try {
+      var q = new URLSearchParams(location.search);
+      if (q.has('seed')) s.text = q.get('seed').slice(0, 200);
+      var n = parseInt(q.get('n'), 10);
+      if (n >= 1) s.n = Math.min(n, MAX_N);
+      var c = parseInt(q.get('clusters'), 10);
+      if (c >= 1 && c <= 6) s.clusters = c;
+      var sc = parseFloat(q.get('scale'));
+      if (isFinite(sc)) s.scale = snap(sc, 0.6, 4, 10);
+      var dk = parseFloat(q.get('darkness'));
+      if (isFinite(dk)) s.darkness = snap(dk, 0.5, 1, 20);
+    } catch (e) { /* a malformed link falls back to the defaults */ }
+    return s;
+  }
+
+  var state = fromUrl();
+
+  function seedText() { return state.text.trim(); }
+  function seedString() {
+    var t = seedText();
+    if (t === '') return String(state.n);
+    return state.n === 1 ? t : t + ' #' + state.n;
+  }
+  function atDefaultShape() {
+    return state.clusters === DEFAULTS.clusters && state.scale === DEFAULTS.scale && state.darkness === DEFAULTS.darkness;
+  }
+
+  /* ── Elements ── */
+  var $ = function (id) { return document.getElementById(id); };
+  var art = $('art');
+  var ctx = art.getContext('2d', { willReadFrequently: true });
+  var seed = $('seed'), prev = $('prev'), next = $('next'), variation = $('variation');
+  var scale = $('scale'), darkness = $('darkness'), scaleOut = $('scale-out'), darkOut = $('darkness-out');
+  var reset = $('reset'), download = $('download'), copy = $('copy'), status = $('status');
+  var radios = Array.prototype.slice.call(document.querySelectorAll('input[name="clusters"]'));
+
+  /* ── Analytics: guarded, so a blocked script never throws into the page.
+     The seed text is never sent. */
+  function track(name, data) {
+    try { if (window.va) window.va('event', data ? { name: name, data: data } : { name: name }); } catch (e) {}
+  }
+  function shapeData() {
+    return { clusters: state.clusters, scale: state.scale, darkness: state.darkness, variation: state.n, own_seed: seedText() !== DEFAULTS.text };
+  }
+  var played = false;
+  function play(via) {
+    if (played) return;
+    played = true;
+    track('unblocked_play', { via: via });
+  }
+
+  /* ── Drawing: at most once a frame, however fast the input arrives ── */
+  var pending = true;
+  function draw() {
+    paint(ctx, seedString(), state);
+    var t = seedText();
+    art.setAttribute('aria-label',
+      'Banner seeded by ' + (t ? '“' + t + '”' : 'the number ' + state.n) +
+      (t && state.n > 1 ? ', variation ' + state.n : '') + ': ' +
+      state.clusters + (state.clusters === 1 ? ' cluster' : ' clusters') + ' of vertical bars.');
+  }
+  function schedule() {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(flush);
+  }
+  function flush() {
+    if (!pending) return;
+    pending = false;
+    draw();
+  }
+
+  /* ── Controls ── */
+  function setFill(el) {
+    var min = parseFloat(el.min), max = parseFloat(el.max);
+    el.style.setProperty('--fill', ((parseFloat(el.value) - min) / (max - min) * 100) + '%');
+  }
+  function syncReadouts() {
+    scaleOut.textContent = state.scale.toFixed(1) + '×';
+    darkOut.textContent = Math.round(state.darkness * 100) + '%';
+    scale.setAttribute('aria-valuetext', state.scale.toFixed(1) + ' times');
+    darkness.setAttribute('aria-valuetext', Math.round(state.darkness * 100) + ' percent');
+    setFill(scale);
+    setFill(darkness);
+    variation.textContent = 'N° ' + state.n;
+    prev.setAttribute('aria-disabled', String(state.n === 1));
+    next.setAttribute('aria-disabled', String(state.n === MAX_N));
+    reset.setAttribute('aria-disabled', String(atDefaultShape()));
+  }
+  function syncShape() {
+    radios.forEach(function (r) { r.checked = Number(r.value) === state.clusters; });
+    scale.value = String(state.scale);
+    darkness.value = String(state.darkness);
+    syncReadouts();
+  }
+
+  // The seed box hugs its words for one or two lines, so the bar beside it
+  // is always as tall as the text. Past two lines the type shrinks to fit.
+  function fitSeed() {
+    seed.style.fontSize = '';
+    seed.style.height = 'auto';
+    var cs = getComputedStyle(seed);
+    var base = parseFloat(cs.fontSize), max = parseFloat(cs.maxHeight);
+    var size = base, min = Math.round(base * 0.6);
+    seed.style.height = max + 'px';
+    while (seed.scrollHeight > seed.clientHeight + 1 && size > min) {
+      size -= 1;
+      seed.style.fontSize = size + 'px';
+    }
+    seed.style.height = 'auto';
+    seed.style.height = Math.min(seed.scrollHeight, max) + 'px';
+  }
+
+  function step(d) {
+    var n = Math.min(MAX_N, Math.max(1, state.n + d));
+    if (n === state.n) return;
+    state.n = n;
+    syncReadouts();
+    schedule();
+    play('variation');
+  }
+
+  seed.value = state.text;
+  seed.addEventListener('input', function () {
+    state.text = seed.value;
+    fitSeed();
+    schedule();
+    play('seed');
+  });
+  // One line of words, no line breaks. Enter hands the arrow keys back to
+  // the variation stepper.
+  seed.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); seed.blur(); }
+  });
+
+  prev.addEventListener('click', function () { step(-1); });
+  next.addEventListener('click', function () { step(1); });
+
+  radios.forEach(function (r) {
+    r.addEventListener('change', function () {
+      if (!r.checked) return;
+      state.clusters = Number(r.value);
+      syncReadouts();
+      schedule();
+      play('clusters');
+    });
+  });
+  scale.addEventListener('input', function () {
+    state.scale = parseFloat(scale.value);
+    syncReadouts();
+    schedule();
+    play('scale');
+  });
+  darkness.addEventListener('input', function () {
+    state.darkness = parseFloat(darkness.value);
+    syncReadouts();
+    schedule();
+    play('darkness');
+  });
+
+  reset.addEventListener('click', function () {
+    if (atDefaultShape()) return;
+    state.clusters = DEFAULTS.clusters;
+    state.scale = DEFAULTS.scale;
+    state.darkness = DEFAULTS.darkness;
+    syncShape();
+    schedule();
+  });
+
+  // Arrow keys step through variations whenever they aren't already moving
+  // a caret, a slider or the cluster picker.
+  document.addEventListener('keydown', function (e) {
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    var t = e.target;
+    if (t && t.closest && t.closest('textarea, input, select, [contenteditable]')) return;
+    e.preventDefault();
+    step(e.key === 'ArrowRight' ? 1 : -1);
+  });
+
+  /* ── Download and share ── */
+  function say(msg) {
+    status.textContent = '';
+    setTimeout(function () { status.textContent = msg; }, 30);
+  }
+  function confirmOn(btn, done) {
+    var label = btn.getAttribute('data-label') || btn.textContent;
+    btn.setAttribute('data-label', label);
+    btn.textContent = done;
+    clearTimeout(btn._t);
+    btn._t = setTimeout(function () { btn.textContent = label; }, 1600);
+  }
+  function filename() {
+    var t = seedText();
+    var slug = t.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60).replace(/-+$/, '');
+    if (!t) slug = String(state.n);
+    else if (state.n > 1) slug += (slug ? '-' : '') + state.n;
+    return 'unblocked' + (slug ? '-' + slug : '') + '.png';
+  }
+  function save(href, name) {
+    var a = document.createElement('a');
+    a.href = href;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  download.addEventListener('click', function () {
+    flush();
+    var name = filename();
+    var done = function () {
+      confirmOn(download, 'Downloaded');
+      say('Downloaded ' + name);
+    };
+    if (art.toBlob) {
+      art.toBlob(function (blob) {
+        if (!blob) return;
+        var url = URL.createObjectURL(blob);
+        save(url, name);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+        done();
+      }, 'image/png');
+    } else {
+      save(art.toDataURL('image/png'), name);
+      done();
+    }
+    track('unblocked_download', shapeData());
+  });
+
+  function shareUrl() {
+    var q = new URLSearchParams();
+    var t = seedText();
+    if (t !== DEFAULTS.text) q.set('seed', t);
+    if (state.n !== DEFAULTS.n) q.set('n', String(state.n));
+    if (state.clusters !== DEFAULTS.clusters) q.set('clusters', String(state.clusters));
+    if (state.scale !== DEFAULTS.scale) q.set('scale', state.scale.toFixed(1));
+    if (state.darkness !== DEFAULTS.darkness) q.set('darkness', state.darkness.toFixed(2));
+    var qs = q.toString();
+    return location.origin + location.pathname + (qs ? '?' + qs : '');
+  }
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise(function (resolve, reject) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.className = 'visually-hidden';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      ta.remove();
+      ok ? resolve() : reject(new Error('copy failed'));
+    });
+  }
+  copy.addEventListener('click', function () {
+    var url = shareUrl();
+    copyText(url).then(function () {
+      confirmOn(copy, 'Copied');
+      say('Link copied');
+    }, function () {
+      confirmOn(copy, 'Copy failed');
+      say('Could not copy. The link is ' + url);
+    });
+    track('unblocked_copy_link', shapeData());
+  });
+
+  // Outbound links carry their event name in data-event.
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest ? e.target.closest('a[data-event]') : null;
+    if (el) track(el.getAttribute('data-event'));
+  });
+
+  /* ── First paint ──
+     The banner paints just after the page's first frame, so the words and
+     controls never wait on it. Download flushes it first if you are quicker. */
+  syncShape();
+  fitSeed();
+  requestAnimationFrame(function () { setTimeout(flush, 0); });
+
+  var resizing = false;
+  window.addEventListener('resize', function () {
+    if (resizing) return;
+    resizing = true;
+    requestAnimationFrame(function () { resizing = false; fitSeed(); });
+  });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSeed);
+})();
+</script>
+</body>
+</html>
