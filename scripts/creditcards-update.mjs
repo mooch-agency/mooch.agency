@@ -275,8 +275,15 @@ function renderProjects(projects) {
     );
   }
 
-  const items = approved
+  // One featured slot at most: the first approved entry flagged
+  // "featured": true in the data file. It leads the grid on a black base,
+  // full width, so it never leaves a hole in the rows below it.
+  const featured = approved.find((p) => p.featured);
+  const ordered = featured ? [featured, ...approved.filter((p) => p !== featured)] : approved;
+
+  const items = ordered
     .map((p) => {
+      const isFeatured = p === featured;
       const name = escapeHtml(stripDashes(p.name));
       const blurb = escapeHtml(stripDashes(p.blurb));
       const handle = escapeHtml(p.x);
@@ -285,10 +292,16 @@ function renderProjects(projects) {
         ? `<a href="${escapeHtml(p.post)}" target="_blank" rel="noopener" data-event="creditcards_post_click">@${handle}</a>`
         : '<span></span>';
       return [
-        '      <li class="proj-card">',
+        isFeatured ? '      <li class="proj-card proj-card--featured">' : '      <li class="proj-card">',
         `        ${gridSvg(p.id)}`,
+        isFeatured
+          ? '        <p class="proj-flag"><span class="proj-flag-marks" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Featured</p>'
+          : null,
         `        <a class="proj-name" href="${url}" target="_blank" rel="noopener" data-event="creditcards_project_click">${name}</a>`,
         blurb ? `        <p class="proj-blurb">${blurb}</p>` : null,
+        isFeatured
+          ? `        <p class="proj-cta"><a class="pill" href="${url}" target="_blank" rel="noopener" data-event="creditcards_featured_click">Open ${name} <span class="arrow">&rarr;</span></a></p>`
+          : null,
         `        <p class="proj-by">${by}<span>${fmtDate(p.added)}</span></p>`,
         '      </li>',
       ]

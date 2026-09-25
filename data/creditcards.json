@@ -12,6 +12,21 @@
   },
   "projects": [
     {
+      "id": "jack-art-credits-rating",
+      "name": "Credit Ratings",
+      "url": "https://jack.art/credits/rating",
+      "x": "jackbutcher",
+      "post": "https://x.com/jackbutcher",
+      "blurb": "Jack's own rarity index. Every Credit scored from 80 to 800 across five traits: palette, active bits, occupied cells, eights and print. Look up a wallet or a token ID, nothing to connect.",
+      "status": "approved",
+      "featured": true,
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
       "id": "creditsmoonmath-xyz",
       "name": "creditsmoonmath.xyz",
       "url": "https://creditsmoonmath.xyz",
