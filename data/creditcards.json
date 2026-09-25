@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2103546358296932525",
-    "lastRun": "2026-09-25T18:47:06.243Z",
+    "sinceId": "2103596011176313307",
+    "lastRun": "2026-09-25T21:33:02.119Z",
     "stats": {
-      "floorEth": 0.0256,
-      "floorUsd": 69,
+      "floorEth": 0.0227,
+      "floorUsd": 61,
       "supply": 122153,
-      "owners": 16011,
-      "fetchedAt": "2026-09-25T18:47:06.220Z"
+      "owners": 15967,
+      "fetchedAt": "2026-09-25T21:33:02.087Z"
     },
     "replySinceId": "2103492987892400638"
   },
@@ -407,6 +407,21 @@
         "reposts": 0
       },
       "tweetText": "@jackbutcher not sure if this was intentional but Credits make really good Game of Life seeds!  #66101 runs for like 3,700 generations. I put all of them on a site so people can play theirs!  https://"
+    },
+    {
+      "id": "credits-monitor-vercel-app",
+      "name": "credits-monitor.vercel.app",
+      "url": "https://credits-monitor.vercel.app",
+      "x": "Dorsian",
+      "post": "https://x.com/Dorsian/status/2103596011176313307",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "tweetText": "TOP 100 Credits by @jackbutcher  deserve a nice monitor site, with clear price rankings.\n\nhttps://t.co/olSn7Ij8tE https://t.co/QLA2JkKKOk"
     }
   ]
 }
