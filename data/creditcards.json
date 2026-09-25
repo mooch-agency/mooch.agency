@@ -18,7 +18,7 @@
       "url": "https://jack.art/credits/rating",
       "x": "jackbutcher",
       "post": "https://x.com/jackbutcher",
-      "blurb": "Jack's own rarity index. Every Credit scored from 80 to 800 across five traits: palette, active bits, occupied cells, eights and print. Look up a wallet or a token ID, nothing to connect.",
+      "blurb": "Jack's own rarity index, every Credit scored from 80 to 800. No wallet needed.",
       "status": "approved",
       "featured": true,
       "added": "2026-09-25",
@@ -33,7 +33,7 @@
       "url": "https://creditsmoonmath.xyz",
       "x": "himars",
       "post": "https://x.com/himars/status/2103250902656118893",
-      "blurb": "Paste a wallet, get a rarity rating for every Credit in it. Nothing to connect.",
+      "blurb": "Paste an address, get a rarity rating for every Credit in it. No wallet needed.",
       "status": "approved",
       "added": "2026-09-24",
       "metrics": {
@@ -47,7 +47,7 @@
       "url": "https://credits-statement-studio.vercel.app",
       "x": "ivdoublex",
       "post": "https://x.com/ivdoublex/status/2103242384775471375",
-      "blurb": "Arrange your 80 before you burn anything, with read-only lookup of your holdings.",
+      "blurb": "Arrange your 80 before you burn anything. Read-only lookup of your holdings.",
       "status": "approved",
       "added": "2026-09-24",
       "metrics": {
@@ -61,7 +61,7 @@
       "url": "https://mantra-coral-mr7v.here.now",
       "x": "4484",
       "post": "https://x.com/4484/status/2103209362206654605",
-      "blurb": "Describe the Statement you want and an AI picks the 80 Credits, priced from live listings.",
+      "blurb": "Describe a Statement and an AI picks the 80 Credits, priced from live listings.",
       "status": "approved",
       "added": "2026-09-24",
       "metrics": {
@@ -75,7 +75,7 @@
       "url": "https://credits.ninja",
       "x": "itsmemeworks",
       "post": "https://x.com/itsmemeworks/status/2103163283482304667",
-      "blurb": "Rarity for all 122,154 Credits, live sales, holder rankings and wallet compares. Paste an address, nothing to connect.",
+      "blurb": "Rarity, live sales and holder rankings for every Credit. No wallet needed.",
       "status": "approved",
       "added": "2026-09-24",
       "metrics": {
@@ -89,7 +89,7 @@
       "url": "https://sighthood.com",
       "x": "sight_hood",
       "post": "https://x.com/sight_hood/status/2103147553948626961",
-      "blurb": "A prediction market on where the Credits floor lands. Wallet connected, real money.",
+      "blurb": "A prediction market on the Credits floor price. Wallet connected, real money.",
       "status": "approved",
       "added": "2026-09-24",
       "metrics": {
@@ -183,12 +183,12 @@
     },
     {
       "id": "oncave-io-labs-credited-punks",
-      "name": "oncave.io",
+      "name": "Credited Punks",
       "url": "https://oncave.io/labs/credited-punks",
       "x": "defimaestro90",
       "post": "https://x.com/defimaestro90/status/2102792764765188313",
-      "blurb": "",
-      "status": "rejected",
+      "blurb": "10,000 CryptoPunks recoloured by Credits, onchain. Paid mint, wallet connected.",
+      "status": "approved",
       "added": "2026-09-24",
       "metrics": {
         "likes": 35,
@@ -271,7 +271,7 @@
       "url": "https://buybits.art",
       "x": "EightBits11",
       "post": "https://x.com/EightBits11/status/2103342460047085643",
-      "blurb": "Credits' $8 X Money mechanic, rebuilt on Solana. A separate collection, not part of Credits.",
+      "blurb": "Credits' $8 X Money mechanic, rebuilt on Solana. A separate collection.",
       "status": "approved",
       "added": "2026-09-25",
       "metrics": {
@@ -299,7 +299,7 @@
       "url": "https://laternow.app/futures",
       "x": "LATE_FX",
       "post": "https://x.com/LATE_FX/status/2103269221111058849",
-      "blurb": "Free mint for Credits holders: a 1 of 1 magic 8 ball, gas only. Wallet connected.",
+      "blurb": "Free mint for holders: a 1 of 1 magic 8 ball, gas only. Wallet connected.",
       "status": "approved",
       "added": "2026-09-25",
       "metrics": {
@@ -313,7 +313,7 @@
       "url": "https://creditscheck.xyz",
       "x": "JimEagle_",
       "post": "https://x.com/JimEagle_/status/2103297144015011852",
-      "blurb": "A report card for every Credit: rank, an AAA to CCC rating, why it's rare, live price and a Game of Life run. Read-only, wallet optional.",
+      "blurb": "A report card per Credit: rank, AAA to CCC rating, live price. Wallet optional.",
       "status": "approved",
       "added": "2026-09-25",
       "metrics": {
@@ -327,7 +327,7 @@
       "url": "https://exaltedlove.com/debits/",
       "x": "wubbushi",
       "post": "https://x.com/wubbushi/status/2103321243831451817",
-      "blurb": "A Debit prints the plates your Credit didn't show; hold both for the full Total. Not on sale yet. Plus a gallery, Credit Score and rare finds, nothing to connect.",
+      "blurb": "A Debit prints the plates your Credit didn't show. Unreleased, gallery live.",
       "status": "approved",
       "added": "2026-09-25",
       "metrics": {
@@ -341,7 +341,7 @@
       "url": "https://www.tokenstrategy.com",
       "x": "token_works",
       "post": "https://x.com/AlphaAltcoins/status/2103274156620124313",
-      "blurb": "A strategy token (CREDITSTR) that uses its trade tax to buy the cheapest Credits, relist them and burn the token. Not deployed by Jack. Wallet connected.",
+      "blurb": "A token whose trade tax buys and relists Credits. Not Jack's. Wallet connected.",
       "status": "approved",
       "added": "2026-09-25",
       "metrics": {
@@ -355,7 +355,7 @@
       "url": "https://opensea.io/collection/creditcards",
       "x": "Jehoseph",
       "post": "https://x.com/Jehoseph/status/2103013672541204483",
-      "blurb": "A separate paid collection inspired by Credits, not part of Credits or this index. 10,000 cards on OpenSea. Wallet connected to mint.",
+      "blurb": "A separate paid collection inspired by Credits, not part of it. Wallet to mint.",
       "status": "approved",
       "added": "2026-09-25",
       "metrics": {
