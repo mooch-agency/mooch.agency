@@ -28,6 +28,7 @@
   --hairline: #d2d2d7;
   --hairline-focus: #86868b;  /* Darker hairline for focusable element borders */
   --hairline-dark: #2a2a2c;   /* Hairline rule for dark-footer (.colophon-dark) context */
+  --muted-dark: #a1a1a6;      /* Secondary text on black (featured card on /creditcards) */
   --error: #b00020;
   --success: #0a7d3f;
 

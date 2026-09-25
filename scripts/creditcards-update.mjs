@@ -211,7 +211,36 @@ async function discover(data, token, fetchImpl) {
 
 // --- stats --------------------------------------------------------------------
 
+// OpenSea's keyless API refuses some cloud IP ranges some of the time
+// (GitHub's runners got a 401 on the collection endpoint on 25 Sep while
+// Vercel's egress got 200s). When the direct call fails, the site's own
+// /api/creditcards-stats serves the same four numbers from Vercel, so the
+// baked fallback never goes stale just because the runner was refused.
+const SITE_STATS = 'https://mooch.agency/api/creditcards-stats';
+
 async function refreshStats(data, fetchImpl) {
+  try {
+    await refreshStatsDirect(data, fetchImpl);
+    return 'OpenSea';
+  } catch (direct) {
+    const res = await fetchImpl(SITE_STATS, { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) throw new Error(`${direct.message}; site stats ${res.status}`);
+    const s = await res.json();
+    if (typeof s.floorEth !== 'number' || typeof s.supply !== 'number' || typeof s.owners !== 'number') {
+      throw new Error(`${direct.message}; site stats payload missing a field`);
+    }
+    data.meta.stats = {
+      floorEth: s.floorEth,
+      floorUsd: typeof s.floorUsd === 'number' ? s.floorUsd : data.meta.stats.floorUsd,
+      supply: s.supply,
+      owners: s.owners,
+      fetchedAt: new Date().toISOString(),
+    };
+    return `site API (OpenSea direct failed: ${direct.message})`;
+  }
+}
+
+async function refreshStatsDirect(data, fetchImpl) {
   const headers = { accept: 'application/json' };
   if (process.env.OPENSEA_API_KEY) headers['x-api-key'] = process.env.OPENSEA_API_KEY;
   const opts = { headers, signal: AbortSignal.timeout(10_000) };
@@ -275,8 +304,15 @@ function renderProjects(projects) {
     );
   }
 
-  const items = approved
+  // One featured slot at most: the first approved entry flagged
+  // "featured": true in the data file. It leads the grid on a black base,
+  // full width, so it never leaves a hole in the rows below it.
+  const featured = approved.find((p) => p.featured);
+  const ordered = featured ? [featured, ...approved.filter((p) => p !== featured)] : approved;
+
+  const items = ordered
     .map((p) => {
+      const isFeatured = p === featured;
       const name = escapeHtml(stripDashes(p.name));
       const blurb = escapeHtml(stripDashes(p.blurb));
       const handle = escapeHtml(p.x);
@@ -285,10 +321,16 @@ function renderProjects(projects) {
         ? `<a href="${escapeHtml(p.post)}" target="_blank" rel="noopener" data-event="creditcards_post_click">@${handle}</a>`
         : '<span></span>';
       return [
-        '      <li class="proj-card">',
+        isFeatured ? '      <li class="proj-card proj-card--featured">' : '      <li class="proj-card">',
         `        ${gridSvg(p.id)}`,
+        isFeatured
+          ? '        <p class="proj-flag"><span class="proj-flag-marks" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Featured</p>'
+          : null,
         `        <a class="proj-name" href="${url}" target="_blank" rel="noopener" data-event="creditcards_project_click">${name}</a>`,
         blurb ? `        <p class="proj-blurb">${blurb}</p>` : null,
+        isFeatured
+          ? `        <p class="proj-cta"><a class="pill" href="${url}" target="_blank" rel="noopener" data-event="creditcards_featured_click">Open ${name} <span class="arrow">&rarr;</span></a></p>`
+          : null,
         `        <p class="proj-by">${by}<span>${fmtDate(p.added)}</span></p>`,
         '      </li>',
       ]
@@ -341,10 +383,10 @@ export async function run({ xToken, fetchImpl = fetch, root = ROOT, dry = DRY, b
       }
     }
     try {
-      await refreshStats(data, fetchImpl);
-      console.log(`✓ OpenSea: floor ${fmtEth(data.meta.stats.floorEth)} ETH, supply ${fmtInt(data.meta.stats.supply)}`);
+      const source = await refreshStats(data, fetchImpl);
+      console.log(`✓ Stats via ${source}: floor ${fmtEth(data.meta.stats.floorEth)} ETH, supply ${fmtInt(data.meta.stats.supply)}`);
     } catch (e) {
-      console.error(`✗ OpenSea refresh failed, keeping baked stats: ${e.message}`);
+      console.error(`✗ Stats refresh failed, keeping baked stats: ${e.message}`);
     }
     data.meta.lastRun = new Date().toISOString();
   }
