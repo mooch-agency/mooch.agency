@@ -1,18 +1,18 @@
 # Deploy: Write Like Paul Graham
 
 The tool lives in this repo: `paulgraham.html` (the page), `api/rewrite.js` (the
-streaming function), `api/pg-system.md` (the system prompt, generated from
-`pg-rewriter/voice/`), and `vercel.json` (the host rewrite).
+streaming function) and `api/pg-system.md` (the system prompt, generated from
+`pg-rewriter/voice/`).
 
 ## How it deploys
 
 The repo deploys as the `mooch.agency` Vercel project from `master`. Merging to
-`master` ships `/api/rewrite` and `/paulgraham`. The host rewrite in `vercel.json`
-is conditional on `paulgraham.mooch.agency`, so `mooch.agency` itself is untouched.
+`master` ships `/api/rewrite` and `/paulgraham`.
 
-To put it on its own subdomain, add `paulgraham.mooch.agency` to the project and
-point a DNS record at Vercel (`CNAME paulgraham -> cname.vercel-dns.com`, DNS-only).
-Vercel issues the certificate.
+The tool lives at `mooch.agency/paulgraham`, a path, because its code lives in
+the agency repo (see "Paths and subdomains" in the root `CLAUDE.md`). It used to
+be served at `paulgraham.mooch.agency`; that domain stays on the Vercel project
+only so the redirects in `vercel.json` can send old links to the path.
 
 ## Environment variables
 
@@ -32,7 +32,7 @@ Claude is a one-variable fallback (`PROVIDER=claude`).
 
 ## Verify
 
-- `curl -N -X POST https://paulgraham.mooch.agency/api/rewrite -H 'content-type: application/json' -d '{"text":"It could be argued that..."}'` streams `data:` tokens.
+- `curl -N -X POST https://mooch.agency/api/rewrite -H 'content-type: application/json' -d '{"text":"It could be argued that..."}'` streams `data:` tokens.
 - Load the page, paste, hit Rewrite, watch the before/after Voice Score, copy.
 
 ## Cost guards

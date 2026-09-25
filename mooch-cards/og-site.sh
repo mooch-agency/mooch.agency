@@ -85,7 +85,7 @@ card paulgraham \
   --eyebrow "Plaything" \
   --title "Write like\n*Paul Graham.*" \
   --subtitle "Write articles as clearly as Paul Graham." \
-  --domain "paulgraham.mooch.agency" \
+  --domain "mooch.agency/paulgraham" \
   --scale 1.15
 
 card deslop \
@@ -101,13 +101,6 @@ card soundlikeme \
   --subtitle "Make AI write in your voice." \
   --domain "mooch.agency/prompts/soundlikeme" \
   --tint prompt --scale 1.1
-
-card frwa \
-  --eyebrow "Plaything" \
-  --title "Fake Real\n*World Assets.*" \
-  --subtitle "Trade the FRWA 10 asset index 24/7 365 on the Mooch Stock Exchange (MSE)." \
-  --domain "mooch.agency/frwa" \
-  --dark --scale 1.15
 
 card creditcards \
   --eyebrow "Community index" \
