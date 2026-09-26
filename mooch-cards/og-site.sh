@@ -110,9 +110,9 @@ card creditcards \
   --tint plaything --scale 1.3
 
 card unblocked \
-  --eyebrow "Banner generator" \
+  --eyebrow "Plaything" \
   --title "*Unblocked.*" \
-  --subtitle "Type a headline, get a banner.\nSame words, same banner, every time." \
+  --subtitle "A generative art project that turns words into hero banners." \
   --domain "mooch.agency/unblocked" \
   --scale 1.3
 
