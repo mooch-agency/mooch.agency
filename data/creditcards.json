@@ -1,15 +1,15 @@
 {
   "meta": {
-    "sinceId": "2103596011176313307",
-    "lastRun": "2026-09-25T21:33:02.119Z",
+    "sinceId": "2103778159183495362",
+    "lastRun": "2026-09-26T11:19:51.416Z",
     "stats": {
-      "floorEth": 0.0227,
-      "floorUsd": 61,
+      "floorEth": 0.02685,
+      "floorUsd": 72,
       "supply": 122153,
-      "owners": 15967,
-      "fetchedAt": "2026-09-25T21:33:02.087Z"
+      "owners": 15778,
+      "fetchedAt": "2026-09-26T11:19:51.391Z"
     },
-    "replySinceId": "2103492987892400638"
+    "replySinceId": "2103765952894558555"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -483,6 +483,36 @@
         "likes": 0,
         "reposts": 0
       }
+    },
+    {
+      "id": "pump-fun",
+      "name": "pump.fun",
+      "url": "https://pump.fun",
+      "x": "bitecong",
+      "post": "https://x.com/bitecong/status/2103703567219773668",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "tweetText": "🤖 AI Signal (SOL) $CREDIT\n\nCA: CXpCREMe9NYtQzJikaPKuVmXD58ZeCnVdiUjKyuEAP7a\n\nCredits (CREDIT) is a https://t.co/bfcZh58PrC launch on Solana, minutes old at our signal, and its story is the attention "
+    },
+    {
+      "id": "blackswanofficial-xyz",
+      "name": "blackswanofficial.xyz",
+      "url": "https://blackswanofficial.xyz",
+      "x": "BlackswanTM",
+      "post": "https://x.com/BlackswanTM/status/2103778159183495362",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "tweetText": "Blackswan Official NFTs on @opensea will be live in a week.\n\nCredits to @jackbutcher \nFind your item and own your collectibles\n\nVisit the official website for official brand ambassador program.\nhttps:"
     }
   ]
 }
