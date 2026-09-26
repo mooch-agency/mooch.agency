@@ -356,6 +356,9 @@
     overflow: hidden;
     box-shadow: var(--shadow-border);
     transition: box-shadow 0.15s ease, transform 0.15s ease;
+    /* Own stacking context, so the watermark can sit at z-index -1: above
+       the card's paper, below the name, which is no longer positioned. */
+    isolation: isolate;
   }
   .proj-card:hover { box-shadow: var(--shadow-border-hover); transform: translateY(-2px); }
   /* The mark goes oversized and faint off the corner, the same move as the
@@ -368,10 +371,13 @@
     width: 176px;
     height: 176px;
     opacity: 0.15;
+    z-index: -1;
     pointer-events: none;
   }
+  /* The whole card opens the project: the name's link stretches over it.
+     Static, so its ::after takes the card as containing block. Hovering
+     anywhere on the card is hovering the name, so it underlines too. */
   .proj-name {
-    position: relative;
     font-family: var(--serif);
     font-weight: 400;
     font-size: clamp(26px, 2.4vw, 34px);
@@ -385,6 +391,17 @@
     overflow-wrap: anywhere;
   }
   .proj-name:hover { border-bottom-color: var(--ink); }
+  .proj-name::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+  @supports selector(:has(a)) {
+    .proj-card:has(.proj-name:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .proj-name:focus-visible { outline: none; }
+  }
+  /* The byline and the featured pill keep their own links above the
+     stretched one. The strip itself lets clicks through, so the date
+     still opens the project. */
+  .proj-cta, .proj-by { z-index: 2; }
+  .proj-by { pointer-events: none; }
+  .proj-by a { pointer-events: auto; }
   .proj-blurb { position: relative; margin: 0; font-size: 15px; line-height: 1.5; color: var(--muted-small); flex: 1; max-width: 88%; text-wrap: pretty; }
   /* Handle left, date right, never wrapping: a byline that breaks onto a
      second line in some cards and not others makes the row look ragged. */
