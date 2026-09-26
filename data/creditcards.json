@@ -11,6 +11,15 @@
     },
     "replySinceId": "2103492987892400638"
   },
+  "featuredSlot": {
+    "price": "80 USDC",
+    "per": "week",
+    "credit": "1 Credit",
+    "address": "jesus.eth",
+    "network": "Ethereum mainnet",
+    "dm": "https://x.com/messages/compose?recipient_id=1386099253580345344",
+    "dmLabel": "DM @jesusdoteth"
+  },
   "projects": [
     {
       "id": "jack-art-credits-rating",
