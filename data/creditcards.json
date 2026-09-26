@@ -422,6 +422,34 @@
         "reposts": 0
       },
       "tweetText": "TOP 100 Credits by @jackbutcher  deserve a nice monitor site, with clear price rankings.\n\nhttps://t.co/olSn7Ij8tE https://t.co/QLA2JkKKOk"
+    },
+    {
+      "id": "creditscores-vercel-app-creditizer",
+      "name": "Creditizer",
+      "url": "https://creditscores.vercel.app/creditizer/",
+      "x": "devonfigures",
+      "post": "https://x.com/devonfigures",
+      "blurb": "Turn any image into a mosaic of Credits, up to 256 across, and download it as a 4K PNG or SVG with a map of every Credit used. Nothing to connect.",
+      "status": "approved",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "statement-builder-xyz",
+      "name": "Statement Builder",
+      "url": "https://www.statement-builder.xyz/",
+      "x": "Caben_nft",
+      "post": "https://x.com/Caben_nft",
+      "blurb": "Build Statements from 80 real Credits or the ones an address owns, turn an image into Credits and hear your Statement. No wallet connection.",
+      "status": "approved",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
     }
   ]
 }
