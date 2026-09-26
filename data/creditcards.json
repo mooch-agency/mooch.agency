@@ -326,8 +326,8 @@
       "name": "Debits",
       "url": "https://exaltedlove.com/debits/",
       "x": "wubbushi",
-      "post": "https://x.com/wubbushi/status/2103321243831451817",
-      "blurb": "A Debit prints the plates your Credit didn't show. Unreleased, gallery live.",
+      "post": "https://x.com/wubbushi/status/2103650320924774801",
+      "blurb": "A Debit prints the plates your Credit didn't show, now with The Second Hand: a film and a clock of your Credits. Unreleased, nothing to connect.",
       "status": "approved",
       "added": "2026-09-25",
       "metrics": {
@@ -440,6 +440,34 @@
       "x": "Caben_nft",
       "post": "https://x.com/Caben_nft",
       "blurb": "Build Statements from 80 real Credits or the ones an address owns, turn an image into Credits and hear your Statement. No wallet connection.",
+      "status": "approved",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "exaltedlove-com-debits-miles",
+      "name": "Credit Miles",
+      "url": "https://exaltedlove.com/debits/miles",
+      "x": "wubbushi",
+      "post": "https://x.com/wubbushi/status/2103638750295159126",
+      "blurb": "A frequent flyer program for Credits: miles for every hour held, every sale a flight. Look up any wallet, nothing to connect.",
+      "status": "approved",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "pour-eight-vercel-app",
+      "name": "Pour",
+      "url": "https://pour-eight.vercel.app/",
+      "x": "dealer1943",
+      "post": "https://x.com/dealer1943/status/2103691502870553059",
+      "blurb": "Pour any Credit's colors onto a canvas like acrylic paint, tilt it, add salt, alcohol or soap and save the image. Free, nothing to connect.",
       "status": "approved",
       "added": "2026-09-26",
       "metrics": {
