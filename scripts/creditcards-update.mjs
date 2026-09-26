@@ -304,7 +304,26 @@ function gridSvg(id) {
   return `<svg class="proj-art" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${rects}</svg>`;
 }
 
-function renderProjects(projects) {
+// The paid slot line under the featured card. Price, the Credit alternative,
+// the payment address and the DM link all come from data.featuredSlot, so a
+// price change is a data edit, not a template edit. No featuredSlot, no line.
+function renderSponsorLine(slot) {
+  if (!slot) return null;
+  const price = escapeHtml(stripDashes(slot.price));
+  const per = escapeHtml(stripDashes(slot.per));
+  const credit = escapeHtml(stripDashes(slot.credit));
+  const address = escapeHtml(slot.address);
+  const network = slot.network ? ` on ${escapeHtml(slot.network)}` : '';
+  const dm = escapeHtml(slot.dm);
+  const dmLabel = escapeHtml(stripDashes(slot.dmLabel));
+  return [
+    '      <li class="proj-sponsor">',
+    `        <p>Feature your project here: ${price} a ${per} or ${credit} to <button type="button" class="proj-sponsor-address" data-copy="${address}" title="Copy ${address}${network}" data-event="creditcards_sponsor_copy">${address}</button><span class="proj-sponsor-sep" aria-hidden="true">&middot;</span><a href="${dm}" target="_blank" rel="noopener" data-event="creditcards_sponsor_click">${dmLabel} <span class="arrow">&rarr;</span></a></p>`,
+    '      </li>',
+  ].join('\n');
+}
+
+function renderProjects(projects, slot) {
   const approved = projects
     .filter((p) => p.status === 'approved')
     .sort((a, b) => (a.added === b.added ? a.name.localeCompare(b.name) : b.added.localeCompare(a.added)));
@@ -317,7 +336,9 @@ function renderProjects(projects) {
 
   // One featured slot at most: the first approved entry flagged
   // "featured": true in the data file. It leads the grid on a black base,
-  // full width, so it never leaves a hole in the rows below it.
+  // full width, so it never leaves a hole in the rows below it. Add
+  // "sponsored": true to the same entry when the slot is paid for, and the
+  // eyebrow reads Sponsored instead of Featured.
   const featured = approved.find((p) => p.featured);
   const ordered = featured ? [featured, ...approved.filter((p) => p !== featured)] : approved;
 
@@ -335,7 +356,7 @@ function renderProjects(projects) {
         isFeatured ? '      <li class="proj-card proj-card--featured">' : '      <li class="proj-card">',
         `        ${gridSvg(p.id)}`,
         isFeatured
-          ? '        <p class="proj-flag"><span class="proj-flag-marks" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Featured</p>'
+          ? `        <p class="proj-flag"><span class="proj-flag-marks" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${p.sponsored ? 'Sponsored' : 'Featured'}</p>`
           : null,
         `        <a class="proj-name" href="${url}" target="_blank" rel="noopener" data-event="creditcards_project_click">${name}</a>`,
         blurb ? `        <p class="proj-blurb">${blurb}</p>` : null,
@@ -344,6 +365,7 @@ function renderProjects(projects) {
           : null,
         `        <p class="proj-by">${by}<span>${fmtDate(p.added)}</span></p>`,
         '      </li>',
+        isFeatured ? renderSponsorLine(slot) : null,
       ]
         .filter(Boolean)
         .join('\n');
@@ -361,7 +383,7 @@ function bakeStat(html, key, value) {
 
 function bake(html, data) {
   if (!MARKER_RE.test(html)) throw new Error(`creditcards:projects markers missing from ${PAGE_FILE}`);
-  let next = html.replace(MARKER_RE, (_, open, __, close) => `${open}${renderProjects(data.projects)}${close}`);
+  let next = html.replace(MARKER_RE, (_, open, __, close) => `${open}${renderProjects(data.projects, data.featuredSlot)}${close}`);
   const s = data.meta.stats;
   next = bakeStat(next, 'floorEth', fmtEth(s.floorEth));
   next = bakeStat(next, 'floorUsd', fmtInt(s.floorUsd));

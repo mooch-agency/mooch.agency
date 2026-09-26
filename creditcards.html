@@ -232,7 +232,7 @@
   }
   /* The featured slot: one card, black base, full grid width so it never
      leaves a hole in the rows below. Set with "featured": true in
-     data/creditcards.json. Local token overrides follow .colophon-dark. */
+     data/creditcards.json; add "sponsored": true for a paid slot. Local token overrides follow .colophon-dark. */
   .projects .proj-card--featured {
     --muted: var(--muted-dark);
     --muted-small: var(--muted-dark);
@@ -290,6 +290,48 @@
     /* On a phone the mark can't sit beside the text, so it drops back to
        a faint corner mark rather than competing with the blurb. */
     .proj-card--featured .proj-art { width: 200px; height: 200px; right: -50px; bottom: -30px; opacity: 0.3; }
+  }
+  /* The paid slot line: one quiet mono row tucked under the featured card,
+     same voice as the bylines. Price and address come from
+     data/creditcards.json (featuredSlot). Wraps freely on a phone. */
+  .projects .proj-sponsor { grid-column: 1 / -1; margin-top: -12px; }
+  .proj-sponsor p {
+    margin: 0;
+    padding: 0 2px;
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.7;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+  .proj-sponsor a,
+  .proj-sponsor-address {
+    color: var(--ink);
+    border-bottom: 1px solid var(--hairline);
+    transition: border-color 0.15s ease;
+  }
+  .proj-sponsor a { white-space: nowrap; }
+  .proj-sponsor-sep { margin: 0 0.6em; }
+  .proj-sponsor a:hover,
+  .proj-sponsor-address:hover { border-bottom-color: var(--ink); }
+  .proj-sponsor-address {
+    padding: 0;
+    background: none;
+    border-top: 0;
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+    font: inherit;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    line-height: 1.2;
+    vertical-align: baseline;
+    cursor: copy;
+  }
+  @media (max-width: 599px) {
+    .projects .proj-sponsor { margin-top: -10px; }
   }
   .projects-foot { font-size: 17px; max-width: var(--col); text-wrap: pretty; }
   .projects-foot a { border-bottom: 1px solid var(--hairline); transition: border-color 0.15s ease; }
@@ -516,6 +558,9 @@
         <p class="proj-cta"><a class="pill" href="https://jack.art/credits/rating" target="_blank" rel="noopener" data-event="creditcards_featured_click">Open Credit Ratings <span class="arrow">&rarr;</span></a></p>
         <p class="proj-by"><a href="https://x.com/jackbutcher" target="_blank" rel="noopener" data-event="creditcards_post_click">@jackbutcher</a><span>25 Sept 2026</span></p>
       </li>
+      <li class="proj-sponsor">
+        <p>Feature your project here: 80 USDC a week or 1 Credit to <button type="button" class="proj-sponsor-address" data-copy="jesus.eth" title="Copy jesus.eth on Ethereum mainnet" data-event="creditcards_sponsor_copy">jesus.eth</button><span class="proj-sponsor-sep" aria-hidden="true">&middot;</span><a href="https://x.com/messages/compose?recipient_id=1386099253580345344" target="_blank" rel="noopener" data-event="creditcards_sponsor_click">DM @jesusdoteth <span class="arrow">&rarr;</span></a></p>
+      </li>
       <li class="proj-card">
         <svg class="proj-art" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="31" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="41" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="1" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="71" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="1" y="11" width="8" height="8" fill="var(--credit-k)"/><rect x="21" y="11" width="8" height="8" fill="var(--credit-y)"/><rect x="61" y="11" width="8" height="8" fill="var(--credit-k)"/><rect x="71" y="11" width="8" height="8" fill="var(--credit-y)"/><rect x="1" y="21" width="8" height="8" fill="var(--credit-m)"/><rect x="11" y="21" width="8" height="8" fill="var(--credit-k)"/><rect x="21" y="21" width="8" height="8" fill="var(--credit-m)"/><rect x="61" y="21" width="8" height="8" fill="var(--credit-m)"/><rect x="21" y="31" width="8" height="8" fill="var(--credit-c)"/><rect x="41" y="31" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="31" width="8" height="8" fill="var(--credit-y)"/><rect x="11" y="41" width="8" height="8" fill="var(--credit-y)"/><rect x="21" y="41" width="8" height="8" fill="var(--credit-k)"/><rect x="31" y="41" width="8" height="8" fill="var(--credit-m)"/><rect x="51" y="41" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="41" width="8" height="8" fill="var(--credit-k)"/><rect x="71" y="41" width="8" height="8" fill="var(--credit-m)"/><rect x="11" y="51" width="8" height="8" fill="var(--credit-m)"/><rect x="31" y="51" width="8" height="8" fill="var(--credit-m)"/><rect x="41" y="51" width="8" height="8" fill="var(--credit-y)"/><rect x="61" y="51" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="61" width="8" height="8" fill="var(--credit-m)"/><rect x="31" y="61" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="61" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="71" width="8" height="8" fill="var(--credit-y)"/><rect x="21" y="71" width="8" height="8" fill="var(--credit-c)"/><rect x="31" y="71" width="8" height="8" fill="var(--credit-k)"/><rect x="41" y="71" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="71" width="8" height="8" fill="var(--credit-k)"/></svg>
         <a class="proj-name" href="https://exaltedlove.com/debits/miles" target="_blank" rel="noopener" data-event="creditcards_project_click">Credit Miles</a>
@@ -703,6 +748,18 @@
         if (typeof d.owners === "number") set("owners", fmtInt(d.owners));
       })
       .catch(function () {});
+
+    // Tap the payment address to copy it. Falls back to plain text when the
+    // clipboard API is missing or refused: the name is still right there.
+    document.addEventListener("click", function (e) {
+      var btn = e.target.closest ? e.target.closest("[data-copy]") : null;
+      if (!btn || !navigator.clipboard) return;
+      var value = btn.getAttribute("data-copy");
+      navigator.clipboard.writeText(value).then(function () {
+        btn.textContent = "copied";
+        setTimeout(function () { btn.textContent = value; }, 1400);
+      }).catch(function () {});
+    });
 
     // One delegated listener covers every outbound link, including project
     // rows the daily bake adds later. One event name per intent: a project
