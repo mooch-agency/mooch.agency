@@ -109,6 +109,13 @@ card creditcards \
   --domain "mooch.agency/creditcards" \
   --tint plaything --scale 1.3
 
+card unblocked \
+  --eyebrow "Plaything" \
+  --title "*Unblocked.*" \
+  --subtitle "A generative art project that turns words into hero banners." \
+  --domain "mooch.agency/unblocked" \
+  --scale 1.3
+
 # No `ready` card: /ready was retired in the Phase 0 roadmap decision and now
 # 301s to /, so a sharer never reaches a page that would use one.
 
