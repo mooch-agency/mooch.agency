@@ -491,13 +491,12 @@
       "x": "bitecong",
       "post": "https://x.com/bitecong/status/2103703567219773668",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-26",
       "metrics": {
         "likes": 0,
         "reposts": 0
-      },
-      "tweetText": "🤖 AI Signal (SOL) $CREDIT\n\nCA: CXpCREMe9NYtQzJikaPKuVmXD58ZeCnVdiUjKyuEAP7a\n\nCredits (CREDIT) is a https://t.co/bfcZh58PrC launch on Solana, minutes old at our signal, and its story is the attention "
+      }
     },
     {
       "id": "blackswanofficial-xyz",
@@ -506,13 +505,12 @@
       "x": "BlackswanTM",
       "post": "https://x.com/BlackswanTM/status/2103778159183495362",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-26",
       "metrics": {
         "likes": 0,
         "reposts": 0
-      },
-      "tweetText": "Blackswan Official NFTs on @opensea will be live in a week.\n\nCredits to @jackbutcher \nFind your item and own your collectibles\n\nVisit the official website for official brand ambassador program.\nhttps:"
+      }
     },
     {
       "id": "suno-com-song-968e10f0-4d03-4228-b6f0-3d0baa358b0a",
@@ -521,13 +519,12 @@
       "x": "brbk85",
       "post": "https://x.com/brbk85/status/2103810431928467771",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-26",
       "metrics": {
         "likes": 4,
         "reposts": 2
-      },
-      "tweetText": "Made a little $JACKOFF anthem. 🎵\n28 seconds of catchy crypto-meme energy, Credits, and Robinhood Chain vibes.\n🎧 https://t.co/4BWJPVAPcn\n$JACKOFF @jackbutcher @mememaxxers @tradesgiving"
+      }
     },
     {
       "id": "catalogue-gallery-blog-jack-butcher-credits-cmyk-x-money",
@@ -536,13 +533,12 @@
       "x": "CatalogueART",
       "post": "https://x.com/CatalogueART/status/2103821449794589033",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-26",
       "metrics": {
         "likes": 7,
         "reposts": 2
-      },
-      "tweetText": "Credits from $8, Jack Butcher’s (@jackbutcher) X Money open edition turns each payment into a CMYK grid artwork.\nhttps://t.co/HoZKYeUZBh"
+      }
     },
     {
       "id": "jackoff-simulator-netlify-app",
@@ -551,28 +547,54 @@
       "x": "brbk85",
       "post": "https://x.com/brbk85/status/2103949478646444425",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-26",
       "metrics": {
         "likes": 0,
         "reposts": 0
-      },
-      "tweetText": "Built a simple $JACKOFF Market Cap Simulator for the Credits + $JACKOFF community.\nIt converts target market cap into token price and shows Bear / Base / Bull scenarios.\nNo wallet connection, no appro"
+      }
     },
     {
       "id": "credit-limit-vv-vercel-app",
-      "name": "credit-limit-vv.vercel.app",
+      "name": "Credit Limit",
       "url": "https://credit-limit-vv.vercel.app",
       "x": "0xhiromasa",
       "post": "https://x.com/0xhiromasa/status/2103862962830393355",
-      "blurb": "",
-      "status": "pending",
+      "blurb": "Higher or lower with Credits: pick the rarer score until one miss reaches your limit, or play the Daily 8. Free, nothing to connect.",
+      "status": "approved",
       "added": "2026-09-26",
       "metrics": {
         "likes": 1,
         "reposts": 0
-      },
-      "tweetText": "Couldn't stop looking at @jackbutcher's credits so i made a game out of them\n\nTry it here 👇 Guess if the credit is higher or lower\nhttps://t.co/ouxoJoUtd3 https://t.co/6enzUnHDZE"
+      }
+    },
+    {
+      "id": "creditscores-vercel-app-scan",
+      "name": "Credit Scanner",
+      "url": "https://creditscores.vercel.app/scan/",
+      "x": "devonfigures",
+      "post": "https://x.com/devonfigures/status/2103877289788227649",
+      "blurb": "Point your phone camera at any Credit, on screen or in print, for its score, rank and market. Free, nothing to connect.",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 71,
+        "reposts": 8
+      }
+    },
+    {
+      "id": "opensea-io-collection-not-an-artist-888",
+      "name": "Not An Artist",
+      "url": "https://opensea.io/collection/not-an-artist-888",
+      "x": "BB88888888888BB",
+      "post": "https://x.com/BB88888888888BB/status/2103520141158093001",
+      "blurb": "12,542 Jacks from timelines where he never became an artist, a separate collection from Credits. Mint closed, wallet to trade on OpenSea.",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 62,
+        "reposts": 5
+      }
     }
   ]
 }

@@ -4,14 +4,21 @@
 //
 // Three jobs, in order, each surviving the others' failure:
 //
-//   1. Discovery (needs X_BEARER_TOKEN): two recent-search requests against the
-//      X API for new Credits-related projects (the main query, plus replies to
-//      @jesusdoteth's own posts, where builders submit to the index). New external links land in
-//      data/creditcards.json as status "pending". Nothing pending ever renders;
-//      a human flips it to "approved" (and tidies the blurb) first. Rejected
-//      entries stay as tombstones so a re-announced URL is never re-added.
-//      Cost control: max 50 posts per run on a pay-per-use token, windowed by
-//      since_id so a quiet day reads almost nothing.
+//   1. Discovery (needs X_BEARER_TOKEN, see creditcards-discover.mjs): three
+//      sources, each with its own since-id in data.meta: the main keyword
+//      search (sinceId), replies to @jesusdoteth where builders submit
+//      (replySinceId), and Tahi's "Credits" X List of builders (listSinceId).
+//      Posts are mined for links in the post, in a quoted or reposted post, in
+//      the author's bio when the post says "link in bio", and in the author's
+//      own first reply when the post itself has none. New external links land
+//      in data/creditcards.json as status "pending", with a score and flags
+//      (coin, denylist, article) that only rank and label. Nothing pending
+//      ever renders; a human flips it to "approved" (and tidies the blurb)
+//      first. Rejected entries stay as tombstones so a re-announced URL is
+//      never re-added. Cost control: at most 50 + 25 search posts, 80 list
+//      posts and one 25-post thread lookup a run, windowed by since-ids so a
+//      quiet day reads almost nothing; at most 15 new entries a run and 3 per
+//      author.
 //
 //   2. Stats refresh (best effort, keyless): the same two OpenSea endpoints
 //      api/creditcards-stats.js proxies at runtime. Baking the numbers here
@@ -38,6 +45,26 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import {
+  MAX_NEW_PER_AUTHOR,
+  MAX_NEW_PER_RUN,
+  TCO_MAX_RESOLVE,
+  THREAD_MAX_CONVERSATIONS,
+  X_API,
+  acceptableUrl,
+  assess,
+  entityLinks,
+  hostOf,
+  idGreater,
+  isShortener,
+  knownHostOf,
+  mentionsLinkInBio,
+  normaliseUrl,
+  pickCandidates,
+  refOf,
+  snowflakeAt,
+  strayTcoLinks,
+} from './creditcards-discover.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -55,7 +82,6 @@ const PAGE_FILE = 'creditcards.html';
 // internet; replies and reposts are noise at this budget. No lang filter:
 // grid-art projects announce in any language, and the human review gate
 // absorbs what the query lets through.
-const X_ENDPOINT = 'https://api.x.com/2/tweets/search/recent';
 const X_QUERY =
   '(credits ("jack butcher" OR jackbutcher OR @jackbutcher) OR url:"jack.art/credits") has:links -is:retweet -is:reply';
 const X_MAX_RESULTS = 50;
@@ -70,20 +96,45 @@ const X_REPLY_HANDLE = 'jesusdoteth';
 const X_REPLY_QUERY = `to:${X_REPLY_HANDLE} is:reply has:links -is:retweet -from:${X_REPLY_HANDLE}`;
 const X_REPLY_MAX_RESULTS = 25;
 
-// Hosts that are never a community project: the collection's own surfaces,
-// marketplaces, explorers and link shorteners the search will hit constantly.
-const HOST_BLOCKLIST = new Set([
-  'x.com',
-  'twitter.com',
-  't.co',
-  'opensea.io',
-  'jack.art',
-  'etherscan.io',
-  'blur.io',
-  'magiceden.io',
-  'foundation.app',
-  'mooch.agency',
-]);
+// Third source: Tahi's "Credits" X List, the builders themselves. Builders
+// rarely put "credits" and "jack butcher" in the same post (they write "credit
+// scanner" or "jack's score"), often post the link in a reply to their own
+// thread, or point at an OpenSea collection, so the keyword search misses
+// them. The list reads everything its members post and the link rules below
+// sort it out.
+//
+// Not a secret: the list is found by owner and name once, then cached in
+// meta.listId. Set X_LIST.id to pin it (or switch lists) with no workflow
+// change. The lists endpoint has no since_id, so the window is applied here
+// against meta.listSinceId and paging stops at the first post already seen.
+const X_LIST = { ownerId: '1386099253580345344', name: 'Credits', id: null };
+const X_LIST_MAX_RESULTS = 40;
+const X_LIST_MAX_PAGES = 2;
+
+// Fields every tweet read asks for: entities for links, referenced tweets for
+// quotes, reposts and threads, and the author's profile link for "link in bio".
+const TWEET_FIELDS = 'created_at,public_metrics,entities,referenced_tweets,conversation_id,author_id';
+const TWEET_EXPANSIONS = 'author_id,referenced_tweets.id,referenced_tweets.id.author_id';
+const USER_FIELDS = 'username,url,entities';
+
+// Every X read goes through here. A 429 says when the window resets, so the
+// workflow log shows whether the next scheduled run will clear it.
+async function xGet(pathAndQuery, token, fetchImpl) {
+  const res = await fetchImpl(`${X_API}${pathAndQuery}`, {
+    headers: { authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(15_000),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    let detail = body && (body.title || body.detail) ? ` (${body.title || body.detail})` : '';
+    if (res.status === 429) {
+      const reset = Number(res.headers.get('x-rate-limit-reset'));
+      if (Number.isFinite(reset) && reset > 0) detail += `, rate limited until ${new Date(reset * 1000).toISOString()}`;
+    }
+    throw new Error(`X ${res.status}${detail}`);
+  }
+  return body;
+}
 
 const MARKER_RE = /(<!-- creditcards:projects:start -->)([\s\S]*?)(<!-- creditcards:projects:end -->)/;
 
@@ -120,39 +171,200 @@ function fmtDate(iso) {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 }
 
-// Dedupe key: same project announced with and without a trailing slash, or
-// with tracking query params bolted on, is still the same project.
-function normaliseUrl(raw) {
-  try {
-    const u = new URL(raw);
-    u.hash = '';
-    u.search = '';
-    u.hostname = u.hostname.toLowerCase().replace(/^www\./, '');
-    let s = u.toString();
-    if (s.endsWith('/')) s = s.slice(0, -1);
-    return s;
-  } catch {
-    return null;
-  }
-}
-
-function hostOf(normalised) {
-  try {
-    return new URL(normalised).hostname;
-  } catch {
-    return null;
-  }
-}
-
 // --- discovery ---------------------------------------------------------------
 
-async function discover(data, token, fetchImpl, { query = X_QUERY, maxResults = X_MAX_RESULTS, sinceKey = 'sinceId' } = {}) {
+const ANNOUNCE_RE = /credit|jack|built|made|try|play|live|check|launch/i;
+
+// One pool for the whole run. Sources add pages of posts to it, resolve()
+// turns posts into candidate links, and commit() adds the best of them.
+class Pool {
+  constructor(data, fetchImpl) {
+    this.data = data;
+    this.fetchImpl = fetchImpl;
+    this.known = new Set(data.projects.map((p) => normaliseUrl(p.url)).filter(Boolean));
+    this.users = new Map();
+    this.tweets = new Map();
+    this.items = []; // { tweet, source }
+    this.threadRoots = new Map(); // conversation id -> { tweet, source }
+    this.cands = new Map(); // normalised url -> candidate
+    this.tcoBudget = TCO_MAX_RESOLVE;
+  }
+
+  addPage(body, source) {
+    for (const u of (body.includes && body.includes.users) || []) this.users.set(u.id, u);
+    for (const t of (body.includes && body.includes.tweets) || []) this.tweets.set(t.id, t);
+    for (const t of body.data || []) {
+      this.tweets.set(t.id, t);
+      this.items.push({ tweet: t, source });
+    }
+  }
+
+  handleOf(tweet) {
+    const u = this.users.get(tweet.author_id);
+    return (u && u.username) || '';
+  }
+
+  // X sometimes leaves a link unexpanded, or out of entities altogether.
+  // Follow the redirect ourselves: no API cost, capped per run, and a failure
+  // only loses that one link.
+  async expand(link) {
+    let raw = link.raw;
+    const host = raw ? hostOf(normaliseUrl(raw) || '') : 't.co';
+    if ((!raw || host === 't.co' || isShortener(host)) && this.tcoBudget > 0) {
+      this.tcoBudget--;
+      const from = raw || link.tco;
+      try {
+        const res = await this.fetchImpl(from, { redirect: 'manual', signal: AbortSignal.timeout(5_000) });
+        const loc = res.headers && res.headers.get('location');
+        if (loc) raw = new URL(loc, from).toString();
+      } catch {
+        /* keep what we had */
+      }
+    }
+    return raw;
+  }
+
+  async linksOf(tweet) {
+    const out = [];
+    const links = [...entityLinks(tweet), ...strayTcoLinks(tweet).map((tco) => ({ tco, raw: null }))];
+    for (const l of links) {
+      const raw = await this.expand(l);
+      const n = raw && normaliseUrl(raw);
+      if (n && acceptableUrl(n) && !out.includes(n)) out.push(n);
+    }
+    return out;
+  }
+
+  offer(url, tweet, source, via, text) {
+    if (this.known.has(url)) return;
+    const handle = this.handleOf(tweet);
+    const likes = (tweet.public_metrics && tweet.public_metrics.like_count) || 0;
+    const { flags, score } = assess({ url, text, source, likes, via, knownHost: knownHostOf(url, this.known) });
+    const prev = this.cands.get(url);
+    // The same link from two posts in one run: keep the earliest post (the
+    // announcement) and the better score.
+    if (prev) {
+      if (BigInt(tweet.id) < BigInt(prev.tweetId)) Object.assign(prev, { tweetId: tweet.id, handle, tweet, via, likes, text });
+      if (score > prev.score) Object.assign(prev, { score, flags, source });
+      return;
+    }
+    this.cands.set(url, { url, tweetId: tweet.id, handle, tweet, source, via, score, flags, likes, text });
+  }
+
+  async resolve() {
+    for (const { tweet, source } of this.items) {
+      const text = tweet.text || '';
+      let found = 0;
+
+      for (const url of await this.linksOf(tweet)) {
+        this.offer(url, tweet, source, 'post', text);
+        found++;
+      }
+
+      // A quote or a repost: the project is the other post's, so credit its
+      // author and link its post.
+      for (const type of ['quoted', 'retweeted']) {
+        const refId = refOf(tweet, type);
+        const ref = refId && this.tweets.get(refId);
+        if (!ref) continue;
+        for (const url of await this.linksOf(ref)) {
+          this.offer(url, ref, source, type === 'quoted' ? 'quote' : 'repost', `${ref.text || ''} ${text}`);
+          found++;
+        }
+      }
+      if (found) continue;
+
+      // "Link in bio": the author's profile link stands in for the post's.
+      if (mentionsLinkInBio(text)) {
+        const u = this.users.get(tweet.author_id);
+        const bio = u && u.entities && u.entities.url && u.entities.url.urls && u.entities.url.urls[0];
+        const n = bio && normaliseUrl(bio.expanded_url || bio.url);
+        if (n && acceptableUrl(n)) {
+          this.offer(n, tweet, source, 'bio', text);
+          continue;
+        }
+      }
+
+      // Nothing yet, but a thread root may carry its link in the first reply.
+      if (tweet.conversation_id === tweet.id && !refOf(tweet, 'retweeted')) {
+        this.threadRoots.set(tweet.id, { tweet, source });
+      }
+    }
+  }
+
+  // One recent search for every thread root at once: the authors' own
+  // replies that carry a link. Announcement-looking posts go first.
+  async followThreads(token) {
+    const roots = [...this.threadRoots.values()]
+      .sort((a, b) => Number(ANNOUNCE_RE.test(b.tweet.text || '')) - Number(ANNOUNCE_RE.test(a.tweet.text || '')))
+      .slice(0, THREAD_MAX_CONVERSATIONS);
+    if (!roots.length) return 0;
+    const params = new URLSearchParams({
+      query: `(${roots.map((r) => `conversation_id:${r.tweet.id}`).join(' OR ')}) is:reply has:links -is:retweet`,
+      max_results: '25',
+      'tweet.fields': TWEET_FIELDS,
+      expansions: 'author_id',
+      'user.fields': USER_FIELDS,
+    });
+    const body = await xGet(`/tweets/search/recent?${params}`, token, this.fetchImpl);
+    for (const u of (body.includes && body.includes.users) || []) this.users.set(u.id, u);
+    const byRoot = new Map(roots.map((r) => [r.tweet.id, r]));
+    let n = 0;
+    for (const reply of body.data || []) {
+      const root = byRoot.get(reply.conversation_id);
+      if (!root || reply.author_id !== root.tweet.author_id) continue;
+      for (const url of await this.linksOf(reply)) {
+        // Credit the root post: it is the announcement people see.
+        this.offer(url, root.tweet, root.source, 'thread', `${root.tweet.text || ''} ${reply.text || ''}`);
+        n++;
+      }
+    }
+    return n;
+  }
+
+  commit(log) {
+    const { kept, dropped } = pickCandidates([...this.cands.values()]);
+    const today = new Date().toISOString().slice(0, 10);
+    for (const c of kept) {
+      const host = hostOf(c.url);
+      const handle = c.handle;
+      const source = c.via === 'post' ? c.source : `${c.source}+${c.via}`;
+      this.data.projects.push({
+        id: `${host}${new URL(c.url).pathname}`.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase(),
+        name: host,
+        url: c.url,
+        x: handle,
+        post: handle ? `https://x.com/${handle}/status/${c.tweetId}` : `https://x.com/i/status/${c.tweetId}`,
+        blurb: '',
+        status: 'pending',
+        added: today,
+        metrics: {
+          likes: c.likes,
+          reposts: (c.tweet.public_metrics && c.tweet.public_metrics.retweet_count) || 0,
+        },
+        // For review in the GitHub diff only; never rendered. Score and flags
+        // rank and label, they never approve or reject anything.
+        source,
+        score: c.score,
+        flags: c.flags,
+        tweetText: stripDashes(c.tweet.text || '').slice(0, 200),
+      });
+      this.known.add(c.url);
+      log(`  + [${source}] ${c.url} @${handle} score ${c.score}${c.flags.length ? ` (${c.flags.join(', ')})` : ''}`);
+    }
+    for (const c of dropped) log(`  - over the per-run or per-author cap, not added: ${c.url} @${c.handle} score ${c.score}`);
+    return kept.length;
+  }
+}
+
+async function searchSource(pool, token, { query, maxResults, sinceKey, source }) {
+  const data = pool.data;
   const params = new URLSearchParams({
     query,
     max_results: String(maxResults),
-    'tweet.fields': 'created_at,public_metrics,entities',
-    expansions: 'author_id',
-    'user.fields': 'username',
+    'tweet.fields': TWEET_FIELDS,
+    expansions: TWEET_EXPANSIONS,
+    'user.fields': USER_FIELDS,
   });
   if (data.meta[sinceKey]) {
     params.set('since_id', data.meta[sinceKey]);
@@ -164,59 +376,90 @@ async function discover(data, token, fetchImpl, { query = X_QUERY, maxResults = 
     params.set('start_time', new Date(Date.now() - 48 * 3600_000).toISOString());
     params.set('sort_order', 'recency');
   }
-
-  const res = await fetchImpl(`${X_ENDPOINT}?${params}`, {
-    headers: { authorization: `Bearer ${token}` },
-    signal: AbortSignal.timeout(15_000),
-  });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const detail = body && (body.title || body.detail) ? ` (${body.title || body.detail})` : '';
-    throw new Error(`X search ${res.status}${detail}`);
-  }
-
-  const users = new Map(((body.includes && body.includes.users) || []).map((u) => [u.id, u.username]));
-  const tweets = body.data || [];
-
-  const known = new Set(data.projects.map((p) => normaliseUrl(p.url)).filter(Boolean));
-  let added = 0;
-
-  for (const t of tweets) {
-    const urls = (t.entities && t.entities.urls) || [];
-    for (const u of urls) {
-      const raw = u.unwound_url || u.expanded_url;
-      if (!raw) continue;
-      const normalised = normaliseUrl(raw);
-      if (!normalised) continue;
-      const host = hostOf(normalised);
-      if (!host || HOST_BLOCKLIST.has(host)) continue;
-      if (known.has(normalised)) continue;
-      known.add(normalised);
-
-      const handle = users.get(t.author_id) || '';
-      data.projects.push({
-        id: `${host}${new URL(normalised).pathname}`.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase(),
-        name: host,
-        url: normalised,
-        x: handle,
-        post: handle ? `https://x.com/${handle}/status/${t.id}` : `https://x.com/i/status/${t.id}`,
-        blurb: '',
-        status: 'pending',
-        added: new Date().toISOString().slice(0, 10),
-        metrics: {
-          likes: (t.public_metrics && t.public_metrics.like_count) || 0,
-          reposts: (t.public_metrics && t.public_metrics.retweet_count) || 0,
-        },
-        // For review in the GitHub diff only; never rendered.
-        tweetText: stripDashes(t.text || '').slice(0, 200),
-      });
-      added++;
-    }
-  }
-
+  const body = await xGet(`/tweets/search/recent?${params}`, token, pool.fetchImpl);
+  pool.addPage(body, source);
   // Advance the window even on a zero-find day, so tomorrow never re-reads
   // (and re-pays for) today's posts.
   if (body.meta && body.meta.newest_id) data.meta[sinceKey] = body.meta.newest_id;
+  return (body.data || []).length;
+}
+
+async function resolveListId(data, token, fetchImpl) {
+  if (X_LIST.id) return X_LIST.id;
+  if (data.meta.listId) return data.meta.listId;
+  for (const kind of ['owned_lists', 'followed_lists']) {
+    const body = await xGet(`/users/${X_LIST.ownerId}/${kind}?max_results=100`, token, fetchImpl);
+    const hit = (body.data || []).find((l) => String(l.name).trim().toLowerCase() === X_LIST.name.toLowerCase());
+    if (hit) {
+      data.meta.listId = hit.id;
+      return hit.id;
+    }
+  }
+  throw new Error(`no X List named "${X_LIST.name}" owned or followed by user ${X_LIST.ownerId}`);
+}
+
+async function listSource(pool, token) {
+  const data = pool.data;
+  const listId = await resolveListId(data, token, pool.fetchImpl);
+  // First run: two days back, like the searches.
+  const floor = data.meta.listSinceId || snowflakeAt(Date.now() - 48 * 3600_000);
+  let newest = null;
+  let read = 0;
+  let next = null;
+  for (let page = 0; page < X_LIST_MAX_PAGES; page++) {
+    const params = new URLSearchParams({
+      max_results: String(X_LIST_MAX_RESULTS),
+      'tweet.fields': TWEET_FIELDS,
+      expansions: TWEET_EXPANSIONS,
+      'user.fields': USER_FIELDS,
+    });
+    if (next) params.set('pagination_token', next);
+    const body = await xGet(`/lists/${listId}/tweets?${params}`, token, pool.fetchImpl);
+    const all = body.data || [];
+    const fresh = all.filter((t) => idGreater(t.id, floor));
+    for (const t of all) if (!newest || idGreater(t.id, newest)) newest = t.id;
+    pool.addPage({ ...body, data: fresh }, 'list');
+    read += fresh.length;
+    next = body.meta && body.meta.next_token;
+    // Newest first: once a page reaches posts already seen, stop paging.
+    if (!next || fresh.length < all.length) break;
+  }
+  if (newest && (!data.meta.listSinceId || idGreater(newest, data.meta.listSinceId))) data.meta.listSinceId = newest;
+  return read;
+}
+
+export async function discover(data, token, fetchImpl = fetch, log = console.log, logErr = console.error) {
+  const pool = new Pool(data, fetchImpl);
+  const sources = [
+    ['X search', () => searchSource(pool, token, { query: X_QUERY, maxResults: X_MAX_RESULTS, sinceKey: 'sinceId', source: 'search' })],
+    [
+      `X replies to @${X_REPLY_HANDLE}`,
+      () =>
+        searchSource(pool, token, { query: X_REPLY_QUERY, maxResults: X_REPLY_MAX_RESULTS, sinceKey: 'replySinceId', source: 'replies' }),
+    ],
+    [`X List "${X_LIST.name}"`, () => listSource(pool, token)],
+  ];
+  // Each source survives the others' failure. A failed source leaves its
+  // since-id where it was, so the next run re-reads the gap (search windows
+  // reach back 7 days).
+  for (const [label, read] of sources) {
+    try {
+      log(`✓ ${label}: ${await read()} post(s) read`);
+    } catch (e) {
+      logErr(`✗ ${label} failed, continuing: ${e.message}`);
+    }
+  }
+  await pool.resolve();
+  if (pool.threadRoots.size) {
+    try {
+      const n = await pool.followThreads(token);
+      log(`✓ X threads: ${n} link(s) in self-replies under ${Math.min(pool.threadRoots.size, THREAD_MAX_CONVERSATIONS)} linkless post(s)`);
+    } catch (e) {
+      logErr(`✗ X thread follow-up failed, continuing: ${e.message}`);
+    }
+  }
+  const added = pool.commit(log);
+  log(`✓ X: ${added} new candidate(s) pending review (max ${MAX_NEW_PER_RUN} a run, ${MAX_NEW_PER_AUTHOR} per author)`);
   return added;
 }
 
@@ -406,24 +649,7 @@ export async function run({ xToken, fetchImpl = fetch, root = ROOT, dry = DRY, b
     if (!xToken) {
       console.log('= X_BEARER_TOKEN not set, discovery skipped (add it as an Actions secret to enable)');
     } else {
-      try {
-        const added = await discover(data, xToken, fetchImpl);
-        console.log(`✓ X search: ${added} new candidate(s) pending review`);
-      } catch (e) {
-        // A rate limit or auth blip must not kill the bake; the 7-day search
-        // window means tomorrow's run covers today's gap.
-        console.error(`✗ X search failed, continuing: ${e.message}`);
-      }
-      try {
-        const added = await discover(data, xToken, fetchImpl, {
-          query: X_REPLY_QUERY,
-          maxResults: X_REPLY_MAX_RESULTS,
-          sinceKey: 'replySinceId',
-        });
-        console.log(`✓ X replies to @${X_REPLY_HANDLE}: ${added} new candidate(s) pending review`);
-      } catch (e) {
-        console.error(`✗ X reply search failed, continuing: ${e.message}`);
-      }
+      await discover(data, xToken, fetchImpl);
     }
     try {
       const source = await refreshStats(data, fetchImpl);
