@@ -612,17 +612,87 @@
       }
     },
     {
-      "id": "opensea-io-collection-0xquit-operation-26448",
-      "name": "0xQuit: Operation 26,448",
-      "url": "https://opensea.io/collection/0xquit-operation-26448",
-      "x": "jafastar2",
-      "post": "https://x.com/jafastar2/status/2103811520123777182",
-      "blurb": "A free 10k tribute collection for 0xQuit, the white hat who rescued 26,448 NFTs in the Magic Eden drain. Minted out, wallet to trade on OpenSea.",
+      "id": "opensea-io-collection-creditmon",
+      "name": "Creditmon",
+      "url": "https://opensea.io/collection/creditmon",
+      "x": "Jehoseph",
+      "post": "https://x.com/Jehoseph/status/2103925939285663899",
+      "blurb": "10,000 generative creatures inspired by Credits, each with its own stats, name and moves. Mint on OpenSea, wallet needed.",
       "status": "approved",
       "added": "2026-09-27",
       "metrics": {
-        "likes": 863,
-        "reposts": 203
+        "likes": 3,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "winchxyz-github-io-credits-cubed",
+      "name": "Credits Cube",
+      "url": "https://winchxyz.github.io/credits-cubed/",
+      "x": "winchxyz",
+      "post": "https://x.com/winchxyz/status/2103637645267972456",
+      "blurb": "Put six Credits on a picture cube, scramble it and turn it back until every side is a Credit again. Free, nothing to connect.",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "cr3dits-vercel-app",
+      "name": "CR3DITS",
+      "url": "https://cr3dits.vercel.app",
+      "x": "bclever0x",
+      "post": "https://x.com/bclever0x/status/2103718642818953340",
+      "blurb": "Enter a Credit's number to see it as an interactive 3D volume, then download it as a card to share. Free, nothing to connect.",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "credit-k1ller-xyz",
+      "name": "Credit // Killers",
+      "url": "https://credit.k1ller.xyz/",
+      "x": "DTODDART",
+      "post": "https://x.com/DTODDART/status/2103213993666240674",
+      "blurb": "Combine a Credit with a KILLERS piece, pick the colours and download your remix. Free preview, wallet optional, minting not open yet.",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 11,
+        "reposts": 1
+      }
+    },
+    {
+      "id": "mod80-art-play",
+      "name": "MOD80 BREAK",
+      "url": "https://mod80.art/play",
+      "x": "intr3pico",
+      "post": "https://x.com/intr3pico/status/2102967868052877335",
+      "blurb": "Turn any Credit into a retro Breakout game and smash its actual blocks. Free, nothing to connect.",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 14,
+        "reposts": 1
+      }
+    },
+    {
+      "id": "credits-rarity-checker-kimi-page",
+      "name": "Credits Rarity Checker",
+      "url": "https://credits-rarity-checker.kimi.page",
+      "x": "0xlalitmehra",
+      "post": "https://x.com/0xlords_/status/2102621801163727016",
+      "blurb": "Paste a Credit's token ID or OpenSea link for a rarity verdict, plus a live feed of sales against rarity. Free, nothing to connect.",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 43,
+        "reposts": 4
       }
     }
   ]
