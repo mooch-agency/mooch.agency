@@ -1,15 +1,15 @@
 {
   "meta": {
-    "sinceId": "2104162321446957266",
-    "lastRun": "2026-09-27T11:58:30.520Z",
+    "sinceId": "2104311889622946152",
+    "lastRun": "2026-09-27T21:19:33.293Z",
     "stats": {
-      "floorEth": 0.02712,
-      "floorUsd": 73,
+      "floorEth": 0.02333,
+      "floorUsd": 63,
       "supply": 122153,
-      "owners": 15544,
-      "fetchedAt": "2026-09-27T11:58:30.488Z"
+      "owners": 15513,
+      "fetchedAt": "2026-09-27T21:19:33.280Z"
     },
-    "replySinceId": "2103765952894558555"
+    "replySinceId": "2104295401797124376"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -694,6 +694,118 @@
         "likes": 43,
         "reposts": 4
       }
+    },
+    {
+      "id": "studyfrogs-com-creditpepen",
+      "name": "studyfrogs.com",
+      "url": "https://studyfrogs.com/creditpepen",
+      "x": "LikeLewis",
+      "post": "https://x.com/LikeLewis/status/2104293199959494978",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 4,
+        "reposts": 0
+      },
+      "source": "replies",
+      "score": 3,
+      "flags": [],
+      "tweetText": "@jesusdoteth @jackbutcher 30. creditpepen\ngenerate opepen inspired by credits\n\nhttps://t.co/hjA863XWLh"
+    },
+    {
+      "id": "mylesdaughtry-com",
+      "name": "mylesdaughtry.com",
+      "url": "https://mylesdaughtry.com",
+      "x": "mylesdaughtry",
+      "post": "https://x.com/mylesdaughtry/status/2104305396693512667",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 7,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "also building something for @jackbutcher credits. \nno token. no nft. no x account, website will connect to my personal https://t.co/ZHbYV66M41 simply as a subdomain and it will drop 10/1 shortly after"
+    },
+    {
+      "id": "creditscores-vercel-app",
+      "name": "creditscores.vercel.app",
+      "url": "https://creditscores.vercel.app",
+      "x": "matriona_fails",
+      "post": "https://x.com/matriona_fails/status/2104294260854149156",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 5,
+        "reposts": 1
+      },
+      "source": "replies",
+      "score": 2,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "@jesusdoteth Credit ringtones https://t.co/ZjcZsG6yy7 by @wubbushi 🎶🐸🤳"
+    },
+    {
+      "id": "opensea-io-collection-aura-2222",
+      "name": "opensea.io",
+      "url": "https://opensea.io/collection/aura-2222",
+      "x": "WabisukiART",
+      "post": "https://x.com/WabisukiART/status/2104254256081404076",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 3,
+        "reposts": 0
+      },
+      "source": "replies",
+      "score": 2,
+      "flags": [],
+      "tweetText": "@jesusdoteth GM \n\nhttps://t.co/3ev4UKWu1H https://t.co/pb2ebc7ykw"
+    },
+    {
+      "id": "networked-art-itsbubblezzz-0xd12c2fe0d64eb382d36e619a6505014672771719-17-details",
+      "name": "networked.art",
+      "url": "https://networked.art/itsbubblezzz/0xd12c2fe0d64eb382d36e619a6505014672771719/17/details",
+      "x": "itsBubblezzz",
+      "post": "https://x.com/itsBubblezzz/status/2104311889622946152",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "Credits being credited  @networkeddotart\n🤌🏻🌻🫧\nA mixed-media collage incorporating monochrome photography, torn paper patches, cardboard textures, and signature yellow tape accents.\nInspired by cre"
+    },
+    {
+      "id": "nftstrategy-fun-strategies-0x8e607209899b5d12bd3167a6cd0e8e11feb053d6",
+      "name": "nftstrategy.fun",
+      "url": "https://nftstrategy.fun/strategies/0x8e607209899b5d12bd3167a6cd0e8e11feb053d6",
+      "x": "tradesgiving",
+      "post": "https://x.com/tradesgiving/status/2104229150429200708",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 16,
+        "reposts": 2
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "coin"
+      ],
+      "tweetText": "was originally bearish with $CREDITSTR at 1.4 mil marketcap as it was sub optimal ROI\n\nhowever, now that it's 600k marketcap and holding and accumulating a bunch more @jackbutcher Credits, a lot more "
     }
   ]
 }
