@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2103949478646444425",
-    "lastRun": "2026-09-26T21:07:35.523Z",
+    "sinceId": "2104162321446957266",
+    "lastRun": "2026-09-27T11:58:30.520Z",
     "stats": {
-      "floorEth": 0.0254,
-      "floorUsd": 68,
+      "floorEth": 0.02712,
+      "floorUsd": 73,
       "supply": 122153,
-      "owners": 15680,
-      "fetchedAt": "2026-09-26T21:07:35.481Z"
+      "owners": 15544,
+      "fetchedAt": "2026-09-27T11:58:30.488Z"
     },
     "replySinceId": "2103765952894558555"
   },
@@ -567,6 +567,21 @@
         "likes": 1,
         "reposts": 0
       }
+    },
+    {
+      "id": "discord-com-invite-adhqjepga",
+      "name": "discord.com",
+      "url": "https://discord.com/invite/adhQjEpGa",
+      "x": "kenZaii7",
+      "post": "https://x.com/kenZaii7/status/2104157637684380041",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "tweetText": "@mememaxxers Bounties #4\n\nGot a take on @jackbutcher’s Credits? Turn it into an article or app.\n\nJoin @mememaxxers and check Discord #announcements for the details.\n\nhttps://t.co/QQlHsHKlNW\n\nCome $JAC"
     },
     {
       "id": "creditscores-vercel-app-scan",
