@@ -588,12 +588,26 @@
       "url": "https://opensea.io/collection/not-an-artist-888",
       "x": "BB88888888888BB",
       "post": "https://x.com/BB88888888888BB/status/2103520141158093001",
-      "blurb": "12,542 Jacks from timelines where he never became an artist, a separate collection from Credits. Mint closed, wallet to trade on OpenSea.",
-      "status": "approved",
+      "blurb": "",
+      "status": "rejected",
       "added": "2026-09-27",
       "metrics": {
         "likes": 62,
         "reposts": 5
+      }
+    },
+    {
+      "id": "opensea-io-collection-0xquit-operation-26448",
+      "name": "0xQuit: Operation 26,448",
+      "url": "https://opensea.io/collection/0xquit-operation-26448",
+      "x": "jafastar2",
+      "post": "https://x.com/jafastar2/status/2103811520123777182",
+      "blurb": "A free 10k tribute collection for 0xQuit, the white hat who rescued 26,448 NFTs in the Magic Eden drain. Minted out, wallet to trade on OpenSea.",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 863,
+        "reposts": 203
       }
     }
   ]

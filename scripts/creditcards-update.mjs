@@ -4,10 +4,10 @@
 //
 // Three jobs, in order, each surviving the others' failure:
 //
-//   1. Discovery (needs X_BEARER_TOKEN, see creditcards-discover.mjs): three
+//   1. Discovery (needs X_BEARER_TOKEN, see creditcards-discover.mjs): two
 //      sources, each with its own since-id in data.meta: the main keyword
-//      search (sinceId), replies to @jesusdoteth where builders submit
-//      (replySinceId), and Tahi's "Credits" X List of builders (listSinceId).
+//      search (sinceId) and replies to @jesusdoteth where builders submit
+//      (replySinceId).
 //      Posts are mined for links in the post, in a quoted or reposted post, in
 //      the author's bio when the post says "link in bio", and in the author's
 //      own first reply when the post itself has none. New external links land
@@ -15,8 +15,8 @@
 //      (coin, denylist, article) that only rank and label. Nothing pending
 //      ever renders; a human flips it to "approved" (and tidies the blurb)
 //      first. Rejected entries stay as tombstones so a re-announced URL is
-//      never re-added. Cost control: at most 50 + 25 search posts, 80 list
-//      posts and one 25-post thread lookup a run, windowed by since-ids so a
+//      never re-added. Cost control: at most 50 + 25 search posts and
+//      one 25-post thread lookup a run, windowed by since-ids so a
 //      quiet day reads almost nothing; at most 15 new entries a run and 3 per
 //      author.
 //
@@ -55,14 +55,12 @@ import {
   assess,
   entityLinks,
   hostOf,
-  idGreater,
   isShortener,
   knownHostOf,
   mentionsLinkInBio,
   normaliseUrl,
   pickCandidates,
   refOf,
-  snowflakeAt,
   strayTcoLinks,
 } from './creditcards-discover.mjs';
 
@@ -95,21 +93,6 @@ const X_MAX_RESULTS = 50;
 const X_REPLY_HANDLE = 'jesusdoteth';
 const X_REPLY_QUERY = `to:${X_REPLY_HANDLE} is:reply has:links -is:retweet -from:${X_REPLY_HANDLE}`;
 const X_REPLY_MAX_RESULTS = 25;
-
-// Third source: Tahi's "Credits" X List, the builders themselves. Builders
-// rarely put "credits" and "jack butcher" in the same post (they write "credit
-// scanner" or "jack's score"), often post the link in a reply to their own
-// thread, or point at an OpenSea collection, so the keyword search misses
-// them. The list reads everything its members post and the link rules below
-// sort it out.
-//
-// Not a secret: the list is found by owner and name once, then cached in
-// meta.listId. Set X_LIST.id to pin it (or switch lists) with no workflow
-// change. The lists endpoint has no since_id, so the window is applied here
-// against meta.listSinceId and paging stops at the first post already seen.
-const X_LIST = { ownerId: '1386099253580345344', name: 'Credits', id: null };
-const X_LIST_MAX_RESULTS = 40;
-const X_LIST_MAX_PAGES = 2;
 
 // Fields every tweet read asks for: entities for links, referenced tweets for
 // quotes, reposts and threads, and the author's profile link for "link in bio".
@@ -384,50 +367,6 @@ async function searchSource(pool, token, { query, maxResults, sinceKey, source }
   return (body.data || []).length;
 }
 
-async function resolveListId(data, token, fetchImpl) {
-  if (X_LIST.id) return X_LIST.id;
-  if (data.meta.listId) return data.meta.listId;
-  for (const kind of ['owned_lists', 'followed_lists']) {
-    const body = await xGet(`/users/${X_LIST.ownerId}/${kind}?max_results=100`, token, fetchImpl);
-    const hit = (body.data || []).find((l) => String(l.name).trim().toLowerCase() === X_LIST.name.toLowerCase());
-    if (hit) {
-      data.meta.listId = hit.id;
-      return hit.id;
-    }
-  }
-  throw new Error(`no X List named "${X_LIST.name}" owned or followed by user ${X_LIST.ownerId}`);
-}
-
-async function listSource(pool, token) {
-  const data = pool.data;
-  const listId = await resolveListId(data, token, pool.fetchImpl);
-  // First run: two days back, like the searches.
-  const floor = data.meta.listSinceId || snowflakeAt(Date.now() - 48 * 3600_000);
-  let newest = null;
-  let read = 0;
-  let next = null;
-  for (let page = 0; page < X_LIST_MAX_PAGES; page++) {
-    const params = new URLSearchParams({
-      max_results: String(X_LIST_MAX_RESULTS),
-      'tweet.fields': TWEET_FIELDS,
-      expansions: TWEET_EXPANSIONS,
-      'user.fields': USER_FIELDS,
-    });
-    if (next) params.set('pagination_token', next);
-    const body = await xGet(`/lists/${listId}/tweets?${params}`, token, pool.fetchImpl);
-    const all = body.data || [];
-    const fresh = all.filter((t) => idGreater(t.id, floor));
-    for (const t of all) if (!newest || idGreater(t.id, newest)) newest = t.id;
-    pool.addPage({ ...body, data: fresh }, 'list');
-    read += fresh.length;
-    next = body.meta && body.meta.next_token;
-    // Newest first: once a page reaches posts already seen, stop paging.
-    if (!next || fresh.length < all.length) break;
-  }
-  if (newest && (!data.meta.listSinceId || idGreater(newest, data.meta.listSinceId))) data.meta.listSinceId = newest;
-  return read;
-}
-
 export async function discover(data, token, fetchImpl = fetch, log = console.log, logErr = console.error) {
   const pool = new Pool(data, fetchImpl);
   const sources = [
@@ -437,7 +376,6 @@ export async function discover(data, token, fetchImpl = fetch, log = console.log
       () =>
         searchSource(pool, token, { query: X_REPLY_QUERY, maxResults: X_REPLY_MAX_RESULTS, sinceKey: 'replySinceId', source: 'replies' }),
     ],
-    [`X List "${X_LIST.name}"`, () => listSource(pool, token)],
   ];
   // Each source survives the others' failure. A failed source leaves its
   // since-id where it was, so the next run re-reads the gap (search windows

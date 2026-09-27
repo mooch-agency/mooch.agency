@@ -1,12 +1,11 @@
 // ---------------------------------------------------------------------------
 // creditcards-discover.mjs: the X side of creditcards-update.mjs.
 //
-// Four sources feed one candidate pool, each with its own since-id bookmark in
-// data.meta so no source ever skips another's posts:
+// Three sources feed one candidate pool; the two searches each keep their own
+// since-id bookmark in data.meta so neither ever skips the other's posts:
 //
 //   search   the main keyword query                     meta.sinceId
 //   replies  replies addressed to @jesusdoteth          meta.replySinceId
-//   list     Tahi's "Credits" X List, the builders       meta.listSinceId
 //   thread   self-replies under a post that had no link (derived, no bookmark)
 //
 // What each post is mined for, in order:
@@ -94,7 +93,7 @@ export const MAX_NEW_PER_AUTHOR = 3;
 export const THREAD_MAX_CONVERSATIONS = 8;
 export const TCO_MAX_RESOLVE = 20;
 
-const SOURCE_BASE_SCORE = { list: 2, replies: 2, search: 1 };
+const SOURCE_BASE_SCORE = { replies: 2, search: 1 };
 
 // Hosts many unrelated projects share, where "same host" says nothing.
 const SHARED_HOSTS = new Set(['opensea.io', 'github.com', 'gitlab.com']);
@@ -204,16 +203,6 @@ export function mentionsLinkInBio(text) {
 export function refOf(tweet, type) {
   const r = (tweet.referenced_tweets || []).find((x) => x.type === type);
   return r ? r.id : null;
-}
-
-// Snowflake ids compare as numbers, not strings.
-export function idGreater(a, b) {
-  return BigInt(a) > BigInt(b);
-}
-
-// Snowflake id for a moment in time, for "since two days ago" floors.
-export function snowflakeAt(ms) {
-  return ((BigInt(ms) - 1288834974657n) << 22n).toString();
 }
 
 // Keep the best candidates: highest score first, then most liked, then oldest

@@ -1,6 +1,6 @@
 // Offline checks for Credit Cards discovery: node --test scripts/
 // A fake X API replays posts shaped like the real ones from 25 to 27 Sep 2026,
-// including the two list finds the keyword search missed.
+// including finds the old keyword search and link rules missed.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { acceptableUrl, assess, knownHostOf, normaliseUrl, pickCandidates, strayTcoLinks } from './creditcards-discover.mjs';
@@ -15,10 +15,10 @@ const users = [
 ];
 const link = (u) => ({ url: `https://t.co/${u.length}`, expanded_url: u, unwound_url: u });
 
-const listTweets = [
-  // Credit scanner: no "credits" + "jack butcher" pair, so the keyword search skips it.
+const searchTweets = [
+  // Credit scanner: a plain post with its link in entities.
   { id: '2103877289788227649', conversation_id: '2103877289788227649', author_id: '1', text: "credit scanner\n\nscan any credit with your phone camera\n\nget a splayed 3d model, jack's official score", entities: { urls: [link('https://creditscores.vercel.app/scan/'), link('https://x.com/devonfigures/status/2103877289788227649/video/1')] } },
-  // Not An Artist: a reply, and an OpenSea link the old blocklist dropped.
+  // An OpenSea collection link, which the old blocklist dropped.
   { id: '2103520141158093001', conversation_id: '2103519962082193703', author_id: '2', text: '@jackbutcher https://t.co/6C82HiRCJu', referenced_tweets: [{ type: 'replied_to', id: '2103519962082193703' }], entities: { urls: [link('https://opensea.io/collection/not-an-artist-888/overview')] } },
   // Pour: video only, the link sits in the author's first reply.
   { id: '2103691502870553059', conversation_id: '2103691502870553059', author_id: '3', text: "This is a fun way to reimagine @jackbutcher 's credits as an acrylic pour", entities: { urls: [link('https://x.com/dealer1943/status/2103691502870553059/video/1')] } },
@@ -39,10 +39,14 @@ function fakeX(calls) {
       return { ok: false, status: 301, headers: new Headers({ location: 'https://stray-project.app/?utm_source=x' }) };
     }
     const u = new URL(url);
-    if (u.pathname === '/2/users/1386099253580345344/owned_lists') return json({ data: [{ id: '999', name: 'Credits' }] });
-    if (u.pathname === '/2/lists/999/tweets') return json({ data: listTweets, includes: { users }, meta: {} });
     if (u.pathname === '/2/tweets/search/recent') {
       const q = u.searchParams.get('query');
+      const since = u.searchParams.get('since_id');
+      if (q.includes('jackbutcher') && !q.includes('conversation_id:')) {
+        const fresh = searchTweets.filter((t) => !since || BigInt(t.id) > BigInt(since));
+        const newest = fresh.reduce((m, t) => (!m || BigInt(t.id) > BigInt(m) ? t.id : m), null);
+        return json({ data: fresh, includes: { users }, meta: newest ? { newest_id: newest, result_count: fresh.length } : { result_count: 0 } });
+      }
       if (q.includes('conversation_id:2103691502870553059')) {
         return json({ data: [{ id: '2103691506142085501', conversation_id: '2103691502870553059', author_id: '3', text: 'https://t.co/HsELRcK1tq', entities: { urls: [link('https://pour-eight.vercel.app/')] } }], includes: { users } });
       }
@@ -52,17 +56,17 @@ function fakeX(calls) {
   };
 }
 
-test('list, threads, bio and t.co find what the keyword search missed', async () => {
-  const data = { meta: { sinceId: '1', replySinceId: '1', listSinceId: '2103500000000000000' }, projects: [] };
+test('threads, bio, t.co and OpenSea find what the old rules missed', async () => {
+  const data = { meta: { sinceId: '1', replySinceId: '1' }, projects: [] };
   const calls = [];
   const lines = [];
   const added = await discover(data, 'token', fakeX(calls), (l) => lines.push(l), (l) => lines.push(l));
   const byUrl = Object.fromEntries(data.projects.map((p) => [p.url, p]));
 
   assert.ok(byUrl['https://creditscores.vercel.app/scan'], 'credit scanner');
-  assert.ok(byUrl['https://opensea.io/collection/not-an-artist-888'], 'not an artist');
+  assert.ok(byUrl['https://opensea.io/collection/not-an-artist-888'], 'opensea collection');
   assert.equal(byUrl['https://pour-eight.vercel.app'].post, 'https://x.com/dealer1943/status/2103691502870553059', 'thread link credited to root');
-  assert.equal(byUrl['https://pour-eight.vercel.app'].source, 'list+thread');
+  assert.equal(byUrl['https://pour-eight.vercel.app'].source, 'search+thread');
   assert.ok(byUrl['https://bio-project.xyz'], 'link in bio');
   assert.ok(byUrl['https://stray-project.app'], 't.co outside entities');
   assert.ok(!byUrl['https://opensea.io/collection/credits'], 'the collection itself');
@@ -71,19 +75,20 @@ test('list, threads, bio and t.co find what the keyword search missed', async ()
   assert.deepEqual(pump.flags, ['denylist', 'coin']);
   assert.ok(pump.score < byUrl['https://creditscores.vercel.app/scan'].score);
   assert.equal(added, data.projects.length);
-  assert.equal(data.meta.listId, '999');
-  assert.equal(data.meta.listSinceId, '2103877289788227649');
+  assert.equal(data.meta.sinceId, '2103877289788227649');
+  assert.ok(!calls.some((c) => c.includes('/lists/') || c.includes('_lists')), 'no X List reads');
 });
 
-test('a list post at or below listSinceId is not read again', async () => {
-  const data = { meta: { sinceId: '1', replySinceId: '1', listId: '999', listSinceId: '2103877289788227649' }, projects: [] };
+test('a post at or below sinceId is not read again', async () => {
+  const data = { meta: { sinceId: '2103877289788227649', replySinceId: '1' }, projects: [] };
   await discover(data, 'token', fakeX([]), () => {}, () => {});
   assert.equal(data.projects.length, 0);
+  assert.equal(data.meta.sinceId, '2103877289788227649');
 });
 
 test('known urls, in any form, are never re-added', async () => {
   const data = {
-    meta: { sinceId: '1', replySinceId: '1', listId: '999', listSinceId: '2103500000000000000' },
+    meta: { sinceId: '1', replySinceId: '1' },
     projects: [{ url: 'https://opensea.io/collection/not-an-artist-888', status: 'rejected' }],
   };
   await discover(data, 'token', fakeX([]), () => {}, () => {});
@@ -91,15 +96,17 @@ test('known urls, in any form, are never re-added', async () => {
 });
 
 test('a failing source leaves its since-id alone and the rest still run', async () => {
-  const data = { meta: { sinceId: '5', replySinceId: '6', listSinceId: '2103500000000000000' }, projects: [] };
+  const data = { meta: { sinceId: '5', replySinceId: '6' }, projects: [] };
   const base = fakeX([]);
   const fetchImpl = async (url, opts) =>
-    url.includes('/owned_lists') || url.includes('/lists/')
+    url.includes('to%3Ajesusdoteth')
       ? { ok: false, status: 429, headers: new Headers({ 'x-rate-limit-reset': '1790000000' }), json: async () => ({ title: 'Too Many Requests' }) }
       : base(url, opts);
   const errs = [];
   await discover(data, 'token', fetchImpl, () => {}, (l) => errs.push(l));
-  assert.equal(data.meta.listSinceId, '2103500000000000000');
+  assert.equal(data.meta.replySinceId, '6');
+  assert.equal(data.meta.sinceId, '2103877289788227649');
+  assert.ok(data.projects.length > 0, 'the main search still ran');
   assert.match(errs.join('\n'), /429 \(Too Many Requests\), rate limited until/);
 });
 
@@ -120,6 +127,6 @@ test('sub pages of a listed site are flagged, not dropped', () => {
   const known = new Set(['https://creditscheck.xyz', 'https://opensea.io/collection/creditcards']);
   assert.equal(knownHostOf('https://creditscheck.xyz/life', known), true);
   assert.equal(knownHostOf('https://opensea.io/collection/creditmon', known), false);
-  const a = assess({ url: 'https://creditscheck.xyz/life', text: 'Credits', source: 'list', knownHost: true });
+  const a = assess({ url: 'https://creditscheck.xyz/life', text: 'Credits', source: 'search', knownHost: true });
   assert.deepEqual(a.flags, ['known-host']);
 });
