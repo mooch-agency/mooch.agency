@@ -27,7 +27,8 @@
 //      copy-counts.mjs, same reason.
 //
 //   3. Bake: regenerate the approved-projects block between the
-//      creditcards:projects markers in creditcards.html, and the data-stat
+//      creditcards:projects markers in creditcards.html, the top-creditors
+//      tiles between the creditcards:creditors markers, and the data-stat
 //      spans. Output is deterministic (stable sort, fixed indentation) so a
 //      no-change run produces no git diff and the daily workflow commits
 //      nothing.
@@ -120,6 +121,7 @@ async function xGet(pathAndQuery, token, fetchImpl) {
 }
 
 const MARKER_RE = /(<!-- creditcards:projects:start -->)([\s\S]*?)(<!-- creditcards:projects:end -->)/;
+const CREDITORS_RE = /(<!-- creditcards:creditors:start -->)([\s\S]*?)(<!-- creditcards:creditors:end -->)/;
 
 // --- shared formatting ------------------------------------------------------
 // These mirror the inline formatters in creditcards.html exactly, so the
@@ -556,6 +558,63 @@ function renderProjects(projects, slot) {
   return `\n    <ol class="projects">\n${items}\n    </ol>\n    `;
 }
 
+// --- top creditors -------------------------------------------------------------
+
+// Jack made Credits; the board celebrates the people building on it, so his
+// own entries never count towards it.
+const CREDITOR_EXCLUDE = new Set(['jackbutcher']);
+const CREDITOR_SLOTS = 3;
+
+// Approved projects per builder X handle, top three. Ties go to whoever got
+// there first: walk the approved list in the order it happened (added date,
+// then data-file order) and remember the step at which each builder reached
+// their final count. Handles compare case-insensitively; the spelling shown
+// is the builder's most recent one. Pure function of the data file, so the
+// bake stays byte-stable.
+export function topCreditors(projects, slots = CREDITOR_SLOTS) {
+  const timeline = projects
+    .map((p, i) => ({ p, i }))
+    .filter(({ p }) => p.status === 'approved' && p.x && !CREDITOR_EXCLUDE.has(p.x.toLowerCase()))
+    .sort((a, b) => (a.p.added === b.p.added ? a.i - b.i : a.p.added.localeCompare(b.p.added)));
+  const byHandle = new Map();
+  timeline.forEach(({ p }, step) => {
+    const key = p.x.toLowerCase();
+    const c = byHandle.get(key) || { handle: p.x, count: 0, reachedAt: 0 };
+    c.handle = p.x;
+    c.count += 1;
+    c.reachedAt = step;
+    byHandle.set(key, c);
+  });
+  return [...byHandle.values()]
+    .sort((a, b) => b.count - a.count || a.reachedAt - b.reachedAt)
+    .slice(0, slots);
+}
+
+// Same anatomy as the page's stat tiles: mono label, serif figure, mono sub.
+// The avatar is a letter circle with the unavatar.io photo laid over it; if
+// the photo fails (rate limit, blocked, offline) onerror drops it and the
+// letter shows through, so the tile never shows a broken image.
+function renderCreditors(projects) {
+  const top = topCreditors(projects);
+  if (!top.length) return '\n        ';
+  const tiles = top
+    .map((c, i) => {
+      const h = escapeHtml(c.handle);
+      const label = i === 0 ? `<span class="creditor-crown" aria-hidden="true">&#x1F451;</span>No. 1` : `No. ${i + 1}`;
+      const initial = escapeHtml(c.handle.replace(/^[^a-z0-9]+/i, '').charAt(0).toUpperCase() || '@');
+      return [
+        `          <a class="stat-tile creditor" href="https://x.com/${h}" target="_blank" rel="noopener" data-event="creditcards_leaderboard_click">`,
+        `            <span class="creditor-av" aria-hidden="true">${initial}<img src="https://unavatar.io/x/${h}" width="20" height="20" loading="lazy" alt="" onerror="this.remove()"></span>`,
+        `            <div class="stat-label">${label}</div>`,
+        `            <div class="stat-value creditor-handle">@${h}</div>`,
+        `            <div class="stat-sub">${c.count} ${c.count === 1 ? 'project' : 'projects'}</div>`,
+        '          </a>',
+      ].join('\n');
+    })
+    .join('\n');
+  return `\n${tiles}\n          `;
+}
+
 function bakeStat(html, key, value) {
   const re = new RegExp(`(<span data-stat="${key}">)([^<]*)(</span>)`);
   if (!re.test(html)) throw new Error(`no data-stat="${key}" span in ${PAGE_FILE}`);
@@ -565,6 +624,8 @@ function bakeStat(html, key, value) {
 function bake(html, data) {
   if (!MARKER_RE.test(html)) throw new Error(`creditcards:projects markers missing from ${PAGE_FILE}`);
   let next = html.replace(MARKER_RE, (_, open, __, close) => `${open}${renderProjects(data.projects, data.featuredSlot)}${close}`);
+  if (!CREDITORS_RE.test(next)) throw new Error(`creditcards:creditors markers missing from ${PAGE_FILE}`);
+  next = next.replace(CREDITORS_RE, (_, open, __, close) => `${open}${renderCreditors(data.projects)}${close}`);
   const s = data.meta.stats;
   next = bakeStat(next, 'floorEth', fmtEth(s.floorEth));
   next = bakeStat(next, 'floorUsd', fmtInt(s.floorUsd));
