@@ -451,6 +451,36 @@ function aiPolicyFrom(check) {
 }
 
 // ---------------------------------------------------------------------------
+// Per-row links: /axbeat#<slug> opens that chain's row (added 28 Sep 2026, so
+// launch outreach can link a chain straight to its own row).
+//
+// The slug is the chain's display name, lowercased, with every run of anything
+// that is not a letter or digit collapsed to one hyphen: Base -> base,
+// ADI Chain -> adi-chain, Honeypot v2 -> honeypot-v2. Baked onto each row
+// rather than derived in the page, so the static no-JS table (its <tr id>) and
+// the interactive board (its row id, and the hash it opens) read the one value
+// and cannot disagree. It follows the display name, not L2Beat's entry name,
+// because the display name is what a reader sees and would guess at.
+//
+// A link sent to a chain has to keep working, so renaming a chain in
+// scripts/axbeat-chains.json breaks every link already sent for it. Treat the
+// display name as frozen once outreach has gone out.
+// ---------------------------------------------------------------------------
+function slugFrom(name) {
+  return String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// The first slug two rows share, or null. Used by the build and by --check.
+function slugClash(rows) {
+  const seen = new Set();
+  for (const r of rows) {
+    if (seen.has(r.slug)) return r.slug;
+    seen.add(r.slug);
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Build
 // ---------------------------------------------------------------------------
 function build(scanPath) {
@@ -494,6 +524,7 @@ function build(scanPath) {
       if (!ed.logo) die(`${e.brand} has no logo in scripts/axbeat-chains.json`);
       return {
         name: ed.name || e.brand,
+        slug: slugFrom(ed.name || e.brand),
         domain: e.site.url,
         tvs: e.tvs,
         note: ed.note || null,
@@ -506,6 +537,10 @@ function build(scanPath) {
   // A note left behind by an upstream rename would silently stop showing.
   const unknown = Object.keys(overlay).filter((b) => !byBrand.has(b));
   if (unknown.length) die(`scripts/axbeat-chains.json names brands not in the scan: ${unknown.join(', ')}`);
+
+  // Two chains on one slug would send one chain's link to the other's row.
+  const clash = slugClash(rows);
+  if (clash) die(`two chains share the row link #${clash}: rename one in scripts/axbeat-chains.json`);
 
   const data = {
     scannedAt: scan.scannedAt,
@@ -586,7 +621,9 @@ function staticBoard(data) {
 ${list.map((r, i) => {
   const site = scoredCount(r.site);
   const docs = scoredCount(r.docs);
-  return `<tr><td class="rank">${i + 1}</td>` +
+  // The id is the row's link target (see slugFrom), so /axbeat#<slug> lands
+  // on the right row here too, where there is no JS to open anything.
+  return `<tr id="${esc(r.slug)}"><td class="rank">${i + 1}</td>` +
     `<td><span class="chainname"><img class="chainlogo" src="${esc(r.logo)}" alt="" width="20" height="20" loading="lazy">` +
     `<span class="brand">${esc(r.name)}</span></span><span class="brandurl">${esc(r.site.url)}</span></td>` +
     `<td><span class="snum">${site.found}/${site.total}</span> ${esc(r.site.levelName || LEVEL_NAME[r.site.level])}</td>` +
@@ -653,6 +690,16 @@ function check() {
       want(typeof h.url === 'string' && h.url.length > 0, `${r.name} ${view}: no host`);
     }
   }
+
+  // Row links (see slugFrom): each row carries its own, it is the one its display
+  // name produces, and no two rows share one, or a link sent to one chain would
+  // open another chain's row or none at all.
+  for (const r of data.rows || []) {
+    want(typeof r.slug === 'string' && r.slug === slugFrom(r.name) && r.slug.length > 0,
+      `${r.name}: row link "#${r.slug}" is not the one its name produces ("#${slugFrom(r.name)}")`);
+  }
+  const clash = slugClash(data.rows || []);
+  want(clash === null, `two chains share the row link #${clash}`);
 
   // The AI access policy is derived at build time from a check message, so it is
   // the one baked field that could silently go stale against its own row. Both

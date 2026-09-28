@@ -234,6 +234,11 @@ Display copy carrying a chain's name or a reader-facing caveat lives in
 `scripts/axbeat-chains.json`, keyed by the brand in ax-audit's targets file.
 Nothing there can change a score.
 
+Each row has its own link, `/axbeat#<slug>`, which opens that row (added 28 Sep
+2026 for launch outreach). The slug is baked from the display name (`ADI Chain` ->
+`adi-chain`), so **renaming a chain breaks every link already sent for it**: once
+outreach has gone out, treat display names as frozen.
+
 Leads land via `api/axbeat-lead.js` in the same Notion "Inbound Audit Leads" DB as
 the homepage audit band (Reviewer: Natalie), so there is one review queue. The
 endpoint accepts any work email (the board-domain allowlist was deliberately
