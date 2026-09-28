@@ -25,6 +25,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<script>
+  // Theme before first paint, so a dark visitor never sees a white flash.
+  // A saved choice wins, else the OS setting. The toggle script at the foot
+  // of the page does the switching.
+  (function () {
+    var t;
+    try { t = localStorage.getItem("mooch-theme"); } catch (e) {}
+    if (t !== "dark" && t !== "light") t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
 <link rel="stylesheet" href="/tokens.css">
 <link rel="stylesheet" href="/motion.css">
 <link rel="stylesheet" href="/ui.css">
@@ -59,6 +70,48 @@
   .topbar a { color: var(--ink); }
   .topbar a:hover { border-bottom: 1px solid var(--ink); }
   .topbar .you { color: var(--muted); }
+  .topbar .right { display: flex; align-items: center; gap: 18px; }
+
+  /* Theme toggle: one "pixel" plus a label, in the topbar's mono voice.
+     Hidden until the script below wires it, so it never shows dead. The
+     padding widens the hit area without moving the bar. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: -12px 0;
+    padding: 12px 0;
+    background: none;
+    border: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .theme-toggle[hidden] { display: none; }
+  .theme-toggle::before { content: ""; width: 7px; height: 7px; background: var(--ink); }
+  .theme-toggle:hover span { border-bottom: 1px solid var(--ink); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  /* The pixel wipe. The View Transitions API snapshots the page in the old
+     and new theme; the new snapshot sits on top behind a mask that uncovers
+     it one square cell at a time, left to right, then row by row. Two mask
+     layers do it: every finished row as one block, plus the part-done row.
+     The script animates --wipe-n (cells shown) and sets --wipe-cell (px);
+     rows and columns fall out of it with round() and mod(). */
+  @property --wipe-n { syntax: "<integer>"; inherits: true; initial-value: 0; }
+  .px-wipe::view-transition-old(root),
+  .px-wipe::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+  .px-wipe::view-transition-new(root) {
+    --wipe-row: round(down, calc(var(--wipe-n) / var(--wipe-cols)), 1);
+    --wipe-col: mod(var(--wipe-n), var(--wipe-cols));
+    mask-image: linear-gradient(var(--black) 0 0), linear-gradient(var(--black) 0 0);
+    mask-repeat: no-repeat;
+    mask-position: 0 0, 0 calc(var(--wipe-row) * var(--wipe-cell));
+    mask-size: 100% calc(var(--wipe-row) * var(--wipe-cell)),
+               calc(var(--wipe-col) * 100% / var(--wipe-cols)) var(--wipe-cell);
+  }
 
   /* Grid first. Title, top creditors and the explainer share one compact
      header so the first cards land on the first screen, desktop and phone
@@ -655,7 +708,10 @@
   <div class="left">
     <a href="/">Mooch</a> &nbsp;/&nbsp; <span class="you">Credit Cards</span>
   </div>
-  <div class="right">2026</div>
+  <div class="right">
+    <button type="button" class="theme-toggle" data-theme-toggle hidden><span>Lights off</span></button>
+    <span>2026</span>
+  </div>
 </header>
 
 <main>
@@ -1123,6 +1179,63 @@
     window.addEventListener("resize", edge);
     apply(fromHash(), false);
     edge();
+  })();
+</script>
+<script>
+  // Theme toggle with the pixel wipe (styles above, tokens in tokens.css).
+  // Falls back to an instant swap for reduced motion and for browsers
+  // without View Transitions or CSS round()/mod(), which would otherwise
+  // show the new theme at once and then sit through a dead wipe.
+  (function () {
+    var root = document.documentElement;
+    var btn = document.querySelector("[data-theme-toggle]");
+    if (!btn) return;
+    var text = btn.querySelector("span");
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    var canWipe = !!document.startViewTransition && window.CSS && CSS.supports("width", "mod(3px, 2px)") && CSS.supports("width", "round(down, 3px, 2px)");
+
+    function isDark() { return root.getAttribute("data-theme") === "dark"; }
+    function label() { text.textContent = isDark() ? "Lights on" : "Lights off"; }
+    function set(theme) {
+      root.setAttribute("data-theme", theme);
+      label();
+      try { localStorage.setItem("mooch-theme", theme); } catch (e) {}
+    }
+
+    btn.addEventListener("click", function () {
+      if (root.classList.contains("px-wipe")) return; // one wipe at a time
+      var next = isDark() ? "light" : "dark";
+      try {
+        if (window.va) window.va("event", { name: "creditcards_theme", data: { to: next } });
+      } catch (err) {}
+      if (!canWipe || reduce.matches) return set(next);
+
+      // Square cells, --wipe-cols to a row, as many rows as the screen needs.
+      var css = getComputedStyle(root);
+      var cols = parseInt(css.getPropertyValue("--wipe-cols"), 10) || 8;
+      var dur = parseFloat(css.getPropertyValue("--t-wipe")) * 1000 || 1200;
+      var cell = window.innerWidth / cols;
+      var total = cols * Math.ceil(window.innerHeight / cell);
+      root.style.setProperty("--wipe-cell", cell + "px");
+      root.classList.add("px-wipe");
+
+      var t = document.startViewTransition(function () { set(next); });
+      t.ready.then(function () {
+        root.animate({ "--wipe-n": [0, total] }, {
+          duration: dur,
+          easing: "linear",
+          fill: "forwards",
+          pseudoElement: "::view-transition-new(root)"
+        });
+      }).catch(function () {});
+      t.finished.finally(function () {
+        root.classList.remove("px-wipe");
+        root.style.removeProperty("--wipe-cell");
+      });
+    });
+
+    label();
+    btn.hidden = false;
   })();
 </script>
 </body>
