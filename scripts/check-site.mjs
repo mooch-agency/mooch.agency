@@ -283,7 +283,6 @@ function checkPage(rel, seenTitles, seenDescs) {
   return { title, desc };
 }
 
-// Colour literals in inline CSS, minus documented exceptions.
 // ---------------------------------------------------------------------------
 // Stale comments. This codebase carries its reasoning in comments rather than
 // in a wiki, which is the point, but a comment that names something the file no
@@ -334,6 +333,7 @@ function checkStaleComments(rel, raw) {
   }
 }
 
+// Colour literals in inline CSS, minus documented exceptions.
 function checkColours(rel, raw) {
   const chunks = inlineCssChunks(raw);
   const colour = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})\b|(?:rgba?|hsla?)\([^)]*\)/g;

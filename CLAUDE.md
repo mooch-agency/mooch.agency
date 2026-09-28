@@ -187,8 +187,9 @@ commit, or the index goes stale and CI says so.
 
 ## AXBeat (`/axbeat`)
 
-The public agent-experience board for the top 22 L2s. Cloudflare's agent-readiness
-level for two hosts per chain, the website and the docs, republished unaltered.
+The public agent-experience board for the top 22 L2s. Two hosts per chain, the
+website and the docs, each ranked on how many of Cloudflare's scored
+agent-readiness checks it passes, republished unaltered.
 
 `https://mooch.agency/axbeat` is the canonical URL and the only place the board is
 served. If a short AXBeat domain is ever bought it becomes a **permanent redirect

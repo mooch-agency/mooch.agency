@@ -2,8 +2,9 @@
 // ---------------------------------------------------------------------------
 // axbeat-data.mjs: bakes the AXBeat board data into axbeat.html.
 //
-// AXBeat publishes Cloudflare's agent-readiness level for the top 22 L2s, one
-// website host and one docs host each. The scan itself lives in the private
+// AXBeat republishes Cloudflare's agent-readiness scan for the top 22 L2s, one
+// website host and one docs host each, ranked on how many of the scan's scored
+// checks each host passes. The scan itself lives in the private
 // `ax-audit` repo; this script is the only bridge between the two, and it runs
 // on a machine that has both, never in CI.
 //
@@ -68,7 +69,7 @@ const CLOSE = '</script>';
 const STATIC_OPEN = '<!-- @AXBEAT-STATIC@ -->';
 const STATIC_CLOSE = '<!-- @/AXBEAT-STATIC@ -->';
 
-// What the board names in its "Built with" column, in two tiers, because the
+// What the board names in its "Built on" column, in two tiers, because the
 // column now runs on both views and a website has no docs tool to name.
 //
 // DOC_TOOLS come first and win a tie. The test for being here is unchanged: the
@@ -84,8 +85,9 @@ const STATIC_CLOSE = '<!-- @/AXBEAT-STATIC@ -->';
 // on the grounds that naming one would suggest a cause that is not operating.
 // That reasoning still holds and the fix is in the copy, not the list: the
 // column describes a stack, it never explains a score, and the method note
-// says so with the numbers. Without them the website view reads "Custom" on 12
-// of 22 rows, which tells a reader nothing at all.
+// says so with the numbers. Without them every row on the website view reads
+// "Custom" (with them, 12 of 22 are named on the 28 Sep scan), which tells a
+// reader nothing at all.
 //
 // Order matters only as a tiebreak when a host reports two; the first match
 // wins, which is why a Docusaurus site on Next.js still reads Docusaurus.
@@ -188,7 +190,7 @@ function flattenChecks(agentReadiness) {
 //                      answers 200 whatever it finds, which would actively
 //                      mislead as a "status"). These map Cloudflare's own
 //                      message to one of a fixed, exhaustively-listed words,
-//                      the same pattern as policyFromMessage above: a
+//                      the same pattern as policyFromMessage below: a
 //                      reworded message dies the build instead of a guess.
 //
 // Checks in neither family (the payment checks, and webBotAuth's neutral
@@ -429,8 +431,8 @@ function hostFrom(row) {
 // reasoning that both fail the same scored check. They are still two
 // different facts about a host, so the column keeps them apart and names
 // them off Cloudflare's own message rather than inventing a tier between
-// them (see the .aipill comment in axbeat.html for why no state is
-// highlighted over another).
+// them (see the AI Rules comment below .platpill in axbeat.html for why no
+// state is highlighted over another).
 // The policy says which crawlers are addressed, never whether they are
 // allowed: naming a bot to block it and naming it to welcome it both read as
 // "named", because that is as far as this check looks.

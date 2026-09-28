@@ -339,10 +339,10 @@ table.board tr.row:focus-visible {
    This is the one colour on the whole board, and deliberately: a check
    passing or failing is a genuine pass/fail, unlike AI Rules a few columns
    over, which says who a site addresses and never whether they are welcome
-   (see .aipill). One is a result, the other is a fact, and only the result
-   gets green. Real SVG
-   <rect>s rather than a striped background or a conic-gradient, so the shape
-   survives print and engines that skip gradients. The category breakdown
+   (see the AI Rules comment below .platpill). One is a result, the other is
+   a fact, and only the result gets green. Real SVG <rect>s rather than a
+   striped background or a conic-gradient, so the shape survives print and
+   engines that skip gradients. The category breakdown
    still belongs to the opened panel below, not this cell, which only has to
    say how many of the host's scored checks passed.
    The number beside the bar changed meaning along with it: it used to be
@@ -397,10 +397,6 @@ table.board tr.row:focus-visible {
    stacked fact too many on a row that already opens to the full panel, and
    it is still there once opened. */
 .rowmeta { display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
-.metalabel {
-  display:block; font-size:10px; letter-spacing:.06em; text-transform:uppercase;
-  color:var(--muted-small);
-}
 /* The board column. Controls and table share one measure with the hero and
    everything else on the page now (see .pad): no width of its own here, just
    the 14px font-size base so the colgroup's em widths (col.c-chain etc.)
@@ -434,12 +430,13 @@ table.board col.c-ai { width:auto; }
 table.board col.c-plat { width:auto; }
 table.board col.c-score { width:9.5em; }
 
-/* Iteration 01 only. Its Docs platform column comes and goes with the view,
-   so its widths have to be law rather than a hint: with the default
-   table-layout:auto the browser re-measures every column against its content,
-   and a long platform string ("Docusaurus \u00b7 Vercel") widens that column,
-   takes the space out of Chain and drags the score column sideways. Fixed
-   layout pins the colgroup widths, so the two views line up exactly. */
+/* URL, Built on and AI Rules change value with the view (the docs host has
+   its own address and builder), so the column widths have to be law rather
+   than a hint: with the default table-layout:auto the browser re-measures
+   every column against its content, and a long value ("Docusaurus") widens
+   its column, takes the space out of Chain and drags the score column
+   sideways. Fixed layout pins the colgroup widths, so the two views line up
+   exactly. */
 #p-a table.board { table-layout:fixed; }
 #p-a table.board td, #p-a table.board th { overflow:hidden; text-overflow:ellipsis; }
 /* Padding lives on the inner element, not the cell, so a closed row collapses
@@ -742,11 +739,14 @@ form.mail { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   <!-- The board, twice over, and deliberately.
 
        What sits between the markers below is baked into the file by
-       scripts/axbeat-data.mjs: the headline, the scan date and a plain table of
-       every chain with both scores. It is what anything that does not run
-       JavaScript reads, which on a page arguing that agents should be able to
-       read your site is not an edge case, it is the argument. It is generated
-       from the same block the interactive board reads, so the two cannot drift.
+       scripts/axbeat-data.mjs: the headline and a plain table of every chain
+       with both scores, the scan date carried in the table's screen-reader
+       caption rather than shown (no visible date, Tahi's call, 29 Sep 2026;
+       the nav's "Scanning weekly" is the freshness signal). It is what
+       anything that does not run JavaScript reads, which on a page arguing
+       that agents should be able to read your site is not an edge case, it is
+       the argument. It is generated from the same block the interactive board
+       reads, so the two cannot drift.
 
        The script below replaces it with the sortable, openable version. -->
   <section id="p-a">
@@ -877,12 +877,12 @@ function viewOf(row, view) { return view === "site" ? row.site : row.docs; }
    Sep, concept 04 of the lo-fi score/16 mocks, Tahi's pick): the visible
    figure now reads "found/total" scored checks, the same count the opened
    panel already prints as "Found x/16", not the level out of 5.
-   The level itself is not dropped, only demoted: it still decides the row's
-   rank (see sorted()) and still names the host's own tier, just for screen
-   readers now rather than as the headline figure. The name comes off the
-   scanned host, which is Cloudflare's own word for that level, because the
-   page's whole claim is that the scores are theirs unaltered. LEVEL_NAME is
-   only the fallback, and only ever fills a level nothing reached. */
+   The level itself is not dropped, only demoted: it no longer decides the
+   row's rank (checks found does, see sorted()), but it still names the host's
+   own tier, just for screen readers now rather than as the headline figure.
+   The name comes off the scanned host, which is Cloudflare's own word for
+   that level, because the page's whole claim is that the scores are theirs
+   unaltered. LEVEL_NAME is only the fallback, and only ever fills a level nothing reached. */
 function bars(found, total) {
   /* Real <rect>s, not a single fill on a striped background: a gradient or a
      repeating pattern is one rendering engine away from not printing, where
@@ -1130,9 +1130,9 @@ function segToggle(view) {
 
 /* ===========================================================================
    The board. Website is the default view; a segmented toggle switches to docs
-   without moving a column; the whole row opens to the next-level panel and the
-   report request. Ranked on checks found (see sorted()); ties are numbered
-   and broken on L2Beat value secured.
+   without moving a column; the whole row opens to its found and missing
+   checks and the report request. Ranked on checks found (see sorted());
+   ties are numbered and broken on L2Beat value secured.
    ========================================================================= */
 /* What fillPanel needs to build a row's panel later, keyed by the same id the
    detpad carries. Rebuilt on every render, because the view decides which host
