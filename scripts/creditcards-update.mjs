@@ -41,6 +41,7 @@
 // Entry fields in data/creditcards.json (projects[]):
 //   id, name, url      identity; the url is the dedupe key once normalised
 //   x, post            builder handle and the announcement post
+//   with               optional, co-builders' X handles, shown after x
 //   blurb              one line for the card, written by a human
 //   category           rarity | art | statements | games | markets. Required
 //                      once approved; discovery pre-fills a suggestion on
@@ -589,8 +590,13 @@ function renderProjects(projects, slot) {
       const blurb = escapeHtml(stripDashes(p.blurb));
       const handle = escapeHtml(p.x);
       const url = escapeHtml(p.url);
+      // Co-builders from "with" follow the lead handle, each linking to their
+      // own profile; the lead handle still opens the announcement post.
+      const co = (p.with || [])
+        .map((h) => ` &amp; <a href="https://x.com/${escapeHtml(h)}" target="_blank" rel="noopener" data-event="creditcards_builder_click">@${escapeHtml(h)}</a>`)
+        .join('');
       const by = p.x
-        ? `<a href="${escapeHtml(p.post)}" target="_blank" rel="noopener" data-event="creditcards_post_click">@${handle}</a>`
+        ? `<span class="proj-by-names"><a href="${escapeHtml(p.post)}" target="_blank" rel="noopener" data-event="creditcards_post_click">@${handle}</a>${co}</span>`
         : '<span></span>';
       return [
         `      <li class="proj-card${isFeatured ? ' proj-card--featured' : ''}" data-category="${p.category}">`,
