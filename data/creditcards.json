@@ -697,21 +697,17 @@
     },
     {
       "id": "studyfrogs-com-creditpepen",
-      "name": "studyfrogs.com",
+      "name": "Creditpepen",
       "url": "https://studyfrogs.com/creditpepen",
       "x": "LikeLewis",
       "post": "https://x.com/LikeLewis/status/2104293199959494978",
-      "blurb": "",
-      "status": "pending",
+      "blurb": "Generate a CMYK proof in the style of Opepen, with plates that overprint and sometimes slip out of register. Download as a 2000px PNG, nothing to connect.",
+      "status": "approved",
       "added": "2026-09-27",
       "metrics": {
         "likes": 4,
         "reposts": 0
-      },
-      "source": "replies",
-      "score": 3,
-      "flags": [],
-      "tweetText": "@jesusdoteth @jackbutcher 30. creditpepen\ngenerate opepen inspired by credits\n\nhttps://t.co/hjA863XWLh"
+      }
     },
     {
       "id": "mylesdaughtry-com",
@@ -733,23 +729,17 @@
     },
     {
       "id": "creditscores-vercel-app",
-      "name": "creditscores.vercel.app",
+      "name": "Credit Scores",
       "url": "https://creditscores.vercel.app",
-      "x": "matriona_fails",
+      "x": "wubbushi",
       "post": "https://x.com/matriona_fails/status/2104294260854149156",
-      "blurb": "",
-      "status": "pending",
+      "blurb": "Look up any Credit for its score and download it as a ringtone. Free, nothing to connect.",
+      "status": "approved",
       "added": "2026-09-27",
       "metrics": {
         "likes": 5,
         "reposts": 1
-      },
-      "source": "replies",
-      "score": 2,
-      "flags": [
-        "known-host"
-      ],
-      "tweetText": "@jesusdoteth Credit ringtones https://t.co/ZjcZsG6yy7 by @wubbushi 🎶🐸🤳"
+      }
     },
     {
       "id": "opensea-io-collection-aura-2222",
@@ -806,6 +796,20 @@
         "coin"
       ],
       "tweetText": "was originally bearish with $CREDITSTR at 1.4 mil marketcap as it was sub optimal ROI\n\nhowever, now that it's 600k marketcap and holding and accumulating a bunch more @jackbutcher Credits, a lot more "
+    },
+    {
+      "id": "credonauts-com",
+      "name": "Credonauts",
+      "url": "https://credonauts.com/",
+      "x": "timsouw",
+      "post": "https://x.com/timsouw/status/2104475099370000674",
+      "blurb": "Argonauts rebuilt from around 200 real Credits each, never recolored. Click any pixel to open its Credit. Free to browse, nothing to connect.",
+      "status": "approved",
+      "added": "2026-09-28",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
     }
   ]
 }
