@@ -74,8 +74,11 @@ const STATIC_CLOSE = '<!-- @/AXBEAT-STATIC@ -->';
 // DOC_TOOLS come first and win a tie. The test for being here is unchanged: the
 // tool has a documented, default mechanism for the checks Cloudflare scores, so
 // its presence can move a score with nobody configuring anything. GitBook is the
-// clearest case on the current scan: all five GitBook hosts pass both Content
-// Signals and Markdown negotiation, and all five sit on exactly 3/5.
+// clearest case: all five GitBook hosts pass both Content Signals and Markdown
+// negotiation, and all five move as one. They sat on exactly 3/5 through the
+// 8 and 18 Sep scans, then on 28 Sep all five gained an MCP Server Card (and an
+// ARD manifest Cloudflare rejects) at once and moved to 4/5 together, which is
+// GitBook shipping a feature, not five chains each fixing their docs.
 //
 // SITE_FRAMEWORKS were deliberately absent while this was a docs-only column,
 // on the grounds that naming one would suggest a cause that is not operating.
@@ -308,12 +311,17 @@ function wordFrom(key, message) {
 // what happened. Three sites here (Ink, Morph, Ethscriptions) answer 200 to
 // every path, so on those every Missing row would have read 200.
 // The failure itself is the value instead, in the message's own terms.
+// "has no valid entries" arrived with the 28 Sep 2026 scan: five GitBook docs
+// hosts now serve an ARD capability manifest whose entries Cloudflare rejects
+// ("entry 0 is missing displayName"), a file that is there but unusable, which
+// is what 'invalid' already means here.
 const FAIL_2XX_RULES = [
   [/returned HTML instead of/i, 'html'],
   [/^No .*(found|metadata)/i, 'absent'],
   [/not found/i, 'absent'],
   [/exists but/i, 'invalid'],
   [/appears invalid/i, 'invalid'],
+  [/has no valid entries/i, 'invalid'],
 ];
 function fail2xxWord(message) {
   for (const [re, word] of FAIL_2XX_RULES) {
@@ -367,11 +375,11 @@ function heldReason(row) {
 //   cloudflare / otherHost
 //             whether Cloudflare was detected, and whether another hosting
 //             provider was detected alongside it. Both are facts about the
-//             detection, never a claim about who serves the host: on the 18 Sep
-//             2026 scan Cloudflare is detected on 23 of the 44 hosts and 15 of
-//             those also report Vercel, Netlify, AWS, Firebase or Google Cloud.
-//             That is why the board has no host column and the method note says
-//             so. The count moves with the scan (it was 25 on 8 Sep, and Ink
+//             detection, never a claim about who serves the host: on the 18 and
+//             28 Sep 2026 scans Cloudflare is detected on 23 of the 44 hosts and
+//             15 of those also report Vercel, Netlify, AWS, Firebase or Google
+//             Cloud. That is why the board has no host column and the method note
+//             says so. The count moves with the scan (it was 25 on 8 Sep, and Ink
 //             dropped off it), so treat it as a snapshot, not a constant.
 //
 // `detected` keeps Cloudflare's full string, so nothing is lost and any future
