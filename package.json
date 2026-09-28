@@ -1,7 +1,9 @@
 {
   "private": true,
   "scripts": {
-    "ci:check": "node scripts/check-site.mjs && node scripts/stamp-cards.mjs --check && node scripts/agent-skills.mjs --check",
+    "axbeat:build": "node scripts/axbeat-data.mjs",
+    "axbeat:check": "node scripts/axbeat-data.mjs --check",
+    "ci:check": "node scripts/check-site.mjs && node scripts/stamp-cards.mjs --check && node scripts/agent-skills.mjs --check && node scripts/axbeat-data.mjs --check",
     "ci:validate-html": "html-validate \"*.html\" \"prompts/*.html\"",
     "cards:build": "./mooch-cards/og-site.sh && node scripts/stamp-cards.mjs",
     "cards:stamp": "node scripts/stamp-cards.mjs",
@@ -22,7 +24,7 @@
   "pnpm": {
     "overrides": {
       "undici": ">=7.29.0",
-      "fast-uri": ">=3.1.5",
+      "fast-uri": ">=4.1.4",
       "ws": ">=8.21.0",
       "axios": ">=1.18.0"
     }

@@ -1,0 +1,63 @@
+{
+  "_comment": [
+    "AXBeat's editorial layer, and the only place display copy for a row lives.",
+    "",
+    "The scan in ax-audit is the authority on every score, host and check: nothing",
+    "here can change a number. What lives here is the two things a scan cannot know.",
+    "",
+    "  name  what a reader calls the chain. L2Beat's entry names carry qualifiers",
+    "        ('Arbitrum One', 'OP Mainnet', 'ZKsync Era') that read as noise in a",
+    "        ranked list. The scan keeps the full name; the board shows this one.",
+    "  note  why a row is not the obvious host, written for a visitor rather than",
+    "        for us. The targets file has its own notes, but those explain a scanning",
+    "        decision to the person running the scan. A note is only written here when",
+    "        a reader would otherwise mistrust the row (a rebrand, a cross-host",
+    "        redirect, a chain with no site of its own).",
+    "  logo  path to the chain's mark, vendored into axbeat-logos/ (never hotlinked).",
+    "        Sourced from L2Beat's icon set (l2beat.com/icons/<slug>.png), downscaled",
+    "        to 40x40 (2x a 20px display size) and verified by eye against the brand",
+    "        it claims to be. Required for every brand: there is no per-chain fallback,",
+    "        so a brand added to the scan without an entry here ships with a broken img.",
+    "",
+    "Keyed by the `brand` in ax-audit's targets file. A brand in the scan with no",
+    "entry here ships under its own name with no note, which is the common case.",
+    "scripts/axbeat-data.mjs fails the build if an entry here matches no brand in",
+    "the scan, so a rename upstream cannot leave a stale note behind."
+  ],
+  "chains": {
+    "Base": { "logo": "/axbeat-logos/base.png" },
+    "Arbitrum One": { "name": "Arbitrum", "logo": "/axbeat-logos/arbitrum.png" },
+    "OP Mainnet": { "name": "Optimism", "logo": "/axbeat-logos/op-mainnet.png" },
+    "Mantle": { "logo": "/axbeat-logos/mantle.png" },
+    "Lighter": { "logo": "/axbeat-logos/lighter.png" },
+    "Starknet": { "logo": "/axbeat-logos/starknet.png" },
+    "Linea": { "logo": "/axbeat-logos/linea.png" },
+    "Ink": { "logo": "/axbeat-logos/ink.png" },
+    "ZKsync Era": { "name": "ZKsync", "logo": "/axbeat-logos/zksync-era.png" },
+    "Morph": {
+      "note": "Morph moved to morph.network during 2026; the old morphl2.io address redirects there.",
+      "logo": "/axbeat-logos/morph.png"
+    },
+    "Unichain": {
+      "note": "The docs address redirects to Uniswap’s developer portal, so the docs score belongs to Uniswap’s site, not one Unichain runs.",
+      "logo": "/axbeat-logos/unichain.png"
+    },
+    "Katana": { "logo": "/axbeat-logos/katana.png" },
+    "BOB": { "logo": "/axbeat-logos/bob.png" },
+    "Abstract": { "logo": "/axbeat-logos/abstract.png" },
+    "Scroll": { "logo": "/axbeat-logos/scroll.png" },
+    "Taiko Alethia": { "name": "Taiko", "logo": "/axbeat-logos/taiko.png" },
+    "ADI Chain": { "logo": "/axbeat-logos/adi.png" },
+    "Facet": { "logo": "/axbeat-logos/facet.png" },
+    "INTMAX": {
+      "note": "Docs scored at docs.network.intmax.io, the address INTMAX links to. docs.intmax.io does not resolve.",
+      "logo": "/axbeat-logos/intmax.png"
+    },
+    "Honeypot v2": {
+      "note": "Scanned as Cartesi (cartesi.io and docs.cartesi.io). Honeypot v2 is Cartesi’s bug-bounty chain and has no site of its own.",
+      "logo": "/axbeat-logos/cartesi-prt-honeypot-v2.png"
+    },
+    "Aztec": { "logo": "/axbeat-logos/aztecnetwork.png" },
+    "Ethscriptions": { "logo": "/axbeat-logos/ethscriptions.png" }
+  }
+}
