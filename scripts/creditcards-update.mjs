@@ -12,9 +12,10 @@
 //      the author's bio when the post says "link in bio", and in the author's
 //      own first reply when the post itself has none. New external links land
 //      in data/creditcards.json as status "pending", with a score and flags
-//      (coin, denylist, article) that only rank and label. Nothing pending
-//      ever renders; a human flips it to "approved" (and tidies the blurb)
-//      first. Rejected entries stay as tombstones so a re-announced URL is
+//      (coin, denylist, article) that only rank and label, plus a suggested
+//      category (a keyword guess, see creditcards-categories.mjs). Nothing
+//      pending ever renders; a human flips it to "approved" (and tidies the
+//      blurb, name and category) first. Rejected entries stay as tombstones so a re-announced URL is
 //      never re-added. Cost control: at most 50 + 25 search posts and
 //      one 25-post thread lookup a run, windowed by since-ids so a
 //      quiet day reads almost nothing; at most 15 new entries a run and 3 per
@@ -27,11 +28,29 @@
 //      copy-counts.mjs, same reason.
 //
 //   3. Bake: regenerate the approved-projects block between the
-//      creditcards:projects markers in creditcards.html, the top-creditors
+//      creditcards:projects markers in creditcards.html (the count line, the
+//      category filter pills with their counts, and a data-category on every
+//      card), the top-creditors
 //      tiles between the creditcards:creditors markers, and the data-stat
 //      spans. Output is deterministic (stable sort, fixed indentation) so a
 //      no-change run produces no git diff and the daily workflow commits
-//      nothing.
+//      nothing. Every approved project needs a category from
+//      creditcards-categories.mjs; one without fails the bake (and
+//      check-site), so a half-finished approval never reaches the page.
+//
+// Entry fields in data/creditcards.json (projects[]):
+//   id, name, url      identity; the url is the dedupe key once normalised
+//   x, post            builder handle and the announcement post
+//   blurb              one line for the card, written by a human
+//   category           rarity | art | statements | games | markets. Required
+//                      once approved; discovery pre-fills a suggestion on
+//                      pending entries, so approving is one edit (status)
+//   status             pending | approved | rejected (rejected = tombstone)
+//   featured,sponsored optional, the one featured slot (see renderProjects)
+//   added              YYYY-MM-DD, drives the order on the page
+//   metrics            likes and reposts at discovery time
+//   source, score, flags, tweetText
+//                      review aids from discovery, never rendered
 //
 // Run:   node scripts/creditcards-update.mjs              full run
 //        node scripts/creditcards-update.mjs --bake-only  skip X and OpenSea
@@ -64,6 +83,7 @@ import {
   refOf,
   strayTcoLinks,
 } from './creditcards-discover.mjs';
+import { CATEGORIES, categoryProblems, suggestCategory } from './creditcards-categories.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -321,6 +341,9 @@ class Pool {
         x: handle,
         post: handle ? `https://x.com/${handle}/status/${c.tweetId}` : `https://x.com/i/status/${c.tweetId}`,
         blurb: '',
+        // A suggestion only, from name, url and post text; a human checks it
+        // when approving. Kept as the real field so approval is one edit.
+        category: suggestCategory({ name: host, url: c.url, tweetText: c.tweet.text || '', flags: c.flags }),
         status: 'pending',
         added: today,
         metrics: {
@@ -335,7 +358,8 @@ class Pool {
         tweetText: stripDashes(c.tweet.text || '').slice(0, 200),
       });
       this.known.add(c.url);
-      log(`  + [${source}] ${c.url} @${handle} score ${c.score}${c.flags.length ? ` (${c.flags.join(', ')})` : ''}`);
+      const entry = this.data.projects[this.data.projects.length - 1];
+      log(`  + [${source}] ${c.url} @${handle} score ${c.score}${c.flags.length ? ` (${c.flags.join(', ')})` : ''}, suggested ${entry.category}`);
     }
     for (const c of dropped) log(`  - over the per-run or per-author cap, not added: ${c.url} @${c.handle} score ${c.score}`);
     return kept.length;
@@ -500,9 +524,42 @@ function renderSponsorLine(slot) {
   const dm = escapeHtml(slot.dm);
   const dmLabel = escapeHtml(stripDashes(slot.dmLabel));
   return [
-    '      <li class="proj-sponsor">',
+    '      <li class="proj-sponsor" data-category="all">',
     `        <p>Feature your project here: ${price} a ${per} or ${credit} to <button type="button" class="proj-sponsor-address" data-copy="${address}" title="Copy ${address}${network}" data-event="creditcards_sponsor_copy">${address}</button><span class="proj-sponsor-sep" aria-hidden="true">&middot;</span><a href="${dm}" target="_blank" rel="noopener" data-event="creditcards_sponsor_click">${dmLabel} <span class="arrow">&rarr;</span></a></p>`,
     '      </li>',
+  ].join('\n');
+}
+
+// The line in the corner of the projects header. Without JavaScript it is
+// the whole story; the filter script swaps the count for "X of N shown" and
+// hides the "Found daily on X" half on a phone, where it would not fit.
+function renderHead(total) {
+  const count = total ? `${total} ${total === 1 ? 'project' : 'projects'}` : '';
+  return [
+    '    <div class="projects-head">',
+    '      <h2 id="projects">The projects</h2>',
+    count
+      ? `      <p><span data-filter-status aria-live="polite">${count}</span><span class="projects-found"> &middot; Found daily on X</span></p>`
+      : '      <p>Found daily on X</p>',
+    '    </div>',
+  ].join('\n');
+}
+
+// The category pills: All first, then CATEGORIES in their fixed order, each
+// with its count from the data. Plain buttons with aria-pressed; they do
+// nothing until the inline filter script wires them up, so with no
+// JavaScript every card simply stays on the page.
+function renderFilter(approved) {
+  const counts = Object.fromEntries(CATEGORIES.map((c) => [c.slug, 0]));
+  for (const p of approved) counts[p.category] += 1;
+  const pills = [{ slug: 'all', label: 'All', n: approved.length }, ...CATEGORIES.map((c) => ({ ...c, n: counts[c.slug] }))];
+  return [
+    '    <div class="cc-filter" role="group" aria-label="Filter projects by category" data-scroller>',
+    ...pills.map(
+      (c) =>
+        `      <button type="button" class="cc-filter-pill" data-filter="${c.slug}" aria-pressed="${c.slug === 'all'}" aria-controls="project-list">${escapeHtml(c.label)} <span class="cc-filter-n">${c.n}</span></button>`,
+    ),
+    '    </div>',
   ].join('\n');
 }
 
@@ -512,16 +569,16 @@ function renderProjects(projects, slot) {
     .sort((a, b) => (a.added === b.added ? a.name.localeCompare(b.name) : b.added.localeCompare(a.added)));
 
   if (!approved.length) {
-    return (
-      '\n    <p class="projects-empty">Nothing listed yet. The first finds land here once a human has looked at them.</p>\n    '
-    );
+    return `\n${renderHead(0)}\n    <p class="projects-empty">Nothing listed yet. The first finds land here once a human has looked at them.</p>\n    `;
   }
 
   // One featured slot at most: the first approved entry flagged
   // "featured": true in the data file. It leads the grid on a black base,
   // full width, so it never leaves a hole in the rows below it. Add
   // "sponsored": true to the same entry when the slot is paid for, and the
-  // eyebrow reads Sponsored instead of Featured.
+  // eyebrow reads Sponsored instead of Featured. It carries its own
+  // data-category like any card, so it shows under All and under its
+  // category; the paid-slot line is data-category="all", All only.
   const featured = approved.find((p) => p.featured);
   const ordered = featured ? [featured, ...approved.filter((p) => p !== featured)] : approved;
 
@@ -536,7 +593,7 @@ function renderProjects(projects, slot) {
         ? `<a href="${escapeHtml(p.post)}" target="_blank" rel="noopener" data-event="creditcards_post_click">@${handle}</a>`
         : '<span></span>';
       return [
-        isFeatured ? '      <li class="proj-card proj-card--featured">' : '      <li class="proj-card">',
+        `      <li class="proj-card${isFeatured ? ' proj-card--featured' : ''}" data-category="${p.category}">`,
         `        ${gridSvg(p.id)}`,
         isFeatured
           ? `        <p class="proj-flag"><span class="proj-flag-marks" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${p.sponsored ? 'Sponsored' : 'Featured'}</p>`
@@ -555,7 +612,7 @@ function renderProjects(projects, slot) {
     })
     .join('\n');
 
-  return `\n    <ol class="projects">\n${items}\n    </ol>\n    `;
+  return `\n${renderHead(approved.length)}\n${renderFilter(approved)}\n    <ol class="projects" id="project-list">\n${items}\n    </ol>\n    `;
 }
 
 // --- top creditors -------------------------------------------------------------
@@ -622,6 +679,8 @@ function bakeStat(html, key, value) {
 }
 
 function bake(html, data) {
+  const problems = categoryProblems(data.projects);
+  if (problems.length) throw new Error(`${DATA_FILE}: ${problems.join('; ')}`);
   if (!MARKER_RE.test(html)) throw new Error(`creditcards:projects markers missing from ${PAGE_FILE}`);
   let next = html.replace(MARKER_RE, (_, open, __, close) => `${open}${renderProjects(data.projects, data.featuredSlot)}${close}`);
   if (!CREDITORS_RE.test(next)) throw new Error(`creditcards:creditors markers missing from ${PAGE_FILE}`);
