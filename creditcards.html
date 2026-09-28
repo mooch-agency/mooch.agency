@@ -563,12 +563,17 @@
     border-radius: 10px;
     overflow: hidden;
     box-shadow: var(--shadow-border);
-    transition: box-shadow 0.15s ease, transform 0.15s ease;
+    /* The lift eases out over --t-lift rather than snapping in 0.15s: sweeping
+       the cursor across the grid raises and settles each card softly. */
+    transition: box-shadow var(--t-lift) var(--ease-decide), transform var(--t-lift) var(--ease-decide);
     /* Own stacking context, so the watermark can sit at z-index -1: above
        the card's paper, below the name, which is no longer positioned. */
     isolation: isolate;
   }
-  .proj-card:hover { box-shadow: var(--shadow-border-hover); transform: translateY(-2px); }
+  .proj-card:hover { box-shadow: var(--shadow-border-hover); }
+  @media (prefers-reduced-motion: no-preference) {
+    .proj-card:hover { transform: translateY(-3px); }
+  }
   /* The mark goes oversized and faint off the corner, the same move as the
      share-card watermark. Full-strength cells under low opacity, so the
      colours stay CMYK rather than going pastel. Decorative only. */

@@ -79,7 +79,8 @@
   --ease-deliver: cubic-bezier(0.2, 0, 0, 1);
   --t-decide: 1.56s;
   --t-deliver: 0.15s;
-  --t-settle: 0.5s;   /* in-place swaps (the /creditcards filter): quicker than a reveal, never a hover */
+  --t-settle: 0.5s;
+  --t-lift: 0.4s;     /* card hover lift: a hover, but a soft physical settle, not a snap */   /* in-place swaps (the /creditcards filter): quicker than a reveal, never a hover */
 
   /* Stagger scale. motion.js reads these so JS-driven timing lives here too.
      Tuned on /stagger-tuner against real sections. */
