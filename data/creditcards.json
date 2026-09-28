@@ -1,15 +1,15 @@
 {
   "meta": {
     "sinceId": "2104502552146407773",
-    "lastRun": "2026-09-28T10:04:05.727Z",
+    "lastRun": "2026-09-28T13:47:26.304Z",
     "stats": {
-      "floorEth": 0.025,
-      "floorUsd": 66,
+      "floorEth": 0.024908,
+      "floorUsd": 67,
       "supply": 122153,
-      "owners": 15447,
-      "fetchedAt": "2026-09-28T10:04:05.699Z"
+      "owners": 15407,
+      "fetchedAt": "2026-09-28T13:47:26.291Z"
     },
-    "replySinceId": "2104295401797124376"
+    "replySinceId": "2104552093738537308"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -810,6 +810,26 @@
         "likes": 0,
         "reposts": 0
       }
+    },
+    {
+      "id": "opensea-io-collection-ether-bunnys-club",
+      "name": "opensea.io",
+      "url": "https://opensea.io/collection/ether-bunnys-club",
+      "x": "etherbunnysclub",
+      "post": "https://x.com/etherbunnysclub/status/2104537232799338910",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-28",
+      "metrics": {
+        "likes": 2,
+        "reposts": 2
+      },
+      "source": "replies+quote",
+      "score": 2,
+      "flags": [
+        "via-quote"
+      ],
+      "tweetText": "Top 1 holder win 2 ethereum airdrop!\n\nTotal airdrop: 10Eth\n\nMint price: Free\n\nChain: @ethereum \n\nMintpad: @opensea \n\nLink: https://t.co/iTijjpKL44\n\n#Airdrop #ethereum #Crypto #mintingnow #opensea #fre"
     }
   ]
 }
