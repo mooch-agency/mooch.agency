@@ -8,19 +8,19 @@
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
 <meta name="description" content="Paste your writing, get it back in Paul Graham's voice. Built on 208 essays, 490,813 words, 25 years of writing. A Mooch plaything.">
-<link rel="canonical" href="https://paulgraham.mooch.agency/">
+<link rel="canonical" href="https://mooch.agency/paulgraham">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://paulgraham.mooch.agency/">
+<meta property="og:url" content="https://mooch.agency/paulgraham">
 <meta property="og:title" content="Write like Paul Graham. A Mooch plaything.">
 <meta property="og:description" content="Paste your writing, get it back in Paul Graham's voice. Built on 208 essays, 490,813 words, 25 years of writing.">
-<meta property="og:image" content="https://mooch.agency/og-paulgraham.png?v=3a62f731">
+<meta property="og:image" content="https://mooch.agency/og-paulgraham.png?v=01fec850">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Write like Paul Graham. A Mooch plaything, built on 208 essays.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Write like Paul Graham. A Mooch plaything.">
 <meta name="twitter:description" content="Paste your writing, get it back in Paul Graham's voice. Built on 208 essays, 490,813 words, 25 years of writing.">
-<meta name="twitter:image" content="https://mooch.agency/og-paulgraham.png?v=3a62f731">
+<meta name="twitter:image" content="https://mooch.agency/og-paulgraham.png?v=01fec850">
 <meta name="twitter:image:alt" content="Write like Paul Graham. A Mooch plaything, built on 208 essays.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -165,7 +165,7 @@
     display: flex; justify-content: space-between; align-items: center;
   }
   .count { color: var(--muted); }
-  .count.over { color: #b00020; }
+  .count.over { color: var(--error); }
   /* Field actions sit top-right of the input, where clear/reset belongs. */
   .label-actions { display: flex; align-items: center; gap: 16px; }
   .field-btn {
@@ -212,7 +212,7 @@
   .score { display: flex; align-items: center; gap: 12px; margin-left: auto; }
   .dial { position: relative; width: 64px; height: 64px; flex: none; }
   .dial svg { transform: rotate(-90deg); }
-  .dial .arc-bg { stroke: var(--surface, #eceae2); }
+  .dial .arc-bg { stroke: var(--surface); }
   .dial .arc-ghost { stroke: var(--muted); opacity: 0.35; }
   .dial .arc { stroke: var(--black); transition: stroke-dashoffset 0.9s cubic-bezier(0.2,0,0,1); }
   .dial-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -243,7 +243,7 @@
   .copy { margin-top: 14px; align-self: flex-start; }
   .copy.hidden { display: none; }
 
-  .err { color: #b00020; font-size: 14px; margin-top: 12px; min-height: 1em; }
+  .err { color: var(--error); font-size: 14px; margin-top: 12px; min-height: 1em; }
 
   /* Mobile: a single input box leads. The result lands in the hero
      (see #m-hero), so the output pane is hidden here. Reads like a
@@ -304,7 +304,7 @@
       position: relative; width: 96px; height: 96px; flex: none;
     }
     .m-dial svg { transform: rotate(-90deg); }
-    .m-dial .arc-bg { stroke: var(--surface, #eceae2); }
+    .m-dial .arc-bg { stroke: var(--surface); }
     .m-dial .arc-ghost { stroke: var(--muted); opacity: 0.35; }
     .m-dial .arc { stroke: var(--black); transition: stroke-dashoffset 1.1s cubic-bezier(0.2,0,0,1); }
     .m-dial .arc-num {
@@ -409,7 +409,7 @@
 <body>
 
 <header class="topbar">
-  <a class="brand" href="https://mooch.agency">MOOCH</a>
+  <a class="brand" href="/">MOOCH</a>
   <span class="right">Write Like Paul Graham</span>
 </header>
 
@@ -502,8 +502,9 @@
 
 <footer>
   <div class="foot-grid">
-    <a class="foot-made" href="https://mooch.agency" target="_blank" rel="noopener">Made by <strong>Mooch</strong> <span class="foot-arrow">&#8599;</span></a>
+    <a class="foot-made" href="/">Made by <strong>Mooch</strong> <span class="foot-arrow">&#8599;</span></a>
     <div class="foot-row"><a href="https://github.com/tahi-gichigi/mooch.agency/blob/master/pg-rewriter/voice/paulgraham.md">Read paulgraham.md</a></div>
+    <div class="foot-row"><a href="mailto:hey@mooch.agency">hey@mooch.agency</a></div>
     <span class="foot-c">Write Like Paul Graham &copy; 2026</span>
   </div>
 </footer>
@@ -511,7 +512,7 @@
 <!-- Mobile result hero — Option 6, post-rewrite only, hidden on desktop -->
 <div id="m-hero" role="region" aria-label="Rewrite result" aria-hidden="true">
   <div class="m-hero-bar">
-    <a class="brand" href="https://mooch.agency">MOOCH</a>
+    <a class="brand" href="/">MOOCH</a>
     <span>Write Like Paul Graham</span>
   </div>
   <div class="m-hero-scroll">
@@ -892,7 +893,7 @@ function finalizeMobileHero(text, score) {
 // Error while the hero is open: show it where the rewrite would be.
 function showHeroError(msg, hadPartial) {
   const e = document.createElement("div");
-  e.style.cssText = "color:#b00020;font-size:14px;" + (hadPartial ? "margin-top:12px;" : "");
+  e.style.cssText = "color:var(--error);font-size:14px;" + (hadPartial ? "margin-top:12px;" : "");
   e.textContent = msg;
   if (!hadPartial) mOutputText.textContent = "";
   mOutputText.appendChild(e);

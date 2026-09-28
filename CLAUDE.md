@@ -73,6 +73,29 @@ either way). Point the destination at a card, not at a bare filename: `cards:sta
 stamps redirect destinations too, precisely so a retired URL cannot hand a crawler
 back the unstamped key it was already caching.
 
+## Paths and subdomains
+
+One rule: **the address follows the code.**
+
+- **Code in this repo gets a path**, `mooch.agency/<slug>`. Case studies,
+  prompts, offer pages, and free tools that exist to show what Mooch does
+  (Say Less, Write like Paul Graham, Credit Cards).
+- **Code with its own repo and Vercel project gets a subdomain**,
+  `<slug>.mooch.agency`, or its own domain. Products and playthings with their
+  own code, deploys, payments or users (FRWA, samantha, Monitoring the
+  Situation), plus infrastructure (`notion-webhook`).
+
+For something new, ask: does it sell Mooch, or does it run as its own thing? If it
+sells Mooch, build it here and ship it as a path. If it runs as its own thing, give
+it its own repo and its subdomain from day one.
+
+Two things this rules out. Never serve a page from this repo on a subdomain: a
+host rewrite makes one app look like two, and splits its analytics. Never copy
+another project's pages in here: the copy drifts from the real one. When
+something moves, leave a permanent redirect from the old address in
+`vercel.json`. Older playthings still on `*.vercel.app` addresses are a known
+exception, left as they are.
+
 ## Analytics
 
 Vercel Web Analytics is on. Every shipped page loads `analytics.js`, which is a
@@ -99,9 +122,10 @@ stored token because it uses your `vercel login` session:
 vercel api "/v1/query/web-analytics/events/aggregate?projectId=<id>&teamId=<id>&since=<ms>&until=<ms>&by=eventName"
 ```
 
-Note the API has no `hostname` dimension, so `paulgraham.mooch.agency` reports
-its root as `/` and blends into the homepage's path. Split those by event name,
-not by path.
+Note the API has no `hostname` dimension. Until 25 Sep 2026 the Paul Graham
+tool was served at `paulgraham.mooch.agency`, so its visits before then report
+as `/` and blend into the homepage: split those by event name, not by path.
+From that date it reports as `/paulgraham`.
 
 ### The copy counter
 

@@ -43,9 +43,11 @@ We figure out what people actually need, then build the AI to deliver it. Most o
 
 ## Playthings
 
+- [Credit Cards](https://mooch.agency/creditcards): Every community project built around Jack Butcher's Credits collection, with live floor price and supply.
+- [Unblocked](https://mooch.agency/unblocked): Type a headline, get a banner. Any text seeds a composition of blockquote bars, the same one every time. How it was made: [How we accidentally became generative artists](https://moochagency.substack.com/p/unblockedbymooch).
 - [sassgpt](https://sassgpt.vercel.app): ChatGPT clone where the models have attitude.
 - [gravity](https://gravity-v0.vercel.app): Clone of v0.dev that roasts your app ideas.
 - [egotrip](https://egotrip.vercel.app): A snobby AI travel agent who finds the sunniest cities near you.
 - [onlyfans](https://onlyfans-gpu.vercel.app): Pre-loved GPU marketplace for discerning buyers. Mockup.
 - [alibi](https://alibi-saas.vercel.app): Client dispute app channelling a legal drama. Mockup.
-- [write like paul graham](https://paulgraham.mooch.agency): Paste your writing, get it back in Paul Graham's voice. Built from 208 of his essays.
+- [write like paul graham](https://mooch.agency/paulgraham): Paste your writing, get it back in Paul Graham's voice. Built from 208 of his essays.

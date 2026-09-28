@@ -2,6 +2,11 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
+    { "source": "/", "has": [{ "type": "host", "value": "paulgraham.mooch.agency" }], "destination": "https://mooch.agency/paulgraham", "permanent": true },
+    { "source": "/:path*", "has": [{ "type": "host", "value": "paulgraham.mooch.agency" }], "destination": "https://mooch.agency/:path*", "permanent": true },
+    { "source": "/frwa", "destination": "https://frwa.mooch.agency", "permanent": true },
+    { "source": "/frwa/:path*", "destination": "https://frwa.mooch.agency/:path*", "permanent": true },
+    { "source": "/og-frwa.png", "destination": "https://frwa.mooch.agency/og.png?v=579af151", "permanent": true },
     { "source": "/log", "destination": "/", "permanent": true },
     { "source": "/ready", "destination": "/", "permanent": true },
     { "source": "/contrabando", "destination": "/lisbon-restaurant-group", "permanent": true },
@@ -24,7 +29,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.vercel-scripts.com https://*.vercel-insights.com https://*.vercel-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.vercel-insights.com https://*.vercel-analytics.com; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.vercel-scripts.com https://*.vercel-insights.com https://*.vercel-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://unavatar.io; connect-src 'self' https://*.vercel-insights.com https://*.vercel-analytics.com; frame-ancestors 'none'"
         }
       ]
     }

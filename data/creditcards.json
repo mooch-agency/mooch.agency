@@ -1,0 +1,886 @@
+{
+  "meta": {
+    "sinceId": "2104502552146407773",
+    "lastRun": "2026-09-28T13:47:26.304Z",
+    "stats": {
+      "floorEth": 0.024908,
+      "floorUsd": 67,
+      "supply": 122153,
+      "owners": 15407,
+      "fetchedAt": "2026-09-28T13:47:26.291Z"
+    },
+    "replySinceId": "2104552093738537308"
+  },
+  "featuredSlot": {
+    "price": "80 USDC",
+    "per": "week",
+    "credit": "1 Credit",
+    "address": "jesus.eth",
+    "network": "Ethereum mainnet",
+    "dm": "https://x.com/messages/compose?recipient_id=1386099253580345344",
+    "dmLabel": "DM @jesusdoteth"
+  },
+  "projects": [
+    {
+      "id": "creditunion-fun",
+      "name": "Credit Union",
+      "url": "https://creditunion.fun",
+      "x": "bigvibessss",
+      "with": [
+        "taylor_"
+      ],
+      "post": "https://x.com/bigvibessss/status/2104402862185001233",
+      "blurb": "Pool Credits with other holders until you hit 80. The Statement goes to auction and every member takes a share of the sale.",
+      "category": "statements",
+      "status": "approved",
+      "featured": true,
+      "sponsored": true,
+      "added": "2026-09-28",
+      "metrics": {
+        "likes": 227,
+        "reposts": 22
+      }
+    },
+    {
+      "id": "jack-art-credits-rating",
+      "name": "Credit Ratings",
+      "url": "https://jack.art/credits/rating",
+      "x": "jackbutcher",
+      "post": "https://x.com/jackbutcher",
+      "blurb": "Jack's own rarity index, every Credit scored from 80 to 800. No wallet needed.",
+      "category": "rarity",
+      "status": "approved",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "creditsmoonmath-xyz",
+      "name": "creditsmoonmath.xyz",
+      "url": "https://creditsmoonmath.xyz",
+      "x": "himars",
+      "post": "https://x.com/himars/status/2103250902656118893",
+      "blurb": "Paste an address, get a rarity rating for every Credit in it. No wallet needed.",
+      "category": "rarity",
+      "status": "approved",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "credits-statement-studio-vercel-app",
+      "name": "Statement Studio",
+      "url": "https://credits-statement-studio.vercel.app",
+      "x": "ivdoublex",
+      "post": "https://x.com/ivdoublex/status/2103242384775471375",
+      "blurb": "Arrange your 80 before you burn anything. Read-only lookup of your holdings.",
+      "category": "statements",
+      "status": "approved",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "mantra-coral-mr7v-here-now",
+      "name": "Credits Factory",
+      "url": "https://mantra-coral-mr7v.here.now",
+      "x": "4484",
+      "post": "https://x.com/4484/status/2103209362206654605",
+      "blurb": "Describe a Statement and an AI picks the 80 Credits, priced from live listings.",
+      "category": "statements",
+      "status": "approved",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 76,
+        "reposts": 3
+      }
+    },
+    {
+      "id": "credits-ninja",
+      "name": "credits.ninja",
+      "url": "https://credits.ninja",
+      "x": "itsmemeworks",
+      "post": "https://x.com/itsmemeworks/status/2103163283482304667",
+      "blurb": "Rarity, live sales and holder rankings for every Credit. No wallet needed.",
+      "category": "rarity",
+      "status": "approved",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 2,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "sighthood-com",
+      "name": "Sight",
+      "url": "https://sighthood.com",
+      "x": "sight_hood",
+      "post": "https://x.com/sight_hood/status/2103147553948626961",
+      "blurb": "A prediction market on the Credits floor price. Wallet connected, real money.",
+      "category": "markets",
+      "status": "approved",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 86,
+        "reposts": 16
+      }
+    },
+    {
+      "id": "ponsfamily-com-launchpad-0x5458b19214caba7ebbd550d1514a674c3bbfe2b1",
+      "name": "ponsfamily.com",
+      "url": "https://ponsfamily.com/launchpad/0x5458B19214CaBa7eBbD550D1514a674c3BbFe2B1",
+      "x": "kenZaii7",
+      "post": "https://x.com/kenZaii7/status/2103142300276941293",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "credits-intelligence-netlify-app",
+      "name": "Credits Intelligence",
+      "url": "https://credits-intelligence.netlify.app",
+      "x": "SickAssPen",
+      "post": "https://x.com/SickAssPen/status/2103093920972312602",
+      "blurb": "A dashboard for the collection: supply, burns and expected Statements.",
+      "category": "rarity",
+      "status": "approved",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 6,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "credits-lab-vercel-app",
+      "name": "Credits Lab",
+      "url": "https://credits-lab.vercel.app",
+      "x": "0xJohnB",
+      "post": "https://x.com/0xJohnB/status/2103058107240759350",
+      "blurb": "Metadata explorer for Credits: traits, rarity and renders by token ID.",
+      "category": "rarity",
+      "status": "approved",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 4,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "3dcredits-vercel-app",
+      "name": "3D Credits",
+      "url": "https://3dcredits.vercel.app",
+      "x": "avsingh_eth",
+      "post": "https://x.com/avsingh_eth/status/2102857294811967660",
+      "blurb": "Your Credit as 3D voxels. Enter a token ID, export a snapshot or a video.",
+      "category": "art",
+      "status": "approved",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 4,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "gmgn-ai-robinhood-address-mjhhuwaq-0x63623d092e67fd2529e11dd6e74503748b00865b",
+      "name": "gmgn.ai",
+      "url": "https://gmgn.ai/robinhood/address/MjhhuWaq_0x63623d092e67fd2529e11dd6e74503748b00865b",
+      "x": "qkdsb666",
+      "post": "https://x.com/qkdsb666/status/2102835394706346043",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "gmgn-ai-robinhood-token-3mfzmyuy-0x39679b59289cce7c7f6e0feacdf39a1e543de751",
+      "name": "gmgn.ai",
+      "url": "https://gmgn.ai/robinhood/token/3MFzMyuY_0x39679b59289CcE7C7f6e0fEacDF39A1e543dE751",
+      "x": "tony080226",
+      "post": "https://x.com/tony080226/status/2102796915771642197",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "oncave-io-labs-credited-punks",
+      "name": "Credited Punks",
+      "url": "https://oncave.io/labs/credited-punks",
+      "x": "defimaestro90",
+      "post": "https://x.com/defimaestro90/status/2102792764765188313",
+      "blurb": "10,000 CryptoPunks recoloured by Credits, onchain. Paid mint, wallet connected.",
+      "category": "markets",
+      "status": "approved",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 35,
+        "reposts": 8
+      }
+    },
+    {
+      "id": "homeofficeos-com",
+      "name": "homeofficeos.com",
+      "url": "https://homeofficeos.com",
+      "x": "ErvistheGreat",
+      "post": "https://x.com/ErvistheGreat/status/2102787056976220242",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "8str-art",
+      "name": "8str.art",
+      "url": "https://8str.art",
+      "x": "_8str",
+      "post": "https://x.com/_8str/status/2102770734317879654",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "trover-tech-machine-0x8e607209899b5d12bd3167a6cd0e8e11feb053d6",
+      "name": "trover.tech",
+      "url": "https://trover.tech/machine/0x8e607209899b5d12bd3167a6cd0e8e11feb053d6",
+      "x": "troverdottech",
+      "post": "https://x.com/troverdottech/status/2102768907346129292",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 2,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "dex-trover-tech-nfts-ethereum-credits",
+      "name": "dex.trover.tech",
+      "url": "https://dex.trover.tech/nfts/ethereum/credits",
+      "x": "troverdottech",
+      "post": "https://x.com/troverdottech/status/2102766895980269592",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "gmgn-ai-robinhood-address-tx168-0x63623d092e67fd2529e11dd6e74503748b00865b",
+      "name": "gmgn.ai",
+      "url": "https://gmgn.ai/robinhood/address/tx168_0x63623d092e67fd2529e11dd6e74503748b00865b",
+      "x": "linda6248130564",
+      "post": "https://x.com/linda6248130564/status/2102754103785103761",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-24",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "buybits-art",
+      "name": "BITS",
+      "url": "https://buybits.art",
+      "x": "EightBits11",
+      "post": "https://x.com/EightBits11/status/2103342460047085643",
+      "blurb": "Credits' $8 X Money mechanic, rebuilt on Solana. A separate collection.",
+      "category": "markets",
+      "status": "approved",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "chainhawk-io",
+      "name": "chainhawk.io",
+      "url": "https://chainhawk.io",
+      "x": "Boomskite",
+      "post": "https://x.com/Boomskite/status/2103276453282386379",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "laternow-app-futures",
+      "name": "Futures",
+      "url": "https://laternow.app/futures",
+      "x": "LATE_FX",
+      "post": "https://x.com/LATE_FX/status/2103269221111058849",
+      "blurb": "Free mint for holders: a 1 of 1 magic 8 ball, gas only. Wallet connected.",
+      "category": "markets",
+      "status": "approved",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 3,
+        "reposts": 1
+      }
+    },
+    {
+      "id": "creditscheck-xyz",
+      "name": "Credit Check",
+      "url": "https://creditscheck.xyz",
+      "x": "JimEagle_",
+      "post": "https://x.com/JimEagle_/status/2103297144015011852",
+      "blurb": "A report card per Credit: rank, AAA to CCC rating, live price. Wallet optional.",
+      "category": "rarity",
+      "status": "approved",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "exaltedlove-com-debits",
+      "name": "Debits",
+      "url": "https://exaltedlove.com/debits/",
+      "x": "wubbushi",
+      "post": "https://x.com/wubbushi/status/2103650320924774801",
+      "blurb": "A Debit prints the plates your Credit didn't show, now with The Second Hand: a film and a clock of your Credits. Unreleased, nothing to connect.",
+      "category": "art",
+      "status": "approved",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "tokenstrategy-com",
+      "name": "Credit Strategy",
+      "url": "https://www.tokenstrategy.com",
+      "x": "token_works",
+      "post": "https://x.com/AlphaAltcoins/status/2103274156620124313",
+      "blurb": "A token whose trade tax buys and relists Credits. Not Jack's. Wallet connected.",
+      "category": "markets",
+      "status": "approved",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "opensea-io-collection-creditcards",
+      "name": "Credit Cards (Jehoseph)",
+      "url": "https://opensea.io/collection/creditcards",
+      "x": "Jehoseph",
+      "post": "https://x.com/Jehoseph/status/2103013672541204483",
+      "blurb": "A separate paid collection inspired by Credits, not part of it. Wallet to mint.",
+      "category": "markets",
+      "status": "approved",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 15,
+        "reposts": 2
+      }
+    },
+    {
+      "id": "creditscheck-xyz-browse-all",
+      "name": "creditscheck.xyz",
+      "url": "https://creditscheck.xyz/browse/all",
+      "x": "JimEagle_",
+      "post": "https://x.com/JimEagle_/status/2103300436945977671",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "t-me-gainzys-22",
+      "name": "t.me",
+      "url": "https://t.me/gainzys_22",
+      "x": "gainzry22",
+      "post": "https://x.com/gainzry22/status/2102825813141823665",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "creditscheck-xyz-life",
+      "name": "creditscheck.xyz",
+      "url": "https://creditscheck.xyz/life",
+      "x": "JimEagle_",
+      "post": "https://x.com/JimEagle_/status/2103546358296932525",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 2,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "credits-monitor-vercel-app",
+      "name": "Credits Monitor",
+      "url": "https://credits-monitor.vercel.app",
+      "x": "Dorsian",
+      "post": "https://x.com/Dorsian/status/2103596011176313307",
+      "blurb": "Live sales and listings for the Top 100 Credits, ranked by Jack's official Credit Ratings. Nothing to connect.",
+      "category": "rarity",
+      "status": "approved",
+      "added": "2026-09-25",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "creditscores-vercel-app-creditizer",
+      "name": "Creditizer",
+      "url": "https://creditscores.vercel.app/creditizer/",
+      "x": "devonfigures",
+      "post": "https://x.com/devonfigures",
+      "blurb": "Turn any image into a mosaic of Credits, up to 256 across, and download it as a 4K PNG or SVG with a map of every Credit used. Nothing to connect.",
+      "category": "art",
+      "status": "approved",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "statement-builder-xyz",
+      "name": "Statement Builder",
+      "url": "https://www.statement-builder.xyz/",
+      "x": "Caben_nft",
+      "post": "https://x.com/Caben_nft",
+      "blurb": "Build Statements from 80 real Credits or the ones an address owns, turn an image into Credits and hear your Statement. No wallet connection.",
+      "category": "statements",
+      "status": "approved",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "exaltedlove-com-debits-miles",
+      "name": "Credit Miles",
+      "url": "https://exaltedlove.com/debits/miles",
+      "x": "wubbushi",
+      "post": "https://x.com/wubbushi/status/2103638750295159126",
+      "blurb": "A frequent flyer program for Credits: miles for every hour held, every sale a flight. Look up any wallet, nothing to connect.",
+      "category": "rarity",
+      "status": "approved",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "pour-eight-vercel-app",
+      "name": "Pour",
+      "url": "https://pour-eight.vercel.app/",
+      "x": "dealer1943",
+      "post": "https://x.com/dealer1943/status/2103691502870553059",
+      "blurb": "Pour any Credit's colors onto a canvas like acrylic paint, tilt it, add salt, alcohol or soap and save the image. Free, nothing to connect.",
+      "category": "art",
+      "status": "approved",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "pump-fun",
+      "name": "pump.fun",
+      "url": "https://pump.fun",
+      "x": "bitecong",
+      "post": "https://x.com/bitecong/status/2103703567219773668",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "blackswanofficial-xyz",
+      "name": "blackswanofficial.xyz",
+      "url": "https://blackswanofficial.xyz",
+      "x": "BlackswanTM",
+      "post": "https://x.com/BlackswanTM/status/2103778159183495362",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "suno-com-song-968e10f0-4d03-4228-b6f0-3d0baa358b0a",
+      "name": "suno.com",
+      "url": "https://suno.com/song/968e10f0-4d03-4228-b6f0-3d0baa358b0a",
+      "x": "brbk85",
+      "post": "https://x.com/brbk85/status/2103810431928467771",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 4,
+        "reposts": 2
+      }
+    },
+    {
+      "id": "catalogue-gallery-blog-jack-butcher-credits-cmyk-x-money",
+      "name": "catalogue.gallery",
+      "url": "https://catalogue.gallery/blog/jack-butcher-credits-cmyk-x-money",
+      "x": "CatalogueART",
+      "post": "https://x.com/CatalogueART/status/2103821449794589033",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 7,
+        "reposts": 2
+      }
+    },
+    {
+      "id": "jackoff-simulator-netlify-app",
+      "name": "jackoff-simulator.netlify.app",
+      "url": "https://jackoff-simulator.netlify.app",
+      "x": "brbk85",
+      "post": "https://x.com/brbk85/status/2103949478646444425",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "credit-limit-vv-vercel-app",
+      "name": "Credit Limit",
+      "url": "https://credit-limit-vv.vercel.app",
+      "x": "0xhiromasa",
+      "post": "https://x.com/0xhiromasa/status/2103862962830393355",
+      "blurb": "Higher or lower with Credits: pick the rarer score until one miss reaches your limit, or play the Daily 8. Free, nothing to connect.",
+      "category": "games",
+      "status": "approved",
+      "added": "2026-09-26",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "discord-com-invite-adhqjepga",
+      "name": "discord.com",
+      "url": "https://discord.com/invite/adhQjEpGa",
+      "x": "kenZaii7",
+      "post": "https://x.com/kenZaii7/status/2104157637684380041",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "tweetText": "@mememaxxers Bounties #4\n\nGot a take on @jackbutcher’s Credits? Turn it into an article or app.\n\nJoin @mememaxxers and check Discord #announcements for the details.\n\nhttps://t.co/QQlHsHKlNW\n\nCome $JAC"
+    },
+    {
+      "id": "creditscores-vercel-app-scan",
+      "name": "Credit Scanner",
+      "url": "https://creditscores.vercel.app/scan/",
+      "x": "devonfigures",
+      "post": "https://x.com/devonfigures/status/2103877289788227649",
+      "blurb": "Point your phone camera at any Credit, on screen or in print, for its score, rank and market. Free, nothing to connect.",
+      "category": "rarity",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 71,
+        "reposts": 8
+      }
+    },
+    {
+      "id": "opensea-io-collection-not-an-artist-888",
+      "name": "Not An Artist",
+      "url": "https://opensea.io/collection/not-an-artist-888",
+      "x": "BB88888888888BB",
+      "post": "https://x.com/BB88888888888BB/status/2103520141158093001",
+      "blurb": "",
+      "status": "rejected",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 62,
+        "reposts": 5
+      }
+    },
+    {
+      "id": "opensea-io-collection-creditmon",
+      "name": "Creditmon",
+      "url": "https://opensea.io/collection/creditmon",
+      "x": "Jehoseph",
+      "post": "https://x.com/Jehoseph/status/2103925939285663899",
+      "blurb": "10,000 creatures inspired by Credits. Mint on OpenSea, wallet needed.",
+      "category": "markets",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 3,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "winchxyz-github-io-credits-cubed",
+      "name": "Credits Cube",
+      "url": "https://winchxyz.github.io/credits-cubed/",
+      "x": "winchxyz",
+      "post": "https://x.com/winchxyz/status/2103637645267972456",
+      "blurb": "Put six Credits on a picture cube, scramble it and turn it back until every side is a Credit again. Free, nothing to connect.",
+      "category": "games",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "cr3dits-vercel-app",
+      "name": "CR3DITS",
+      "url": "https://cr3dits.vercel.app",
+      "x": "heyflaw",
+      "post": "https://x.com/bclever0x/status/2103718642818953340",
+      "blurb": "Enter a Credit's number to see it as an interactive 3D volume, then download it as a card to share. Free, nothing to connect.",
+      "category": "art",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "credit-k1ller-xyz",
+      "name": "Credit // Killers",
+      "url": "https://credit.k1ller.xyz/",
+      "x": "DTODDART",
+      "post": "https://x.com/DTODDART/status/2103213993666240674",
+      "blurb": "Combine a Credit with a KILLERS piece, pick the colours and download your remix. Free preview, wallet optional, minting not open yet.",
+      "category": "art",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 11,
+        "reposts": 1
+      }
+    },
+    {
+      "id": "mod80-art-play",
+      "name": "MOD80 BREAK",
+      "url": "https://mod80.art/play",
+      "x": "intr3pico",
+      "post": "https://x.com/intr3pico/status/2102967868052877335",
+      "blurb": "Turn any Credit into a retro Breakout game and smash its actual blocks. Free, nothing to connect.",
+      "category": "games",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 14,
+        "reposts": 1
+      }
+    },
+    {
+      "id": "credits-rarity-checker-kimi-page",
+      "name": "Credits Rarity Checker",
+      "url": "https://credits-rarity-checker.kimi.page",
+      "x": "0xlalitmehra",
+      "post": "https://x.com/0xlords_/status/2102621801163727016",
+      "blurb": "Paste a Credit's token ID or OpenSea link for a rarity verdict, plus a live feed of sales against rarity. Free, nothing to connect.",
+      "category": "rarity",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 43,
+        "reposts": 4
+      }
+    },
+    {
+      "id": "studyfrogs-com-creditpepen",
+      "name": "Creditpepen",
+      "url": "https://studyfrogs.com/creditpepen",
+      "x": "LikeLewis",
+      "post": "https://x.com/LikeLewis/status/2104293199959494978",
+      "blurb": "Generate a CMYK proof in the style of Opepen, with plates that overprint and sometimes slip out of register. Download as a 2000px PNG, nothing to connect.",
+      "category": "art",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 4,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "mylesdaughtry-com",
+      "name": "mylesdaughtry.com",
+      "url": "https://mylesdaughtry.com",
+      "x": "mylesdaughtry",
+      "post": "https://x.com/mylesdaughtry/status/2104305396693512667",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 7,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "also building something for @jackbutcher credits. \nno token. no nft. no x account, website will connect to my personal https://t.co/ZHbYV66M41 simply as a subdomain and it will drop 10/1 shortly after"
+    },
+    {
+      "id": "creditscores-vercel-app",
+      "name": "Credit Scores",
+      "url": "https://creditscores.vercel.app",
+      "x": "wubbushi",
+      "post": "https://x.com/matriona_fails/status/2104294260854149156",
+      "blurb": "Look up any Credit for its score and download it as a ringtone. Free, nothing to connect.",
+      "category": "art",
+      "status": "approved",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 5,
+        "reposts": 1
+      }
+    },
+    {
+      "id": "opensea-io-collection-aura-2222",
+      "name": "opensea.io",
+      "url": "https://opensea.io/collection/aura-2222",
+      "x": "WabisukiART",
+      "post": "https://x.com/WabisukiART/status/2104254256081404076",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 3,
+        "reposts": 0
+      },
+      "source": "replies",
+      "score": 2,
+      "flags": [],
+      "tweetText": "@jesusdoteth GM \n\nhttps://t.co/3ev4UKWu1H https://t.co/pb2ebc7ykw"
+    },
+    {
+      "id": "networked-art-itsbubblezzz-0xd12c2fe0d64eb382d36e619a6505014672771719-17-details",
+      "name": "networked.art",
+      "url": "https://networked.art/itsbubblezzz/0xd12c2fe0d64eb382d36e619a6505014672771719/17/details",
+      "x": "itsBubblezzz",
+      "post": "https://x.com/itsBubblezzz/status/2104311889622946152",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "Credits being credited  @networkeddotart\n🤌🏻🌻🫧\nA mixed-media collage incorporating monochrome photography, torn paper patches, cardboard textures, and signature yellow tape accents.\nInspired by cre"
+    },
+    {
+      "id": "nftstrategy-fun-strategies-0x8e607209899b5d12bd3167a6cd0e8e11feb053d6",
+      "name": "nftstrategy.fun",
+      "url": "https://nftstrategy.fun/strategies/0x8e607209899b5d12bd3167a6cd0e8e11feb053d6",
+      "x": "tradesgiving",
+      "post": "https://x.com/tradesgiving/status/2104229150429200708",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-27",
+      "metrics": {
+        "likes": 16,
+        "reposts": 2
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "coin"
+      ],
+      "tweetText": "was originally bearish with $CREDITSTR at 1.4 mil marketcap as it was sub optimal ROI\n\nhowever, now that it's 600k marketcap and holding and accumulating a bunch more @jackbutcher Credits, a lot more "
+    },
+    {
+      "id": "credonauts-com",
+      "name": "Credonauts",
+      "url": "https://credonauts.com/",
+      "x": "timsouw",
+      "post": "https://x.com/timsouw/status/2104475099370000674",
+      "blurb": "Argonauts rebuilt from around 200 real Credits each, never recolored. Click any pixel to open its Credit. Free to browse, nothing to connect.",
+      "category": "art",
+      "status": "approved",
+      "added": "2026-09-28",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
+    },
+    {
+      "id": "opensea-io-collection-ether-bunnys-club",
+      "name": "opensea.io",
+      "url": "https://opensea.io/collection/ether-bunnys-club",
+      "x": "etherbunnysclub",
+      "post": "https://x.com/etherbunnysclub/status/2104537232799338910",
+      "blurb": "",
+      "status": "pending",
+      "added": "2026-09-28",
+      "metrics": {
+        "likes": 2,
+        "reposts": 2
+      },
+      "source": "replies+quote",
+      "score": 2,
+      "flags": [
+        "via-quote"
+      ],
+      "tweetText": "Top 1 holder win 2 ethereum airdrop!\n\nTotal airdrop: 10Eth\n\nMint price: Free\n\nChain: @ethereum \n\nMintpad: @opensea \n\nLink: https://t.co/iTijjpKL44\n\n#Airdrop #ethereum #Crypto #mintingnow #opensea #fre"
+    }
+  ]
+}

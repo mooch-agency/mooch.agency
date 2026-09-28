@@ -20,6 +20,8 @@
 //   Social cards ......... og:title/description/image + image exists ~1200x630
 //   Index hygiene ........ sitemap <-> pages bijection, no stray noindex, robots
 //   Uniqueness ........... unique titles + descriptions, exactly one <h1>
+//   Data ................. every approved Credit Cards project has a valid
+//                          category, and so does every baked card
 //
 // Scoping: we check the pages the site actually ships: every *.html at the repo
 // root plus prompts/*.html, MINUS a documented exclusion list of templates, dev
@@ -33,6 +35,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { load } from 'cheerio';
 import { EXCLUDED, shippedPages } from './site-files.mjs';
+import { CATEGORY_SLUGS, categoryProblems } from './creditcards-categories.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -557,6 +560,32 @@ function checkFragments(pages) {
 }
 
 // ---------------------------------------------------------------------------
+// Data: data/creditcards.json is baked into /creditcards, and the category
+// filter needs a category on every approved project. The bake refuses to run
+// without one; this catches a hand edit in a PR before the daily job does.
+// ---------------------------------------------------------------------------
+function checkCreditCardsData() {
+  const dataRel = 'data/creditcards.json';
+  if (!has(dataRel)) return;
+  let data;
+  try {
+    data = JSON.parse(read(dataRel));
+  } catch (e) {
+    fail('Data', dataRel, `not valid JSON: ${e.message}`);
+    return;
+  }
+  for (const msg of categoryProblems(data.projects || [])) fail('Data', dataRel, msg);
+  if (!has('creditcards.html')) return;
+  const raw = read('creditcards.html');
+  const $ = load(raw);
+  $('#project-list > li').each((_, li) => {
+    const cat = $(li).attr('data-category');
+    const ok = $(li).hasClass('proj-sponsor') ? cat === 'all' : CATEGORY_SLUGS.includes(cat);
+    if (!ok) fail('Data', 'creditcards.html', `card "${$(li).find('.proj-name').text() || 'sponsor line'}" has data-category "${cat ?? ''}"; re-run node scripts/creditcards-update.mjs --bake-only`);
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
 const pages = discoverPages();
@@ -573,11 +602,12 @@ for (const rel of pages) checkPage(rel, seenTitles, seenDescs);
 checkUniqueness(seenTitles, seenDescs);
 checkIndexHygiene(pages);
 checkFragments(pages);
+checkCreditCardsData();
 
 // ---------------------------------------------------------------------------
 // Output, grouped by discipline, file + line where feasible.
 // ---------------------------------------------------------------------------
-const DISCIPLINES = ['SEO & Meta', 'Content hygiene', 'Trust & contactability', 'Mobile', 'Design tokens', 'Stale comments', 'Social cards', 'Fragments', 'Index hygiene', 'Uniqueness & structure'];
+const DISCIPLINES = ['SEO & Meta', 'Content hygiene', 'Trust & contactability', 'Mobile', 'Design tokens', 'Stale comments', 'Social cards', 'Fragments', 'Index hygiene', 'Uniqueness & structure', 'Data'];
 console.log(`check-site: ${pages.length} shipped pages under ${ROOT}`);
 console.log(pages.map((p) => `  - ${p}`).join('\n'));
 console.log('');

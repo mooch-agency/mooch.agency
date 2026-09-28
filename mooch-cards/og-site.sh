@@ -85,7 +85,7 @@ card paulgraham \
   --eyebrow "Plaything" \
   --title "Write like\n*Paul Graham.*" \
   --subtitle "Write articles as clearly as Paul Graham." \
-  --domain "paulgraham.mooch.agency" \
+  --domain "mooch.agency/paulgraham" \
   --scale 1.15
 
 card deslop \
@@ -102,12 +102,19 @@ card soundlikeme \
   --domain "mooch.agency/prompts/soundlikeme" \
   --tint prompt --scale 1.1
 
-card frwa \
+card creditcards \
+  --eyebrow "Community index" \
+  --title "Credit *Cards*" \
+  --subtitle "Every project built on Jack Butcher's\nCredits, in one place. Refreshed daily." \
+  --domain "mooch.agency/creditcards" \
+  --tint plaything --scale 1.3
+
+card unblocked \
   --eyebrow "Plaything" \
-  --title "Fake Real\n*World Assets.*" \
-  --subtitle "Trade the FRWA 10 asset index 24/7 365 on the Mooch Stock Exchange (MSE)." \
-  --domain "mooch.agency/frwa" \
-  --dark --scale 1.15
+  --title "*Unblocked.*" \
+  --subtitle "A generative art project that turns words into hero banners." \
+  --domain "mooch.agency/unblocked" \
+  --scale 1.3
 
 # No `ready` card: /ready was retired in the Phase 0 roadmap decision and now
 # 301s to /, so a sharer never reaches a page that would use one.

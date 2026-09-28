@@ -61,6 +61,9 @@
   --muted: #8e8e93;
   --colophon-rule: var(--hairline-dark);
 }
+/* Under the dark theme the footer inverts to light, so its muted text
+   follows the inverted-surface token instead of the fixed grey above. */
+:root[data-theme="dark"] .colophon-dark { --muted: var(--muted-dark); }
 
 /* Copy button — mono-spaced action chip used in prompt pages.
    Promoted from inline styles (rule of three: deslop, soundlikeme,

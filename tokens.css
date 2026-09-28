@@ -28,13 +28,14 @@
   --hairline: #d2d2d7;
   --hairline-focus: #86868b;  /* Darker hairline for focusable element borders */
   --hairline-dark: #2a2a2c;   /* Hairline rule for dark-footer (.colophon-dark) context */
+  --muted-dark: #a1a1a6;      /* Secondary text on black (featured card on /creditcards) */
   --error: #b00020;
   --success: #0a7d3f;
 
   /* Elevation. Shadow-as-border: a 1px ring plus two soft lift layers,
      for cards/buttons that currently fake depth with a solid border.
-     Shadows adapt to any background; solid border colours don't. Light-mode
-     only, since the site has no dark theme outside the one-off dark footer. */
+     Shadows adapt to any background; solid border colours don't. The dark
+     theme block at the end of this file swaps in a light ring. */
   --shadow-border: 0px 0px 0px 1px rgba(0, 0, 0, 0.06), 0px 1px 2px -1px rgba(0, 0, 0, 0.06), 0px 2px 4px 0px rgba(0, 0, 0, 0.04);
   --shadow-border-hover: 0px 0px 0px 1px rgba(0, 0, 0, 0.08), 0px 1px 2px -1px rgba(0, 0, 0, 0.08), 0px 2px 4px 0px rgba(0, 0, 0, 0.06);
 
@@ -78,6 +79,8 @@
   --ease-deliver: cubic-bezier(0.2, 0, 0, 1);
   --t-decide: 1.56s;
   --t-deliver: 0.15s;
+  --t-settle: 0.5s;
+  --t-lift: 0.4s;     /* card hover lift: a hover, but a soft physical settle, not a snap */   /* in-place swaps (the /creditcards filter): quicker than a reveal, never a hover */
 
   /* Stagger scale. motion.js reads these so JS-driven timing lives here too.
      Tuned on /stagger-tuner against real sections. */
@@ -94,4 +97,39 @@
   --cat-prompt: hsl(270, 30%, 94%);
   --cat-plaything: hsl(35, 40%, 93%);
   --cat-ai: hsl(200, 30%, 94%);
+
+  /* Process colours for the /creditcards card art, mirroring the CMYK
+     grids of the Credits collection itself. Decorative marks only, never
+     text: the yellow has nowhere near text contrast on paper. */
+  --credit-c: #00aeef;
+  --credit-m: #ec008c;
+  --credit-y: #fff200;
+  --credit-k: #1a1a1a;
+
+  /* Pixel-wipe theme switch (/creditcards). The viewport is cut into
+     --wipe-cols square "pixels" a row, like a Credit's 8x8 grid, and the new
+     theme lands one pixel at a time in reading order over --t-wipe. */
+  --wipe-cols: 8;
+  --t-wipe: 1.2s;
+}
+
+/* Dark theme, opt-in per page via <html data-theme="dark"> (only /creditcards
+   so far). It remaps palette *roles*, so a page styled purely on tokens flips
+   with no rules of its own. --black stays "heaviest ink", so it goes white,
+   and every surface that was dark-on-light (a featured card, the dark footer)
+   inverts to light: the -dark tokens become "on the inverted surface". */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --black: #ffffff;
+  --ink: #f5f5f7;
+  --paper: #0b0b0c;
+  --surface: #161618;
+  --muted: #98989d;
+  --muted-small: #aeaeb2;   /* ~9:1 on --paper, for text below 14px */
+  --hairline: #2c2c2e;
+  --hairline-focus: #636366;
+  --hairline-dark: #d2d2d7; /* rules on the inverted (white) surfaces */
+  --muted-dark: #6e6e73;    /* secondary text on the inverted surfaces, ~5:1 */
+  --shadow-border: 0px 0px 0px 1px rgba(255, 255, 255, 0.09), 0px 1px 2px -1px rgba(0, 0, 0, 0.4), 0px 2px 4px 0px rgba(0, 0, 0, 0.3);
+  --shadow-border-hover: 0px 0px 0px 1px rgba(255, 255, 255, 0.16), 0px 1px 2px -1px rgba(0, 0, 0, 0.5), 0px 2px 4px 0px rgba(0, 0, 0, 0.4);
 }

@@ -29,7 +29,6 @@ export const EXCLUDED = new Set([
   'stagger-tuner.html',             // internal motion-tuning dev tool (noindex)
   'styleguide.html',                // internal design reference (noindex)
   'ready.html',                     // redirected to / in vercel.json (/ready -> /)
-  'paulgraham.html',                // interactive demo, intentionally unlisted (no canonical)
   'portfolio-all.html',             // portfolio index / lab page (noindex, not in sitemap)
   'portfolio-explorations.html',    // portfolio lab page (noindex, not in sitemap)
   'portfolio-explorations-2.html',  // portfolio lab page (noindex, not in sitemap)
