@@ -22,6 +22,23 @@
   },
   "projects": [
     {
+      "id": "creditunion-fun",
+      "name": "Credit Union",
+      "url": "https://creditunion.fun",
+      "x": "bigvibessss",
+      "post": "https://x.com/bigvibessss/status/2104402862185001233",
+      "blurb": "Pool Credits with other holders until you hit 80. The Statement goes to auction and every member takes a share of the sale.",
+      "category": "statements",
+      "status": "approved",
+      "featured": true,
+      "sponsored": true,
+      "added": "2026-09-28",
+      "metrics": {
+        "likes": 227,
+        "reposts": 22
+      }
+    },
+    {
       "id": "jack-art-credits-rating",
       "name": "Credit Ratings",
       "url": "https://jack.art/credits/rating",
@@ -30,7 +47,6 @@
       "blurb": "Jack's own rarity index, every Credit scored from 80 to 800. No wallet needed.",
       "category": "rarity",
       "status": "approved",
-      "featured": true,
       "added": "2026-09-25",
       "metrics": {
         "likes": 0,
