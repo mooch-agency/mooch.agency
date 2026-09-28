@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { acceptableUrl, assess, knownHostOf, normaliseUrl, pickCandidates, strayTcoLinks } from './creditcards-discover.mjs';
 import { discover } from './creditcards-update.mjs';
+import { CATEGORY_SLUGS, categoryProblems, suggestCategory } from './creditcards-categories.mjs';
 
 const users = [
   { id: '1', username: 'devonfigures' },
@@ -75,6 +76,9 @@ test('threads, bio, t.co and OpenSea find what the old rules missed', async () =
   assert.deepEqual(pump.flags, ['denylist', 'coin']);
   assert.ok(pump.score < byUrl['https://creditscores.vercel.app/scan'].score);
   assert.equal(added, data.projects.length);
+  assert.ok(data.projects.every((p) => CATEGORY_SLUGS.includes(p.category)), 'every pending entry carries a suggested category');
+  assert.equal(pump.category, 'markets', 'a coin post suggests markets');
+  assert.equal(byUrl['https://opensea.io/collection/not-an-artist-888'].category, 'markets', 'an OpenSea collection suggests markets');
   assert.equal(data.meta.sinceId, '2103877289788227649');
   assert.ok(!calls.some((c) => c.includes('/lists/') || c.includes('_lists')), 'no X List reads');
 });
@@ -129,4 +133,17 @@ test('sub pages of a listed site are flagged, not dropped', () => {
   assert.equal(knownHostOf('https://opensea.io/collection/creditmon', known), false);
   const a = assess({ url: 'https://creditscheck.xyz/life', text: 'Credits', source: 'search', knownHost: true });
   assert.deepEqual(a.flags, ['known-host']);
+});
+
+test('category suggestions and the approved-entry check', () => {
+  assert.equal(suggestCategory({ name: 'x.app', tweetText: 'Build your Statement: pick the 80 Credits you will burn' }), 'statements');
+  assert.equal(suggestCategory({ name: 'x.app', tweetText: 'made a little game with credits, play the daily puzzle' }), 'games');
+  assert.equal(suggestCategory({ name: 'x.app', tweetText: 'rarity ranks and live sales for every credit' }), 'rarity');
+  assert.equal(suggestCategory({ name: 'x.app', tweetText: 'turn your credit into a 3d voxel remix' }), 'art');
+  assert.equal(suggestCategory({ name: 'opensea.io', url: 'https://opensea.io/collection/foo', tweetText: 'gm' }), 'markets');
+  assert.equal(suggestCategory({ name: 'x.app', tweetText: 'gm' }), 'art', 'no hit falls back to art');
+  const ok = { id: 'a', name: 'A', status: 'approved', category: 'games' };
+  assert.deepEqual(categoryProblems([ok, { id: 'p', name: 'P', status: 'pending' }]), []);
+  assert.equal(categoryProblems([{ id: 'b', name: 'B', status: 'approved' }]).length, 1);
+  assert.equal(categoryProblems([{ id: 'c', name: 'C', status: 'approved', category: 'misc' }]).length, 1);
 });
