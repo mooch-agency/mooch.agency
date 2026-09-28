@@ -1,15 +1,15 @@
 {
   "meta": {
-    "sinceId": "2104502552146407773",
-    "lastRun": "2026-09-28T13:47:26.304Z",
+    "sinceId": "2104682888306298930",
+    "lastRun": "2026-09-28T23:14:47.760Z",
     "stats": {
-      "floorEth": 0.024908,
-      "floorUsd": 67,
+      "floorEth": 0.026,
+      "floorUsd": 70,
       "supply": 122153,
-      "owners": 15407,
-      "fetchedAt": "2026-09-28T13:47:26.291Z"
+      "owners": 15285,
+      "fetchedAt": "2026-09-28T23:14:47.309Z"
     },
-    "replySinceId": "2104552093738537308"
+    "replySinceId": "2104586614714294635"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -881,6 +881,27 @@
         "via-quote"
       ],
       "tweetText": "Top 1 holder win 2 ethereum airdrop!\n\nTotal airdrop: 10Eth\n\nMint price: Free\n\nChain: @ethereum \n\nMintpad: @opensea \n\nLink: https://t.co/iTijjpKL44\n\n#Airdrop #ethereum #Crypto #mintingnow #opensea #fre"
+    },
+    {
+      "id": "credits-conviction-myaititan-workers-dev",
+      "name": "credits-conviction.myaititan.workers.dev",
+      "url": "https://credits-conviction.myaititan.workers.dev",
+      "x": "Davuswho",
+      "post": "https://x.com/Davuswho/status/2104682888306298930",
+      "blurb": "",
+      "category": "markets",
+      "status": "pending",
+      "added": "2026-09-28",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 0,
+      "flags": [
+        "coin"
+      ],
+      "tweetText": "I built an independent Credits × $JACKOFF scenario desk!\n\n- Move the assumptions, see the 80 Credits to 1 Statement math.\n- Compare token cap with per-token price\n- Export your own share card. \n- No w"
     }
   ]
 }
