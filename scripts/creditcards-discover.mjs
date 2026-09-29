@@ -119,6 +119,8 @@ export function normaliseUrl(raw) {
     u.hash = '';
     u.search = '';
     u.hostname = u.hostname.toLowerCase().replace(/^www\./, '');
+    // Long posts carry http:// links in note_tweet; the list stores https.
+    if (u.protocol === 'http:') u.protocol = 'https:';
     if (u.hostname === 'opensea.io') {
       const m = u.pathname.match(/^\/collection\/([^/]+)/i);
       if (m) u.pathname = `/collection/${m[1].toLowerCase()}`;
@@ -184,10 +186,14 @@ export function assess({ url, text = '', source, likes = 0, via, knownHost = fal
 // --- tweets --------------------------------------------------------------------
 
 // Links X parsed into entities, preferring the unwound (post-redirect) URL.
+// A long post keeps links past the first 280 characters only in
+// note_tweet.entities, so those count too (one t.co is listed once).
 export function entityLinks(tweet) {
-  return ((tweet.entities && tweet.entities.urls) || [])
+  const urls = [...((tweet.entities && tweet.entities.urls) || []), ...((tweet.note_tweet && tweet.note_tweet.entities && tweet.note_tweet.entities.urls) || [])];
+  const seen = new Set();
+  return urls
     .map((u) => ({ tco: u.url, raw: u.unwound_url || u.expanded_url || null }))
-    .filter((u) => u.raw || u.tco);
+    .filter((u) => (u.raw || u.tco) && !seen.has(u.tco || u.raw) && seen.add(u.tco || u.raw));
 }
 
 // t.co links in the text that entities does not account for.

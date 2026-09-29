@@ -3,7 +3,7 @@
 // including finds the old keyword search and link rules missed.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { acceptableUrl, assess, knownHostOf, normaliseUrl, pickCandidates, strayTcoLinks } from './creditcards-discover.mjs';
+import { acceptableUrl, assess, entityLinks, knownHostOf, normaliseUrl, pickCandidates, strayTcoLinks } from './creditcards-discover.mjs';
 import { discover } from './creditcards-update.mjs';
 import { CATEGORY_SLUGS, categoryProblems, suggestCategory } from './creditcards-categories.mjs';
 
@@ -116,6 +116,7 @@ test('a failing source leaves its since-id alone and the rest still run', async 
 
 test('helpers', () => {
   assert.equal(normaliseUrl('https://www.OpenSea.io/collection/CreditCards/overview?ref=1'), 'https://opensea.io/collection/creditcards');
+  assert.equal(normaliseUrl('http://www.mylesdaughtry.com/'), 'https://mylesdaughtry.com');
   assert.equal(acceptableUrl('https://opensea.io/item/ethereum/0x1/3'), false);
   assert.equal(acceptableUrl('https://opensea.io/collection/creditmon'), true);
   assert.deepEqual(assess({ url: 'https://catalogue.gallery/blog/jack-butcher-credits', text: 'Credits', source: 'search' }).flags, ['article']);
@@ -125,6 +126,16 @@ test('helpers', () => {
   const { kept } = pickCandidates(many);
   assert.equal(kept.length, 15);
   assert.equal(kept.filter((c) => c.handle === 'spam').length, 3);
+});
+
+test('a long post keeps its late link in note_tweet', () => {
+  // The CEST_nft Chrome extension post (29 Sep): the GitHub link sits past 280 characters.
+  const tweet = {
+    entities: { urls: [{ url: 'https://t.co/pic', expanded_url: 'https://x.com/CEST_nft/status/2104740927499637225/photo/1' }] },
+    note_tweet: { entities: { urls: [{ url: 'https://t.co/u752xvkICD', expanded_url: 'https://github.com/0XCEST/credits-opensea-rank' }, { url: 'https://t.co/pic', expanded_url: 'https://x.com/CEST_nft/status/2104740927499637225/photo/1' }] } },
+  };
+  assert.deepEqual(entityLinks(tweet).map((l) => l.raw), ['https://x.com/CEST_nft/status/2104740927499637225/photo/1', 'https://github.com/0XCEST/credits-opensea-rank']);
+  assert.deepEqual(entityLinks({ text: 'no links' }), []);
 });
 
 test('sub pages of a listed site are flagged, not dropped', () => {
