@@ -401,7 +401,7 @@
   .cc-filter-pill[aria-pressed="true"]:hover { background: var(--ink); }
   .cc-filter-n { font-family: var(--mono); font-size: 11px; font-weight: 400; letter-spacing: 0.04em; color: var(--muted-small); }
   .cc-filter-pill[aria-pressed="true"] .cc-filter-n { color: var(--muted-dark); }
-  .projects > li[hidden] { display: none; }
+  .projects[hidden], .projects > li[hidden] { display: none; }
   @keyframes cc-filter-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: no-preference) {
     .projects > li.is-in { animation: cc-filter-in var(--t-settle) var(--ease-decide); }
@@ -649,6 +649,53 @@
   .proj-by-names { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .projects-empty { color: var(--muted); font-style: italic; margin: 0 0 40px; }
 
+  /* The Perks view: everything builders have offered Credits holders, baked
+     from data/creditcards.json (perks[]) by scripts/creditcards-update.mjs.
+     Project-card anatomy plus a status and type row and a "For" line. Ended
+     perks stay on the page, muted: the point is how much a holder could have
+     picked up by coming back. Hidden by the filter script until the Perks
+     pill is pressed; with no JavaScript it sits under the projects. */
+  .perks-view[hidden] { display: none; }
+  .perks-intro { max-width: var(--col); margin: 0 0 22px; font-size: 17px; line-height: 1.5; color: var(--ink); text-wrap: pretty; }
+  .perks-intro a { white-space: nowrap; border-bottom: 1px solid var(--hairline); transition: border-color var(--t-deliver) var(--ease-deliver); }
+  .perks-intro a:hover { border-bottom-color: var(--ink); }
+  .perk-tags {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted-small);
+  }
+  .perk-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 980px;
+    border: 1px solid var(--hairline);
+    color: var(--ink);
+  }
+  .perk-status::before { content: ""; width: 6px; height: 6px; background: var(--muted); }
+  .perk-card--open .perk-status { background: var(--black); border-color: var(--black); color: var(--paper); }
+  .perk-card--open .perk-status::before { background: var(--credit-c); }
+  .perk-card--ended .perk-status { color: var(--muted-small); }
+  .perk-reason::before { content: "\00b7"; margin-right: 10px; }
+  .perk-for { position: relative; margin: 0; font-size: 14px; line-height: 1.45; color: var(--ink); }
+  .perk-for-label { margin-right: 6px; font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted-small); }
+  /* Ended: still readable, still clickable, but visibly over. */
+  .perk-card--ended { background: var(--surface); box-shadow: 0 0 0 1px var(--hairline); }
+  .perk-card--ended:hover { box-shadow: 0 0 0 1px var(--hairline-focus); }
+  .perk-card--ended .proj-name { color: var(--muted); }
+  .perk-card--ended .perk-for { color: var(--muted-small); }
+  .perk-card--ended .proj-by { background: var(--surface); }
+  .perk-card--ended .proj-art { opacity: 0.07; filter: grayscale(1); }
+
   .colophon {
     padding: 56px var(--pad-x) 40px;
   }
@@ -809,6 +856,7 @@
     </div>
     <div class="cc-filter" role="group" aria-label="Filter projects by category" data-scroller>
       <button type="button" class="cc-filter-pill" data-filter="all" aria-pressed="true" aria-controls="project-list">All <span class="cc-filter-n">34</span></button>
+      <button type="button" class="cc-filter-pill" data-filter="perks" aria-pressed="false" aria-controls="perk-list">Perks <span class="cc-filter-n">2</span></button>
       <button type="button" class="cc-filter-pill" data-filter="rarity" aria-pressed="false" aria-controls="project-list">Rarity &amp; data <span class="cc-filter-n">10</span></button>
       <button type="button" class="cc-filter-pill" data-filter="art" aria-pressed="false" aria-controls="project-list">Art &amp; remixes <span class="cc-filter-n">9</span></button>
       <button type="button" class="cc-filter-pill" data-filter="statements" aria-pressed="false" aria-controls="project-list">Build your Statement <span class="cc-filter-n">4</span></button>
@@ -1026,6 +1074,27 @@
         <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/ivdoublex/status/2103242384775471375" target="_blank" rel="noopener" data-event="creditcards_post_click">@ivdoublex</a></span><span>24 Sept 2026</span></p>
       </li>
     </ol>
+    <div class="perks-view" id="perk-list">
+      <p class="perks-intro">Every perk offered to Credits holders so far. New ones land here first. <a href="https://x.com/messages/compose?recipient_id=1386099253580345344" target="_blank" rel="noopener" data-event="creditcards_perk_submit">Know a perk? DM @jesusdoteth <span class="arrow">&rarr;</span></a></p>
+      <ol class="projects perks">
+        <li class="proj-card perk-card perk-card--open" data-perk="jehoseph-credit-cards-allowlist" data-status="open">
+          <svg class="proj-art" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill="var(--credit-c)"/><rect x="21" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="31" y="1" width="8" height="8" fill="var(--credit-m)"/><rect x="41" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="51" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="71" y="1" width="8" height="8" fill="var(--credit-y)"/><rect x="1" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="11" y="11" width="8" height="8" fill="var(--credit-y)"/><rect x="31" y="11" width="8" height="8" fill="var(--credit-m)"/><rect x="41" y="11" width="8" height="8" fill="var(--credit-k)"/><rect x="61" y="11" width="8" height="8" fill="var(--credit-y)"/><rect x="71" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="11" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="21" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="31" width="8" height="8" fill="var(--credit-c)"/><rect x="31" y="31" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="31" width="8" height="8" fill="var(--credit-m)"/><rect x="61" y="31" width="8" height="8" fill="var(--credit-c)"/><rect x="1" y="41" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="41" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="41" width="8" height="8" fill="var(--credit-y)"/><rect x="1" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="21" y="51" width="8" height="8" fill="var(--credit-y)"/><rect x="41" y="51" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="1" y="61" width="8" height="8" fill="var(--credit-m)"/><rect x="11" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="61" width="8" height="8" fill="var(--credit-m)"/><rect x="71" y="61" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="71" width="8" height="8" fill="var(--credit-c)"/><rect x="21" y="71" width="8" height="8" fill="var(--credit-m)"/><rect x="41" y="71" width="8" height="8" fill="var(--credit-y)"/><rect x="71" y="71" width="8" height="8" fill="var(--credit-k)"/></svg>
+          <p class="perk-tags"><span class="perk-status">Open</span><span class="perk-type">Allowlist</span></p>
+          <a class="proj-name" href="https://opensea.io/collection/creditcards" target="_blank" rel="noopener" data-event="creditcards_perk_click">Credit Cards</a>
+          <p class="proj-blurb">An allowlist spot on Credit Cards, 10,000 cards inspired by Credits. The top 2,000 go by Visualize Value&#39;s holder ranking. The window may close early, and the price goes up after it.</p>
+          <p class="perk-for"><span class="perk-for-label">For</span> Top 2,000 Credits holders, plus KYC holders</p>
+          <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/Jehoseph/status/2103753864449290577" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@Jehoseph</a></span><time datetime="2026-10-01">Ends 1 Oct 2026</time></p>
+        </li>
+        <li class="proj-card perk-card perk-card--ended" data-perk="credited-punks-holder-mint" data-status="ended">
+          <svg class="proj-art" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="31" y="1" width="8" height="8" fill="var(--credit-c)"/><rect x="41" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="1" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="1" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="1" width="8" height="8" fill="var(--credit-k)"/><rect x="21" y="11" width="8" height="8" fill="var(--credit-c)"/><rect x="41" y="11" width="8" height="8" fill="var(--credit-y)"/><rect x="51" y="11" width="8" height="8" fill="var(--credit-m)"/><rect x="61" y="11" width="8" height="8" fill="var(--credit-k)"/><rect x="21" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="21" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="21" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="31" width="8" height="8" fill="var(--credit-m)"/><rect x="11" y="31" width="8" height="8" fill="var(--credit-k)"/><rect x="41" y="31" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="31" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="41" width="8" height="8" fill="var(--credit-y)"/><rect x="41" y="41" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="41" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="41" width="8" height="8" fill="var(--credit-c)"/><rect x="1" y="51" width="8" height="8" fill="var(--credit-m)"/><rect x="11" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="21" y="51" width="8" height="8" fill="var(--credit-c)"/><rect x="31" y="51" width="8" height="8" fill="var(--credit-k)"/><rect x="51" y="51" width="8" height="8" fill="var(--credit-m)"/><rect x="71" y="51" width="8" height="8" fill="var(--credit-y)"/><rect x="11" y="61" width="8" height="8" fill="var(--credit-k)"/><rect x="41" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="51" y="61" width="8" height="8" fill="var(--credit-c)"/><rect x="71" y="61" width="8" height="8" fill="var(--credit-k)"/><rect x="1" y="71" width="8" height="8" fill="var(--credit-m)"/><rect x="21" y="71" width="8" height="8" fill="var(--credit-m)"/><rect x="41" y="71" width="8" height="8" fill="var(--credit-c)"/><rect x="61" y="71" width="8" height="8" fill="var(--credit-y)"/></svg>
+          <p class="perk-tags"><span class="perk-status">Ended</span><span class="perk-type">Allowlist</span><span class="perk-reason">Sold out</span></p>
+          <a class="proj-name" href="https://oncave.io/labs/credited-punks" target="_blank" rel="noopener" data-event="creditcards_perk_click">Credited Punks</a>
+          <p class="proj-blurb">A holder mint of 10,000 onchain Punks, each coloured by one of your Credits, at 0.00029 ETH. The Credit stays yours.</p>
+          <p class="perk-for"><span class="perk-for-label">For</span> Credits holders</p>
+          <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/wutaner/status/2102691432599633997" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@wutaner</a></span><time datetime="2026-09-23">23 Sept 2026</time></p>
+        </li>
+      </ol>
+    </div>
     <!-- creditcards:projects:end -->
     <p class="projects-foot">Built something for Credits holders? <a href="mailto:hey@mooch.agency?subject=Credit%20Cards%3A%20a%20project%20for%20the%20index&amp;body=Hi%20guys%2C%0D%0A%0D%0AThe%20project%3A%0D%0AThe%20announcement%20post%3A%0D%0AWhat%20it%20does%3A">Send it over</a>.</p>
   </div>
@@ -1120,16 +1189,22 @@
 </script>
 <script>
   // Category filter. Every card carries data-category (baked); the paid-slot
-  // line is data-category="all", so it only shows under All. The active
-  // category lives in the URL hash (#games), so a filtered view can be
-  // shared, and All clears it. With no JavaScript none of this runs and
-  // every card stays on the page.
+  // line is data-category="all", so it only shows under All. Perks (#perks)
+  // swap the whole project grid for the perks list. The active view lives in
+  // the URL hash (#games, #perks), so a filtered view can be shared, and All
+  // clears it. With no JavaScript none of this runs and every card, perks
+  // included, stays on the page.
   (function () {
     var list = document.getElementById("project-list");
     var row = document.querySelector(".cc-filter");
     if (!list || !row) return;
     var pills = [].slice.call(row.querySelectorAll("[data-filter]"));
     var cards = [].slice.call(list.querySelectorAll(":scope > li[data-category]"));
+    // Perks are their own list (#perk-list), not a category of projects:
+    // the Perks pill swaps the project grid for it.
+    var perkView = document.getElementById("perk-list");
+    var perkCards = perkView ? [].slice.call(perkView.querySelectorAll("li[data-perk]")) : [];
+    var perksOpen = perkCards.filter(function (li) { return li.getAttribute("data-status") === "open"; }).length;
     var status = document.querySelector("[data-filter-status]");
     var keys = pills.map(function (p) { return p.getAttribute("data-filter"); });
     var counts = {};
@@ -1150,14 +1225,18 @@
       if (l - pad < row.scrollLeft) row.scrollTo({ left: Math.max(0, l - pad), behavior: behavior });
       else if (r + pad > row.scrollLeft + row.clientWidth) row.scrollTo({ left: r + pad - row.clientWidth, behavior: behavior });
     }
+    function reveal(li, show, animate) {
+      li.hidden = !show;
+      li.classList.remove("is-in");
+      if (show && animate && !reduce.matches) { void li.offsetWidth; li.classList.add("is-in"); }
+    }
     function apply(cat, animate) {
       current = cat;
-      cards.forEach(function (li) {
-        var show = cat === "all" || li.getAttribute("data-category") === cat;
-        li.hidden = !show;
-        li.classList.remove("is-in");
-        if (show && animate && !reduce.matches) { void li.offsetWidth; li.classList.add("is-in"); }
-      });
+      var perks = cat === "perks";
+      list.hidden = perks;
+      if (perkView) perkView.hidden = !perks;
+      cards.forEach(function (li) { reveal(li, !perks && (cat === "all" || li.getAttribute("data-category") === cat), animate); });
+      perkCards.forEach(function (li) { reveal(li, perks, animate); });
       pills.forEach(function (p) {
         var on = p.getAttribute("data-filter") === cat;
         p.setAttribute("aria-pressed", on ? "true" : "false");
@@ -1165,10 +1244,13 @@
       });
       if (status) {
         var n = counts.all;
-        status.textContent = cat === "all" ? n + (n === 1 ? " project" : " projects") : counts[cat] + " of " + n + " shown";
+        status.textContent = perks
+          ? counts.perks + (counts.perks === 1 ? " perk" : " perks") + ", " + perksOpen + " open"
+          : cat === "all" ? n + (n === 1 ? " project" : " projects") : counts[cat] + " of " + n + " shown";
       }
     }
     list.addEventListener("animationend", function (e) { e.target.classList.remove("is-in"); });
+    if (perkView) perkView.addEventListener("animationend", function (e) { e.target.classList.remove("is-in"); });
     row.addEventListener("click", function (e) {
       var p = e.target.closest ? e.target.closest("[data-filter]") : null;
       if (!p) return;

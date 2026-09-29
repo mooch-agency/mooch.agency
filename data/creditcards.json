@@ -20,6 +20,34 @@
     "dm": "https://x.com/messages/compose?recipient_id=1386099253580345344",
     "dmLabel": "DM @jesusdoteth"
   },
+  "perks": [
+    {
+      "id": "jehoseph-credit-cards-allowlist",
+      "project": "Credit Cards",
+      "x": "Jehoseph",
+      "type": "allowlist",
+      "eligibility": "Top 2,000 Credits holders, plus KYC holders",
+      "description": "An allowlist spot on Credit Cards, 10,000 cards inspired by Credits. The top 2,000 go by Visualize Value's holder ranking. The window may close early, and the price goes up after it.",
+      "url": "https://opensea.io/collection/creditcards",
+      "post": "https://x.com/Jehoseph/status/2103753864449290577",
+      "start": "2026-09-26",
+      "end": "2026-10-01",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "credited-punks-holder-mint",
+      "project": "Credited Punks",
+      "x": "wutaner",
+      "type": "allowlist",
+      "eligibility": "Credits holders",
+      "description": "A holder mint of 10,000 onchain Punks, each coloured by one of your Credits, at 0.00029 ETH. The Credit stays yours.",
+      "url": "https://oncave.io/labs/credited-punks",
+      "post": "https://x.com/wutaner/status/2102691432599633997",
+      "start": "2026-09-23",
+      "ended": "Sold out",
+      "checked": "2026-09-29"
+    }
+  ],
   "projects": [
     {
       "id": "creditunion-fun",
