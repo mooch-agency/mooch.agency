@@ -33,6 +33,15 @@ test('tiers without Jack exclude him, so no post is paid for twice', () => {
   assert.doesNotMatch(buildQuery(config.tiers[0], config), /has:links/, 'the anchor tier no longer needs a link');
 });
 
+test('tier tuning from the 29 Sep test read stays in place', () => {
+  const byId = Object.fromEntries(config.tiers.map((t) => [t.id, buildQuery(t, config)]));
+  // Bare url:credits / url:debits matched carbon credits, post-credits scenes and bank news: 35 of 50 posts, no finds.
+  assert.doesNotMatch(byId.derivative, /(^|[\s(])url:(credits|debits)\b/);
+  assert.match(byId.derivative, /\(debits credits\)/);
+  // Credit Union join posts were half of tier B and always a listed host.
+  assert.match(byId.vocab, /-url:"creditunion\.fun"/);
+});
+
 test('morning tiers run once a UTC day', () => {
   const now = new Date('2026-09-29T18:17:00Z');
   const ids = (lastRuns) => tiersFor(config, { lastRuns, now }).map((t) => t.id);

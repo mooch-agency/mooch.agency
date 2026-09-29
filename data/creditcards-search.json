@@ -53,7 +53,7 @@
     },
     {
       "id": "vocab",
-      "label": "B: \"credits\" plus community-only vocabulary, no Jack, no link required",
+      "label": "B: \"credits\" plus community-only vocabulary, no Jack, no link required, Credit Union join posts left out",
       "source": "vocab",
       "sinceKey": "vocabSinceId",
       "maxResults": 25,
@@ -86,13 +86,14 @@
       "exclude": [
         "@jackbutcher",
         "jackbutcher",
-        "\"jack butcher\""
+        "\"jack butcher\"",
+        "url:\"creditunion.fun\""
       ],
       "useNoise": true
     },
     {
       "id": "derivative",
-      "label": "C: derivative names, slang and tool hosts, no Jack",
+      "label": "C: derivative names, slang and tool hosts, no Jack (no bare url:credits or url:debits, see docs/creditcards-search-test.md)",
       "source": "derivative",
       "sinceKey": "derivativeSinceId",
       "maxResults": 25,
@@ -102,9 +103,7 @@
         "\"permissionless derivative\"",
         "\"every credit implies\"",
         "(debits credits)",
-        "(credits (url:vercel.app OR url:netlify.app OR url:github.io OR url:here.now OR url:workers.dev OR url:kimi.page))",
-        "url:credits",
-        "url:debits"
+        "(credits (url:vercel.app OR url:netlify.app OR url:github.io OR url:here.now OR url:workers.dev OR url:kimi.page))"
       ],
       "all": [],
       "operators": [
