@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2104986838943359130",
-    "lastRun": "2026-09-29T18:26:13.790Z",
+    "sinceId": "2105042848366129640",
+    "lastRun": "2026-09-29T22:12:56.947Z",
     "stats": {
-      "floorEth": 0.02769,
-      "floorUsd": 74,
+      "floorEth": 0.0285,
+      "floorUsd": 76,
       "supply": 122153,
-      "owners": 15303,
-      "fetchedAt": "2026-09-29T18:26:13.760Z"
+      "owners": 15246,
+      "fetchedAt": "2026-09-29T22:12:56.937Z"
     },
     "replySinceId": "2104985591024910518"
   },
@@ -1177,6 +1177,48 @@
         "via-quote"
       ],
       "tweetText": "Road to the Ultimate Finish: $JACKOFF Bounties #4\n\nCome make your best @jackbutcher Credit theme'd articles and apps to get future @SpaceX stonks + JACKOFF tokens on @RobinhoodCrypto 🚀\n\nMore info sha"
+    },
+    {
+      "id": "creditunion-fun-union-0x8475d17c587964816f14664c0e2233dc81300970",
+      "name": "creditunion.fun",
+      "url": "https://creditunion.fun/union/0x8475d17c587964816f14664C0E2233dc81300970",
+      "x": "Tomjeff_lfc",
+      "post": "https://x.com/Tomjeff_lfc/status/2105003200973570140",
+      "blurb": "",
+      "category": "art",
+      "status": "pending",
+      "added": "2026-09-29",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "Made a @jackbutcher credits union for those of us with just one 8\n\nhttps://t.co/7TnznIgTA3"
+    },
+    {
+      "id": "nowmedia-co-posts-jack-butcher-credits-nft-guide",
+      "name": "nowmedia.co",
+      "url": "https://nowmedia.co/posts/jack-butcher-credits-nft-guide",
+      "x": "SazidOnX",
+      "post": "https://x.com/SazidOnX/status/2105013440075194663",
+      "blurb": "",
+      "category": "art",
+      "status": "pending",
+      "added": "2026-09-29",
+      "metrics": {
+        "likes": 2,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 0,
+      "flags": [
+        "article"
+      ],
+      "tweetText": "We all know that @jackbutcher sold 122,154 NFTs at $8 apiece through X Money\n\nRead our full guide to Credits ↓\n\nPresented by @nowmedia \n\nhttps://t.co/0QudQbx6Ou"
     }
   ]
 }
