@@ -31,6 +31,9 @@ test('perkStatus: end dates, ended reasons and unknowns', () => {
   assert.equal(perkStatus(perk({ start: '2026-10-05', end: '2026-10-09' }), '2026-09-29'), 'unknown', 'not started yet');
   assert.equal(perkStatus(perk({ ended: 'Sold out' }), '2026-09-29'), 'ended');
   assert.equal(perkStatus(perk({ start: '2026-09-23' }), '2026-09-29'), 'unknown');
+  assert.equal(perkStatus(perk({ seenOpen: '2026-09-29' }), '2026-09-29'), 'open', 'seen live today');
+  assert.equal(perkStatus(perk({ seenOpen: '2026-09-29' }), '2026-10-06'), 'open', 'still vouched for on day 7');
+  assert.equal(perkStatus(perk({ seenOpen: '2026-09-29' }), '2026-10-07'), 'unknown', 'a stale check stops vouching');
 });
 
 test('sortPerks: open, then unknown, then ended, newest first', () => {
@@ -57,6 +60,7 @@ test('perkProblems: required fields, types, dates, dashes, no stored status', ()
   assert.ok(perkProblems([perk({ status: 'open' })])[0].includes('bake time'));
   assert.ok(perkProblems([perk({ post: 'https://twitter.com/builder/status/1' })])[0].includes('post'));
   assert.ok(perkProblems([perk(), perk()]).some((m) => m.includes('twice')));
+  assert.ok(perkProblems([perk({ seenOpen: '2026-09-29', ended: 'Sold out' })])[0].includes('seenOpen'));
 });
 
 function sandbox(perks) {

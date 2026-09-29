@@ -24,6 +24,10 @@
 //   start, end    optional, YYYY-MM-DD (UTC)
 //   ended         optional, a short reason ("Sold out") when a perk is over
 //                 before, or without, a stated end date
+//   seenOpen      optional, YYYY-MM-DD a human last saw the claim live on the
+//                 project's own site, for perks with no end date. Counts as
+//                 open for SEEN_OPEN_DAYS, then drops back to unknown until
+//                 someone looks again
 //   checked       optional, YYYY-MM-DD the post was last read by a human
 //
 // Status is never stored: the bake works it out for the day it runs (UTC), so
@@ -44,6 +48,9 @@ export const PERK_TYPE_SLUGS = PERK_TYPES.map((t) => t.slug);
 export const PERK_STATUSES = ['open', 'ended', 'unknown'];
 export const PERK_REQUIRED = ['id', 'project', 'x', 'type', 'eligibility', 'description', 'url', 'post'];
 
+// How long a "seen open" check vouches for a perk with no end date.
+export const SEEN_OPEN_DAYS = 7;
+
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const POST_RE = /^https:\/\/x\.com\/[A-Za-z0-9_]{1,15}\/status\/\d+$/;
 const HANDLE_RE = /^[A-Za-z0-9_]{1,15}$/;
@@ -55,13 +62,18 @@ export function todayUtc(now = new Date()) {
   return now.toISOString().slice(0, 10);
 }
 
+const addDays = (iso, n) => new Date(Date.parse(`${iso}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+
 // open: a stated end date that hasn't passed yet (and, if a start is given,
-// it has started). ended: an "ended" reason, or an end date before today.
-// unknown: anything else, which is most perks: builders rarely give an end.
+// it has started), or no end date but seen live within SEEN_OPEN_DAYS.
+// ended: an "ended" reason, or an end date before today. unknown: anything
+// else. Builders rarely give an end date.
 export function perkStatus(perk, today = todayUtc()) {
   if (perk.ended) return 'ended';
   if (perk.end && perk.end < today) return 'ended';
-  if (perk.end && (!perk.start || perk.start <= today)) return 'open';
+  if (perk.start && perk.start > today) return 'unknown';
+  if (perk.end) return 'open';
+  if (perk.seenOpen && perk.seenOpen <= today && today <= addDays(perk.seenOpen, SEEN_OPEN_DAYS)) return 'open';
   return 'unknown';
 }
 
@@ -100,11 +112,12 @@ export function perkProblems(perks) {
     if (p.x && !HANDLE_RE.test(p.x)) out.push(`${who}: x must be a bare X handle, no @`);
     if (p.post && !POST_RE.test(p.post)) out.push(`${who}: post must be an https://x.com/<handle>/status/<id> link`);
     if (p.url && !/^https:\/\/[^\s]+$/.test(p.url)) out.push(`${who}: url must be an https link`);
-    for (const f of ['start', 'end', 'checked']) {
+    for (const f of ['start', 'end', 'seenOpen', 'checked']) {
       if (p[f] !== undefined && !(typeof p[f] === 'string' && validDate(p[f]))) out.push(`${who}: ${f} must be a YYYY-MM-DD date`);
     }
     if (p.start && p.end && validDate(p.start) && validDate(p.end) && p.end < p.start) out.push(`${who} ends before it starts`);
     if (p.ended !== undefined && (typeof p.ended !== 'string' || !p.ended.trim())) out.push(`${who}: ended must be a short reason, like "Sold out"`);
+    if (p.seenOpen !== undefined && (p.ended || p.end)) out.push(`${who}: seenOpen is only for perks with no end date and no ended reason`);
     if (p.status !== undefined) out.push(`${who} has a status field; status is worked out at bake time, remove it`);
     for (const f of ['project', 'eligibility', 'description', 'ended']) {
       if (typeof p[f] === 'string' && DASH_RE.test(p[f])) out.push(`${who}: ${f} has a dash (house style: no dashes)`);
