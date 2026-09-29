@@ -118,7 +118,7 @@ const X_REPLY_MAX_RESULTS = 25;
 
 // Fields every tweet read asks for: entities for links, referenced tweets for
 // quotes, reposts and threads, and the author's profile link for "link in bio".
-const TWEET_FIELDS = 'created_at,public_metrics,entities,referenced_tweets,conversation_id,author_id';
+const TWEET_FIELDS = 'created_at,public_metrics,entities,referenced_tweets,conversation_id,author_id,note_tweet';
 const TWEET_EXPANSIONS = 'author_id,referenced_tweets.id,referenced_tweets.id.author_id';
 const USER_FIELDS = 'username,url,entities';
 
