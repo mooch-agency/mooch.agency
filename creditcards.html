@@ -401,16 +401,10 @@
   .cc-filter-pill[aria-pressed="true"]:hover { background: var(--ink); }
   .cc-filter-n { font-family: var(--mono); font-size: 11px; font-weight: 400; letter-spacing: 0.04em; color: var(--muted-small); }
   .cc-filter-pill[aria-pressed="true"] .cc-filter-n { color: var(--muted-dark); }
-  /* Perks is not a category, so its pill takes the Credits cyan: a cyan edge
-     and faint tint at rest, solid cyan under --credit-k text when pressed.
-     The process colours do not flip with the theme, so the pressed state is
-     the same in both: --credit-k on --credit-c is 6.9:1, on the hover mix
-     5.2:1 (dark) to 7.8:1 (light). Focus keeps the shared --ink ring. */
-  .cc-filter-pill[data-filter="perks"] { border-color: var(--credit-c); background: color-mix(in srgb, var(--credit-c) 10%, var(--paper)); }
-  .cc-filter-pill[data-filter="perks"]:hover { border-color: var(--credit-c); background: color-mix(in srgb, var(--credit-c) 18%, var(--paper)); }
-  .cc-filter-pill[data-filter="perks"][aria-pressed="true"] { background: var(--credit-c); border-color: var(--credit-c); color: var(--credit-k); }
-  .cc-filter-pill[data-filter="perks"][aria-pressed="true"]:hover { background: color-mix(in srgb, var(--credit-c) 85%, var(--paper)); }
-  .cc-filter-pill[data-filter="perks"][aria-pressed="true"] .cc-filter-n { color: var(--credit-k); }
+  /* The live dot: while any perk is open the bake puts the Open badge's
+     cyan square before "Perks" and swaps its count for "N open". Otherwise
+     the Perks pill is a plain pill like the rest. */
+  .cc-filter-dot { flex: 0 0 6px; width: 6px; height: 6px; align-self: center; margin-right: -2px; background: var(--credit-c); }
   .projects[hidden], .projects > li[hidden] { display: none; }
   @keyframes cc-filter-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: no-preference) {
@@ -867,7 +861,7 @@
     </div>
     <div class="cc-filter" role="group" aria-label="Filter projects by category" data-scroller>
       <button type="button" class="cc-filter-pill" data-filter="all" aria-pressed="true" aria-controls="project-list">All <span class="cc-filter-n">34</span></button>
-      <button type="button" class="cc-filter-pill" data-filter="perks" aria-pressed="false" aria-controls="perk-list">Perks <span class="cc-filter-n">6</span></button>
+      <button type="button" class="cc-filter-pill" data-filter="perks" aria-pressed="false" aria-controls="perk-list"><span class="cc-filter-dot" aria-hidden="true"></span>Perks <span class="cc-filter-n">1 open</span></button>
       <button type="button" class="cc-filter-pill" data-filter="rarity" aria-pressed="false" aria-controls="project-list">Rarity &amp; data <span class="cc-filter-n">10</span></button>
       <button type="button" class="cc-filter-pill" data-filter="art" aria-pressed="false" aria-controls="project-list">Art &amp; remixes <span class="cc-filter-n">9</span></button>
       <button type="button" class="cc-filter-pill" data-filter="statements" aria-pressed="false" aria-controls="project-list">Build your Statement <span class="cc-filter-n">4</span></button>
@@ -1252,6 +1246,8 @@
     var keys = pills.map(function (p) { return p.getAttribute("data-filter"); });
     var counts = {};
     pills.forEach(function (p) { counts[p.getAttribute("data-filter")] = Number(p.querySelector(".cc-filter-n").textContent); });
+    // The Perks pill may read "N open" rather than a total, so count its cards.
+    if (perkView) counts.perks = perkCards.length;
     var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
     var current = "all";
 

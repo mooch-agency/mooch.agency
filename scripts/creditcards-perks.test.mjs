@@ -84,7 +84,7 @@ test('bake: Perks pill straight after All, one card per perk, status by day', as
     // Buttons only: the page CSS also names [data-filter="perks"].
     const order = [...html.matchAll(/<button [^>]*data-filter="([a-z]+)"/g)].map((m) => m[1]);
     assert.deepEqual(order.slice(0, 3), ['all', 'perks', 'rarity']);
-    assert.match(html, /data-filter="perks"[^>]*aria-controls="perk-list">Perks <span class="cc-filter-n">2<\/span>/);
+    assert.match(html, /data-filter="perks"[^>]*aria-controls="perk-list"><span class="cc-filter-dot" aria-hidden="true"><\/span>Perks <span class="cc-filter-n">1 open<\/span>/);
     assert.match(html, /data-perk="one" data-status="open"/);
     assert.match(html, /data-perk="two" data-status="ended"/);
     assert.match(html, /Know a perk\? DM @jesusdoteth/);
@@ -92,6 +92,7 @@ test('bake: Perks pill straight after All, one card per perk, status by day', as
     html = readFileSync(path.join(dir, 'creditcards.html'), 'utf8');
     assert.match(html, /data-perk="one" data-status="ended"/);
     assert.match(html, /Ended 1 Oct 2026/);
+    assert.match(html, /aria-controls="perk-list">Perks <span class="cc-filter-n">2<\/span>/, 'none open: the plain total');
   } finally {
     console.log = log;
   }
@@ -107,6 +108,35 @@ test('bake: no perks, no pill and no view; a bad perk fails the bake', async () 
     assert.doesNotMatch(html, /<button [^>]*data-filter="perks"/);
     assert.doesNotMatch(html, /id="perk-list"/);
     await assert.rejects(run({ root: sandbox([perk({ type: 'raffle' })]), bakeOnly: true, dry: true }), /type "raffle"/);
+  } finally {
+    console.log = log;
+  }
+});
+
+test('bake: the live dot shows only while a perk is open', async () => {
+  const log = console.log;
+  console.log = () => {};
+  const pill = (html) => html.match(/<button [^>]*data-filter="perks"[^>]*>.*?<\/button>/)[0];
+  try {
+    const perks = [
+      perk({ id: 'a', end: '2026-10-01' }),
+      perk({ id: 'b', seenOpen: '2026-09-29' }),
+      perk({ id: 'c', ended: 'Sold out' }),
+      perk({ id: 'd', start: '2026-09-20' }),
+    ];
+    const dir = sandbox(perks);
+    const read = () => readFileSync(path.join(dir, 'creditcards.html'), 'utf8');
+    await run({ root: dir, bakeOnly: true, dry: false, today: '2026-09-29' });
+    let p = pill(read());
+    assert.equal((p.match(/cc-filter-dot/g) || []).length, 1, 'one dot while two are open');
+    assert.match(p, /<span class="cc-filter-dot" aria-hidden="true"><\/span>Perks <span class="cc-filter-n">2 open<\/span>/);
+    await run({ root: dir, bakeOnly: true, dry: false, today: '2026-10-02' });
+    p = pill(read());
+    assert.match(p, /<span class="cc-filter-dot" aria-hidden="true"><\/span>Perks <span class="cc-filter-n">1 open<\/span>/, 'b is still vouched for');
+    await run({ root: dir, bakeOnly: true, dry: false, today: '2026-10-07' });
+    p = pill(read());
+    assert.doesNotMatch(p, /cc-filter-dot/, 'none open: no dot');
+    assert.match(p, />Perks <span class="cc-filter-n">4<\/span><\/button>$/, 'none open: the plain total');
   } finally {
     console.log = log;
   }

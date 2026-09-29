@@ -597,8 +597,13 @@ function checkCreditCardsData() {
   const want = (data.perks || []).map((p) => p.id).sort();
   const got = $('#perk-list li[data-perk]').map((_, li) => $(li).attr('data-perk')).get().sort();
   if (want.join('|') !== got.join('|')) fail('Data', 'creditcards.html', `perk cards (${got.length}) don't match data.perks (${want.length}); ${rebake}`);
+  // The pill reads "N open" with the live dot while a baked card is open,
+  // else the total with no dot.
   const pill = $('.cc-filter [data-filter="perks"]');
-  if (want.length && (!pill.length || Number(pill.find('.cc-filter-n').text()) !== want.length)) fail('Data', 'creditcards.html', `the Perks pill is missing or its count isn't ${want.length}; ${rebake}`);
+  const open = $('#perk-list li[data-perk][data-status="open"]').length;
+  const label = open ? `${open} open` : String(want.length);
+  if (want.length && (!pill.length || pill.find('.cc-filter-n').text() !== label)) fail('Data', 'creditcards.html', `the Perks pill is missing or doesn't read "${label}"; ${rebake}`);
+  if (pill.length && pill.find('.cc-filter-dot').length !== (open ? 1 : 0)) fail('Data', 'creditcards.html', `the Perks pill ${open ? 'needs' : 'must not have'} the live dot with ${open} perk${open === 1 ? '' : 's'} open; ${rebake}`);
   if (pill.length && pill.prev().attr('data-filter') !== 'all') fail('Data', 'creditcards.html', 'the Perks pill must come straight after All');
   $('#perk-list li[data-perk]').each((_, li) => {
     const s = $(li).attr('data-status');

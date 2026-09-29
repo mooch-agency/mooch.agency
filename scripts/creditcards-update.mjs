@@ -559,19 +559,24 @@ function renderHead(total) {
 // its count from the data. Plain buttons with aria-pressed; they do nothing
 // until the inline filter script wires them up, so with no JavaScript every
 // card, and the perks list under the projects, simply stays on the page.
-function renderFilter(approved, perkCount) {
+// While any perk is open the Perks pill carries the live dot (the Open
+// badge's cyan square) and reads "Perks N open" instead of its total; with
+// none open it is a plain pill with the total, like the rest.
+function renderFilter(approved, perkCount, perksOpen = 0) {
   const counts = Object.fromEntries(CATEGORIES.map((c) => [c.slug, 0]));
   for (const p of approved) counts[p.category] += 1;
   const pills = [
     { slug: 'all', label: 'All', n: approved.length, controls: 'project-list' },
-    ...(perkCount ? [{ slug: 'perks', label: 'Perks', n: perkCount, controls: 'perk-list' }] : []),
+    ...(perkCount
+      ? [{ slug: 'perks', label: 'Perks', n: perksOpen ? `${perksOpen} open` : perkCount, dot: perksOpen > 0, controls: 'perk-list' }]
+      : []),
     ...CATEGORIES.map((c) => ({ ...c, n: counts[c.slug], controls: 'project-list' })),
   ];
   return [
     '    <div class="cc-filter" role="group" aria-label="Filter projects by category" data-scroller>',
     ...pills.map(
       (c) =>
-        `      <button type="button" class="cc-filter-pill" data-filter="${c.slug}" aria-pressed="${c.slug === 'all'}" aria-controls="${c.controls}">${escapeHtml(c.label)} <span class="cc-filter-n">${c.n}</span></button>`,
+        `      <button type="button" class="cc-filter-pill" data-filter="${c.slug}" aria-pressed="${c.slug === 'all'}" aria-controls="${c.controls}">${c.dot ? '<span class="cc-filter-dot" aria-hidden="true"></span>' : ''}${escapeHtml(c.label)} <span class="cc-filter-n">${c.n}</span></button>`,
     ),
     '    </div>',
   ].join('\n');
@@ -682,7 +687,7 @@ function renderProjects(projects, slot, perks = [], today = todayUtc()) {
     .join('\n');
 
   const perksBlock = renderPerks(perks, slot && slot.dm, today);
-  return `\n${renderHead(approved.length)}\n${renderFilter(approved, perks.length)}\n    <ol class="projects" id="project-list">\n${items}\n    </ol>\n${perksBlock ? `${perksBlock}\n` : ''}    `;
+  return `\n${renderHead(approved.length)}\n${renderFilter(approved, perks.length, perks.filter((p) => perkStatus(p, today) === 'open').length)}\n    <ol class="projects" id="project-list">\n${items}\n    </ol>\n${perksBlock ? `${perksBlock}\n` : ''}    `;
 }
 
 // --- top creditors -------------------------------------------------------------
