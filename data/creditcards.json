@@ -921,6 +921,21 @@
       "score": 2,
       "flags": [],
       "tweetText": "Another TakeA CryptoPunk made from Credits hits different.@vvcredits turns every pixel into its own 48×48 @jackbutcher artwork, stacking hundreds of individual pieces into one recognizable https://t.c"
+    },
+    {
+      "id": "permissionlessderivatives-com-debits",
+      "name": "Debits NFT",
+      "url": "https://permissionlessderivatives.com/debits",
+      "x": "jamesrichardfry",
+      "post": "https://x.com/jamesrichardfry/status/2104677909214716203",
+      "blurb": "Every Credit implies a Debit: 80% of mint proceeds buy Credits, and 80 Debits burn into an Arbitrage plus a Credit. 48 hour open edition at 0.0003 ETH, wallet needed.",
+      "category": "markets",
+      "status": "approved",
+      "added": "2026-09-29",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      }
     }
   ]
 }
