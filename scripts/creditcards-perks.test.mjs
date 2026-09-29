@@ -81,7 +81,8 @@ test('bake: Perks pill straight after All, one card per perk, status by day', as
   try {
     await run({ root: dir, bakeOnly: true, dry: false, today: '2026-09-29' });
     let html = readFileSync(path.join(dir, 'creditcards.html'), 'utf8');
-    const order = [...html.matchAll(/data-filter="([a-z]+)"/g)].map((m) => m[1]);
+    // Buttons only: the page CSS also names [data-filter="perks"].
+    const order = [...html.matchAll(/<button [^>]*data-filter="([a-z]+)"/g)].map((m) => m[1]);
     assert.deepEqual(order.slice(0, 3), ['all', 'perks', 'rarity']);
     assert.match(html, /data-filter="perks"[^>]*aria-controls="perk-list">Perks <span class="cc-filter-n">2<\/span>/);
     assert.match(html, /data-perk="one" data-status="open"/);
@@ -103,7 +104,7 @@ test('bake: no perks, no pill and no view; a bad perk fails the bake', async () 
     const dir = sandbox([]);
     await run({ root: dir, bakeOnly: true, dry: false, today: '2026-09-29' });
     const html = readFileSync(path.join(dir, 'creditcards.html'), 'utf8');
-    assert.doesNotMatch(html, /data-filter="perks"/);
+    assert.doesNotMatch(html, /<button [^>]*data-filter="perks"/);
     assert.doesNotMatch(html, /id="perk-list"/);
     await assert.rejects(run({ root: sandbox([perk({ type: 'raffle' })]), bakeOnly: true, dry: true }), /type "raffle"/);
   } finally {

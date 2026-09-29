@@ -401,6 +401,16 @@
   .cc-filter-pill[aria-pressed="true"]:hover { background: var(--ink); }
   .cc-filter-n { font-family: var(--mono); font-size: 11px; font-weight: 400; letter-spacing: 0.04em; color: var(--muted-small); }
   .cc-filter-pill[aria-pressed="true"] .cc-filter-n { color: var(--muted-dark); }
+  /* Perks is not a category, so its pill takes the Credits cyan: a cyan edge
+     and faint tint at rest, solid cyan under --credit-k text when pressed.
+     The process colours do not flip with the theme, so the pressed state is
+     the same in both: --credit-k on --credit-c is 6.9:1, on the hover mix
+     5.2:1 (dark) to 7.8:1 (light). Focus keeps the shared --ink ring. */
+  .cc-filter-pill[data-filter="perks"] { border-color: var(--credit-c); background: color-mix(in srgb, var(--credit-c) 10%, var(--paper)); }
+  .cc-filter-pill[data-filter="perks"]:hover { border-color: var(--credit-c); background: color-mix(in srgb, var(--credit-c) 18%, var(--paper)); }
+  .cc-filter-pill[data-filter="perks"][aria-pressed="true"] { background: var(--credit-c); border-color: var(--credit-c); color: var(--credit-k); }
+  .cc-filter-pill[data-filter="perks"][aria-pressed="true"]:hover { background: color-mix(in srgb, var(--credit-c) 85%, var(--paper)); }
+  .cc-filter-pill[data-filter="perks"][aria-pressed="true"] .cc-filter-n { color: var(--credit-k); }
   .projects[hidden], .projects > li[hidden] { display: none; }
   @keyframes cc-filter-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: no-preference) {
@@ -411,8 +421,9 @@
     .cc-filter {
       flex-wrap: nowrap;
       overflow-x: auto;
-      margin: -2px calc(-1 * var(--pad-x)) 20px;
-      padding: 2px var(--pad-x);
+      /* 4px keeps the 2px focus ring (offset 2px) inside the scroll clip */
+      margin: -4px calc(-1 * var(--pad-x)) 18px;
+      padding: 4px var(--pad-x);
       scroll-padding-inline: 40px;
       scrollbar-width: none;
     }
