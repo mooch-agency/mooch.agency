@@ -1,15 +1,15 @@
 {
   "meta": {
-    "sinceId": "2104854045382840391",
-    "lastRun": "2026-09-29T12:47:08.985Z",
+    "sinceId": "2104986838943359130",
+    "lastRun": "2026-09-29T18:26:13.790Z",
     "stats": {
-      "floorEth": 0.027,
+      "floorEth": 0.02769,
       "floorUsd": 74,
       "supply": 122153,
-      "owners": 15391,
-      "fetchedAt": "2026-09-29T12:47:08.962Z"
+      "owners": 15303,
+      "fetchedAt": "2026-09-29T18:26:13.760Z"
     },
-    "replySinceId": "2104884955788808261"
+    "replySinceId": "2104985591024910518"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -1094,6 +1094,89 @@
       "score": 2,
       "flags": [],
       "tweetText": "MEET PUNKS x CREDITS\n\nA 4,444 piece collection by A.C.J @Internetanount, live at https://t.co/4hWBFRbSdc\n\nEach Punk is rebuilt pixel-by-pixel, every visible pixel replaced with a full 48x48 CREDIT (by"
+    },
+    {
+      "id": "proofofreal-app-social-creditsleaderboard",
+      "name": "proofofreal.app",
+      "url": "https://proofofreal.app/social/creditsleaderboard",
+      "x": "tradesgiving",
+      "post": "https://x.com/tradesgiving/status/2104973729071792165",
+      "blurb": "",
+      "category": "markets",
+      "status": "pending",
+      "added": "2026-09-29",
+      "metrics": {
+        "likes": 5,
+        "reposts": 3
+      },
+      "source": "replies",
+      "score": 3,
+      "flags": [],
+      "tweetText": "The Meme Maxxers Credits Contributor Leaderboard is Live! 🃏\n\nhttps://t.co/tdpNm9PnrX\n\nCreate @jackbutcher posts to get more $JACKOFF and  future @SpaceX stonks on @RobinhoodCrypto 🚀\n\nMore info share"
+    },
+    {
+      "id": "genmerch-xyz-creditchecks",
+      "name": "genmerch.xyz",
+      "url": "https://genmerch.xyz/creditchecks",
+      "x": "_JKNFT_",
+      "post": "https://x.com/_JKNFT_/status/2104929550358679890",
+      "blurb": "",
+      "category": "art",
+      "status": "pending",
+      "added": "2026-09-29",
+      "metrics": {
+        "likes": 7,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "Credit Checks\n\nJust for fun, I put together a website to run a Credit Check on your @jackbutcher Credits.\n\nI've always loved the simplicity, creativity, and cleverness that Jack's projects foster and "
+    },
+    {
+      "id": "creditunion-fun-union-0xbd28b3b85d79ffc819bb09157042999f981f9af5",
+      "name": "creditunion.fun",
+      "url": "https://creditunion.fun/union/0xBD28b3B85d79Ffc819bb09157042999F981f9Af5",
+      "x": "YeoCrypto",
+      "post": "https://x.com/YeoCrypto/status/2104960307034804235",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-09-29",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "I joined Colors M, MK, a Credit Union pooling 80 Credits into a Statement. 23 to go. \n\nhttps://t.co/cqaZVHW146 \n\n@vvcredits \n@jackbutcher \n@taylor_ \n@bigvibessss"
+    },
+    {
+      "id": "discord-com-invite-7vca2wfk5",
+      "name": "discord.com",
+      "url": "https://discord.com/invite/7vCa2wfK5",
+      "x": "tradesgiving",
+      "post": "https://x.com/tradesgiving/status/2103880105814802539",
+      "blurb": "",
+      "category": "markets",
+      "status": "pending",
+      "added": "2026-09-29",
+      "metrics": {
+        "likes": 17,
+        "reposts": 9
+      },
+      "source": "search+quote",
+      "score": -3,
+      "flags": [
+        "denylist",
+        "coin",
+        "known-host",
+        "via-quote"
+      ],
+      "tweetText": "Road to the Ultimate Finish: $JACKOFF Bounties #4\n\nCome make your best @jackbutcher Credit theme'd articles and apps to get future @SpaceX stonks + JACKOFF tokens on @RobinhoodCrypto 🚀\n\nMore info sha"
     }
   ]
 }
