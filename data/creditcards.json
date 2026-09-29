@@ -20,6 +20,86 @@
     "dm": "https://x.com/messages/compose?recipient_id=1386099253580345344",
     "dmLabel": "DM @jesusdoteth"
   },
+  "perks": [
+    {
+      "id": "jehoseph-credit-cards-allowlist",
+      "project": "Credit Cards",
+      "x": "Jehoseph",
+      "type": "allowlist",
+      "eligibility": "Top 2,000 Credits holders, plus KYC holders",
+      "description": "An allowlist spot on Credit Cards, 10,000 cards inspired by Credits. The top 2,000 go by Visualize Value's holder ranking. It closed when the mint opened to everyone at 0.001 ETH.",
+      "url": "https://opensea.io/collection/creditcards",
+      "post": "https://x.com/Jehoseph/status/2103753864449290577",
+      "start": "2026-09-25",
+      "end": "2026-09-26",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "credited-punks-holder-mint",
+      "project": "Credited Punks",
+      "x": "wutaner",
+      "type": "allowlist",
+      "eligibility": "Credits holders",
+      "description": "A holder mint of 10,000 onchain Punks, each coloured by one of your Credits, at 0.00029 ETH. The Credit stays yours.",
+      "url": "https://oncave.io/labs/credited-punks",
+      "post": "https://x.com/wutaner/status/2102691432599633997",
+      "start": "2026-09-23",
+      "ended": "Sold out",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "wubbushi-debits-free-mint",
+      "project": "Debits",
+      "x": "wubbushi",
+      "type": "free-mint",
+      "eligibility": "Credits holders at the 28 Sep snapshot",
+      "description": "One free Debit for every wallet that held a Credit at the snapshot, gas paid. For 24 hours only holders could mint their matched Debits, at $7 after the first.",
+      "url": "https://exaltedlove.com/debits/",
+      "post": "https://x.com/wubbushi/status/2104586007706267791",
+      "start": "2026-09-29",
+      "ended": "Closed",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "the-creditors-free-mint",
+      "project": "The Creditors",
+      "x": "TheCreditorsNFT",
+      "type": "free-mint",
+      "eligibility": "Credits holders, plus some Robinhood Chain communities",
+      "description": "A free mint of 1 of 1 PFPs made from Credits, on Robinhood Chain. The holder stage ran for two hours before the public mint.",
+      "url": "https://opensea.io/collection/0xf8641504e13b609eecbd1e8811306507ba330176/overview",
+      "post": "https://x.com/TheCreditorsNFT/status/2102767674111537367",
+      "start": "2026-09-23",
+      "end": "2026-09-23",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "laternow-futures-free-mint",
+      "project": "Futures",
+      "x": "LATE_FX",
+      "type": "free-mint",
+      "eligibility": "Credits holders, one per Credit",
+      "description": "A free 1 of 1 magic 8 ball drawn from the traits of each Credit you hold. Only that Credit's owner can claim it. Gas only.",
+      "url": "https://laternow.app/futures",
+      "post": "https://x.com/LATE_FX/status/2103269221111058849",
+      "start": "2026-09-24",
+      "seenOpen": "2026-09-29",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "credonauts-top-holders-airdrop",
+      "project": "Credonauts",
+      "x": "timsouw",
+      "type": "airdrop",
+      "eligibility": "Top 50 Credits holders",
+      "description": "One Credonaut each, sent by the artist to the top 50 Credits holders. The top 50 Argonauts holders got one too.",
+      "url": "https://credonauts.com/",
+      "post": "https://x.com/timsouw/status/2104789433287635452",
+      "start": "2026-09-29",
+      "ended": "Sent",
+      "checked": "2026-09-29"
+    }
+  ],
   "projects": [
     {
       "id": "creditunion-fun",

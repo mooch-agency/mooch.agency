@@ -30,7 +30,8 @@
 //   3. Bake: regenerate the approved-projects block between the
 //      creditcards:projects markers in creditcards.html (the count line, the
 //      category filter pills with their counts, and a data-category on every
-//      card), the top-creditors
+//      card, plus the Perks pill and view from data.perks, see
+//      creditcards-perks.mjs), the top-creditors
 //      tiles between the creditcards:creditors markers, and the data-stat
 //      spans. Output is deterministic (stable sort, fixed indentation) so a
 //      no-change run produces no git diff and the daily workflow commits
@@ -52,6 +53,11 @@
 //   metrics            likes and reposts at discovery time
 //   source, score, flags, tweetText
 //                      review aids from discovery, never rendered
+//
+// Perks (perks[], written by a human, never by discovery): fields and the
+// status rule are documented in creditcards-perks.mjs. Status (open, ended,
+// unknown) is worked out for the UTC day the bake runs, so a perk flips to
+// Ended on the first bake after its end date, and that run commits the page.
 //
 // Run:   node scripts/creditcards-update.mjs              full run
 //        node scripts/creditcards-update.mjs --bake-only  skip X and OpenSea
@@ -85,6 +91,7 @@ import {
   strayTcoLinks,
 } from './creditcards-discover.mjs';
 import { CATEGORIES, categoryProblems, suggestCategory } from './creditcards-categories.mjs';
+import { PERK_TYPES, perkProblems, perkStatus, sortPerks, todayUtc } from './creditcards-perks.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -546,25 +553,86 @@ function renderHead(total) {
   ].join('\n');
 }
 
-// The category pills: All first, then CATEGORIES in their fixed order, each
-// with its count from the data. Plain buttons with aria-pressed; they do
-// nothing until the inline filter script wires them up, so with no
-// JavaScript every card simply stays on the page.
-function renderFilter(approved) {
+// The category pills: All first, then Perks when there are any (straight
+// after All, so on a phone it sits on the first screen of the sideways row
+// rather than off the end), then CATEGORIES in their fixed order, each with
+// its count from the data. Plain buttons with aria-pressed; they do nothing
+// until the inline filter script wires them up, so with no JavaScript every
+// card, and the perks list under the projects, simply stays on the page.
+// While any perk is open the Perks pill carries the live dot (the Open
+// badge's cyan square) and reads "Perks N open" instead of its total; with
+// none open it is a plain pill with the total, like the rest.
+function renderFilter(approved, perkCount, perksOpen = 0) {
   const counts = Object.fromEntries(CATEGORIES.map((c) => [c.slug, 0]));
   for (const p of approved) counts[p.category] += 1;
-  const pills = [{ slug: 'all', label: 'All', n: approved.length }, ...CATEGORIES.map((c) => ({ ...c, n: counts[c.slug] }))];
+  const pills = [
+    { slug: 'all', label: 'All', n: approved.length, controls: 'project-list' },
+    ...(perkCount
+      ? [{ slug: 'perks', label: 'Perks', n: perksOpen ? `${perksOpen} open` : perkCount, dot: perksOpen > 0, controls: 'perk-list' }]
+      : []),
+    ...CATEGORIES.map((c) => ({ ...c, n: counts[c.slug], controls: 'project-list' })),
+  ];
   return [
     '    <div class="cc-filter" role="group" aria-label="Filter projects by category" data-scroller>',
     ...pills.map(
       (c) =>
-        `      <button type="button" class="cc-filter-pill" data-filter="${c.slug}" aria-pressed="${c.slug === 'all'}" aria-controls="project-list">${escapeHtml(c.label)} <span class="cc-filter-n">${c.n}</span></button>`,
+        `      <button type="button" class="cc-filter-pill" data-filter="${c.slug}" aria-pressed="${c.slug === 'all'}" aria-controls="${c.controls}">${c.dot ? '<span class="cc-filter-dot" aria-hidden="true"></span>' : ''}${escapeHtml(c.label)} <span class="cc-filter-n">${c.n}</span></button>`,
     ),
     '    </div>',
   ].join('\n');
 }
 
-function renderProjects(projects, slot) {
+const PERK_TYPE_LABEL = Object.fromEntries(PERK_TYPES.map((t) => [t.slug, t.label]));
+const PERK_STATUS_LABEL = { open: 'Open', ended: 'Ended', unknown: 'Status unknown' };
+
+// The date on a perk card: its end when one is stated ("Ends" or "Ended"),
+// otherwise the day it was announced.
+function perkDate(p, status) {
+  if (p.end) return `<time datetime="${p.end}">${status === 'ended' ? 'Ended' : 'Ends'} ${fmtDate(p.end)}</time>`;
+  if (p.start) return `<time datetime="${p.start}">${fmtDate(p.start)}</time>`;
+  return '<span></span>';
+}
+
+// The Perks view: every perk ever offered to Credits holders, ended ones
+// included (muted, never removed). Same card anatomy as a project: grid mark,
+// the name opening the project, the handle opening the builder's post, the
+// date on the right. Hidden by the filter script until the Perks pill is
+// pressed; with no JavaScript it sits under the projects.
+function renderPerks(perks, dm, today) {
+  if (!perks || !perks.length) return null;
+  const items = sortPerks(perks, today)
+    .map((p) => {
+      const status = perkStatus(p, today);
+      const name = escapeHtml(stripDashes(p.project));
+      const reason = p.ended ? `<span class="perk-reason">${escapeHtml(stripDashes(p.ended))}</span>` : '';
+      return [
+        `      <li class="proj-card perk-card perk-card--${status}" data-perk="${escapeHtml(p.id)}" data-status="${status}">`,
+        `        ${gridSvg(p.id)}`,
+        `        <p class="perk-tags"><span class="perk-status">${PERK_STATUS_LABEL[status]}</span><span class="perk-type">${escapeHtml(PERK_TYPE_LABEL[p.type])}</span>${reason}</p>`,
+        `        <a class="proj-name" href="${escapeHtml(p.url)}" target="_blank" rel="noopener" data-event="creditcards_perk_click">${name}</a>`,
+        `        <p class="proj-blurb">${escapeHtml(stripDashes(p.description))}</p>`,
+        `        <p class="perk-for"><span class="perk-for-label">For</span> ${escapeHtml(stripDashes(p.eligibility))}</p>`,
+        `        <p class="proj-by"><span class="proj-by-names"><a href="${escapeHtml(p.post)}" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@${escapeHtml(p.x)}</a></span>${perkDate(p, status)}</p>`,
+        '      </li>',
+      ]
+        .map((line) => `  ${line}`)
+        .join('\n');
+    })
+    .join('\n');
+  const ask = dm
+    ? ` <a href="${escapeHtml(dm)}" target="_blank" rel="noopener" data-event="creditcards_perk_submit">Know a perk? DM @jesusdoteth <span class="arrow">&rarr;</span></a>`
+    : '';
+  return [
+    '    <div class="perks-view" id="perk-list">',
+    `      <p class="perks-intro">Every perk offered to Credits holders so far. New ones land here first.${ask}</p>`,
+    '      <ol class="projects perks">',
+    items,
+    '      </ol>',
+    '    </div>',
+  ].join('\n');
+}
+
+function renderProjects(projects, slot, perks = [], today = todayUtc()) {
   const approved = projects
     .filter((p) => p.status === 'approved')
     .sort((a, b) => (a.added === b.added ? a.name.localeCompare(b.name) : b.added.localeCompare(a.added)));
@@ -618,7 +686,8 @@ function renderProjects(projects, slot) {
     })
     .join('\n');
 
-  return `\n${renderHead(approved.length)}\n${renderFilter(approved)}\n    <ol class="projects" id="project-list">\n${items}\n    </ol>\n    `;
+  const perksBlock = renderPerks(perks, slot && slot.dm, today);
+  return `\n${renderHead(approved.length)}\n${renderFilter(approved, perks.length, perks.filter((p) => perkStatus(p, today) === 'open').length)}\n    <ol class="projects" id="project-list">\n${items}\n    </ol>\n${perksBlock ? `${perksBlock}\n` : ''}    `;
 }
 
 // --- top creditors -------------------------------------------------------------
@@ -684,11 +753,11 @@ function bakeStat(html, key, value) {
   return html.replace(re, `$1${value}$3`);
 }
 
-function bake(html, data) {
-  const problems = categoryProblems(data.projects);
+function bake(html, data, today = todayUtc()) {
+  const problems = [...categoryProblems(data.projects), ...perkProblems(data.perks)];
   if (problems.length) throw new Error(`${DATA_FILE}: ${problems.join('; ')}`);
   if (!MARKER_RE.test(html)) throw new Error(`creditcards:projects markers missing from ${PAGE_FILE}`);
-  let next = html.replace(MARKER_RE, (_, open, __, close) => `${open}${renderProjects(data.projects, data.featuredSlot)}${close}`);
+  let next = html.replace(MARKER_RE, (_, open, __, close) => `${open}${renderProjects(data.projects, data.featuredSlot, data.perks || [], today)}${close}`);
   if (!CREDITORS_RE.test(next)) throw new Error(`creditcards:creditors markers missing from ${PAGE_FILE}`);
   next = next.replace(CREDITORS_RE, (_, open, __, close) => `${open}${renderCreditors(data.projects)}${close}`);
   const s = data.meta.stats;
@@ -701,7 +770,7 @@ function bake(html, data) {
 
 // --- run -------------------------------------------------------------------------
 
-export async function run({ xToken, fetchImpl = fetch, root = ROOT, dry = DRY, bakeOnly = BAKE_ONLY } = {}) {
+export async function run({ xToken, fetchImpl = fetch, root = ROOT, dry = DRY, bakeOnly = BAKE_ONLY, today = todayUtc() } = {}) {
   const dataFile = path.join(root, DATA_FILE);
   const pageFile = path.join(root, PAGE_FILE);
   const data = JSON.parse(readFileSync(dataFile, 'utf8'));
@@ -724,7 +793,7 @@ export async function run({ xToken, fetchImpl = fetch, root = ROOT, dry = DRY, b
     data.meta.lastRun = new Date().toISOString();
   }
 
-  const nextHtml = bake(html, data);
+  const nextHtml = bake(html, data, today);
   const nextJson = JSON.stringify(data, null, 2) + '\n';
   const htmlChanged = nextHtml !== html;
   const jsonChanged = nextJson !== readFileSync(dataFile, 'utf8');

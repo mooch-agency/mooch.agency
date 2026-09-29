@@ -21,7 +21,9 @@
 //   Index hygiene ........ sitemap <-> pages bijection, no stray noindex, robots
 //   Uniqueness ........... unique titles + descriptions, exactly one <h1>
 //   Data ................. every approved Credit Cards project has a valid
-//                          category, and so does every baked card
+//                          category, and so does every baked card; every
+//                          perk has its required fields, a baked card and
+//                          a count on the Perks pill
 //
 // Scoping: we check the pages the site actually ships: every *.html at the repo
 // root plus prompts/*.html, MINUS a documented exclusion list of templates, dev
@@ -36,6 +38,7 @@ import path from 'node:path';
 import { load } from 'cheerio';
 import { EXCLUDED, shippedPages } from './site-files.mjs';
 import { CATEGORY_SLUGS, categoryProblems } from './creditcards-categories.mjs';
+import { perkProblems } from './creditcards-perks.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -561,8 +564,9 @@ function checkFragments(pages) {
 
 // ---------------------------------------------------------------------------
 // Data: data/creditcards.json is baked into /creditcards, and the category
-// filter needs a category on every approved project. The bake refuses to run
-// without one; this catches a hand edit in a PR before the daily job does.
+// filter needs a category on every approved project, and every perk needs
+// its required fields (creditcards-perks.mjs). The bake refuses to run
+// without them; this catches a hand edit in a PR before the daily job does.
 // ---------------------------------------------------------------------------
 function checkCreditCardsData() {
   const dataRel = 'data/creditcards.json';
@@ -575,6 +579,8 @@ function checkCreditCardsData() {
     return;
   }
   for (const msg of categoryProblems(data.projects || [])) fail('Data', dataRel, msg);
+  const perkMsgs = perkProblems(data.perks);
+  for (const msg of perkMsgs) fail('Data', dataRel, msg);
   if (!has('creditcards.html')) return;
   const raw = read('creditcards.html');
   const $ = load(raw);
@@ -582,6 +588,26 @@ function checkCreditCardsData() {
     const cat = $(li).attr('data-category');
     const ok = $(li).hasClass('proj-sponsor') ? cat === 'all' : CATEGORY_SLUGS.includes(cat);
     if (!ok) fail('Data', 'creditcards.html', `card "${$(li).find('.proj-name').text() || 'sponsor line'}" has data-category "${cat ?? ''}"; re-run node scripts/creditcards-update.mjs --bake-only`);
+  });
+  // Perks: one baked card per perk in the data, and a Perks pill whose count
+  // matches. Status is left alone here: it depends on the day, and the
+  // twice-daily bake keeps it current.
+  if (perkMsgs.length) return;
+  const rebake = 're-run node scripts/creditcards-update.mjs --bake-only';
+  const want = (data.perks || []).map((p) => p.id).sort();
+  const got = $('#perk-list li[data-perk]').map((_, li) => $(li).attr('data-perk')).get().sort();
+  if (want.join('|') !== got.join('|')) fail('Data', 'creditcards.html', `perk cards (${got.length}) don't match data.perks (${want.length}); ${rebake}`);
+  // The pill reads "N open" with the live dot while a baked card is open,
+  // else the total with no dot.
+  const pill = $('.cc-filter [data-filter="perks"]');
+  const open = $('#perk-list li[data-perk][data-status="open"]').length;
+  const label = open ? `${open} open` : String(want.length);
+  if (want.length && (!pill.length || pill.find('.cc-filter-n').text() !== label)) fail('Data', 'creditcards.html', `the Perks pill is missing or doesn't read "${label}"; ${rebake}`);
+  if (pill.length && pill.find('.cc-filter-dot').length !== (open ? 1 : 0)) fail('Data', 'creditcards.html', `the Perks pill ${open ? 'needs' : 'must not have'} the live dot with ${open} perk${open === 1 ? '' : 's'} open; ${rebake}`);
+  if (pill.length && pill.prev().attr('data-filter') !== 'all') fail('Data', 'creditcards.html', 'the Perks pill must come straight after All');
+  $('#perk-list li[data-perk]').each((_, li) => {
+    const s = $(li).attr('data-status');
+    if (!['open', 'ended', 'unknown'].includes(s)) fail('Data', 'creditcards.html', `perk card "${$(li).attr('data-perk')}" has data-status "${s ?? ''}"; ${rebake}`);
   });
 }
 
