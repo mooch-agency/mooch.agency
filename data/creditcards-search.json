@@ -93,7 +93,7 @@
     },
     {
       "id": "derivative",
-      "label": "C: derivative names, slang and tool hosts, no Jack (no bare url:credits or url:debits, see docs/creditcards-search-test.md)",
+      "label": "C: derivative names, slang and tool hosts, no Jack (no bare url:credits or url:debits, see docs/creditcards-search-test-2026-09-29.md)",
       "source": "derivative",
       "sinceKey": "derivativeSinceId",
       "maxResults": 25,
