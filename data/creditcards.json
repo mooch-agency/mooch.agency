@@ -1,15 +1,15 @@
 {
   "meta": {
-    "sinceId": "2104811394793435639",
-    "lastRun": "2026-09-29T06:22:07.466Z",
+    "sinceId": "2104854045382840391",
+    "lastRun": "2026-09-29T12:47:08.985Z",
     "stats": {
-      "floorEth": 0.0254,
-      "floorUsd": 68,
+      "floorEth": 0.027,
+      "floorUsd": 74,
       "supply": 122153,
-      "owners": 15560,
-      "fetchedAt": "2026-09-29T06:22:07.448Z"
+      "owners": 15391,
+      "fetchedAt": "2026-09-29T12:47:08.962Z"
     },
-    "replySinceId": "2104586614714294635"
+    "replySinceId": "2104884955788808261"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -936,6 +936,84 @@
         "likes": 0,
         "reposts": 0
       }
+    },
+    {
+      "id": "opensea-io-collection-hood-credits",
+      "name": "opensea.io",
+      "url": "https://opensea.io/collection/hood-credits",
+      "x": "HoodCredits",
+      "post": "https://x.com/HoodCredits/status/2104881145112588390",
+      "blurb": "",
+      "category": "markets",
+      "status": "pending",
+      "added": "2026-09-29",
+      "metrics": {
+        "likes": 2,
+        "reposts": 2
+      },
+      "source": "replies+quote",
+      "score": 3,
+      "flags": [
+        "via-quote"
+      ],
+      "tweetText": "Free mint stage live!\n\nSupply: 10K\n\nChain: @RobinhoodApp \n\nMintpad: @opensea \n\nLink: https://t.co/0N5MY5zitR\n\n#freemint #opensea #nft #Credits https://t.co/TTjT6w27Hu"
+    },
+    {
+      "id": "drop-wubbushi-com",
+      "name": "drop.wubbushi.com",
+      "url": "https://drop.wubbushi.com",
+      "x": "Epizon_x",
+      "post": "https://x.com/Epizon_x/status/2104840892125471005",
+      "blurb": "",
+      "category": "art",
+      "status": "pending",
+      "added": "2026-09-29",
+      "metrics": {
+        "likes": 6,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "I woke up to a Debit this morning and for once it felt good(free monies haha🙂‍↕️)\n\nI just claimed my free Debit: the plates my Credit kept. Credit + Debit = Rich. \n\nIf you’re still holding @jackbutch"
+    },
+    {
+      "id": "docs-google-com-forms-d-e-1faipqlscqh7caonkhfzytner7g69shzwnxaai818vb62rutzuxxfxaa-viewform",
+      "name": "docs.google.com",
+      "url": "https://docs.google.com/forms/d/e/1FAIpQLScQh7CAOnKhFZyTner7G69sHzWNXAai818vB62rutzUxxfxaA/viewform",
+      "x": "Abdullah4660",
+      "post": "https://x.com/Abdullah4660/status/2104854045382840391",
+      "blurb": "",
+      "category": "art",
+      "status": "pending",
+      "added": "2026-09-29",
+      "metrics": {
+        "likes": 2,
+        "reposts": 1
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "Punks x Credits (https://t.co/NiX76CB4tm): A 4,444-piece NFT drop that rebuilds each CryptoPunk pixel as a full miniature Jack Butcher “Credit” artwork. Looks like a classic Punk from afar, a detailed"
+    },
+    {
+      "id": "punk-credit",
+      "name": "punk.credit",
+      "url": "https://punk.credit",
+      "x": "0xplan_D",
+      "post": "https://x.com/0xplan_D/status/2104841203099291770",
+      "blurb": "",
+      "category": "markets",
+      "status": "pending",
+      "added": "2026-09-29",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "MEET PUNKS x CREDITS\n\nA 4,444 piece collection by A.C.J @Internetanount, live at https://t.co/4hWBFRbSdc\n\nEach Punk is rebuilt pixel-by-pixel, every visible pixel replaced with a full 48x48 CREDIT (by"
     }
   ]
 }
