@@ -195,12 +195,14 @@ derivatives offering free or near-free mints.
 
 ### Quality
 
-Low to mixed. In `perks.json`, 4 of the 6 listed perks carry scam flags
-(Debits: connect wallet and sign to claim, probably benign; Otherides: thin
-author; The Creditors: 49-day-old account; CREDIT DOGS: 5-day-old account and
-urgency). The report's summary counts 3, leaving out The Creditors. Several
-claim links were unresolved t.co links, and the details of the best offer
-(Debits) conflict across posts.
+Low to mixed. 2 of the 6 listed perks carry scam flags: thin authors
+(Otherides, with 339 followers, and CREDIT DOGS, a 5-day-old account using
+urgency). Connecting a wallet, or signing a transaction to claim or mint, is
+**not** a scam signal, since every onchain project needs it. The spike
+originally flagged Debits for it, and that flag has been dropped. The
+Creditors carried a thin-author note (a 49-day-old account), but it was a
+legitimate OpenSea mint. Several claim links were unresolved t.co links, and
+the details of the best offer (Debits) conflict across posts.
 
 ### Recommendation: a Perks filter on Credit Cards
 
@@ -209,28 +211,43 @@ Too thin for a standalone board or a daily feed, and enough for a section of
 found, with ended ones kept and muted to show what holders could pick up by
 coming back. Listing gates:
 
-- the issuer's own post states the Credits gate (a promoter's echo isn't
-  enough);
+- the issuer's own post or site states the Credits gate (a promoter's echo
+  isn't enough);
 - a resolved link;
-- no scam flags;
+- no scam flags (a wallet connection or a signed claim doesn't count as one);
 - never list coin-holder raffles, social-only (follow and repost) routes,
   "Credits as the prize" offers for other collections, or Jack's own burn-80
   Statement mechanic.
 
-That filter is built in **PR #72** (`creditcards-perks`). Re-read against
-the gates on 29 Sep, 2 of the 11 offers pass:
+That filter is built in **PR #72** (`creditcards-perks`). It launches with
+6 perks after re-reading the spike's offers and auditing all 34 listed
+projects (their own sites, their announcement posts, and one capped search of
+the builders' posts):
 
-- **Credit Cards by @Jehoseph:** an allowlist for the top 2,000 Credits
-  holders plus KYC holders, closing by 1 Oct. The post's only link is
-  opensea.io/collection/creditcards, which OpenSea names "Credit Cards". That
-  replaces the spike's inferred name.
-- **Credited Punks by @wutaner:** a holder mint, now sold out (all 10,000
-  minted, per oncave.io).
+| Perk | Type | For | Status on 29 Sep |
+|---|---|---|---|
+| Futures (@LATE_FX) | Free mint | Credits holders, one per Credit | Open |
+| Credonauts (@timsouw) | Airdrop | Top 50 Credits holders | Ended (sent 29 Sep) |
+| Debits (@wubbushi) | Free mint | Credits holders at the 28 Sep snapshot | Ended |
+| Credit Cards (@Jehoseph) | Allowlist | Top 2,000 Credits holders, plus KYC holders | Ended 26 Sep, when the mint opened to everyone |
+| Credited Punks (@wutaner) | Allowlist | Credits holders | Ended (sold out) |
+| The Creditors (@TheCreditorsNFT) | Free mint | Credits holders, plus some Robinhood Chain communities | Ended 23 Sep |
 
-The other 4 listed offers have scam flags. Credit Union is a tool, not a perk.
-The discount is only conditional. RECEIPTS has 4 scam flags, and bloo and
-Proof of Pixels don't name Credits. Punks x Credits was a shill campaign and
-was never a candidate.
+The Credit Cards name comes from the post's own link,
+opensea.io/collection/creditcards, which OpenSea names "Credit Cards". It
+replaces the spike's inferred name.
+
+Left out:
+- Otherides and CREDIT DOGS: scam flags.
+- RECEIPTS: scam flags, and no way to check Ethereum holdings.
+- Credit Union: a tool, not a perk.
+- The Jehoseph discount: only conditional.
+- bloo and Proof of Pixels: they don't name Credits.
+- Punks x Credits: a shill campaign.
+
+The audit found two perks the spike missed, Futures and the Credonauts
+airdrop. So builder timelines and project sites are worth reading alongside
+the search.
 
 Next steps for the perk search: resolve t.co links and fetch quoted and parent
 posts automatically, normalise dedupe keys to project plus canonical domain,
