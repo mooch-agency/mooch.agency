@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2104682888306298930",
-    "lastRun": "2026-09-28T23:14:47.760Z",
+    "sinceId": "2104811394793435639",
+    "lastRun": "2026-09-29T06:22:07.466Z",
     "stats": {
-      "floorEth": 0.026,
-      "floorUsd": 70,
+      "floorEth": 0.0254,
+      "floorUsd": 68,
       "supply": 122153,
-      "owners": 15285,
-      "fetchedAt": "2026-09-28T23:14:47.309Z"
+      "owners": 15560,
+      "fetchedAt": "2026-09-29T06:22:07.448Z"
     },
     "replySinceId": "2104586614714294635"
   },
@@ -902,6 +902,25 @@
         "coin"
       ],
       "tweetText": "I built an independent Credits × $JACKOFF scenario desk!\n\n- Move the assumptions, see the 80 Credits to 1 Statement math.\n- Compare token cap with per-token price\n- Export your own share card. \n- No w"
+    },
+    {
+      "id": "punk-it",
+      "name": "punk.it",
+      "url": "https://punk.it",
+      "x": "tokyo26687654",
+      "post": "https://x.com/tokyo26687654/status/2104811394793435639",
+      "blurb": "",
+      "category": "art",
+      "status": "pending",
+      "added": "2026-09-29",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "Another TakeA CryptoPunk made from Credits hits different.@vvcredits turns every pixel into its own 48×48 @jackbutcher artwork, stacking hundreds of individual pieces into one recognizable https://t.c"
     }
   ]
 }
