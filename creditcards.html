@@ -24,7 +24,13 @@
 <meta name="twitter:image:alt" content="Credit Cards. Every project built on Jack Butcher's Credits, in one place. Refreshed daily.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<!-- Instrument Serif loads without blocking first paint: the largest thing on
+     a phone's first screen is plain system text, and tokens.css ships a
+     metric-matched fallback, so the swap-in shifts nothing. Keeps LCP inside
+     the 2.5s Lighthouse budget. The noscript copy covers no-JS visitors. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"></noscript>
 <script>
   // Theme before first paint, so a dark visitor never sees a white flash.
   // A saved choice wins, else the OS setting. The toggle script at the foot
