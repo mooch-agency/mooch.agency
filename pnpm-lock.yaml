@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  undici: '>=7.29.0'
+  undici: '>=8.10.2'
   fast-uri: '>=4.1.4'
   ws: '>=8.21.0'
   axios: '>=1.18.0'
@@ -1834,8 +1834,8 @@ packages:
   undici-types@7.29.0:
     resolution: {integrity: sha512-vamA8dGlzMwhpyYpQp9d8vka3o4D/yn5I7ez7Or+msDA4bZ8Uh+Zy91WvWf3I73gDAkFha9JcYRqm2li0Npfgg==}
 
-  undici@8.10.0:
-    resolution: {integrity: sha512-HvltHd7avK13QIw/oLe4qoOLyoVSoafqJ2jYOrtMRBkbYT31eiBQ8O0ehRKZiEZCMEyLFQNIADpgCWC5fALvYQ==}
+  undici@8.11.2:
+    resolution: {integrity: sha512-u4UB2/IrKdU6lFxumHmmo1a3fCQO5tzQllRorfoRS63txhrB7xTpSn1PftwC4qEHkOaqP95fCWW4lJzwErwzhQ==}
     engines: {node: '>=22.19.0'}
 
   unstorage@1.17.5:
@@ -3927,7 +3927,7 @@ snapshots:
       parse5: 7.3.0
       parse5-htmlparser2-tree-adapter: 7.1.0
       parse5-parser-stream: 7.1.2
-      undici: 8.10.0
+      undici: 8.11.2
       whatwg-mimetype: 4.0.0
 
   chokidar@5.0.0:
@@ -4788,7 +4788,7 @@ snapshots:
 
   undici-types@7.29.0: {}
 
-  undici@8.10.0: {}
+  undici@8.11.2: {}
 
   unstorage@1.17.5(idb-keyval@6.3.0):
     dependencies:
