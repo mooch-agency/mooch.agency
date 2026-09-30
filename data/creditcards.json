@@ -1,15 +1,15 @@
 {
   "meta": {
-    "sinceId": "2105165170234536383",
-    "lastRun": "2026-09-30T06:26:34.145Z",
+    "sinceId": "2105261291338186994",
+    "lastRun": "2026-09-30T12:29:29.627Z",
     "stats": {
-      "floorEth": 0.02639999989997,
-      "floorUsd": 70,
+      "floorEth": 0.02874999999989,
+      "floorUsd": 78,
       "supply": 122153,
-      "owners": 15199,
-      "fetchedAt": "2026-09-30T06:26:33.804Z"
+      "owners": 15094,
+      "fetchedAt": "2026-09-30T12:29:29.601Z"
     },
-    "replySinceId": "2104985591024910518"
+    "replySinceId": "2105231813664706609"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -1280,6 +1280,27 @@
         "known-host"
       ],
       "tweetText": "Join my Credit Union: Five Eights + CMYK. 80 Credits make a Statement. https://t.co/Z3e9y50fBD \n\nThis design was based off of the rarest credit.  I used K as the top and bottom border and CMYK for the"
+    },
+    {
+      "id": "pepe2pepe-fun-robinhood-market-13",
+      "name": "pepe2pepe.fun",
+      "url": "https://pepe2pepe.fun/robinhood/market/13",
+      "x": "dani_who_daniel",
+      "post": "https://x.com/dani_who_daniel/status/2105261291338186994",
+      "blurb": "",
+      "category": "markets",
+      "status": "pending",
+      "added": "2026-09-30",
+      "metrics": {
+        "likes": 9,
+        "reposts": 3
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "coin"
+      ],
+      "tweetText": "I love @jackbutcher 's Credits, tho i put a controversial $200 worth of $IMD on NO. \n\nBurns coming tomorrow, i think you could steal my money, but here we go...\n\nGo bet on this one!\n\nTo be resolved by"
     }
   ]
 }
