@@ -32,7 +32,7 @@
 //      category filter pills with their counts, and a data-category on every
 //      card, plus the Perks pill and view from data.perks, see
 //      creditcards-perks.mjs), the top-creditors
-//      tiles between the creditcards:creditors markers, and the data-stat
+//      list between the creditcards:creditors markers, and the data-stat
 //      spans. Output is deterministic (stable sort, fixed indentation) so a
 //      no-change run produces no git diff and the daily workflow commits
 //      nothing. Every approved project needs a category from
@@ -68,7 +68,6 @@
 // workflow stays green before the secret exists.
 // ---------------------------------------------------------------------------
 
-import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -498,27 +497,6 @@ async function refreshStatsDirect(data, fetchImpl) {
 
 // --- bake ----------------------------------------------------------------------
 
-// The colours live in tokens.css so the marks follow the design system, and
-// so check-site's no-colour-literals rule holds even for baked markup.
-const GRID_COLOURS = ['var(--credit-c)', 'var(--credit-m)', 'var(--credit-y)', 'var(--credit-k)'];
-
-// Each card's tile is an 8x8 CMYK grid drawn from a SHA-256 of the project's
-// id, the same move as the collection itself: a Credit is drawn from its
-// hashed transaction ID. Cell on/off comes from the hash's first 64 bits;
-// colour from a second hash so the two choices stay independent. Pure
-// function of the id, so the bake stays byte-stable run to run.
-function gridSvg(id) {
-  const on = createHash('sha256').update(id).digest();
-  const colour = createHash('sha256').update(`${id}:colour`).digest();
-  let rects = '';
-  for (let i = 0; i < 64; i++) {
-    if (!((on[i >> 3] >> (i & 7)) & 1)) continue;
-    const fill = GRID_COLOURS[colour[i % 32] & 3];
-    rects += `<rect x="${(i % 8) * 10 + 1}" y="${Math.floor(i / 8) * 10 + 1}" width="8" height="8" fill="${fill}"/>`;
-  }
-  return `<svg class="proj-art" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${rects}</svg>`;
-}
-
 // The paid slot line under the featured card. Price, the Credit alternative,
 // the payment address and the DM link all come from data.featuredSlot, so a
 // price change is a data edit, not a template edit. No featuredSlot, no line.
@@ -538,16 +516,16 @@ function renderSponsorLine(slot) {
   ].join('\n');
 }
 
-// The line in the corner of the projects header. Without JavaScript it is
-// the whole story; the filter script swaps the count for "X of N shown" and
-// hides the "Found daily on X" half on a phone, where it would not fit.
+// The projects heading and its count. Visually hidden since the 30 Sep 2026
+// tidy (the pills say the same on screen), but kept for screen readers: the
+// filter script rewrites the count on every change ("X of N shown").
 function renderHead(total) {
   const count = total ? `${total} ${total === 1 ? 'project' : 'projects'}` : '';
   return [
     '    <div class="projects-head">',
     '      <h2 id="projects">The projects</h2>',
     count
-      ? `      <p><span data-filter-status aria-live="polite">${count}</span><span class="projects-found"> &middot; Found daily on X</span></p>`
+      ? `      <p><span data-filter-status aria-live="polite">${count}</span> &middot; Found daily on X</p>`
       : '      <p>Found daily on X</p>',
     '    </div>',
   ].join('\n');
@@ -556,7 +534,9 @@ function renderHead(total) {
 // The category pills: All first, then Perks when there are any (straight
 // after All, so on a phone it sits on the first screen of the sideways row
 // rather than off the end), then CATEGORIES in their fixed order, each with
-// its count from the data. Plain buttons with aria-pressed; they do nothing
+// its total in data-count (the filter script reads it). Only the Perks pill
+// shows a number on screen; the rest are bare labels, so the row reads as
+// choices rather than a table of figures. Plain buttons with aria-pressed; they do nothing
 // until the inline filter script wires them up, so with no JavaScript every
 // card, and the perks list under the projects, simply stays on the page.
 // While any perk is open the Perks pill carries the live dot (the Open
@@ -566,17 +546,17 @@ function renderFilter(approved, perkCount, perksOpen = 0) {
   const counts = Object.fromEntries(CATEGORIES.map((c) => [c.slug, 0]));
   for (const p of approved) counts[p.category] += 1;
   const pills = [
-    { slug: 'all', label: 'All', n: approved.length, controls: 'project-list' },
+    { slug: 'all', label: 'All', total: approved.length, controls: 'project-list' },
     ...(perkCount
-      ? [{ slug: 'perks', label: 'Perks', n: perksOpen ? `${perksOpen} open` : perkCount, dot: perksOpen > 0, controls: 'perk-list' }]
+      ? [{ slug: 'perks', label: 'Perks', total: perkCount, n: perksOpen ? `${perksOpen} open` : perkCount, dot: perksOpen > 0, controls: 'perk-list' }]
       : []),
-    ...CATEGORIES.map((c) => ({ ...c, n: counts[c.slug], controls: 'project-list' })),
+    ...CATEGORIES.map((c) => ({ ...c, total: counts[c.slug], controls: 'project-list' })),
   ];
   return [
     '    <div class="cc-filter" role="group" aria-label="Filter projects by category" data-scroller>',
     ...pills.map(
       (c) =>
-        `      <button type="button" class="cc-filter-pill" data-filter="${c.slug}" aria-pressed="${c.slug === 'all'}" aria-controls="${c.controls}">${c.dot ? '<span class="cc-filter-dot" aria-hidden="true"></span>' : ''}${escapeHtml(c.label)} <span class="cc-filter-n">${c.n}</span></button>`,
+        `      <button type="button" class="cc-filter-pill" data-filter="${c.slug}" aria-pressed="${c.slug === 'all'}" aria-controls="${c.controls}" data-count="${c.total}">${c.dot ? '<span class="cc-filter-dot" aria-hidden="true"></span>' : ''}${escapeHtml(c.label)}${c.n === undefined ? '' : ` <span class="cc-filter-n">${c.n}</span>`}</button>`,
     ),
     '    </div>',
   ].join('\n');
@@ -594,8 +574,8 @@ function perkDate(p, status) {
 }
 
 // The Perks view: every perk ever offered to Credits holders, ended ones
-// included (muted, never removed). Same card anatomy as a project: grid mark,
-// the name opening the project, the handle opening the builder's post, the
+// included (muted, never removed). Same card anatomy as a project: the
+// name opening the project, the handle opening the builder's post, the
 // date on the right. Hidden by the filter script until the Perks pill is
 // pressed; with no JavaScript it sits under the projects.
 function renderPerks(perks, dm, today) {
@@ -607,7 +587,6 @@ function renderPerks(perks, dm, today) {
       const reason = p.ended ? `<span class="perk-reason">${escapeHtml(stripDashes(p.ended))}</span>` : '';
       return [
         `      <li class="proj-card perk-card perk-card--${status}" data-perk="${escapeHtml(p.id)}" data-status="${status}">`,
-        `        ${gridSvg(p.id)}`,
         `        <p class="perk-tags"><span class="perk-status">${PERK_STATUS_LABEL[status]}</span><span class="perk-type">${escapeHtml(PERK_TYPE_LABEL[p.type])}</span>${reason}</p>`,
         `        <a class="proj-name" href="${escapeHtml(p.url)}" target="_blank" rel="noopener" data-event="creditcards_perk_click">${name}</a>`,
         `        <p class="proj-blurb">${escapeHtml(stripDashes(p.description))}</p>`,
@@ -668,7 +647,6 @@ function renderProjects(projects, slot, perks = [], today = todayUtc()) {
         : '<span></span>';
       return [
         `      <li class="proj-card${isFeatured ? ' proj-card--featured' : ''}" data-category="${p.category}">`,
-        `        ${gridSvg(p.id)}`,
         isFeatured
           ? `        <p class="proj-flag"><span class="proj-flag-marks" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${p.sponsored ? 'Sponsored' : 'Featured'}</p>`
           : null,
@@ -722,29 +700,26 @@ export function topCreditors(projects, slots = CREDITOR_SLOTS) {
     .slice(0, slots);
 }
 
-// Same anatomy as the page's stat tiles: mono label, serif figure, mono sub.
-// The avatar is a letter circle with the unavatar.io photo laid over it; if
-// the photo fails (rate limit, blocked, offline) onerror drops it and the
-// letter shows through, so the tile never shows a broken image.
+// One list item per builder, inside the ol.creditors-list at the foot of the
+// index. The avatar is a letter circle with the unavatar.io photo laid over
+// it; if the photo fails (rate limit, blocked, offline) onerror drops it and
+// the letter shows through, so the row never shows a broken image.
 function renderCreditors(projects) {
   const top = topCreditors(projects);
   if (!top.length) return '\n        ';
-  const tiles = top
-    .map((c, i) => {
+  const items = top
+    .map((c) => {
       const h = escapeHtml(c.handle);
-      const label = i === 0 ? `<span class="creditor-crown" aria-hidden="true">&#x1F451;</span>No. 1` : `No. ${i + 1}`;
       const initial = escapeHtml(c.handle.replace(/^[^a-z0-9]+/i, '').charAt(0).toUpperCase() || '@');
       return [
-        `          <a class="stat-tile creditor" href="https://x.com/${h}" target="_blank" rel="noopener" data-event="creditcards_leaderboard_click">`,
-        `            <span class="creditor-av" aria-hidden="true">${initial}<img src="https://unavatar.io/x/${h}" width="20" height="20" loading="lazy" alt="" onerror="this.remove()"></span>`,
-        `            <div class="stat-label">${label}</div>`,
-        `            <div class="stat-value creditor-handle">@${h}</div>`,
-        `            <div class="stat-sub">${c.count} ${c.count === 1 ? 'project' : 'projects'}</div>`,
-        '          </a>',
+        `        <li><a class="creditor" href="https://x.com/${h}" target="_blank" rel="noopener" data-event="creditcards_leaderboard_click">`,
+        `          <span class="creditor-av" aria-hidden="true">${initial}<img src="https://unavatar.io/x/${h}" width="22" height="22" loading="lazy" alt="" onerror="this.remove()"></span>`,
+        `          <span class="creditor-handle">@${h}</span> <span class="creditor-n">${c.count} ${c.count === 1 ? 'project' : 'projects'}</span>`,
+        '        </a></li>',
       ].join('\n');
     })
     .join('\n');
-  return `\n${tiles}\n          `;
+  return `\n${items}\n        `;
 }
 
 function bakeStat(html, key, value) {

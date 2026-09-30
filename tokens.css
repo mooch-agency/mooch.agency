@@ -38,6 +38,9 @@
      theme block at the end of this file swaps in a light ring. */
   --shadow-border: 0px 0px 0px 1px rgba(0, 0, 0, 0.06), 0px 1px 2px -1px rgba(0, 0, 0, 0.06), 0px 2px 4px 0px rgba(0, 0, 0, 0.04);
   --shadow-border-hover: 0px 0px 0px 1px rgba(0, 0, 0, 0.08), 0px 1px 2px -1px rgba(0, 0, 0, 0.08), 0px 2px 4px 0px rgba(0, 0, 0, 0.06);
+  /* A hairline ring on images (avatars), pure black at low alpha so it never
+     reads as a tinted edge. Flips to white in the dark theme. */
+  --outline-image: 0 0 0 1px rgba(0, 0, 0, 0.1);
 
   /* Dark-context surfaces. The one dark page (/say-less) and the dark footer
      share these: a scrim for anything that sits over the page, a modal lift,
@@ -98,13 +101,13 @@
   --cat-plaything: hsl(35, 40%, 93%);
   --cat-ai: hsl(200, 30%, 94%);
 
-  /* Process colours for the /creditcards card art, mirroring the CMYK
-     grids of the Credits collection itself. Decorative marks only, never
-     text: the yellow has nowhere near text contrast on paper. */
+  /* Process colours for the /creditcards status marks (the Perks live dot,
+     the Open badge, the featured flag), mirroring the CMYK grids of the
+     Credits collection itself. Decorative marks only, never text: the
+     yellow has nowhere near text contrast on paper. */
   --credit-c: #00aeef;
   --credit-m: #ec008c;
   --credit-y: #fff200;
-  --credit-k: #1a1a1a;
 
   /* Pixel-wipe theme switch (/creditcards). The viewport is cut into
      --wipe-cols square "pixels" a row, like a Credit's 8x8 grid, and the new
@@ -132,4 +135,5 @@
   --muted-dark: #6e6e73;    /* secondary text on the inverted surfaces, ~5:1 */
   --shadow-border: 0px 0px 0px 1px rgba(255, 255, 255, 0.09), 0px 1px 2px -1px rgba(0, 0, 0, 0.4), 0px 2px 4px 0px rgba(0, 0, 0, 0.3);
   --shadow-border-hover: 0px 0px 0px 1px rgba(255, 255, 255, 0.16), 0px 1px 2px -1px rgba(0, 0, 0, 0.5), 0px 2px 4px 0px rgba(0, 0, 0, 0.4);
+  --outline-image: 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
