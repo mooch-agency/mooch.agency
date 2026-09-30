@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2105350104634847713",
-    "lastRun": "2026-09-30T18:20:17.551Z",
+    "sinceId": "2105394774584758770",
+    "lastRun": "2026-09-30T22:13:10.091Z",
     "stats": {
-      "floorEth": 0.02638,
+      "floorEth": 0.0264,
       "floorUsd": 71,
       "supply": 122153,
-      "owners": 15035,
-      "fetchedAt": "2026-09-30T18:20:17.537Z"
+      "owners": 14987,
+      "fetchedAt": "2026-09-30T22:13:10.062Z"
     },
     "replySinceId": "2105231813664706609"
   },
@@ -1356,6 +1356,27 @@
         "known-host"
       ],
       "tweetText": "Congrats to those who participated in the Black and Yellow Union of Credits with 80 spots reserved to Vahalla!\n@jackbutcher @visualizevalue \n\nhttps://t.co/pzrmbrojYV"
+    },
+    {
+      "id": "creditunion-fun-union-0x490c0f0d43b076753031299956eb4cee18a21375",
+      "name": "creditunion.fun",
+      "url": "https://creditunion.fun/union/0x490C0F0d43b076753031299956eB4CeE18A21375",
+      "x": "Ezquire",
+      "post": "https://x.com/Ezquire/status/2105376259568181549",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-09-30",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "Whoever is holding @jackbutcher Credits and wants to get in on the Openen Credit Union Statement better lock in!\n\nhttps://t.co/bC6ExxlyTk https://t.co/7Y3ER90Fvo"
     }
   ]
 }
