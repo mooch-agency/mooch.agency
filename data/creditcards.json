@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2105042848366129640",
-    "lastRun": "2026-09-29T22:12:56.947Z",
+    "sinceId": "2105165170234536383",
+    "lastRun": "2026-09-30T06:26:34.145Z",
     "stats": {
-      "floorEth": 0.0285,
-      "floorUsd": 76,
+      "floorEth": 0.02639999989997,
+      "floorUsd": 70,
       "supply": 122153,
-      "owners": 15246,
-      "fetchedAt": "2026-09-29T22:12:56.937Z"
+      "owners": 15199,
+      "fetchedAt": "2026-09-30T06:26:33.804Z"
     },
     "replySinceId": "2104985591024910518"
   },
@@ -1219,6 +1219,67 @@
         "article"
       ],
       "tweetText": "We all know that @jackbutcher sold 122,154 NFTs at $8 apiece through X Money\n\nRead our full guide to Credits ↓\n\nPresented by @nowmedia \n\nhttps://t.co/0QudQbx6Ou"
+    },
+    {
+      "id": "jacksonx28-github-io-credits-whale-watch",
+      "name": "jacksonx28.github.io",
+      "url": "https://jacksonx28.github.io/credits-whale-watch",
+      "x": "kingjackson_eth",
+      "post": "https://x.com/kingjackson_eth/status/2105106220847861901",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-09-30",
+      "metrics": {
+        "likes": 23,
+        "reposts": 5
+      },
+      "source": "search",
+      "score": 3,
+      "flags": [],
+      "tweetText": "built a site for credits to statements thesis gained from current onchain data: https://t.co/aJ7ie8pUpK\n\nCredits Whale Watch breaks down the burn thesis behind @jackbutcher Credits and what whale acti"
+    },
+    {
+      "id": "creditunion-fun-union-0x3e4ae126a14f16c8e55b138cb05f9e35506a5017",
+      "name": "creditunion.fun",
+      "url": "https://creditunion.fun/union/0x3e4ae126A14f16C8E55b138CB05f9e35506A5017",
+      "x": "doeordie448",
+      "post": "https://x.com/doeordie448/status/2105112450832196010",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-09-30",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "I joined Obligatory, a Credit Union pooling 80 Credits into a Statement. 71 to go. #MonaLisa @jackbutcher @taylor_ \nhttps://t.co/cuf3Y2gKqf"
+    },
+    {
+      "id": "creditunion-fun-union-0x3461c65edda8c576fc29585a8eec236c75528687",
+      "name": "creditunion.fun",
+      "url": "https://creditunion.fun/union/0x3461C65EDDA8C576fc29585a8eEC236C75528687",
+      "x": "Alcoholcorrupts",
+      "post": "https://x.com/Alcoholcorrupts/status/2105165170234536383",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-09-30",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "Join my Credit Union: Five Eights + CMYK. 80 Credits make a Statement. https://t.co/Z3e9y50fBD \n\nThis design was based off of the rarest credit.  I used K as the top and bottom border and CMYK for the"
     }
   ]
 }
