@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2105261291338186994",
-    "lastRun": "2026-09-30T12:29:29.627Z",
+    "sinceId": "2105350104634847713",
+    "lastRun": "2026-09-30T18:20:17.551Z",
     "stats": {
-      "floorEth": 0.02874999999989,
-      "floorUsd": 78,
+      "floorEth": 0.02638,
+      "floorUsd": 71,
       "supply": 122153,
-      "owners": 15094,
-      "fetchedAt": "2026-09-30T12:29:29.601Z"
+      "owners": 15035,
+      "fetchedAt": "2026-09-30T18:20:17.537Z"
     },
     "replySinceId": "2105231813664706609"
   },
@@ -1301,6 +1301,48 @@
         "coin"
       ],
       "tweetText": "I love @jackbutcher 's Credits, tho i put a controversial $200 worth of $IMD on NO. \n\nBurns coming tomorrow, i think you could steal my money, but here we go...\n\nGo bet on this one!\n\nTo be resolved by"
+    },
+    {
+      "id": "opensea-io-collection-rcpts",
+      "name": "opensea.io",
+      "url": "https://opensea.io/collection/rcpts",
+      "x": "TheRCPTS",
+      "post": "https://x.com/TheRCPTS/status/2105304229757812814",
+      "blurb": "",
+      "category": "markets",
+      "status": "pending",
+      "added": "2026-09-30",
+      "metrics": {
+        "likes": 34,
+        "reposts": 10
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "coin"
+      ],
+      "tweetText": "RECEIPTS Mint is Live 🧾 \n\n2000 Credits holders by (@jackbutcher) +\n@Racerz_eth + @FunkariNft Holders Are Eligible for Free Mint\n\nhttps://t.co/SYvEtyLcER\n\nmake sure to keep holding your RECEIPTS\n\n$RCP"
+    },
+    {
+      "id": "creditunion-fun-union-0x4c33b1ba63d02114efc522bc808ae937c82e174f",
+      "name": "creditunion.fun",
+      "url": "https://creditunion.fun/union/0x4c33b1BA63d02114Efc522Bc808AE937c82E174f",
+      "x": "lobobug",
+      "post": "https://x.com/lobobug/status/2105310682367635597",
+      "blurb": "",
+      "category": "art",
+      "status": "pending",
+      "added": "2026-09-30",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "Congrats to those who participated in the Black and Yellow Union of Credits with 80 spots reserved to Vahalla!\n@jackbutcher @visualizevalue \n\nhttps://t.co/pzrmbrojYV"
     }
   ]
 }
