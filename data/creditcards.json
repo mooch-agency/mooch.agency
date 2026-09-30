@@ -98,6 +98,18 @@
       "start": "2026-09-29",
       "ended": "Sent",
       "checked": "2026-09-29"
+    },
+    {
+      "id": "receipts-free-mint",
+      "project": "RECEIPTS",
+      "x": "TheRCPTS",
+      "type": "free-mint",
+      "eligibility": "2,000 Credits holders, plus Racerz and Funkari holders",
+      "description": "A free mint of RECEIPTS, 10,000 generative 8×8 records printed in CMYK on a lime field, on Robinhood Chain.",
+      "url": "https://opensea.io/collection/rcpts",
+      "post": "https://x.com/TheRCPTS/status/2105304229757812814",
+      "start": "2026-09-30",
+      "checked": "2026-09-30"
     }
   ],
   "projects": [
@@ -1222,13 +1234,13 @@
     },
     {
       "id": "jacksonx28-github-io-credits-whale-watch",
-      "name": "jacksonx28.github.io",
-      "url": "https://jacksonx28.github.io/credits-whale-watch",
+      "name": "Credits Whale Watch",
+      "url": "https://jacksonx28.github.io/credits-whale-watch/",
       "x": "kingjackson_eth",
       "post": "https://x.com/kingjackson_eth/status/2105106220847861901",
-      "blurb": "",
-      "category": "statements",
-      "status": "pending",
+      "blurb": "The burn thesis in numbers: holder spread, a bull and a bear case, and a whale tracker from 1 Oct. No wallet needed.",
+      "category": "rarity",
+      "status": "approved",
       "added": "2026-09-30",
       "metrics": {
         "likes": 23,
@@ -1304,13 +1316,13 @@
     },
     {
       "id": "opensea-io-collection-rcpts",
-      "name": "opensea.io",
+      "name": "RECEIPTS",
       "url": "https://opensea.io/collection/rcpts",
       "x": "TheRCPTS",
       "post": "https://x.com/TheRCPTS/status/2105304229757812814",
-      "blurb": "",
+      "blurb": "10,000 generative 8×8 receipts in CMYK on lime, on Robinhood Chain. Free mint for 2,000 Credits holders, wallet needed.",
       "category": "markets",
-      "status": "pending",
+      "status": "approved",
       "added": "2026-09-30",
       "metrics": {
         "likes": 34,
