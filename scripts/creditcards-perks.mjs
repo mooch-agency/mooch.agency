@@ -13,7 +13,7 @@
 // creditcards-categories.mjs.
 //
 // Perk fields (perks[]):
-//   id            stable slug, unique, seeds the card's grid mark
+//   id            stable slug, unique, the card's data-perk key
 //   project       the project's real name, as its own post or page gives it
 //   x             the builder's X handle, no @
 //   type          one of PERK_TYPES below

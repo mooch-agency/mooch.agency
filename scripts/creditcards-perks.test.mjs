@@ -84,7 +84,7 @@ test('bake: Perks pill straight after All, one card per perk, status by day', as
     // Buttons only: the page CSS also names [data-filter="perks"].
     const order = [...html.matchAll(/<button [^>]*data-filter="([a-z]+)"/g)].map((m) => m[1]);
     assert.deepEqual(order.slice(0, 3), ['all', 'perks', 'rarity']);
-    assert.match(html, /data-filter="perks"[^>]*aria-controls="perk-list"><span class="cc-filter-dot" aria-hidden="true"><\/span>Perks <span class="cc-filter-n">1 open<\/span>/);
+    assert.match(html, /data-filter="perks"[^>]*aria-controls="perk-list" data-count="\d+"><span class="cc-filter-dot" aria-hidden="true"><\/span>Perks <span class="cc-filter-n">1 open<\/span>/);
     assert.match(html, /data-perk="one" data-status="open"/);
     assert.match(html, /data-perk="two" data-status="ended"/);
     assert.match(html, /Know a perk\? DM @jesusdoteth/);
@@ -92,7 +92,7 @@ test('bake: Perks pill straight after All, one card per perk, status by day', as
     html = readFileSync(path.join(dir, 'creditcards.html'), 'utf8');
     assert.match(html, /data-perk="one" data-status="ended"/);
     assert.match(html, /Ended 1 Oct 2026/);
-    assert.match(html, /aria-controls="perk-list">Perks <span class="cc-filter-n">2<\/span>/, 'none open: the plain total');
+    assert.match(html, /aria-controls="perk-list" data-count="2">Perks <span class="cc-filter-n">2<\/span>/, 'none open: the plain total');
   } finally {
     console.log = log;
   }
