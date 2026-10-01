@@ -606,12 +606,13 @@ function renderPerks(perks, dm, today) {
         .join('\n');
     });
   const items = [...cards.slice(0, slotAt), slot, ...cards.slice(slotAt)].join('\n');
+  // Just the ask: the cards and the band below explain the view themselves.
   const ask = dm
-    ? ` <a href="${escapeHtml(dm)}" target="_blank" rel="noopener" data-event="creditcards_perk_submit">Know a perk? DM @jesusdoteth <span class="arrow">&rarr;</span></a>`
-    : '';
+    ? `      <p class="perks-intro"><a href="${escapeHtml(dm)}" target="_blank" rel="noopener" data-event="creditcards_perk_submit">Know about a perk? DM @jesusdoteth <span class="arrow">&rarr;</span></a></p>`
+    : null;
   return [
     '    <div class="perks-view" id="perk-list">',
-    `      <p class="perks-intro">Every perk offered to Credits holders so far. New ones land here first.${ask}</p>`,
+    ...(ask ? [ask] : []),
     '      <ol class="projects perks">',
     items,
     '      </ol>',

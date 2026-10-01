@@ -87,7 +87,8 @@ test('bake: Perks pill straight after All, one card per perk, status by day', as
     assert.match(html, /data-filter="perks"[^>]*aria-controls="perk-list" data-count="\d+"><span class="cc-filter-dot" aria-hidden="true"><\/span>Perks <span class="cc-filter-n">1 open<\/span>/);
     assert.match(html, /data-perk="one" data-status="open"/);
     assert.match(html, /data-perk="two" data-status="ended"/);
-    assert.match(html, /Know a perk\? DM @jesusdoteth/);
+    assert.match(html, /<p class="perks-intro"><a [^>]*>Know about a perk\? DM @jesusdoteth/);
+    assert.doesNotMatch(html, /Every perk offered to Credits holders so far/);
     await run({ root: dir, bakeOnly: true, dry: false, today: '2026-10-02' });
     html = readFileSync(path.join(dir, 'creditcards.html'), 'utf8');
     assert.match(html, /data-perk="one" data-status="ended"/);
