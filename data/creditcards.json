@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2105394774584758770",
-    "lastRun": "2026-09-30T22:13:10.091Z",
+    "sinceId": "2105538205013393677",
+    "lastRun": "2026-10-01T06:22:36.074Z",
     "stats": {
-      "floorEth": 0.0264,
-      "floorUsd": 71,
+      "floorEth": 0.0274678,
+      "floorUsd": 75,
       "supply": 122153,
-      "owners": 14987,
-      "fetchedAt": "2026-09-30T22:13:10.062Z"
+      "owners": 14912,
+      "fetchedAt": "2026-10-01T06:22:36.055Z"
     },
     "replySinceId": "2105231813664706609"
   },
@@ -1377,6 +1377,25 @@
         "known-host"
       ],
       "tweetText": "Whoever is holding @jackbutcher Credits and wants to get in on the Openen Credit Union Statement better lock in!\n\nhttps://t.co/bC6ExxlyTk https://t.co/7Y3ER90Fvo"
+    },
+    {
+      "id": "themotif-art",
+      "name": "themotif.art",
+      "url": "https://themotif.art",
+      "x": "Mussawar_Hayat",
+      "post": "https://x.com/Mussawar_Hayat/status/2105509807306199060",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-10-01",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "Morning scan.\n\nETH: Jack Butcher Credits open Statement assembly today. Burn 80 Credits into one on-chain print. https://t.co/UWwJ3tpupo\n\nMotif. 2,048 works drawn and animated by contract. magicburp. "
     }
   ]
 }
