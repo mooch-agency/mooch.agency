@@ -1,4 +1,4 @@
-// Vercel serverless function: start a Credit Cards daily-scan subscription.
+// Vercel serverless function: start a Credit Cards perk-alert subscription.
 //
 //   POST { email }  ->  { url }   (a Stripe Checkout URL; the page redirects)
 //

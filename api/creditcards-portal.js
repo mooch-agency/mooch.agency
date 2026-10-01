@@ -75,7 +75,7 @@ function checkYourEmail(res) {
 <body>
 <main>
   <h1>Check your email.</h1>
-  <p>Every Credit Cards digest ends with a Manage link that opens your billing page, where you can change your card or cancel. Can't find one? Email <a class="text" href="mailto:hey@mooch.agency?subject=Credit%20Cards%20subscription">hey@mooch.agency</a> and a human sorts it.</p>
+  <p>Every Credit Cards perk alert ends with a Manage link that opens your billing page, where you can change your card or cancel. Can't find one? Email <a class="text" href="mailto:hey@mooch.agency?subject=Credit%20Cards%20subscription">hey@mooch.agency</a> and a human sorts it.</p>
   <a class="ghost" href="${INDEX_URL}">Back to Credit Cards</a>
 </main>
 </body>

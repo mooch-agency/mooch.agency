@@ -1,107 +1,112 @@
-// Offline checks for the Credit Cards paid daily scan: pnpm test
-// Covers digest selection, the subject line, the email's HTML shape, the
-// run's state rules, and the shared helpers (email syntax, signed portal
-// links, the cron auth). No Stripe, Resend or Blob: every side effect in
-// runDigest is injected, so none of this needs a key or the network.
+// Offline checks for the Credit Cards paid perk alerts: pnpm test
+// Covers perk selection, the subject line, the email's HTML shape, the run's
+// state rules, and the shared helpers (email syntax, signed portal links,
+// the cron auth). No Stripe, Resend or Blob: every side effect in runDigest
+// is injected, so none of this needs a key or the network.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readFileSync } from 'node:fs';
 import digest from '../api/_creditcards-digest.js';
 import shared from '../api/_creditcards.js';
 import handler from '../api/creditcards-digest.js';
 import subscribe from '../api/creditcards-subscribe.js';
-import { CATEGORIES } from './creditcards-categories.mjs';
+import { perkStatus } from './creditcards-perks.mjs';
 
 const {
-  CATEGORY_LABELS, selectNew, buildSubject, buildEmailHtml, buildEmailText, idempotencyKey, byline, mergeState, runDigest,
+  selectNew, buildSubject, buildEmailHtml, buildEmailText, idempotencyKey, when, mergeState, runDigest,
 } = digest;
 const { normaliseEmail, signCustomer, verifyCustomer, portalUrl } = shared;
-const { isAuthorized, blobStoreId, scrubSecrets, makeSender } = handler.__testables;
+const { isAuthorized, blobStoreId, scrubSecrets, makeSender, loadPerks } = handler.__testables;
 const { checkoutParams, returnIndexUrl, hasStandingOrder } = subscribe.__testables;
 
 const NOW = new Date('2026-10-01T07:00:00Z');
 const MANAGE = 'https://mooch.agency/api/creditcards-portal?c=cus_TEST123&s=abc';
 
-const project = (over = {}) => ({
+// A perk as the handler hands it over: the data fields plus status and label.
+const perk = (over = {}) => ({
   id: 'p1',
-  name: 'Credit Union',
-  url: 'https://creditunion.fun',
-  x: 'bigvibessss',
-  post: 'https://x.com/bigvibessss/status/1',
-  blurb: 'Pool Credits until you hit 80.',
-  category: 'statements',
-  status: 'approved',
-  added: '2026-09-28',
+  project: 'Futures',
+  x: 'LATE_FX',
+  type: 'free-mint',
+  typeLabel: 'Free mint',
+  status: 'open',
+  eligibility: 'Credits holders, one per Credit',
+  description: 'A free 1 of 1 magic 8 ball for each Credit you hold.',
+  url: 'https://laternow.app/futures',
+  post: 'https://x.com/LATE_FX/status/1',
+  start: '2026-09-24',
   ...over,
 });
 
-test('selection: approved and unsent only, oldest first', () => {
-  const projects = [
-    project({ id: 'b', name: 'Beta', added: '2026-09-30' }),
-    project({ id: 'a', name: 'Alpha', added: '2026-09-29' }),
-    project({ id: 'sent', added: '2026-09-01' }),
-    project({ id: 'pend', status: 'pending' }),
-    project({ id: 'rej', status: 'rejected' }),
-    project({ id: 'c', name: 'Aardvark', added: '2026-09-30' }),
+test('selection: unsent and not ended; open first, then unknown, then by start', () => {
+  const perks = [
+    perk({ id: 'u', project: 'Unknown', status: 'unknown', start: '2026-09-20' }),
+    perk({ id: 'b', project: 'Beta', start: '2026-09-30' }),
+    perk({ id: 'a', project: 'Alpha', start: '2026-09-29' }),
+    perk({ id: 'sent', start: '2026-09-01' }),
+    perk({ id: 'gone', status: 'ended' }),
   ];
-  assert.deepEqual(selectNew(projects, ['sent']).map((p) => p.id), ['a', 'c', 'b']);
-  assert.deepEqual(selectNew(projects, ['a', 'b', 'c', 'sent']), []);
+  assert.deepEqual(selectNew(perks, ['sent']).map((p) => p.id), ['a', 'b', 'u']);
+  assert.deepEqual(selectNew(perks, ['a', 'b', 'u', 'sent']), []);
   assert.deepEqual(selectNew([], undefined), []);
 });
 
-test('selection: the real feed seeds every approved project', () => {
-  const data = JSON.parse(readFileSync(new URL('../data/creditcards.json', import.meta.url), 'utf8'));
-  const approved = data.projects.filter((p) => p.status === 'approved');
-  assert.equal(selectNew(data.projects, []).length, approved.length);
-  assert.ok(approved.length > 0);
+test('the handler decorates the real feed with the page\'s own status rule', async () => {
+  const perks = await loadPerks(NOW);
+  assert.ok(perks.length > 0);
+  for (const p of perks) {
+    assert.equal(p.status, perkStatus(p, '2026-10-01'), p.id);
+    assert.ok(p.typeLabel, `${p.id} has a type label`);
+  }
 });
 
 test('subject pluralises', () => {
-  assert.equal(buildSubject([project()]), '1 new Credits project');
-  assert.equal(buildSubject([project(), project({ id: 'p2' })]), '2 new Credits projects');
+  assert.equal(buildSubject([perk()]), '1 new perk for Credits holders');
+  assert.equal(buildSubject([perk(), perk({ id: 'p2' })]), '2 new perks for Credits holders');
 });
 
-test('category labels mirror the shared category list', () => {
-  assert.deepEqual(CATEGORY_LABELS, Object.fromEntries(CATEGORIES.map((c) => [c.slug, c.label])));
-});
-
-test('byline joins co-builders', () => {
-  assert.equal(byline(project()), '@bigvibessss');
-  assert.equal(byline(project({ with: ['taylor_'] })), '@bigvibessss & @taylor_');
-  assert.equal(byline(project({ with: ['a', 'b'] })), '@bigvibessss, @a & @b');
+test('dates: an end still ahead, or a start not reached yet', () => {
+  assert.equal(when(perk({ end: '2026-10-03' }), NOW), 'Until 3 Oct');
+  assert.equal(when(perk({ start: '2026-10-05', status: 'unknown' }), NOW), 'From 5 Oct');
+  assert.equal(when(perk(), NOW), '');
 });
 
 test('email HTML: header, items, pips, links, footer', () => {
-  const items = [project({ with: ['taylor_'] }), project({ id: 'p2', name: 'Statement Studio', category: 'art' })];
+  const items = [perk({ end: '2026-10-03' }), perk({ id: 'p2', project: 'Debits', type: 'airdrop', typeLabel: 'Airdrop' })];
   const html = buildEmailHtml(items, { now: NOW, manageUrl: MANAGE });
   assert.match(html, /^<!doctype html>/);
-  assert.match(html, /Credit Cards &middot; Daily scan &middot; 1 October 2026/);
-  assert.match(html, /2 new <em[^>]*>projects\.<\/em>/);
+  assert.match(html, /Credit Cards &middot; Perk alert &middot; 1 October 2026/);
+  assert.match(html, /2 new <em[^>]*>perks\.<\/em>/);
   // Four CMYK pips per item.
   for (const c of ['#00aeef', '#ec008c', '#fff200', '#1a1a1a']) {
     assert.equal(html.split(`background:${c};`).length - 1, items.length, `pip ${c}`);
   }
-  assert.match(html, /Build your Statement/);
-  assert.match(html, /Art &amp; remixes/);
-  assert.match(html, /By @bigvibessss &amp; @taylor_/);
-  assert.match(html, /href="https:\/\/x\.com\/bigvibessss\/status\/1"[^>]*>The announcement &rarr;<\/a>/);
+  assert.match(html, />Free mint</);
+  assert.match(html, />Airdrop</);
+  assert.match(html, /For<\/span>Credits holders, one per Credit/);
+  assert.match(html, /Until 3 Oct &middot; By @LATE_FX &middot; <a href="https:\/\/x\.com\/LATE_FX\/status\/1"[^>]*>The announcement &rarr;<\/a>/);
+  assert.match(html, /Check the builder's own post before you connect a wallet/);
   assert.match(html, /no sponsors in the email, ever\. Reply and a human answers\./);
+  assert.doesNotMatch(html, /7am|7 am/, 'no time of day promised');
   // Manage and Unsubscribe both go to this recipient's signed portal link.
   const manage = MANAGE.replace(/&/g, '&amp;');
   assert.match(html, new RegExp(`href="${manage.replace(/[.?]/g, '\\$&')}"[^>]*>Manage</a>`));
   assert.match(html, new RegExp(`href="${manage.replace(/[.?]/g, '\\$&')}"[^>]*>Unsubscribe</a>`));
-  assert.match(html, /href="https:\/\/mooch\.agency\/creditcards"[^>]*>Open the index<\/a>/);
+  assert.match(html, /href="https:\/\/mooch\.agency\/creditcards#perks"[^>]*>See every perk &rarr;<\/a>/);
+  assert.match(html, /href="https:\/\/mooch\.agency\/creditcards#perks"[^>]*>All perks<\/a>/);
   assert.doesNotMatch(html, /—/, 'no em dashes');
 });
 
-test('email HTML: singular heading', () => {
-  assert.match(buildEmailHtml([project()], { now: NOW, manageUrl: MANAGE }), /1 new <em[^>]*>project\.<\/em>/);
+test('email HTML: singular heading, and no announcement link when there is no post', () => {
+  const html = buildEmailHtml([perk({ post: undefined })], { now: NOW, manageUrl: MANAGE });
+  assert.match(html, /1 new <em[^>]*>perk\.<\/em>/);
+  assert.doesNotMatch(html, /The announcement/);
+  assert.match(html, /By @LATE_FX/);
 });
 
 test('email HTML escapes data and refuses non-http links', () => {
-  const evil = project({
-    name: '<script>alert(1)</script>',
-    blurb: 'Tom & "Jerry" <b>',
+  const evil = perk({
+    project: '<script>alert(1)</script>',
+    description: 'Tom & "Jerry" <b>',
     x: 'x"><img src=x>',
     url: 'javascript:alert(1)',
     post: 'data:text/html,hi',
@@ -115,16 +120,17 @@ test('email HTML escapes data and refuses non-http links', () => {
 });
 
 test('email text part carries the items and both links', () => {
-  const text = buildEmailText([project()], { now: NOW, manageUrl: MANAGE });
-  assert.match(text, /1 new Credits project\./);
-  assert.match(text, /Credit Union \(Build your Statement\)/);
-  assert.match(text, /https:\/\/creditunion\.fun/);
+  const text = buildEmailText([perk()], { now: NOW, manageUrl: MANAGE });
+  assert.match(text, /1 new perk for Credits holders\./);
+  assert.match(text, /Futures \(Free mint\)/);
+  assert.match(text, /For: Credits holders, one per Credit/);
+  assert.match(text, /https:\/\/laternow\.app\/futures/);
   assert.ok(text.includes(`Manage or unsubscribe: ${MANAGE}`));
 });
 
 test('idempotency key: order-blind, per recipient, per item set', () => {
-  const a = project({ id: 'a' });
-  const b = project({ id: 'b' });
+  const a = perk({ id: 'a' });
+  const b = perk({ id: 'b' });
   assert.equal(idempotencyKey('x@y.com', [a, b]), idempotencyKey('x@y.com', [b, a]));
   assert.notEqual(idempotencyKey('x@y.com', [a, b]), idempotencyKey('z@y.com', [a, b]));
   assert.notEqual(idempotencyKey('x@y.com', [a]), idempotencyKey('x@y.com', [a, b]));
@@ -140,11 +146,11 @@ test('state merge is a union', () => {
 
 // A fake world for runDigest: an in-memory state store and a recording sender.
 // failFor: per-recipient failures (Resend 4xx). infraFor: pipe failures (5xx).
-function world({ projects, state, recipients = [], failFor = [], infraFor = [] }) {
+function world({ perks, state, recipients = [], failFor = [], infraFor = [] }) {
   const w = { state, sends: [], recipientCalls: 0 };
   w.deps = {
     now: NOW,
-    loadProjects: async () => projects,
+    loadPerks: async () => perks,
     loadState: async () => w.state,
     saveState: async (merge) => { w.state = merge(w.state); },
     listRecipients: async () => { w.recipientCalls++; return recipients; },
@@ -160,7 +166,7 @@ function world({ projects, state, recipients = [], failFor = [], infraFor = [] }
 }
 
 test('run: first run seeds state and emails nobody', async () => {
-  const w = world({ projects: [project({ id: 'a' }), project({ id: 'b' })], state: null, recipients: [{ email: 'x@y.com', customerId: 'cus_1' }] });
+  const w = world({ perks: [perk({ id: 'a' }), perk({ id: 'b', status: 'ended' })], state: null, recipients: [{ email: 'x@y.com', customerId: 'cus_1' }] });
   const r = await runDigest(w.deps);
   assert.equal(r.ok, true);
   assert.equal(r.skipped, true);
@@ -170,7 +176,7 @@ test('run: first run seeds state and emails nobody', async () => {
 });
 
 test('run: nothing new is silent', async () => {
-  const w = world({ projects: [project({ id: 'a' })], state: { sentIds: ['a'] }, recipients: [{ email: 'x@y.com', customerId: 'cus_1' }] });
+  const w = world({ perks: [perk({ id: 'a' })], state: { sentIds: ['a'] }, recipients: [{ email: 'x@y.com', customerId: 'cus_1' }] });
   const r = await runDigest(w.deps);
   assert.deepEqual([r.ok, r.skipped, r.reason], [true, true, 'nothing new']);
   assert.equal(w.sends.length, 0);
@@ -178,7 +184,7 @@ test('run: nothing new is silent', async () => {
 });
 
 test('run: no recipients still advances state (no backlog for subscriber one)', async () => {
-  const w = world({ projects: [project({ id: 'a' }), project({ id: 'b' })], state: { sentIds: ['a'] }, recipients: [] });
+  const w = world({ perks: [perk({ id: 'a' }), perk({ id: 'b' })], state: { sentIds: ['a'] }, recipients: [] });
   const r = await runDigest(w.deps);
   assert.deepEqual([r.ok, r.skipped, r.reason], [true, true, 'no recipients']);
   assert.deepEqual(w.state.sentIds, ['a', 'b']);
@@ -186,11 +192,11 @@ test('run: no recipients still advances state (no backlog for subscriber one)', 
 
 test('run: one email per recipient, then state', async () => {
   const recipients = [{ email: 'x@y.com', customerId: 'cus_1' }, { email: 'z@y.com', customerId: 'cus_2' }];
-  const w = world({ projects: [project({ id: 'a' }), project({ id: 'b' }), project({ id: 'c' })], state: { sentIds: ['a'] }, recipients });
+  const w = world({ perks: [perk({ id: 'a' }), perk({ id: 'b' }), perk({ id: 'c' })], state: { sentIds: ['a'] }, recipients });
   const r = await runDigest(w.deps);
   assert.deepEqual([r.ok, r.newCount, r.sent, r.failed], [true, 2, 2, 0]);
   assert.deepEqual(w.sends.map((m) => m.to), ['x@y.com', 'z@y.com']);
-  assert.equal(w.sends[0].subject, '2 new Credits projects');
+  assert.equal(w.sends[0].subject, '2 new perks for Credits holders');
   assert.match(w.sends[0].html, /c=cus_1/);
   assert.match(w.sends[1].html, /c=cus_2/);
   assert.equal(w.sends[0].manageUrl, 'https://mooch.agency/api/creditcards-portal?c=cus_1&s=sig');
@@ -200,7 +206,7 @@ test('run: one email per recipient, then state', async () => {
 
 test('run: a per-recipient failure still advances state, and is counted', async () => {
   const recipients = [{ email: 'x@y.com', customerId: 'cus_1' }, { email: 'bad@y.com', customerId: 'cus_2' }];
-  const w = world({ projects: [project({ id: 'a' }), project({ id: 'b' })], state: { sentIds: ['a'] }, recipients, failFor: ['bad@y.com'] });
+  const w = world({ perks: [perk({ id: 'a' }), perk({ id: 'b' })], state: { sentIds: ['a'] }, recipients, failFor: ['bad@y.com'] });
   const r = await runDigest(w.deps);
   assert.deepEqual([r.ok, r.sent, r.failed, r.failedRecipients], [true, 1, 1, 1]);
   assert.deepEqual(w.state.sentIds, ['a', 'b']);
@@ -208,7 +214,7 @@ test('run: a per-recipient failure still advances state, and is counted', async 
 
 test('run: an infrastructure failure leaves state alone so the items go again', async () => {
   const recipients = [{ email: 'x@y.com', customerId: 'cus_1' }, { email: 'down@y.com', customerId: 'cus_2' }];
-  const w = world({ projects: [project({ id: 'a' }), project({ id: 'b' })], state: { sentIds: ['a'] }, recipients, infraFor: ['down@y.com'] });
+  const w = world({ perks: [perk({ id: 'a' }), perk({ id: 'b' })], state: { sentIds: ['a'] }, recipients, infraFor: ['down@y.com'] });
   const r = await runDigest(w.deps);
   assert.deepEqual([r.ok, r.sent, r.failed, r.failedRecipients], [false, 1, 1, 0]);
   assert.deepEqual(w.state.sentIds, ['a']);
@@ -216,14 +222,14 @@ test('run: an infrastructure failure leaves state alone so the items go again', 
 
 test('run: every send failing withholds state, even when each looks per-recipient', async () => {
   const recipients = [{ email: 'x@y.com', customerId: 'cus_1' }, { email: 'z@y.com', customerId: 'cus_2' }];
-  const w = world({ projects: [project({ id: 'a' }), project({ id: 'b' })], state: { sentIds: ['a'] }, recipients, failFor: ['x@y.com', 'z@y.com'] });
+  const w = world({ perks: [perk({ id: 'a' }), perk({ id: 'b' })], state: { sentIds: ['a'] }, recipients, failFor: ['x@y.com', 'z@y.com'] });
   const r = await runDigest(w.deps);
   assert.deepEqual([r.ok, r.sent, r.failedRecipients], [false, 0, 2]);
   assert.deepEqual(w.state.sentIds, ['a']);
 });
 
 test('run: a failed recipient fetch throws and leaves state alone', async () => {
-  const w = world({ projects: [project({ id: 'a' }), project({ id: 'b' })], state: { sentIds: ['a'] } });
+  const w = world({ perks: [perk({ id: 'a' }), perk({ id: 'b' })], state: { sentIds: ['a'] } });
   w.deps.listRecipients = async () => { throw new Error('Stripe down'); };
   await assert.rejects(runDigest(w.deps), /Stripe down/);
   assert.deepEqual(w.state.sentIds, ['a']);

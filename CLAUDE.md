@@ -247,13 +247,24 @@ dropped 17 Sep 2026: the board is public, so gating on it added nothing); its
 guards are local-part syntax, Mailchecker's disposable blocklist, an MX lookup
 that fails open on timeout, and per-domain plus global rate limits.
 
-## Credit Cards alerts (paid daily scan)
+## Credit Cards alerts (paid perk alerts)
 
-The standing-order band on `/creditcards` sells a daily email of newly approved
-projects at $8 a month, labelled "launch price", charged up front with no
-trial. Never show a struck "was" price: $15 was never charged, and a reference
-price that never applied is an ASA problem. **Stripe is the subscriber list**:
-there is no database.
+The standing-order band on `/creditcards` sells an email of **new perks for
+Credits holders** (`perks[]`, not new projects: holders pay to hear about
+things they can claim) at $8 a month, labelled "launch price", charged up
+front with no trial. Never show a struck "was" price: $15 was never charged,
+and a reference price that never applied is an ASA problem. Never promise a
+time of day either: perks land in `perks[]` when a human has checked them,
+so the cron is a floor, not a clock. **Stripe is the subscriber list**: there
+is no database.
+
+The band is inverted (black on the white page, white in the dark theme) so it
+is noticed without motion, popups or timers. It has two homes and is one
+element: the foot of the index, and, in the Perks view, the empty
+`li[data-standing-slot]` the bake leaves after the open perks, where the
+script moves it. Its opening line ("6 of the 7 perks ... have already
+ended") is baked by `perksLine()` in `scripts/creditcards-update.mjs`, so it
+stays true. Band events carry `data.placement` (`perks` or `foot`).
 
 - `api/creditcards-subscribe.js` POST `{email}` opens a Stripe Checkout
   subscription on `STRIPE_PRICE_ID` and returns `{url}`. The band's form also
@@ -265,20 +276,22 @@ there is no database.
   answer reveals whether an address subscribes: accepted, for an $8
   newsletter behind a per-IP rate limit.
 - `api/creditcards-digest.js` is a Vercel cron, `0 7 * * *` in `vercel.json`:
-  07:00 UTC, so 7am GMT and 8am BST, chosen over DST-switching crons. It 401s
+  07:00 UTC (internal only: no copy names a time). It 401s
   without `Authorization: Bearer $CRON_SECRET`. It reads the bundled
-  `data/creditcards.json`, picks approved projects whose id isn't in the sent
+  `data/creditcards.json`, works out each perk's status for the day with
+  `perkStatus()` from `scripts/creditcards-perks.mjs` (imported, one home for
+  the rule), picks perks that haven't ended and whose id isn't in the sent
   state, and emails every active or trialing subscription on our price via
-  Resend, one email per person, idempotency-keyed. Nothing new, no email.
-- State is one private blob, `creditcards-digest/state.json` (`{ sentIds }`).
-  **The first run seeds it with every approved id and sends nothing**, or
-  launch day would mail the whole index. After a send it advances unless the
+  Resend, one email per person, idempotency-keyed. No new perk, no email.
+- State is one private blob, `creditcards-digest/perks-state.json`
+  (`{ sentIds }`, perk ids). **The first run seeds it with every perk id and
+  sends nothing**, or launch day would mail perks already on the page. After a send it advances unless the
   run hit an infrastructure failure (recipient fetch, Blob write, a Resend
   5xx, a 429 that survived the retry, a network error, or every send
   failing). Failures that are only per-recipient (a Resend 4xx for some
   addresses) still advance it: those
-  people miss that day's items for good, rather than one bad address
-  replaying a growing digest to everyone else daily. The run summary carries
+  people miss that perk for good, rather than one bad address replaying a
+  growing alert to everyone else daily. The run summary carries
   `failedRecipients`. A withheld run is safe to re-run by hand within 24h
   (Resend drops repeats by key, and a 409 counts as already sent):
   `curl -H "Authorization: Bearer $CRON_SECRET" https://mooch.agency/api/creditcards-digest`.
@@ -288,7 +301,7 @@ there is no database.
   address; anything unsigned goes to Stripe's portal login page instead. No
   lookup by email, so no enumeration here. The band and the post-checkout
   confirmation link to it unsigned ("Manage"), so a subscriber can manage
-  before their first scan arrives: set `STRIPE_PORTAL_LOGIN_URL`, or that
+  before their first alert arrives: set `STRIPE_PORTAL_LOGIN_URL`, or that
   link lands on a "check your email" page.
 - The rules live in `api/_creditcards-digest.js` with every side effect
   injected; `pnpm test` covers selection, subject, email HTML, the state

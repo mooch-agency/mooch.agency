@@ -1,20 +1,21 @@
-// Vercel cron target: the Credit Cards 7am digest.
+// Vercel cron target: the Credit Cards perk alert.
 //
 //   GET, Authorization: Bearer $CRON_SECRET  ->  { ok, ... } run summary
 //
-// Schedule: "0 7 * * *" in vercel.json, which is 07:00 UTC. That is 7am in
-// winter (GMT) and 8am in summer (BST). Chosen over two DST-switching crons:
-// the difference doesn't matter to a daily digest, the complexity would.
+// Schedule: "0 7 * * *" in vercel.json, 07:00 UTC. The page and the email
+// deliberately promise no time of day (dropped 1 Oct 2026): perks reach
+// perks[] when a human has checked them, so the cron is a floor, not a clock.
 //
 // This file is only the transport: auth, and wiring the real Stripe, Resend
 // and Blob calls into runDigest (api/_creditcards-digest.js), which holds the
 // rules and is unit-tested without any of them. Ported from
 // monitoring-the-situation (api/daily.ts, src/notify.ts, src/storage.ts).
 //
-//   Feed        data/creditcards.json, bundled with the function (includeFiles
-//               in vercel.json). Approved projects only. The daily GitHub
-//               workflow commits it and the push redeploys, so 7am reads
-//               whatever was approved by then.
+//   Feed        data/creditcards.json perks[], bundled with the function
+//               (includeFiles in vercel.json), each decorated with its status
+//               for today by scripts/creditcards-perks.mjs (imported, so the
+//               open/ended rule has one home). Perks are human-written and the
+//               push redeploys, so a run reads whatever was added by then.
 //   Recipients  Stripe subscriptions on STRIPE_PRICE_ID, status active or
 //               trialing, customer email expanded. Stripe is the list.
 //   Send        Resend REST, one email per recipient, Idempotency-Key from
@@ -43,7 +44,9 @@ const { getStripe, normaliseEmail, portalUrl } = require("./_creditcards");
 const { runDigest } = require("./_creditcards-digest");
 
 const FEED_PATH = path.join(__dirname, "..", "data", "creditcards.json");
-const STATE_PATH = "creditcards-digest/state.json";
+// perks-state, not state: the first version tracked project ids and was
+// never deployed. A fresh name means no run can ever read those as perks.
+const STATE_PATH = "creditcards-digest/perks-state.json";
 
 const RESEND_URL = "https://api.resend.com/emails";
 const FROM_ADDRESS = "Credit Cards <mb@mooch.agency>";
@@ -135,7 +138,7 @@ function localStatePath() {
 
 /** The stored state, or null when nothing has ever been stored (first run).
  * A read error throws instead: treating it as "no state" would reseed and
- * silently swallow that day's new projects. Corrupt JSON also throws, for
+ * silently swallow that day's new perks. Corrupt JSON also throws, for
  * the same reason. */
 async function loadState() {
   const raw = await readStateText();
@@ -155,9 +158,15 @@ async function saveState(merge) {
 
 // --- Feed -----------------------------------------------------------------------------
 
-async function loadProjects() {
+/** perks[], each with `status` for today (UTC, as the page's bake works it
+ * out) and `typeLabel` for the email. A literal import path, so Vercel's file
+ * tracer bundles the module with the function. */
+async function loadPerks(now = new Date()) {
+  const { perkStatus, PERK_TYPES, todayUtc } = await import("../scripts/creditcards-perks.mjs");
+  const labels = Object.fromEntries(PERK_TYPES.map((t) => [t.slug, t.label]));
+  const today = todayUtc(now);
   const data = JSON.parse(await fs.readFile(FEED_PATH, "utf8"));
-  return Array.isArray(data.projects) ? data.projects : [];
+  return (Array.isArray(data.perks) ? data.perks : []).map((p) => ({ ...p, status: perkStatus(p, today), typeLabel: labels[p.type] || "" }));
 }
 
 // --- Recipients -----------------------------------------------------------------------
@@ -269,7 +278,7 @@ module.exports = async (req, res) => {
 
     const result = await runDigest({
       now: new Date(startedAt),
-      loadProjects,
+      loadPerks: () => loadPerks(new Date(startedAt)),
       loadState,
       saveState,
       listRecipients: async () => {
@@ -299,4 +308,4 @@ function scrubSecrets(s) {
 }
 
 // Exported for tests only.
-module.exports.__testables = { isAuthorized, blobStoreId, scrubSecrets, makeSender };
+module.exports.__testables = { isAuthorized, blobStoreId, scrubSecrets, makeSender, loadPerks };

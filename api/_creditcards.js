@@ -1,12 +1,12 @@
-// Shared helpers for the Credit Cards paid daily scan: the subscribe, digest
+// Shared helpers for the Credit Cards paid perk alerts: the subscribe, digest
 // and portal endpoints all use these. The leading underscore keeps Vercel
 // from deploying this file as a function of its own (same as _langsmith.js).
 //
 // The pipeline in one breath: /creditcards posts an email to
 // api/creditcards-subscribe.js, which opens a Stripe Checkout subscription
 // (paid up front, no trial). Stripe is the subscriber list: there is no database.
-// Every morning api/creditcards-digest.js emails newly approved projects to
-// every active or trialing subscription. Each email carries a signed link to
+// A daily cron, api/creditcards-digest.js, emails each new perk for Credits
+// holders to every active or trialing subscription. Each email carries a signed link to
 // api/creditcards-portal.js, which opens that customer's Stripe billing
 // portal (manage, cancel). See "Credit Cards alerts" in CLAUDE.md.
 

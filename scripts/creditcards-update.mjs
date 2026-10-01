@@ -580,7 +580,15 @@ function perkDate(p, status) {
 // pressed; with no JavaScript it sits under the projects.
 function renderPerks(perks, dm, today) {
   if (!perks || !perks.length) return null;
-  const items = sortPerks(perks, today)
+  const sorted = sortPerks(perks, today);
+  // Where the paid-alert band goes in this view: straight after the perks
+  // you can still claim (open, then unknown), before the ended ones. Empty in
+  // the HTML; the band's script moves the one #subscribe band in here while
+  // the Perks view is showing, so the form sits where the intent is.
+  const firstEnded = sorted.findIndex((p) => perkStatus(p, today) === 'ended');
+  const slotAt = firstEnded === -1 ? sorted.length : firstEnded;
+  const slot = '        <li data-standing-slot></li>';
+  const cards = sorted
     .map((p) => {
       const status = perkStatus(p, today);
       const name = escapeHtml(stripDashes(p.project));
@@ -596,8 +604,8 @@ function renderPerks(perks, dm, today) {
       ]
         .map((line) => `  ${line}`)
         .join('\n');
-    })
-    .join('\n');
+    });
+  const items = [...cards.slice(0, slotAt), slot, ...cards.slice(slotAt)].join('\n');
   const ask = dm
     ? ` <a href="${escapeHtml(dm)}" target="_blank" rel="noopener" data-event="creditcards_perk_submit">Know a perk? DM @jesusdoteth <span class="arrow">&rarr;</span></a>`
     : '';
@@ -722,6 +730,16 @@ function renderCreditors(projects) {
   return `\n${items}\n        `;
 }
 
+// The band's opening line, true for the day of the bake: how many of the
+// perks listed have already ended. Grammar follows the counts, and with no
+// perks (or none ended) it falls back to a line that claims nothing.
+export function perksLine(perks, today = todayUtc()) {
+  const total = (perks || []).length;
+  const ended = (perks || []).filter((p) => perkStatus(p, today) === 'ended').length;
+  if (!total || !ended) return "Don't miss the next perk for Credits holders.";
+  return `${ended} of the ${total} ${total === 1 ? 'perk' : 'perks'} offered to holders so far ${ended === 1 ? 'has' : 'have'} already ended.`;
+}
+
 function bakeStat(html, key, value) {
   const re = new RegExp(`(<span data-stat="${key}">)([^<]*)(</span>)`);
   if (!re.test(html)) throw new Error(`no data-stat="${key}" span in ${PAGE_FILE}`);
@@ -740,6 +758,7 @@ function bake(html, data, today = todayUtc()) {
   next = bakeStat(next, 'floorUsd', fmtInt(s.floorUsd));
   next = bakeStat(next, 'supply', fmtInt(s.supply));
   next = bakeStat(next, 'owners', fmtInt(s.owners));
+  next = bakeStat(next, 'perksLine', escapeHtml(perksLine(data.perks, today)));
   return next;
 }
 

@@ -619,39 +619,51 @@
   .perk-card--ended:hover { box-shadow: 0 0 0 1px var(--hairline-focus); }
   .perk-card--ended .proj-name { color: var(--muted); }
   .perk-card--ended .perk-for { color: var(--muted-small); }
-  /* Standing order: the paid daily-scan email ($8 a month), between the
-     index and the footer. Deliberately not a newsletter strip: the copy
-     sells the scan, the card reads like a price ticket. The top hairline is
-     the projects band's own border-bottom. Pure tokens, so it flips with the
-     dark theme like everything else on the page.
+  /* Standing order: the paid perk alerts ($8 a month). Inverted on purpose
+     (design 5a, 1 Oct 2026): the one black block on a white page, so it is
+     noticed without moving, popping up or counting down. --black and
+     --paper swap in the dark theme, so there it becomes the one white block.
+     Inner colours use the inverted-surface tokens (--muted-dark,
+     --hairline-dark, --error-dark), as the featured card does.
 
-     Works with no JavaScript: the form posts straight to
-     /api/creditcards-subscribe, which 303s to Stripe Checkout. The script at
-     the foot of the page only upgrades it (inline errors, analytics, and the
-     confirmation state on ?subscribed=1). Pipeline: CLAUDE.md, "Credit Cards
-     alerts". */
-  .standing { padding: clamp(64px, 9vw, 112px) var(--pad-x); scroll-margin-top: 24px; }
+     One band, two homes. It sits at the foot of the index, and in the Perks
+     view the script below moves it into the slot the bake leaves after the
+     open perks ([data-standing-slot]), where the intent is. One form, one
+     id, so nothing is duplicated. With no JavaScript it stays at the foot and
+     posts straight to /api/creditcards-subscribe, which 303s to Checkout.
+     Pipeline: CLAUDE.md, "Credit Cards alerts". */
+  .standing { padding: 0 var(--pad-x) clamp(64px, 9vw, 112px); scroll-margin-top: 24px; }
   .standing-inner {
     max-width: var(--max);
     margin: 0 auto;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 36px;
     align-items: center;
+    background: var(--black);
+    color: var(--paper);
+    border-radius: 10px;
+    padding: clamp(28px, 4.5vw, 48px);
   }
-  @media (min-width: 900px) { .standing-inner { grid-template-columns: 1.2fr 1fr; gap: 64px; } }
+  @media (min-width: 900px) { .standing-inner { grid-template-columns: 1.2fr 1fr; gap: 56px; } }
+  /* In the Perks slot the grid already gives width and gutters. */
+  .projects > li[data-standing-slot] { grid-column: 1 / -1; }
+  .projects > li[data-standing-slot]:empty { display: none; }
+  [data-standing-slot] .standing { padding: 8px 0; }
+  .standing .eyebrow { color: var(--muted-dark); }
+  .standing .eyebrow .rule { background: var(--paper); }
   .standing-title {
     font-family: var(--serif);
     font-weight: 400;
-    font-size: clamp(40px, 4.4vw, 56px);
-    line-height: 0.98;
+    font-size: clamp(40px, 4.6vw, 56px);
+    line-height: 0.96;
     letter-spacing: -0.02em;
-    color: var(--black);
-    margin: 24px 0 16px;
+    color: var(--paper);
+    margin: 20px 0 14px;
     text-wrap: balance;
   }
   .standing-title em { font-style: italic; }
-  .standing-standfirst { font-size: clamp(16px, 1.3vw, 18px); line-height: 1.55; color: var(--muted-small); max-width: 46ch; text-wrap: pretty; }
+  .standing-standfirst { font-size: clamp(16px, 1.3vw, 17px); line-height: 1.55; color: var(--muted-dark); max-width: 44ch; text-wrap: pretty; }
   .standing-note,
   .standing-small {
     font-family: var(--mono);
@@ -659,28 +671,21 @@
     line-height: 1.7;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: var(--muted-small);
+    color: var(--muted-dark);
   }
   .standing-note { margin-top: 18px; }
-  .standing-card {
-    background: var(--paper);
-    border-radius: 10px;
-    box-shadow: var(--shadow-border);
-    padding: 28px;
-    width: 100%;
-    max-width: 520px;
-  }
+  .standing-card { width: 100%; max-width: 480px; }
   /* display: grid would otherwise beat the hidden attribute. */
-  .standing-form { display: grid; gap: 14px; }
+  .standing-form { display: grid; gap: 12px; }
   .standing-form[hidden], .standing-done[hidden], .standing-error[hidden] { display: none; }
-  /* last baseline lines "Daily scan" up with the price, not the tag above it. */
+  /* last baseline lines the label up with the price, not the tag above it. */
   .standing-head { display: flex; justify-content: space-between; align-items: baseline; align-items: last baseline; gap: 16px; }
   .standing-label {
     font-family: var(--mono);
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.14em;
-    color: var(--ink);
+    color: var(--paper);
   }
   /* No struck "was" price: $15 was never charged (ASA reference-pricing
      risk, ruled out 1 Oct 2026). The tag says what $8 is instead. */
@@ -691,35 +696,38 @@
     line-height: 1;
     text-transform: uppercase;
     letter-spacing: 0.14em;
-    color: var(--muted-small);
+    color: var(--muted-dark);
   }
-  .standing-price { font-family: var(--serif); font-size: 28px; line-height: 1; color: var(--black); white-space: nowrap; }
-  .standing-per { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-  .standing-field { font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 4px; }
+  .standing-price { font-family: var(--serif); font-size: 28px; line-height: 1; color: var(--paper); white-space: nowrap; }
+  .standing-per { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-dark); }
+  .standing-field { font-size: 14px; font-weight: 500; color: var(--paper); margin-top: 4px; }
   .standing-input {
     width: 100%;
     height: 48px;
     padding: 0 16px;
     font-family: var(--sans);
     font-size: 16px;                 /* >=16px stops iOS zoom-on-focus */
-    color: var(--ink);
-    background: var(--paper);
+    color: var(--paper);
+    background: transparent;
     border: 1px solid var(--hairline-focus);
     border-radius: 6px;
     transition: border-color var(--t-deliver) var(--ease-deliver);
   }
-  .standing-input::placeholder { color: var(--muted); }
-  .standing-input:hover { border-color: var(--ink); }
-  .standing-input:focus-visible { outline: none; border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
-  .standing-input[aria-invalid="true"] { border-color: var(--error); }
-  .standing-cta { width: 100%; min-height: 48px; margin-top: 2px; }
-  .standing-error { font-size: 14px; line-height: 1.45; color: var(--error); }
+  .standing-input::placeholder { color: var(--muted-dark); }
+  .standing-input:hover { border-color: var(--paper); }
+  .standing-input:focus-visible { outline: none; border-color: var(--paper); box-shadow: 0 0 0 1px var(--paper); }
+  .standing-input[aria-invalid="true"] { border-color: var(--error-dark); }
+  /* The primary pill, inverted for the black ground (as the featured card). */
+  .standing-cta { width: 100%; min-height: 48px; margin-top: 2px; background: var(--paper); color: var(--black); }
+  .standing-cta:hover { background: var(--surface); }
+  .standing-cta:focus-visible { outline-color: var(--paper); }
+  .standing-error { font-size: 14px; line-height: 1.45; color: var(--error-dark); }
   /* Same slot, not an error: "that address already has a standing order". */
-  .standing-error.is-note { color: var(--ink); }
+  .standing-error.is-note { color: var(--paper); }
   /* Quiet Manage link (unsigned, so the portal sends it to Stripe's login).
      Vertical padding grows the hit area without moving the line. */
   .standing-manage {
-    color: var(--ink);
+    color: var(--paper);
     text-decoration: underline;
     text-decoration-color: var(--hairline-focus);
     text-underline-offset: 3px;
@@ -727,16 +735,15 @@
     margin: 0 -4px;
     transition: text-decoration-color var(--t-deliver) var(--ease-deliver);
   }
-  .standing-manage:hover { text-decoration-color: var(--ink); }
-  .standing-manage:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .standing-manage:hover { text-decoration-color: var(--paper); }
+  .standing-manage:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
   .standing-small { text-align: center; text-wrap: balance; }
-  .standing-done-title { font-family: var(--serif); font-size: 28px; line-height: 1.1; color: var(--black); margin-bottom: 8px; }
-  .standing-done-body { font-size: 15px; line-height: 1.5; color: var(--muted-small); text-wrap: pretty; }
+  .standing-done-title { font-family: var(--serif); font-size: 28px; line-height: 1.1; color: var(--paper); margin-bottom: 8px; }
+  .standing-done-body { font-size: 15px; line-height: 1.5; color: var(--muted-dark); text-wrap: pretty; }
   .standing-done-manage { text-align: left; margin-top: 12px; }
   .standing-done:focus { outline: none; }
   @media (max-width: 599px) {
-    .standing-title { margin-top: 18px; }
-    .standing-card { padding: 22px 18px; }
+    .standing-title { margin-top: 16px; }
   }
 
   .colophon {
@@ -1074,6 +1081,7 @@
           <p class="perk-for"><span class="perk-for-label">For</span> Credits holders, one per Credit</p>
           <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/LATE_FX/status/2103269221111058849" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@LATE_FX</a></span><time datetime="2026-09-24">24 Sept 2026</time></p>
         </li>
+        <li data-standing-slot></li>
         <li class="proj-card perk-card perk-card--ended" data-perk="receipts-free-mint" data-status="ended">
           <p class="perk-tags"><span class="perk-status">Ended</span><span class="perk-type">Free mint</span><span class="perk-reason">Closed</span></p>
           <a class="proj-name" href="https://opensea.io/collection/rcpts" target="_blank" rel="noopener" data-event="creditcards_perk_click">RECEIPTS</a>
@@ -1146,14 +1154,14 @@
   <div class="standing-inner">
     <div>
       <div class="eyebrow"><span class="rule"></span> Standing order</div>
-      <h2 class="standing-title" id="standing-title">The scan, in your <em>inbox.</em></h2>
-      <p class="standing-standfirst">We read X every morning so you don't have to. Every new project that makes the index: one email a day, only on days something's new.</p>
-      <p class="standing-note">Same scan that builds this page &middot; Nothing new, no email</p>
+      <h2 class="standing-title" id="standing-title">The next perk, in your <em>inbox.</em></h2>
+      <p class="standing-standfirst"><span data-stat="perksLine">6 of the 7 perks offered to holders so far have already ended.</span> We watch X every day and email you each new perk for Credits holders, only on days there's one.</p>
+      <p class="standing-note">Same scan that builds this page &middot; No new perk, no email</p>
     </div>
     <div class="standing-card">
       <form class="standing-form" action="/api/creditcards-subscribe" method="post" data-standing-form>
         <div class="standing-head">
-          <span class="standing-label">Daily scan</span>
+          <span class="standing-label">Perk alerts</span>
           <span class="standing-price-wrap">
             <span class="standing-tag">Launch price</span>
             <span class="standing-price">$8 <span class="standing-per">/ mo</span></span>
@@ -1167,7 +1175,7 @@
       </form>
       <div class="standing-done" tabindex="-1" data-standing-done hidden>
         <p class="standing-done-title">Standing order placed.</p>
-        <p class="standing-done-body">Nothing to confirm. The scan lands at 7am GMT (8am BST) the next morning there's a new project, with a link to manage or cancel in every one.</p>
+        <p class="standing-done-body">Nothing to confirm. Your first email lands the day a new perk does, with a link to manage or cancel in every one.</p>
         <p class="standing-small standing-done-manage"><a class="standing-manage" href="/api/creditcards-portal">Manage</a></p>
       </div>
     </div>
@@ -1317,6 +1325,7 @@
         p.setAttribute("aria-pressed", on ? "true" : "false");
         if (on) keepInView(p);
       });
+      try { document.dispatchEvent(new CustomEvent("creditcards:view", { detail: { view: cat } })); } catch (err) {}
       if (status) {
         var n = counts.all;
         status.textContent = perks
@@ -1377,9 +1386,33 @@
     var idle = label.textContent;
     var busy = false;
 
+    // Every band event says where the band was (the Perks slot or the foot
+    // of the index), so the two homes can be compared in analytics.
+    var band = document.getElementById("subscribe");
     function track(name) {
-      try { if (window.va) window.va("event", { name: name }); } catch (err) {}
+      var placement = band && band.parentNode && band.parentNode.hasAttribute("data-standing-slot") ? "perks" : "foot";
+      try { if (window.va) window.va("event", { name: name, data: { placement: placement } }); } catch (err) {}
     }
+
+    // One band, two homes. In the Perks view it moves into the slot the bake
+    // leaves after the open perks; anywhere else it goes back to the foot of
+    // the index. The filter script announces each view with a
+    // "creditcards:view" event; the initial check covers a #perks deep link,
+    // which the filter applies before this script runs.
+    var slot = document.querySelector("[data-standing-slot]");
+    var home = band ? band.parentNode : null;
+    var homeNext = band ? band.nextSibling : null;
+    function place(view) {
+      if (!band || !slot) return;
+      var target = view === "perks" ? slot : home;
+      if (band.parentNode === target) return;
+      if (target === slot) slot.appendChild(band);
+      else home.insertBefore(band, homeNext);
+    }
+    var perkView = document.getElementById("perk-list");
+    place(perkView && !perkView.hidden ? "perks" : "all");
+    document.addEventListener("creditcards:view", function (e) { place(e.detail && e.detail.view); });
+
     function reset() {
       busy = false;
       btn.removeAttribute("aria-busy");
