@@ -247,6 +247,63 @@ dropped 17 Sep 2026: the board is public, so gating on it added nothing); its
 guards are local-part syntax, Mailchecker's disposable blocklist, an MX lookup
 that fails open on timeout, and per-domain plus global rate limits.
 
+## Credit Cards alerts (paid daily scan)
+
+The standing-order band on `/creditcards` sells a daily email of newly approved
+projects at $8 a month, labelled "launch price", charged up front with no
+trial. Never show a struck "was" price: $15 was never charged, and a reference
+price that never applied is an ASA problem. **Stripe is the subscriber list**:
+there is no database.
+
+- `api/creditcards-subscribe.js` POST `{email}` opens a Stripe Checkout
+  subscription on `STRIPE_PRICE_ID` and returns `{url}`. The band's form also
+  posts there with no JavaScript (form-encoded, answered with a 303 to
+  Checkout). Success returns to `/creditcards?subscribed=1`, cancel to
+  `/creditcards`. Before opening Checkout it looks the email up in Stripe and,
+  if that address already has an active or trialing subscription on our
+  price, answers `{already: true}` instead, so nobody is billed twice. That
+  answer reveals whether an address subscribes: accepted, for an $8
+  newsletter behind a per-IP rate limit.
+- `api/creditcards-digest.js` is a Vercel cron, `0 7 * * *` in `vercel.json`:
+  07:00 UTC, so 7am GMT and 8am BST, chosen over DST-switching crons. It 401s
+  without `Authorization: Bearer $CRON_SECRET`. It reads the bundled
+  `data/creditcards.json`, picks approved projects whose id isn't in the sent
+  state, and emails every active or trialing subscription on our price via
+  Resend, one email per person, idempotency-keyed. Nothing new, no email.
+- State is one private blob, `creditcards-digest/state.json` (`{ sentIds }`).
+  **The first run seeds it with every approved id and sends nothing**, or
+  launch day would mail the whole index. After a send it advances unless the
+  run hit an infrastructure failure (recipient fetch, Blob write, a Resend
+  5xx, a 429 that survived the retry, a network error, or every send
+  failing). Failures that are only per-recipient (a Resend 4xx for some
+  addresses) still advance it: those
+  people miss that day's items for good, rather than one bad address
+  replaying a growing digest to everyone else daily. The run summary carries
+  `failedRecipients`. A withheld run is safe to re-run by hand within 24h
+  (Resend drops repeats by key, and a 409 counts as already sent):
+  `curl -H "Authorization: Bearer $CRON_SECRET" https://mooch.agency/api/creditcards-digest`.
+- `api/creditcards-portal.js` is where Manage, Unsubscribe and the
+  `List-Unsubscribe` header point. Links carry an HMAC of the Stripe customer
+  id (keyed off `STRIPE_SECRET_KEY`), so they can't be forged from an email
+  address; anything unsigned goes to Stripe's portal login page instead. No
+  lookup by email, so no enumeration here. The band and the post-checkout
+  confirmation link to it unsigned ("Manage"), so a subscriber can manage
+  before their first scan arrives: set `STRIPE_PORTAL_LOGIN_URL`, or that
+  link lands on a "check your email" page.
+- The rules live in `api/_creditcards-digest.js` with every side effect
+  injected; `pnpm test` covers selection, subject, email HTML, the state
+  rules, the Checkout shape (no trial) and the already-subscribed lookup with
+  no keys. Email colours mirror `tokens.css` by hand (mail clients
+  can't read it).
+
+Env on the Vercel project: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`,
+`RESEND_API_KEY`, `CRON_SECRET`, `BLOB_READ_WRITE_TOKEN` (a **private** Blob
+store), plus optional `STRIPE_PORTAL_LOGIN_URL` (the portal's login link). The
+portal configuration exists in both Stripe modes (created via the API, ids in
+the Keystore). With no Stripe key the band answers "not open yet" (503).
+Checkout returns to production, or to the dev server / Vercel preview that
+opened it, so a preview can be tested end to end with the test key.
+
 ## Voice
 British English, terse, no em dashes. Full house style: MOOCHBOT.md in Notion.
 

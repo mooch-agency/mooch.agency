@@ -10,11 +10,13 @@
     "counts:build": "node scripts/copy-counts.mjs",
     "counts:check": "node scripts/copy-counts.mjs --check",
     "skills:build": "node scripts/agent-skills.mjs",
-    "skills:sync": "node scripts/agent-skills.mjs --sync"
+    "skills:sync": "node scripts/agent-skills.mjs --sync",
+    "test": "node --test scripts/*.test.mjs"
   },
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.55.0",
     "mailchecker": "^6.0.15",
+    "stripe": "^23.0.0",
     "x402": "^1.2.0"
   },
   "devDependencies": {

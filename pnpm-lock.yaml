@@ -20,6 +20,9 @@ importers:
       mailchecker:
         specifier: ^6.0.15
         version: 6.0.21
+      stripe:
+        specifier: ^23.0.0
+        version: 23.0.0
       x402:
         specifier: ^1.2.0
         version: 1.2.0(@solana/sysvars@5.5.1)(@tanstack/query-core@5.102.8)(@tanstack/react-query@5.102.8(react@18.3.1))(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@5.0.10)
@@ -1797,6 +1800,15 @@ packages:
   strip-ansi@6.0.1:
     resolution: {integrity: sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==}
     engines: {node: '>=8'}
+
+  stripe@23.0.0:
+    resolution: {integrity: sha512-MDE2A5ZVVluYURORaZEVghSmnLJc3w6aHAlZSxDQMsOjOb3V0O6ro/CiaeFlJS4N7uIVmsg98ocRsPmUK6YfyA==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@types/node': '>=20'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
 
   superstruct@1.0.4:
     resolution: {integrity: sha512-7JpaAoX2NGyoFlI9NBh66BQXGONc+uE+MRS5i2iOBKuS4e+ccgMDjATgZldkah+33DakBxDHiss9kvUcGAO8UQ==}
@@ -4753,6 +4765,8 @@ snapshots:
   strip-ansi@6.0.1:
     dependencies:
       ansi-regex: 5.0.1
+
+  stripe@23.0.0: {}
 
   superstruct@1.0.4: {}
 

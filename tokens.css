@@ -133,6 +133,7 @@
   --hairline-focus: #636366;
   --hairline-dark: #d2d2d7; /* rules on the inverted (white) surfaces */
   --muted-dark: #6e6e73;    /* secondary text on the inverted surfaces, ~5:1 */
+  --error: #ff453a;         /* #b00020 is ~2.7:1 on --paper here; this is ~5.7:1 (the /creditcards subscribe error) */
   --shadow-border: 0px 0px 0px 1px rgba(255, 255, 255, 0.09), 0px 1px 2px -1px rgba(0, 0, 0, 0.4), 0px 2px 4px 0px rgba(0, 0, 0, 0.3);
   --shadow-border-hover: 0px 0px 0px 1px rgba(255, 255, 255, 0.16), 0px 1px 2px -1px rgba(0, 0, 0, 0.5), 0px 2px 4px 0px rgba(0, 0, 0, 0.4);
   --outline-image: 0 0 0 1px rgba(255, 255, 255, 0.1);

@@ -619,6 +619,126 @@
   .perk-card--ended:hover { box-shadow: 0 0 0 1px var(--hairline-focus); }
   .perk-card--ended .proj-name { color: var(--muted); }
   .perk-card--ended .perk-for { color: var(--muted-small); }
+  /* Standing order: the paid daily-scan email ($8 a month), between the
+     index and the footer. Deliberately not a newsletter strip: the copy
+     sells the scan, the card reads like a price ticket. The top hairline is
+     the projects band's own border-bottom. Pure tokens, so it flips with the
+     dark theme like everything else on the page.
+
+     Works with no JavaScript: the form posts straight to
+     /api/creditcards-subscribe, which 303s to Stripe Checkout. The script at
+     the foot of the page only upgrades it (inline errors, analytics, and the
+     confirmation state on ?subscribed=1). Pipeline: CLAUDE.md, "Credit Cards
+     alerts". */
+  .standing { padding: clamp(64px, 9vw, 112px) var(--pad-x); scroll-margin-top: 24px; }
+  .standing-inner {
+    max-width: var(--max);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+    align-items: center;
+  }
+  @media (min-width: 900px) { .standing-inner { grid-template-columns: 1.2fr 1fr; gap: 64px; } }
+  .standing-title {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(40px, 4.4vw, 56px);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+    color: var(--black);
+    margin: 24px 0 16px;
+    text-wrap: balance;
+  }
+  .standing-title em { font-style: italic; }
+  .standing-standfirst { font-size: clamp(16px, 1.3vw, 18px); line-height: 1.55; color: var(--muted-small); max-width: 46ch; text-wrap: pretty; }
+  .standing-note,
+  .standing-small {
+    font-family: var(--mono);
+    font-size: 10px;
+    line-height: 1.7;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted-small);
+  }
+  .standing-note { margin-top: 18px; }
+  .standing-card {
+    background: var(--paper);
+    border-radius: 10px;
+    box-shadow: var(--shadow-border);
+    padding: 28px;
+    width: 100%;
+    max-width: 520px;
+  }
+  /* display: grid would otherwise beat the hidden attribute. */
+  .standing-form { display: grid; gap: 14px; }
+  .standing-form[hidden], .standing-done[hidden], .standing-error[hidden] { display: none; }
+  /* last baseline lines "Daily scan" up with the price, not the tag above it. */
+  .standing-head { display: flex; justify-content: space-between; align-items: baseline; align-items: last baseline; gap: 16px; }
+  .standing-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink);
+  }
+  /* No struck "was" price: $15 was never charged (ASA reference-pricing
+     risk, ruled out 1 Oct 2026). The tag says what $8 is instead. */
+  .standing-price-wrap { display: grid; justify-items: end; gap: 6px; }
+  .standing-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted-small);
+  }
+  .standing-price { font-family: var(--serif); font-size: 28px; line-height: 1; color: var(--black); white-space: nowrap; }
+  .standing-per { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .standing-field { font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 4px; }
+  .standing-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    font-family: var(--sans);
+    font-size: 16px;                 /* >=16px stops iOS zoom-on-focus */
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--hairline-focus);
+    border-radius: 6px;
+    transition: border-color var(--t-deliver) var(--ease-deliver);
+  }
+  .standing-input::placeholder { color: var(--muted); }
+  .standing-input:hover { border-color: var(--ink); }
+  .standing-input:focus-visible { outline: none; border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+  .standing-input[aria-invalid="true"] { border-color: var(--error); }
+  .standing-cta { width: 100%; min-height: 48px; margin-top: 2px; }
+  .standing-error { font-size: 14px; line-height: 1.45; color: var(--error); }
+  /* Same slot, not an error: "that address already has a standing order". */
+  .standing-error.is-note { color: var(--ink); }
+  /* Quiet Manage link (unsigned, so the portal sends it to Stripe's login).
+     Vertical padding grows the hit area without moving the line. */
+  .standing-manage {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--hairline-focus);
+    text-underline-offset: 3px;
+    padding: 12px 4px;
+    margin: 0 -4px;
+    transition: text-decoration-color var(--t-deliver) var(--ease-deliver);
+  }
+  .standing-manage:hover { text-decoration-color: var(--ink); }
+  .standing-manage:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .standing-small { text-align: center; text-wrap: balance; }
+  .standing-done-title { font-family: var(--serif); font-size: 28px; line-height: 1.1; color: var(--black); margin-bottom: 8px; }
+  .standing-done-body { font-size: 15px; line-height: 1.5; color: var(--muted-small); text-wrap: pretty; }
+  .standing-done-manage { text-align: left; margin-top: 12px; }
+  .standing-done:focus { outline: none; }
+  @media (max-width: 599px) {
+    .standing-title { margin-top: 18px; }
+    .standing-card { padding: 22px 18px; }
+  }
+
   .colophon {
     padding: 56px var(--pad-x) 40px;
   }
@@ -672,7 +792,7 @@
 
   @media print {
     body { background: #fff; color: #000; }
-    .topbar, .colophon { display: none; }
+    .topbar, .colophon, .standing { display: none; }
     .cc-head, .projects-band { padding: 24px 0; border: none; }
     a { color: #000; text-decoration: underline; }
     .reveal { opacity: 1; transform: none; animation: none; }
@@ -1022,6 +1142,39 @@
   </div>
 </section>
 
+<section class="standing" id="subscribe" aria-labelledby="standing-title">
+  <div class="standing-inner">
+    <div>
+      <div class="eyebrow"><span class="rule"></span> Standing order</div>
+      <h2 class="standing-title" id="standing-title">The scan, in your <em>inbox.</em></h2>
+      <p class="standing-standfirst">We read X every morning so you don't have to. Every new project that makes the index: one email a day, only on days something's new.</p>
+      <p class="standing-note">Same scan that builds this page &middot; Nothing new, no email</p>
+    </div>
+    <div class="standing-card">
+      <form class="standing-form" action="/api/creditcards-subscribe" method="post" data-standing-form>
+        <div class="standing-head">
+          <span class="standing-label">Daily scan</span>
+          <span class="standing-price-wrap">
+            <span class="standing-tag">Launch price</span>
+            <span class="standing-price">$8 <span class="standing-per">/ mo</span></span>
+          </span>
+        </div>
+        <label class="standing-field" for="standing-email">Your email</label>
+        <input class="standing-input" id="standing-email" name="email" type="email" inputmode="email" autocomplete="email" spellcheck="false" placeholder="you@example.com" required aria-describedby="standing-error standing-small">
+        <p class="standing-error" id="standing-error" role="alert" hidden></p>
+        <button type="submit" class="pill standing-cta"><span data-standing-label>Subscribe &middot; $8 a month</span> <span class="arrow" aria-hidden="true">&rarr;</span></button>
+        <p class="standing-small" id="standing-small">The mint price of one Credit &middot; Cancel any time &middot; <a class="standing-manage" href="/api/creditcards-portal">Manage</a></p>
+      </form>
+      <div class="standing-done" tabindex="-1" data-standing-done hidden>
+        <p class="standing-done-title">Standing order placed.</p>
+        <p class="standing-done-body">Nothing to confirm. The scan lands at 7am GMT (8am BST) the next morning there's a new project, with a link to manage or cancel in every one.</p>
+        <p class="standing-small standing-done-manage"><a class="standing-manage" href="/api/creditcards-portal">Manage</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
 </main>
 
 <footer class="colophon colophon-dark">
@@ -1205,6 +1358,124 @@
     window.addEventListener("resize", edge);
     apply(fromHash(), false);
     edge();
+  })();
+</script>
+<script>
+  // Standing order band. Without this script the form still works: it posts
+  // to /api/creditcards-subscribe, which 303s to Stripe Checkout. This
+  // upgrades it to a fetch (so errors show inline, not on a bare page), fires
+  // the two analytics events, and shows the confirmation when Stripe sends
+  // the visitor back to ?subscribed=1. Cancel returns to the plain page.
+  (function () {
+    var form = document.querySelector("[data-standing-form]");
+    var done = document.querySelector("[data-standing-done]");
+    if (!form || !done || !window.fetch) return;
+    var input = form.querySelector("input[name=email]");
+    var error = form.querySelector(".standing-error");
+    var btn = form.querySelector("button[type=submit]");
+    var label = btn.querySelector("[data-standing-label]");
+    var idle = label.textContent;
+    var busy = false;
+
+    function track(name) {
+      try { if (window.va) window.va("event", { name: name }); } catch (err) {}
+    }
+    function reset() {
+      busy = false;
+      btn.removeAttribute("aria-busy");
+      label.textContent = idle;
+    }
+    // Only a bad address marks the field invalid; a server or network
+    // failure isn't the visitor's typing.
+    // asNote: the same slot in ink, not error red (the already-subscribed
+    // answer is information, not a mistake).
+    function fail(message, badEmail, asNote) {
+      reset();
+      error.textContent = message;
+      error.classList.toggle("is-note", !!asNote);
+      error.hidden = false;
+      if (badEmail) input.setAttribute("aria-invalid", "true");
+      input.focus();
+    }
+
+    // The URL flag alone proves nothing: anyone can type ?subscribed=1. So
+    // the submit handler below leaves a marker in sessionStorage before it
+    // hands the tab to Stripe, and only a tab carrying that marker gets the
+    // confirmation and the success event. A shared or typed link just loses
+    // the flag and sees the form. Storage can be blocked (private mode), in
+    // which case a real subscriber sees the form too: the standing order
+    // still stands, and the already-subscribed answer catches a retry.
+    var MARK = "cc-standing";
+    function marked(set) {
+      try {
+        if (set) { sessionStorage.setItem(MARK, "1"); return true; }
+        var had = sessionStorage.getItem(MARK) === "1";
+        sessionStorage.removeItem(MARK);
+        return had;
+      } catch (err) { return false; }
+    }
+
+    // Back from Checkout. Drop the flag from the URL straight away, so a
+    // reload or a shared link doesn't count a second success.
+    var params = new URLSearchParams(location.search);
+    if (params.get("subscribed") === "1") {
+      var genuine = marked(false);
+      params.delete("subscribed");
+      var rest = params.toString();
+      history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash);
+    }
+    if (genuine) {
+      form.hidden = true;
+      done.hidden = false;
+      track("creditcards_subscribe_success");
+      // Land on the confirmation, not the top of a long page. Instant, and on
+      // load: run any earlier and the browser's own initial scroll wins.
+      var land = function () {
+        document.getElementById("subscribe").scrollIntoView({ block: "center" });
+        done.focus({ preventScroll: true });
+      };
+      if (document.readyState === "complete") land();
+      else window.addEventListener("load", land);
+    }
+
+    input.addEventListener("input", function () {
+      input.removeAttribute("aria-invalid");
+      error.hidden = true;
+    });
+
+    // The browser's own required/type=email check runs before this fires.
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (busy) return;
+      busy = true;
+      error.hidden = true;
+      btn.setAttribute("aria-busy", "true");
+      label.textContent = "Opening checkout…";
+      track("creditcards_subscribe_click");
+      fetch(form.action, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ email: input.value.trim() })
+      })
+        .then(function (r) {
+          return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; });
+        })
+        .then(function (x) {
+          if (x.ok && x.d.url && /^https:\/\//.test(x.d.url)) { marked(true); location.href = x.d.url; return; }
+          // This address already pays: no Checkout, so no second bill.
+          if (x.ok && x.d.already) {
+            track("creditcards_subscribe_already");
+            fail(x.d.message || "That address already has a standing order. Manage it from the link in any scan email.", false, true);
+            return;
+          }
+          fail(x.d.message || "Checkout didn't open. Give it a minute and try again.", x.d.error === "email");
+        })
+        .catch(function () { fail("Couldn't reach checkout. Check your connection and try again."); });
+    });
+
+    // Back button from Stripe restores this page from the bfcache with the
+    // button still saying "Opening checkout". Put it back.
+    window.addEventListener("pageshow", function (e) { if (e.persisted) reset(); });
   })();
 </script>
 <script>
