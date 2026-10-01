@@ -2,7 +2,8 @@
 //
 //   GET, Authorization: Bearer $CRON_SECRET  ->  { ok, ... } run summary
 //
-// Schedule: "0 7 * * *" in vercel.json, 07:00 UTC. The page and the email
+// Schedule: "0 9 * * *" in vercel.json, 09:00 UTC: after the daily 8am (UK)
+// approval slot, so a perk pushed that morning goes out the same day. The page and the email
 // deliberately promise no time of day (dropped 1 Oct 2026): perks reach
 // perks[] when a human has checked them, so the cron is a floor, not a clock.
 //

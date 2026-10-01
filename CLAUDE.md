@@ -275,8 +275,9 @@ stays true. Band events carry `data.placement` (`perks` or `foot`).
   price, answers `{already: true}` instead, so nobody is billed twice. That
   answer reveals whether an address subscribes: accepted, for an $8
   newsletter behind a per-IP rate limit.
-- `api/creditcards-digest.js` is a Vercel cron, `0 7 * * *` in `vercel.json`:
-  07:00 UTC (internal only: no copy names a time). It 401s
+- `api/creditcards-digest.js` is a Vercel cron, `0 9 * * *` in `vercel.json`:
+  09:00 UTC, after the 8am (UK) approval slot, so a perk approved and pushed
+  that morning goes out the same day. Internal only: no copy names a time. It 401s
   without `Authorization: Bearer $CRON_SECRET`. It reads the bundled
   `data/creditcards.json`, works out each perk's status for the day with
   `perkStatus()` from `scripts/creditcards-perks.mjs` (imported, one home for
