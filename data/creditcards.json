@@ -1,13 +1,13 @@
 {
   "meta": {
     "sinceId": "2105604166521639124",
-    "lastRun": "2026-10-01T13:07:03.137Z",
+    "lastRun": "2026-10-01T16:32:50.204Z",
     "stats": {
-      "floorEth": 0.0268,
-      "floorUsd": 72,
+      "floorEth": 0.0250271,
+      "floorUsd": 67,
       "supply": 122153,
-      "owners": 14841,
-      "fetchedAt": "2026-10-01T13:07:02.810Z"
+      "owners": 14826,
+      "fetchedAt": "2026-10-01T16:32:50.167Z"
     },
     "replySinceId": "2105621386211332443"
   },
@@ -709,7 +709,7 @@
       "x": "kenZaii7",
       "post": "https://x.com/kenZaii7/status/2104157637684380041",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-27",
       "metrics": {
         "likes": 0,
@@ -858,7 +858,7 @@
       "x": "mylesdaughtry",
       "post": "https://x.com/mylesdaughtry/status/2104305396693512667",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-27",
       "metrics": {
         "likes": 7,
@@ -891,7 +891,7 @@
       "x": "WabisukiART",
       "post": "https://x.com/WabisukiART/status/2104254256081404076",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-27",
       "metrics": {
         "likes": 3,
@@ -909,7 +909,7 @@
       "x": "itsBubblezzz",
       "post": "https://x.com/itsBubblezzz/status/2104311889622946152",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-27",
       "metrics": {
         "likes": 0,
@@ -927,7 +927,7 @@
       "x": "tradesgiving",
       "post": "https://x.com/tradesgiving/status/2104229150429200708",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-27",
       "metrics": {
         "likes": 16,
@@ -962,7 +962,7 @@
       "x": "etherbunnysclub",
       "post": "https://x.com/etherbunnysclub/status/2104537232799338910",
       "blurb": "",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-28",
       "metrics": {
         "likes": 2,
@@ -983,7 +983,7 @@
       "post": "https://x.com/Davuswho/status/2104682888306298930",
       "blurb": "",
       "category": "markets",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-28",
       "metrics": {
         "likes": 0,
@@ -1004,7 +1004,7 @@
       "post": "https://x.com/tokyo26687654/status/2104811394793435639",
       "blurb": "",
       "category": "art",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-29",
       "metrics": {
         "likes": 0,
@@ -1038,7 +1038,7 @@
       "post": "https://x.com/HoodCredits/status/2104881145112588390",
       "blurb": "",
       "category": "markets",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-29",
       "metrics": {
         "likes": 2,
@@ -1059,7 +1059,7 @@
       "post": "https://x.com/Epizon_x/status/2104840892125471005",
       "blurb": "",
       "category": "art",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-29",
       "metrics": {
         "likes": 6,
@@ -1078,7 +1078,7 @@
       "post": "https://x.com/Abdullah4660/status/2104854045382840391",
       "blurb": "",
       "category": "art",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-29",
       "metrics": {
         "likes": 2,
@@ -1091,13 +1091,13 @@
     },
     {
       "id": "punk-credit",
-      "name": "punk.credit",
+      "name": "Punk / Credit",
       "url": "https://punk.credit",
-      "x": "0xplan_D",
+      "x": "Internetanount",
       "post": "https://x.com/0xplan_D/status/2104841203099291770",
-      "blurb": "",
-      "category": "markets",
-      "status": "pending",
+      "blurb": "CryptoPunks rebuilt pixel by pixel, each pixel a whole Credit matched by colour and tone. Remix any Punk, inspect any pixel, save the PNG.",
+      "category": "art",
+      "status": "approved",
       "added": "2026-09-29",
       "metrics": {
         "likes": 0,
@@ -1116,7 +1116,7 @@
       "post": "https://x.com/tradesgiving/status/2104973729071792165",
       "blurb": "",
       "category": "markets",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-29",
       "metrics": {
         "likes": 5,
@@ -1129,13 +1129,13 @@
     },
     {
       "id": "genmerch-xyz-creditchecks",
-      "name": "genmerch.xyz",
+      "name": "Credit Checks",
       "url": "https://genmerch.xyz/creditchecks",
       "x": "_JKNFT_",
       "post": "https://x.com/_JKNFT_/status/2104929550358679890",
-      "blurb": "",
+      "blurb": "Run a Credit Check on any Credit by number and get a Checks-style print in black or white. Save the PNG or share it. Free, nothing to connect.",
       "category": "art",
-      "status": "pending",
+      "status": "approved",
       "added": "2026-09-29",
       "metrics": {
         "likes": 7,
@@ -1154,7 +1154,7 @@
       "post": "https://x.com/YeoCrypto/status/2104960307034804235",
       "blurb": "",
       "category": "statements",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-29",
       "metrics": {
         "likes": 1,
@@ -1175,7 +1175,7 @@
       "post": "https://x.com/tradesgiving/status/2103880105814802539",
       "blurb": "",
       "category": "markets",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-29",
       "metrics": {
         "likes": 17,
@@ -1199,7 +1199,7 @@
       "post": "https://x.com/Tomjeff_lfc/status/2105003200973570140",
       "blurb": "",
       "category": "art",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-29",
       "metrics": {
         "likes": 1,
@@ -1220,7 +1220,7 @@
       "post": "https://x.com/SazidOnX/status/2105013440075194663",
       "blurb": "",
       "category": "art",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-29",
       "metrics": {
         "likes": 2,
@@ -1260,7 +1260,7 @@
       "post": "https://x.com/doeordie448/status/2105112450832196010",
       "blurb": "",
       "category": "statements",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-30",
       "metrics": {
         "likes": 0,
@@ -1281,7 +1281,7 @@
       "post": "https://x.com/Alcoholcorrupts/status/2105165170234536383",
       "blurb": "",
       "category": "statements",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-30",
       "metrics": {
         "likes": 0,
@@ -1302,7 +1302,7 @@
       "post": "https://x.com/dani_who_daniel/status/2105261291338186994",
       "blurb": "",
       "category": "markets",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-30",
       "metrics": {
         "likes": 9,
@@ -1344,7 +1344,7 @@
       "post": "https://x.com/lobobug/status/2105310682367635597",
       "blurb": "",
       "category": "art",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-30",
       "metrics": {
         "likes": 0,
@@ -1365,7 +1365,7 @@
       "post": "https://x.com/Ezquire/status/2105376259568181549",
       "blurb": "",
       "category": "statements",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-09-30",
       "metrics": {
         "likes": 1,
@@ -1386,7 +1386,7 @@
       "post": "https://x.com/Mussawar_Hayat/status/2105509807306199060",
       "blurb": "",
       "category": "statements",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-01",
       "metrics": {
         "likes": 0,
@@ -1405,7 +1405,7 @@
       "post": "https://x.com/multiversXTeam/status/2105621386211332443",
       "blurb": "",
       "category": "markets",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-01",
       "metrics": {
         "likes": 0,
@@ -1424,7 +1424,7 @@
       "post": "https://x.com/Dorsian/status/2105564825770492112",
       "blurb": "",
       "category": "statements",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-01",
       "metrics": {
         "likes": 1,
@@ -1445,7 +1445,7 @@
       "post": "https://x.com/TheAnsemWorld/status/2105604166521639124",
       "blurb": "",
       "category": "statements",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-01",
       "metrics": {
         "likes": 0,
@@ -1457,6 +1457,30 @@
         "known-host"
       ],
       "tweetText": "Girl with a Pearl Earring is still being made into a statement\n\nWe have 73 credits left to make it complete. Join us so we can complete the statement before it officially begins\n\nhttps://t.co/0JwB375S"
+    },
+    {
+      "id": "credit-crusaders-td3y-vercel-app",
+      "name": "Credit Crusaders",
+      "url": "https://credit-crusaders-td3y.vercel.app",
+      "x": "dealer1943",
+      "post": "https://x.com/dealer1943",
+      "blurb": "A 16-bit shooter across three worlds, hunting The Butcher after a missed Mona Lisa Statement. Hum a melody to score each level. Free, nothing to connect.",
+      "category": "games",
+      "status": "approved",
+      "added": "2026-10-01",
+      "source": "submission"
+    },
+    {
+      "id": "humancredit-co",
+      "name": "Human Credit",
+      "url": "https://www.humancredit.co",
+      "blurb": "Pick a Credit's token ID and credit a person for what they contributed. Each acknowledgment gets a public page with the Credit's artwork. Free, no wallet.",
+      "category": "art",
+      "status": "approved",
+      "added": "2026-10-01",
+      "source": "submission",
+      "x": "cordyjos",
+      "post": "https://x.com/cordyjos"
     }
   ]
 }
