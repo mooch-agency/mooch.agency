@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2105704649718423713",
-    "lastRun": "2026-10-01T18:27:28.811Z",
+    "sinceId": "2105740460874424321",
+    "lastRun": "2026-10-01T22:39:34.615Z",
     "stats": {
-      "floorEth": 0.0237158,
-      "floorUsd": 64,
+      "floorEth": 0.0215,
+      "floorUsd": 58,
       "supply": 122153,
-      "owners": 14836,
-      "fetchedAt": "2026-10-01T18:27:28.782Z"
+      "owners": 14755,
+      "fetchedAt": "2026-10-01T22:39:34.587Z"
     },
     "replySinceId": "2105706224486686829"
   },
@@ -1502,6 +1502,25 @@
         "known-host"
       ],
       "tweetText": "@jesusdoteth Appreciate that 🙏🏾\n\nHonestly had to credit you for it. You're the reason a lot of us know what everyone else is building\n https://t.co/RbaqtvFmxr"
+    },
+    {
+      "id": "credits-disorderly-ai",
+      "name": "credits.disorderly.ai",
+      "url": "https://credits.disorderly.ai",
+      "x": "BFlTCH",
+      "post": "https://x.com/BFlTCH/status/2105740460874424321",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-10-01",
+      "metrics": {
+        "likes": 1,
+        "reposts": 1
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "Credits Rarity is live: https://t.co/4eUpN4t9dn\n\nA free toolkit for Credits, built on @jackbutcher's Credit scores:\n\n• cost per point + best value listings\n• planner: cheapest 80 for any rating\n• live"
     }
   ]
 }
