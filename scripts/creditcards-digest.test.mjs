@@ -307,6 +307,7 @@ test('checkout: paid up front, no trial', () => {
   assert.doesNotMatch(JSON.stringify(p), /trial/);
   assert.equal(p.success_url, 'https://mooch.agency/creditcards?subscribed=1');
   assert.equal(p.cancel_url, 'https://mooch.agency/creditcards');
+  assert.equal(p.allow_promotion_codes, true);
 });
 
 test('checkout returns to the preview or dev server that opened it, else production', () => {

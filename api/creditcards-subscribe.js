@@ -55,6 +55,9 @@ function checkoutParams(email, price, indexUrl = INDEX_URL) {
     mode: "subscription",
     line_items: [{ price, quantity: 1 }],
     customer_email: email,
+    // Shows Stripe's "Add promotion code" field, for comp codes made in the
+    // Stripe dashboard or API (MOOCH100: 100% off, 10 uses, 1 Oct 2026).
+    allow_promotion_codes: true,
     success_url: `${indexUrl}?subscribed=1`,
     cancel_url: indexUrl,
   };
