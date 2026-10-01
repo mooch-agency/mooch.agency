@@ -1,15 +1,15 @@
 {
   "meta": {
-    "sinceId": "2105538205013393677",
-    "lastRun": "2026-10-01T06:22:36.074Z",
+    "sinceId": "2105604166521639124",
+    "lastRun": "2026-10-01T13:07:03.137Z",
     "stats": {
-      "floorEth": 0.0274678,
-      "floorUsd": 75,
+      "floorEth": 0.0268,
+      "floorUsd": 72,
       "supply": 122153,
-      "owners": 14912,
-      "fetchedAt": "2026-10-01T06:22:36.055Z"
+      "owners": 14841,
+      "fetchedAt": "2026-10-01T13:07:02.810Z"
     },
-    "replySinceId": "2105231813664706609"
+    "replySinceId": "2105621386211332443"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -1396,6 +1396,67 @@
       "score": 2,
       "flags": [],
       "tweetText": "Morning scan.\n\nETH: Jack Butcher Credits open Statement assembly today. Burn 80 Credits into one on-chain print. https://t.co/UWwJ3tpupo\n\nMotif. 2,048 works drawn and animated by contract. magicburp. "
+    },
+    {
+      "id": "opensea-io-collection-multivers-x",
+      "name": "opensea.io",
+      "url": "https://opensea.io/collection/multivers-x",
+      "x": "multiversXTeam",
+      "post": "https://x.com/multiversXTeam/status/2105621386211332443",
+      "blurb": "",
+      "category": "markets",
+      "status": "pending",
+      "added": "2026-10-01",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "source": "replies",
+      "score": 2,
+      "flags": [],
+      "tweetText": "@jesusdoteth @taylor_ https://t.co/lQ0DloBild"
+    },
+    {
+      "id": "creditunion-fun-union-0xaa565e3fab9c3bd891e91d5c6846b9e58c0fc7e8",
+      "name": "creditunion.fun",
+      "url": "https://creditunion.fun/union/0xAa565e3fAB9c3BD891e91d5C6846b9e58c0fc7e8",
+      "x": "Dorsian",
+      "post": "https://x.com/Dorsian/status/2105564825770492112",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-10-01",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "This Credits Statement by @ripe0x (Credited Andy Warhold Marilyn) will be legendary.\n\nI joined TBAC, 80 Credits into a Statement. 62 to go. https://t.co/isnER0s9Sv \n\n@vvcredits @jackbutcher"
+    },
+    {
+      "id": "creditunion-fun-union-0xc610ffe55225fd837ff4ada12656ce2fdf50868a",
+      "name": "creditunion.fun",
+      "url": "https://creditunion.fun/union/0xc610FFe55225fD837ff4adA12656Ce2fdF50868A",
+      "x": "TheAnsemWorld",
+      "post": "https://x.com/TheAnsemWorld/status/2105604166521639124",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-10-01",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "Girl with a Pearl Earring is still being made into a statement\n\nWe have 73 credits left to make it complete. Join us so we can complete the statement before it officially begins\n\nhttps://t.co/0JwB375S"
     }
   ]
 }
