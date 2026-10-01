@@ -1,15 +1,15 @@
 {
   "meta": {
-    "sinceId": "2105604166521639124",
-    "lastRun": "2026-10-01T16:32:50.204Z",
+    "sinceId": "2105704649718423713",
+    "lastRun": "2026-10-01T18:27:28.811Z",
     "stats": {
-      "floorEth": 0.0250271,
-      "floorUsd": 67,
+      "floorEth": 0.0237158,
+      "floorUsd": 64,
       "supply": 122153,
-      "owners": 14826,
-      "fetchedAt": "2026-10-01T16:32:50.167Z"
+      "owners": 14836,
+      "fetchedAt": "2026-10-01T18:27:28.782Z"
     },
-    "replySinceId": "2105621386211332443"
+    "replySinceId": "2105706224486686829"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -1481,6 +1481,27 @@
       "source": "submission",
       "x": "cordyjos",
       "post": "https://x.com/cordyjos"
+    },
+    {
+      "id": "humancredit-co-credit-77449-jesus-eth-connector",
+      "name": "humancredit.co",
+      "url": "https://humancredit.co/credit/77449-jesus-eth-connector",
+      "x": "cordyjos",
+      "post": "https://x.com/cordyjos/status/2105658366207172662",
+      "blurb": "",
+      "category": "art",
+      "status": "pending",
+      "added": "2026-10-01",
+      "metrics": {
+        "likes": 3,
+        "reposts": 1
+      },
+      "source": "replies",
+      "score": 2,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "@jesusdoteth Appreciate that 🙏🏾\n\nHonestly had to credit you for it. You're the reason a lot of us know what everyone else is building\n https://t.co/RbaqtvFmxr"
     }
   ]
 }
