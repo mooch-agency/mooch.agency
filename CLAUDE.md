@@ -262,8 +262,8 @@ The band is inverted (black on the white page, white in the dark theme) so it
 is noticed without motion, popups or timers. It has two homes and is one
 element: the foot of the index, and, in the Perks view, the empty
 `li[data-standing-slot]` the bake leaves after the open perks, where the
-script moves it. Its opening line ("6 perks for Credits holders have
-already ended") is baked by `perksLine()` in `scripts/creditcards-update.mjs`, so it
+script moves it. Its opening line ("You've missed 6 perks for Credits
+holders so far") is baked by `perksLine()` in `scripts/creditcards-update.mjs`, so it
 stays true. Band events carry `data.placement` (`perks` or `foot`).
 
 - `api/creditcards-subscribe.js` POST `{email}` opens a Stripe Checkout

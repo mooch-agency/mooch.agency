@@ -738,7 +738,7 @@ export function perksLine(perks, today = todayUtc()) {
   const total = (perks || []).length;
   const ended = (perks || []).filter((p) => perkStatus(p, today) === 'ended').length;
   if (!total || !ended) return "Don't miss the next perk for Credits holders.";
-  return `${ended} ${ended === 1 ? 'perk' : 'perks'} for Credits holders ${ended === 1 ? 'has' : 'have'} already ended.`;
+  return `You've missed ${ended} ${ended === 1 ? 'perk' : 'perks'} for Credits holders so far.`;
 }
 
 function bakeStat(html, key, value) {
