@@ -160,7 +160,7 @@ function buildEmailHtml(items, { now = new Date(), manageUrl, indexUrl = INDEX_U
 <tr><td style="padding:32px 28px 26px;font-family:${SANS};color:${C.ink};">
 <p style="margin:0;${monoStyle(10, C.muted, "letter-spacing:0.14em;")}">Credit Cards &middot; Daily scan &middot; ${escapeHtml(formatDate(now))}</p>
 <h1 style="margin:16px 0 6px;font-family:${SERIF};font-weight:400;font-size:34px;line-height:1.05;letter-spacing:-0.01em;color:${C.black};">${n} new <em style="font-style:italic;">${noun}.</em></h1>
-<p style="margin:0 0 20px;font-size:15px;line-height:1.5;color:${C.mutedSmall};">Added to the index since the last scan. The page has the full set.</p>
+<p style="margin:0 0 20px;font-size:15px;line-height:1.5;color:${C.mutedSmall};">Added to the index since the last scan. <a href="${index}" style="color:${C.ink};">Open Credit Cards &rarr;</a></p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ${C.hairline};border-bottom:1px solid ${C.hairline};">
 ${rows}
 </table>
