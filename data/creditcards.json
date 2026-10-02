@@ -1,15 +1,15 @@
 {
   "meta": {
-    "sinceId": "2105740460874424321",
-    "lastRun": "2026-10-01T22:39:34.615Z",
+    "sinceId": "2105835301696647515",
+    "lastRun": "2026-10-02T06:27:18.274Z",
     "stats": {
-      "floorEth": 0.0215,
-      "floorUsd": 58,
-      "supply": 122153,
-      "owners": 14755,
-      "fetchedAt": "2026-10-01T22:39:34.587Z"
+      "floorEth": 0.0108,
+      "floorUsd": 29,
+      "supply": 114032,
+      "owners": 14498,
+      "fetchedAt": "2026-10-02T06:27:18.242Z"
     },
-    "replySinceId": "2105706224486686829"
+    "replySinceId": "2105877282397311285"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -1521,6 +1521,109 @@
       "score": 2,
       "flags": [],
       "tweetText": "Credits Rarity is live: https://t.co/4eUpN4t9dn\n\nA free toolkit for Credits, built on @jackbutcher's Credit scores:\n\n• cost per point + best value listings\n• planner: cheapest 80 for any rating\n• live"
+    },
+    {
+      "id": "opensea-io-collection-statements",
+      "name": "opensea.io",
+      "url": "https://opensea.io/collection/statements",
+      "x": "jackbutcher",
+      "post": "https://x.com/jackbutcher/status/2105814966414545233",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-10-02",
+      "metrics": {
+        "likes": 473,
+        "reposts": 90
+      },
+      "source": "search+thread",
+      "score": 4,
+      "flags": [
+        "via-thread"
+      ],
+      "tweetText": "make a statement\n\nhttps://t.co/Ai8zClOtaD"
+    },
+    {
+      "id": "creditunion-fun-auctions",
+      "name": "creditunion.fun",
+      "url": "https://creditunion.fun/auctions",
+      "x": "taylor_",
+      "post": "https://x.com/taylor_/status/2105814840539234634",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-10-02",
+      "metrics": {
+        "likes": 52,
+        "reposts": 5
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "Credit Union is now burning deposited credits for full unions into @jackbutcher Statements now\n\nEach one goes straight to auction, and the sale is split between its members  cc @bigvibessss \n\nhttps://"
+    },
+    {
+      "id": "opepen-art-sets-019",
+      "name": "opepen.art",
+      "url": "https://opepen.art/sets/019",
+      "x": "avsingh_eth",
+      "post": "https://x.com/avsingh_eth/status/2105877282397311285",
+      "blurb": "",
+      "category": "art",
+      "status": "pending",
+      "added": "2026-10-02",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      },
+      "source": "replies",
+      "score": 2,
+      "flags": [],
+      "tweetText": "@jesusdoteth \"Prompt\"\n\nhttps://t.co/GwCWXNZc2A"
+    },
+    {
+      "id": "creditunion-fun-union-0xabb4248c1b026ba2372ed276a6dbce0b35d3f0d7",
+      "name": "creditunion.fun",
+      "url": "https://creditunion.fun/union/0xaBb4248c1B026bA2372eD276a6DBce0b35D3F0d7",
+      "x": "thanksnasdaq",
+      "post": "https://x.com/thanksnasdaq/status/2105832159261184293",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-10-02",
+      "metrics": {
+        "likes": 3,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "Decided to have a little fun with the Statements on https://t.co/Wasm3lquxL, combining @jackbutcher latest Credits project to create a Statement that looks like its from the older Checks collection.\n\n"
+    },
+    {
+      "id": "creditunion-fun-union-0x68e21e8769bbbc8f0f8f29b81c7f755646a3e701",
+      "name": "creditunion.fun",
+      "url": "https://creditunion.fun/union/0x68e21E8769Bbbc8F0f8f29B81c7F755646a3E701",
+      "x": "criptospaces",
+      "post": "https://x.com/criptospaces/status/2105835301696647515",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-10-02",
+      "metrics": {
+        "likes": 3,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "The best credits\n\nThe first is the #1 “Unit Jack”\n\nThe second is #20 “Colors M,Mk”, cover of the statement in @opensea\n\nAuction links\nhttps://t.co/KP9dzLlHnS\n\nhttps://t.co/OWc2ibfSNf\n\n@bigvibessss @ja"
     }
   ]
 }
