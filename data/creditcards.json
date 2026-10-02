@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2105985925679644707",
-    "lastRun": "2026-10-02T12:28:02.664Z",
+    "sinceId": "2106071074517754309",
+    "lastRun": "2026-10-02T18:27:32.625Z",
     "stats": {
-      "floorEth": 0.011899,
-      "floorUsd": 33,
-      "supply": 113792,
-      "owners": 14444,
-      "fetchedAt": "2026-10-02T12:28:02.650Z"
+      "floorEth": 0.0105,
+      "floorUsd": 28,
+      "supply": 113398,
+      "owners": 14334,
+      "fetchedAt": "2026-10-02T18:27:32.371Z"
     },
     "replySinceId": "2105930148285493388"
   },
@@ -1656,6 +1656,25 @@
       "score": 3,
       "flags": [],
       "tweetText": "@jesusdoteth Lfg!\nYou can reclaim your burned credits at https://t.co/BKuvNwMIk6 https://t.co/1DkyFvLxjr"
+    },
+    {
+      "id": "opensea-io-collection-hoodiegroupies",
+      "name": "opensea.io",
+      "url": "https://opensea.io/collection/hoodiegroupies",
+      "x": "SketchyMarkets",
+      "post": "https://x.com/SketchyMarkets/status/2106071074517754309",
+      "blurb": "",
+      "category": "markets",
+      "status": "pending",
+      "added": "2026-10-02",
+      "metrics": {
+        "likes": 2,
+        "reposts": 1
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "What if @yonfrula &amp; @jackbutcher made a Groupie Credit 🫪\n\nThis would be pretty sick &amp; both are at some amazing prices to sweep 🧹 ❗️\n\nWhat you all think👀\n\nhttps://t.co/F5WzJP0z92\n\nhttps://t."
     }
   ]
 }
