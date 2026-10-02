@@ -111,6 +111,9 @@ jobs:
       #        discipline), which we control. lychee here checks link EXISTENCE
       #        only. Offline mode keeps it to internal links (no external hosts).
       #        --fallback-extensions html mirrors Vercel cleanUrls (/gov-uk -> gov-uk.html).
+      #        --exclude '/api/' skips links to serverless functions (the Credit
+      #        Cards portal and subscribe links): they exist only at runtime as
+      #        api/*.js, so a file check can never resolve them.
       - name: Enumerate shipped pages (single source of truth for lychee)
         id: shipped
         run: echo "files=$(node scripts/check-site.mjs --list-pages | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
@@ -121,6 +124,7 @@ jobs:
           args: >-
             --offline
             --fallback-extensions html
+            --exclude '/api/'
             --root-dir ${{ github.workspace }}
             --no-progress
             ${{ steps.shipped.outputs.files }} sitemap.xml
