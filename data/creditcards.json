@@ -111,6 +111,19 @@
       "start": "2026-09-30",
       "checked": "2026-09-30",
       "ended": "Closed"
+    },
+    {
+      "id": "afterflow-allowlist",
+      "project": "Afterflow",
+      "x": "disorderly_AI",
+      "type": "allowlist",
+      "eligibility": "Credits holders at the 30 Sep snapshot",
+      "description": "A two hour early window on Afterflow, a free generative geometry mint of up to 10,000 pieces, 5 per wallet. Check your wallet on the allowlist page.",
+      "url": "https://afterflow.disorderly.ai/allowlist.html",
+      "post": "https://x.com/disorderly_AI/status/2105388511209853117",
+      "start": "2026-09-30",
+      "checked": "2026-10-02",
+      "seenOpen": "2026-10-02"
     }
   ],
   "projects": [
