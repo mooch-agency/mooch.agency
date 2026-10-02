@@ -1,15 +1,15 @@
 {
   "meta": {
-    "sinceId": "2105835301696647515",
-    "lastRun": "2026-10-02T06:27:18.274Z",
+    "sinceId": "2105985925679644707",
+    "lastRun": "2026-10-02T12:28:02.664Z",
     "stats": {
-      "floorEth": 0.0108,
-      "floorUsd": 29,
-      "supply": 114032,
-      "owners": 14498,
-      "fetchedAt": "2026-10-02T06:27:18.242Z"
+      "floorEth": 0.011899,
+      "floorUsd": 33,
+      "supply": 113792,
+      "owners": 14444,
+      "fetchedAt": "2026-10-02T12:28:02.650Z"
     },
-    "replySinceId": "2105877282397311285"
+    "replySinceId": "2105930148285493388"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -1624,6 +1624,25 @@
         "known-host"
       ],
       "tweetText": "The best credits\n\nThe first is the #1 “Unit Jack”\n\nThe second is #20 “Colors M,Mk”, cover of the statement in @opensea\n\nAuction links\nhttps://t.co/KP9dzLlHnS\n\nhttps://t.co/OWc2ibfSNf\n\n@bigvibessss @ja"
+    },
+    {
+      "id": "recredits-live",
+      "name": "recredits.live",
+      "url": "https://recredits.live",
+      "x": "fmiasp",
+      "post": "https://x.com/fmiasp/status/2105930148285493388",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-10-02",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "source": "replies",
+      "score": 3,
+      "flags": [],
+      "tweetText": "@jesusdoteth Lfg!\nYou can reclaim your burned credits at https://t.co/BKuvNwMIk6 https://t.co/1DkyFvLxjr"
     }
   ]
 }
