@@ -1490,7 +1490,7 @@
       "post": "https://x.com/cordyjos/status/2105658366207172662",
       "blurb": "",
       "category": "art",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-01",
       "metrics": {
         "likes": 3,
@@ -1505,13 +1505,13 @@
     },
     {
       "id": "credits-disorderly-ai",
-      "name": "credits.disorderly.ai",
+      "name": "Credits Rarity",
       "url": "https://credits.disorderly.ai",
       "x": "BFlTCH",
       "post": "https://x.com/BFlTCH/status/2105740460874424321",
-      "blurb": "",
-      "category": "statements",
-      "status": "pending",
+      "blurb": "Best-value Credit listings by score, cost per point, and a planner for the cheapest 80 to make any Statement. Free, nothing to connect.",
+      "category": "rarity",
+      "status": "approved",
       "added": "2026-10-01",
       "metrics": {
         "likes": 1,
@@ -1524,13 +1524,13 @@
     },
     {
       "id": "opensea-io-collection-statements",
-      "name": "opensea.io",
+      "name": "Statements",
       "url": "https://opensea.io/collection/statements",
       "x": "jackbutcher",
       "post": "https://x.com/jackbutcher/status/2105814966414545233",
-      "blurb": "",
+      "blurb": "Jack's own Statements: 80 Credits burned from one wallet become one print, 1,526 at most, ever.",
       "category": "statements",
-      "status": "pending",
+      "status": "approved",
       "added": "2026-10-02",
       "metrics": {
         "likes": 473,
@@ -1551,7 +1551,7 @@
       "post": "https://x.com/taylor_/status/2105814840539234634",
       "blurb": "",
       "category": "statements",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-02",
       "metrics": {
         "likes": 52,
@@ -1572,7 +1572,7 @@
       "post": "https://x.com/avsingh_eth/status/2105877282397311285",
       "blurb": "",
       "category": "art",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-02",
       "metrics": {
         "likes": 1,
@@ -1591,7 +1591,7 @@
       "post": "https://x.com/thanksnasdaq/status/2105832159261184293",
       "blurb": "",
       "category": "statements",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-02",
       "metrics": {
         "likes": 3,
@@ -1612,7 +1612,7 @@
       "post": "https://x.com/criptospaces/status/2105835301696647515",
       "blurb": "",
       "category": "statements",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-02",
       "metrics": {
         "likes": 3,
@@ -1627,13 +1627,13 @@
     },
     {
       "id": "recredits-live",
-      "name": "recredits.live",
+      "name": "ReCredits",
       "url": "https://recredits.live",
       "x": "fmiasp",
       "post": "https://x.com/fmiasp/status/2105930148285493388",
-      "blurb": "",
+      "blurb": "Burned a Credit for a Statement? Mint it back once as a ReCredit with the same number and print. 0.00037 ETH each, wallet needed.",
       "category": "statements",
-      "status": "pending",
+      "status": "approved",
       "added": "2026-10-02",
       "metrics": {
         "likes": 0,
