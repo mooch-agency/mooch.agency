@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2106071074517754309",
-    "lastRun": "2026-10-02T22:11:42.939Z",
+    "sinceId": "2106210779074851007",
+    "lastRun": "2026-10-03T08:35:16.083Z",
     "stats": {
-      "floorEth": 0.0097,
+      "floorEth": 0.00978,
       "floorUsd": 26,
-      "supply": 113078,
-      "owners": 14301,
-      "fetchedAt": "2026-10-02T22:11:42.912Z"
+      "supply": 112198,
+      "owners": 14158,
+      "fetchedAt": "2026-10-03T08:35:15.788Z"
     },
     "replySinceId": "2105930148285493388"
   },
@@ -1675,6 +1675,27 @@
       "score": 2,
       "flags": [],
       "tweetText": "What if @yonfrula &amp; @jackbutcher made a Groupie Credit 🫪\n\nThis would be pretty sick &amp; both are at some amazing prices to sweep 🧹 ❗️\n\nWhat you all think👀\n\nhttps://t.co/F5WzJP0z92\n\nhttps://t."
+    },
+    {
+      "id": "creditunion-fun-union-0x36c498cfb88802c51af0da2ea1495f95503fd950",
+      "name": "creditunion.fun",
+      "url": "https://creditunion.fun/union/0x36C498CfB88802c51AF0DA2eA1495f95503fD950",
+      "x": "jafastar2",
+      "post": "https://x.com/jafastar2/status/2106147385709822071",
+      "blurb": "",
+      "category": "statements",
+      "status": "pending",
+      "added": "2026-10-03",
+      "metrics": {
+        "likes": 14,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "Fuck the Credits fp its irrelevant to owning the main grail of @jackbutcher masterpiece: a Statement!  If you want to own the very first 2 Eights Statement, you can win it throught the https://t.co/LJ"
     }
   ]
 }
