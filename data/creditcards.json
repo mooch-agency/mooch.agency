@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2106210779074851007",
-    "lastRun": "2026-10-03T11:35:32.258Z",
+    "sinceId": "2106435007673729247",
+    "lastRun": "2026-10-03T18:25:08.404Z",
     "stats": {
-      "floorEth": 0.0090978,
-      "floorUsd": 24,
-      "supply": 111958,
-      "owners": 14144,
-      "fetchedAt": "2026-10-03T11:35:32.233Z"
+      "floorEth": 0.0098043,
+      "floorUsd": 26,
+      "supply": 111336,
+      "owners": 14106,
+      "fetchedAt": "2026-10-03T18:25:08.391Z"
     },
     "replySinceId": "2105930148285493388"
   },
@@ -1696,6 +1696,44 @@
         "known-host"
       ],
       "tweetText": "Fuck the Credits fp its irrelevant to owning the main grail of @jackbutcher masterpiece: a Statement!  If you want to own the very first 2 Eights Statement, you can win it throught the https://t.co/LJ"
+    },
+    {
+      "id": "opensea-io-collection-evms",
+      "name": "opensea.io",
+      "url": "https://opensea.io/collection/evms-",
+      "x": "0x_yahu",
+      "post": "https://x.com/0x_yahu/status/2106376043938664655",
+      "blurb": "",
+      "category": "markets",
+      "status": "pending",
+      "added": "2026-10-03",
+      "metrics": {
+        "likes": 9,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "🚨 FINALLY, NFTs on @ethereum\n\nLess than 3 hours left until the mint starts!\n\nCheck your eligibility &amp; set an alarm:\nhttps://t.co/hXzRpAZk7q\n\nMint Details:\n\nSupply: 10,000\nGTD &amp; WL: FREE\nPubli"
+    },
+    {
+      "id": "nullmint-com-host",
+      "name": "nullmint.com",
+      "url": "https://nullmint.com/host",
+      "x": "manicdistopia",
+      "post": "https://x.com/manicdistopia/status/2106435007673729247",
+      "blurb": "",
+      "category": "markets",
+      "status": "pending",
+      "added": "2026-10-03",
+      "metrics": {
+        "likes": 6,
+        "reposts": 1
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "NULL Host now hosts Credits by Jack Butcher.\n\nhold a NULL and a Credit, press New, mint.\n100% on-chain. \n\nhttps://t.co/sQbGKslrUV https://t.co/zRp6fSBj6x"
     }
   ]
 }
