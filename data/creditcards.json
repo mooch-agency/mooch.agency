@@ -1665,7 +1665,7 @@
       "post": "https://x.com/SketchyMarkets/status/2106071074517754309",
       "blurb": "",
       "category": "markets",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-02",
       "metrics": {
         "likes": 2,
@@ -1684,7 +1684,7 @@
       "post": "https://x.com/jafastar2/status/2106147385709822071",
       "blurb": "",
       "category": "statements",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-03",
       "metrics": {
         "likes": 14,
@@ -1705,7 +1705,7 @@
       "post": "https://x.com/0x_yahu/status/2106376043938664655",
       "blurb": "",
       "category": "markets",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-03",
       "metrics": {
         "likes": 9,
@@ -1718,13 +1718,13 @@
     },
     {
       "id": "nullmint-com-host",
-      "name": "nullmint.com",
+      "name": "NULL Host",
       "url": "https://nullmint.com/host",
       "x": "manicdistopia",
       "post": "https://x.com/manicdistopia/status/2106435007673729247",
-      "blurb": "",
-      "category": "markets",
-      "status": "pending",
+      "blurb": "Apply a NULL to a Credit you own and mint the system it makes, fully onchain. Needs a NULL and a Credit in one wallet, 0.0069 ETH.",
+      "category": "art",
+      "status": "approved",
       "added": "2026-10-03",
       "metrics": {
         "likes": 6,
@@ -1734,6 +1734,21 @@
       "score": 2,
       "flags": [],
       "tweetText": "NULL Host now hosts Credits by Jack Butcher.\n\nhold a NULL and a Credit, press New, mint.\n100% on-chain. \n\nhttps://t.co/sQbGKslrUV https://t.co/zRp6fSBj6x"
+    },
+    {
+      "id": "credits-mu",
+      "name": "Credits Music",
+      "url": "https://credits.mu",
+      "x": "galaxy_nose",
+      "post": "https://x.com/galaxy_nose/status/2106372386551730307",
+      "blurb": "Hear a Statement: load any 80 Credit Statement by ID, play it back and download the MIDI. No wallet needed.",
+      "category": "statements",
+      "status": "approved",
+      "added": "2026-10-04",
+      "metrics": {
+        "likes": 39,
+        "reposts": 8
+      }
     }
   ]
 }
