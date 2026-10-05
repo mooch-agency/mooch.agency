@@ -1,15 +1,16 @@
 {
   "meta": {
-    "sinceId": "2107044453093658686",
-    "lastRun": "2026-10-05T14:29:50.226Z",
+    "sinceId": "2107149928686371181",
+    "lastRun": "2026-10-05T18:19:20.689Z",
     "stats": {
-      "floorEth": 0.006597,
-      "floorUsd": 18,
-      "supply": 110456,
-      "owners": 13900,
-      "fetchedAt": "2026-10-05T14:29:50.212Z"
+      "floorEth": 0.009274,
+      "floorUsd": 25,
+      "supply": 110376,
+      "owners": 13828,
+      "fetchedAt": "2026-10-05T18:19:20.675Z"
     },
-    "replySinceId": "2105930148285493388"
+    "replySinceId": "2105930148285493388",
+    "topicSinceId": "2106920066948419922"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -1796,6 +1797,29 @@
         "likes": 33,
         "reposts": 6
       }
+    },
+    {
+      "id": "discord-com-invite-7bspnqad3",
+      "name": "discord.com",
+      "url": "https://discord.com/invite/7BSpnQaD3",
+      "x": "tradesgiving",
+      "post": "https://x.com/tradesgiving/status/2107148313409855562",
+      "blurb": "",
+      "category": "markets",
+      "status": "pending",
+      "added": "2026-10-05",
+      "metrics": {
+        "likes": 6,
+        "reposts": 4
+      },
+      "source": "search",
+      "score": -4,
+      "flags": [
+        "denylist",
+        "coin",
+        "known-host"
+      ],
+      "tweetText": "Our @jackbutcher credits @mememaxxers  creator leaderboard is updated after wk 2!\n\nhttps://t.co/tdpNm9PnrX\n\nopt in to $JACKOFF or be a $Jackass with us in Discord:\nhttps://t.co/EusQj4piEg\n\nperhaps we "
     }
   ]
 }
