@@ -1551,10 +1551,10 @@
     {
       "id": "opensea-io-collection-statements",
       "name": "Statements",
-      "url": "https://opensea.io/collection/statements",
+      "url": "https://jack.art/credits/assemble",
       "x": "jackbutcher",
       "post": "https://x.com/jackbutcher/status/2105814966414545233",
-      "blurb": "Jack's own Statements: 80 Credits burned from one wallet become one print, 1,526 at most, ever.",
+      "blurb": "Jack's own Statement maker: arrange 80 Credits from one wallet and burn them into one print, 1,526 at most, ever. Wallet needed.",
       "category": "statements",
       "status": "approved",
       "added": "2026-10-02",
@@ -1781,6 +1781,21 @@
       "score": 2,
       "flags": [],
       "tweetText": "Computers: 2026 pixel PCs built for nostalgia, with 80+ unique screen scenes.\n\nFree mint for Credits by @jackbutcher holders, 12-hour window.\n\nMinting now.\nhttps://t.co/Op4efrrGH3"
+    },
+    {
+      "id": "wubbushi-com-debits-duckling",
+      "name": "Duckling",
+      "url": "https://wubbushi.com/debits/duckling.html",
+      "x": "wubbushi",
+      "post": "https://x.com/wubbushi/status/2106795461537611983",
+      "blurb": "A Cinderella musical about Debit #3616 and Ella, the yellow its Credit never printed. 17 songs done, a rough cut playing for Debits holders.",
+      "category": "art",
+      "status": "approved",
+      "added": "2026-10-05",
+      "metrics": {
+        "likes": 33,
+        "reposts": 6
+      }
     }
   ]
 }

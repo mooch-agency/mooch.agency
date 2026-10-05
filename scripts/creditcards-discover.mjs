@@ -39,7 +39,8 @@ export const HOST_BLOCKLIST = new Set([
 ]);
 
 // OpenSea collection slugs that are the real thing, not a community project.
-const OPENSEA_OWN_SLUGS = new Set(['credits']);
+// Statements is listed by its maker page on jack.art, which is blocklisted.
+const OPENSEA_OWN_SLUGS = new Set(['credits', 'statements']);
 
 // Hosts that are almost never a Credits project: memecoin launchpads and
 // charts, chat invites, music and video uploads. Flagged and ranked low, never
