@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2106896421068612074",
-    "lastRun": "2026-10-05T06:26:15.613Z",
+    "sinceId": "2107044453093658686",
+    "lastRun": "2026-10-05T14:29:50.226Z",
     "stats": {
-      "floorEth": 0.0067,
+      "floorEth": 0.006597,
       "floorUsd": 18,
       "supply": 110456,
-      "owners": 13949,
-      "fetchedAt": "2026-10-05T06:26:15.584Z"
+      "owners": 13900,
+      "fetchedAt": "2026-10-05T14:29:50.212Z"
     },
     "replySinceId": "2105930148285493388"
   },
@@ -1762,6 +1762,25 @@
         "likes": 39,
         "reposts": 8
       }
+    },
+    {
+      "id": "opensea-io-collection-computers2026",
+      "name": "opensea.io",
+      "url": "https://opensea.io/collection/computers2026",
+      "x": "xkirteria",
+      "post": "https://x.com/xkirteria/status/2107044453093658686",
+      "blurb": "",
+      "category": "markets",
+      "status": "pending",
+      "added": "2026-10-05",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "Computers: 2026 pixel PCs built for nostalgia, with 80+ unique screen scenes.\n\nFree mint for Credits by @jackbutcher holders, 12-hour window.\n\nMinting now.\nhttps://t.co/Op4efrrGH3"
     }
   ]
 }
