@@ -6,7 +6,7 @@
 //
 //   search   the main keyword query                     meta.sinceId
 //   replies  replies addressed to @jesusdoteth          meta.replySinceId
-//   topic    community phrasing that never names Jack   meta.topicSinceId
+//   topic    perk posts to holders, no Jack named       meta.topicSinceId
 //   thread   self-replies under a post that had no link (derived, no bookmark)
 //
 // What each post is mined for, in order:
