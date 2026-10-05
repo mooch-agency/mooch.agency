@@ -25,3 +25,4 @@ jobs:
         env:
           X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
         run: node .github/backtest/creditcards-topic.mjs
+# run 2: full 7 days, query as is
