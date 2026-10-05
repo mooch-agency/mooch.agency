@@ -124,6 +124,19 @@
       "start": "2026-09-30",
       "checked": "2026-10-02",
       "seenOpen": "2026-10-02"
+    },
+    {
+      "id": "roonz-free-mint",
+      "project": "ROONZ",
+      "x": "Budzukoji",
+      "type": "free-mint",
+      "eligibility": "Credits holders, plus a few other communities",
+      "description": "A free ROONZ, one of 4,269 on Robinhood Chain, for holders with a WL spot. First come, first served, before the public mint.",
+      "url": "https://opensea.io/collection/roonz-by-budz",
+      "post": "https://x.com/Budzukoji/status/2106207875102380316",
+      "start": "2026-10-03",
+      "end": "2026-10-03",
+      "checked": "2026-10-05"
     }
   ],
   "projects": [
