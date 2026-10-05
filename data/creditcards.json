@@ -311,6 +311,21 @@
       }
     },
     {
+      "id": "credopepen-vercel-app",
+      "name": "BALANCE",
+      "url": "https://credopepen.vercel.app",
+      "x": "avsingh_eth",
+      "post": "https://x.com/avsingh_eth/status/2107167115463832051",
+      "blurb": "Credits remapped into Opepen blocks by ink-parity of each color; editions group by how many 8s are in the Credit.",
+      "category": "art",
+      "status": "approved",
+      "added": "2026-10-05",
+      "metrics": {
+        "likes": 13,
+        "reposts": 2
+      }
+    },
+    {
       "id": "gmgn-ai-robinhood-address-mjhhuwaq-0x63623d092e67fd2529e11dd6e74503748b00865b",
       "name": "gmgn.ai",
       "url": "https://gmgn.ai/robinhood/address/MjhhuWaq_0x63623d092e67fd2529e11dd6e74503748b00865b",
