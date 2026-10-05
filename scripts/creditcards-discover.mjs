@@ -1,11 +1,12 @@
 // ---------------------------------------------------------------------------
 // creditcards-discover.mjs: the X side of creditcards-update.mjs.
 //
-// Three sources feed one candidate pool; the two searches each keep their own
-// since-id bookmark in data.meta so neither ever skips the other's posts:
+// Four sources feed one candidate pool; the three searches each keep their own
+// since-id bookmark in data.meta so none ever skips another's posts:
 //
 //   search   the main keyword query                     meta.sinceId
 //   replies  replies addressed to @jesusdoteth          meta.replySinceId
+//   topic    perk posts to holders, no Jack named       meta.topicSinceId
 //   thread   self-replies under a post that had no link (derived, no bookmark)
 //
 // What each post is mined for, in order:
@@ -94,7 +95,7 @@ export const MAX_NEW_PER_AUTHOR = 3;
 export const THREAD_MAX_CONVERSATIONS = 8;
 export const TCO_MAX_RESOLVE = 20;
 
-const SOURCE_BASE_SCORE = { replies: 2, search: 1 };
+const SOURCE_BASE_SCORE = { replies: 2, search: 1, topic: 1 };
 
 // Hosts many unrelated projects share, where "same host" says nothing.
 const SHARED_HOSTS = new Set(['opensea.io', 'github.com', 'gitlab.com']);

@@ -114,6 +114,37 @@ test('a failing source leaves its since-id alone and the rest still run', async 
   assert.match(errs.join('\n'), /429 \(Too Many Requests\), rate limited until/);
 });
 
+test('the perk search finds a holders post that never names Jack', async () => {
+  // Shaped like ROONZ (3 Oct): addressed to @vvcredits holders, no Jack, and
+  // here with the link moved into the author's first reply.
+  const root = { id: '2106207875102380316', conversation_id: '2106207875102380316', author_id: '6', text: 'GM! To my fellow @vvcredits holders, you are all eligible to claim a @ROONZBYBUDZ for free.' };
+  const reply = { id: '2106207875102380400', conversation_id: '2106207875102380316', author_id: '6', text: 'https://t.co/os', entities: { urls: [link('https://opensea.io/collection/roonz-by-budz/overview')] } };
+  const topicUsers = [{ id: '6', username: 'Budzukoji' }];
+  const json = (body) => ({ ok: true, status: 200, headers: new Headers(), json: async () => body });
+  const queries = [];
+  const fetchImpl = async (url) => {
+    const q = new URL(url).searchParams.get('query') || '';
+    queries.push(q);
+    if (q.includes('"credits holders"')) return json({ data: [root], includes: { users: topicUsers }, meta: { newest_id: root.id, result_count: 1 } });
+    if (q.includes(`conversation_id:${root.id}`)) return json({ data: [reply], includes: { users: topicUsers } });
+    return json({ data: [], meta: { result_count: 0 } });
+  };
+  const data = { meta: { sinceId: '1', replySinceId: '1' }, projects: [] };
+  await discover(data, 'token', fetchImpl, () => {}, () => {});
+  const roonz = data.projects.find((p) => p.url === 'https://opensea.io/collection/roonz-by-budz');
+  assert.ok(roonz, 'found through the self-reply');
+  assert.equal(roonz.source, 'topic+thread');
+  assert.equal(roonz.post, 'https://x.com/Budzukoji/status/2106207875102380316');
+  assert.equal(roonz.status, 'pending');
+  assert.equal(data.meta.topicSinceId, root.id, 'its own bookmark advances');
+  assert.equal(data.meta.sinceId, '1', 'the main bookmark is untouched');
+  const topicQuery = queries.find((q) => q.includes('"credits holders"'));
+  assert.ok(!topicQuery.includes('has:links'), 'linkless posts are read');
+  assert.match(topicQuery, /-from:vvcredits/, 'the collection bot is excluded');
+  assert.match(topicQuery, /\bminting\b/, 'X matches whole words, so minting is listed');
+  assert.match(topicQuery, /-"Credit Union pooling"/, 'the union share template is excluded');
+});
+
 test('helpers', () => {
   assert.equal(acceptableUrl('https://opensea.io/collection/statements'), false, "Jack's own Statements collection");
   assert.equal(normaliseUrl('https://www.OpenSea.io/collection/CreditCards/overview?ref=1'), 'https://opensea.io/collection/creditcards');
