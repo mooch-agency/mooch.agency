@@ -552,9 +552,9 @@ function renderHead(total) {
 // The category pills: All first, then Perks when there are any (straight
 // after All, so on a phone it sits on the first screen of the sideways row
 // rather than off the end), then CATEGORIES in their fixed order, each with
-// its total in data-count (the filter script reads it). Only the Perks pill
-// shows a number on screen; the rest are bare labels, so the row reads as
-// choices rather than a table of figures. Plain buttons with aria-pressed; they do nothing
+// its total in data-count (the filter script reads it). All and Perks show a
+// number on screen, All the size of the index; the categories are bare
+// labels, so the row reads as choices rather than a table of figures. Plain buttons with aria-pressed; they do nothing
 // until the inline filter script wires them up, so with no JavaScript every
 // card, and the perks list under the projects, simply stays on the page.
 // While any perk is open the Perks pill carries the live dot (the Open
@@ -564,7 +564,7 @@ function renderFilter(approved, perkCount, perksOpen = 0) {
   const counts = Object.fromEntries(CATEGORIES.map((c) => [c.slug, 0]));
   for (const p of approved) counts[p.category] += 1;
   const pills = [
-    { slug: 'all', label: 'All', total: approved.length, controls: 'project-list' },
+    { slug: 'all', label: 'All', total: approved.length, n: approved.length, controls: 'project-list' },
     ...(perkCount
       ? [{ slug: 'perks', label: 'Perks', total: perkCount, n: perksOpen ? `${perksOpen} open` : perkCount, dot: perksOpen > 0, controls: 'perk-list' }]
       : []),

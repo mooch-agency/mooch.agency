@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2106896421068612074",
-    "lastRun": "2026-10-05T06:26:15.613Z",
+    "sinceId": "2107044453093658686",
+    "lastRun": "2026-10-05T14:29:50.226Z",
     "stats": {
-      "floorEth": 0.0067,
+      "floorEth": 0.006597,
       "floorUsd": 18,
       "supply": 110456,
-      "owners": 13949,
-      "fetchedAt": "2026-10-05T06:26:15.584Z"
+      "owners": 13900,
+      "fetchedAt": "2026-10-05T14:29:50.212Z"
     },
     "replySinceId": "2105930148285493388"
   },
@@ -124,6 +124,19 @@
       "start": "2026-09-30",
       "checked": "2026-10-02",
       "seenOpen": "2026-10-02"
+    },
+    {
+      "id": "roonz-free-mint",
+      "project": "ROONZ",
+      "x": "Budzukoji",
+      "type": "free-mint",
+      "eligibility": "Credits holders, plus a few other communities",
+      "description": "A free ROONZ, one of 4,269 on Robinhood Chain, for holders with a WL spot. First come, first served, before the public mint.",
+      "url": "https://opensea.io/collection/roonz-by-budz",
+      "post": "https://x.com/Budzukoji/status/2106207875102380316",
+      "start": "2026-10-03",
+      "end": "2026-10-03",
+      "checked": "2026-10-05"
     }
   ],
   "projects": [
@@ -1538,10 +1551,10 @@
     {
       "id": "opensea-io-collection-statements",
       "name": "Statements",
-      "url": "https://opensea.io/collection/statements",
+      "url": "https://jack.art/credits/assemble",
       "x": "jackbutcher",
       "post": "https://x.com/jackbutcher/status/2105814966414545233",
-      "blurb": "Jack's own Statements: 80 Credits burned from one wallet become one print, 1,526 at most, ever.",
+      "blurb": "Jack's own Statement maker: arrange 80 Credits from one wallet and burn them into one print, 1,526 at most, ever. Wallet needed.",
       "category": "statements",
       "status": "approved",
       "added": "2026-10-02",
@@ -1748,6 +1761,40 @@
       "metrics": {
         "likes": 39,
         "reposts": 8
+      }
+    },
+    {
+      "id": "opensea-io-collection-computers2026",
+      "name": "opensea.io",
+      "url": "https://opensea.io/collection/computers2026",
+      "x": "xkirteria",
+      "post": "https://x.com/xkirteria/status/2107044453093658686",
+      "blurb": "",
+      "category": "markets",
+      "status": "pending",
+      "added": "2026-10-05",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "Computers: 2026 pixel PCs built for nostalgia, with 80+ unique screen scenes.\n\nFree mint for Credits by @jackbutcher holders, 12-hour window.\n\nMinting now.\nhttps://t.co/Op4efrrGH3"
+    },
+    {
+      "id": "wubbushi-com-debits-duckling",
+      "name": "Duckling",
+      "url": "https://wubbushi.com/debits/duckling.html",
+      "x": "wubbushi",
+      "post": "https://x.com/wubbushi/status/2106795461537611983",
+      "blurb": "A Cinderella musical about Debit #3616 and Ella, the yellow its Credit never printed. 17 songs done, a rough cut playing for Debits holders.",
+      "category": "art",
+      "status": "approved",
+      "added": "2026-10-05",
+      "metrics": {
+        "likes": 33,
+        "reposts": 6
       }
     }
   ]

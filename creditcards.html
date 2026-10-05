@@ -274,8 +274,8 @@
   }
   .projects-head h2 { font: inherit; scroll-margin-top: 24px; }
   /* Category filter: pills in the site's .pill/.ghost language. Each pill's
-     total is baked into data-count for the filter script; only the Perks pill
-     shows a number on screen ("N open" while anything is open). Inert without
+     total is baked into data-count for the filter script; All shows the size
+     of the index and Perks its count ("N open" while anything is open). Inert without
      JavaScript (every card stays visible); the inline filter script below
      wires them to data-category and the URL hash. On a phone the row scrolls
      sideways instead of wrapping, with a fade on whichever edge has more. */
@@ -841,12 +841,12 @@
           </div>
           <div>
             <dt>Floor</dt>
-            <dd class="fact-value"><span data-stat="floorEth">0.0067</span> <span class="unit">ETH</span></dd>
+            <dd class="fact-value"><span data-stat="floorEth">0.0066</span> <span class="unit">ETH</span></dd>
             <dd class="fact-sub">$<span data-stat="floorUsd">18</span></dd>
           </div>
           <div>
             <dt>Holders</dt>
-            <dd class="fact-value"><span data-stat="owners">13,949</span></dd>
+            <dd class="fact-value"><span data-stat="owners">13,900</span></dd>
             <dd class="fact-sub">Wallets</dd>
           </div>
           <div>
@@ -873,13 +873,13 @@
     <!-- creditcards:projects:start -->
     <div class="projects-head">
       <h2 id="projects">The projects</h2>
-      <p><span data-filter-status aria-live="polite">45 projects</span> &middot; Found daily on X</p>
+      <p><span data-filter-status aria-live="polite">46 projects</span> &middot; Found daily on X</p>
     </div>
     <div class="cc-filter" role="group" aria-label="Filter projects by category" data-scroller>
-      <button type="button" class="cc-filter-pill" data-filter="all" aria-pressed="true" aria-controls="project-list" data-count="45">All</button>
-      <button type="button" class="cc-filter-pill" data-filter="perks" aria-pressed="false" aria-controls="perk-list" data-count="8"><span class="cc-filter-dot" aria-hidden="true"></span>Perks <span class="cc-filter-n">2 open</span></button>
+      <button type="button" class="cc-filter-pill" data-filter="all" aria-pressed="true" aria-controls="project-list" data-count="46">All <span class="cc-filter-n">46</span></button>
+      <button type="button" class="cc-filter-pill" data-filter="perks" aria-pressed="false" aria-controls="perk-list" data-count="9"><span class="cc-filter-dot" aria-hidden="true"></span>Perks <span class="cc-filter-n">2 open</span></button>
       <button type="button" class="cc-filter-pill" data-filter="rarity" aria-pressed="false" aria-controls="project-list" data-count="12">Rarity &amp; data</button>
-      <button type="button" class="cc-filter-pill" data-filter="art" aria-pressed="false" aria-controls="project-list" data-count="13">Art &amp; remixes</button>
+      <button type="button" class="cc-filter-pill" data-filter="art" aria-pressed="false" aria-controls="project-list" data-count="14">Art &amp; remixes</button>
       <button type="button" class="cc-filter-pill" data-filter="statements" aria-pressed="false" aria-controls="project-list" data-count="7">Build your Statement</button>
       <button type="button" class="cc-filter-pill" data-filter="games" aria-pressed="false" aria-controls="project-list" data-count="4">Games</button>
       <button type="button" class="cc-filter-pill" data-filter="markets" aria-pressed="false" aria-controls="project-list" data-count="9">Mints, tokens &amp; markets</button>
@@ -894,6 +894,11 @@
       </li>
       <li class="proj-sponsor" data-category="all">
         <p>Feature your project here: 80 USDC a week or 1 Credit to <button type="button" class="proj-sponsor-address" data-copy="jesus.eth" title="Copy jesus.eth on Ethereum mainnet" data-event="creditcards_sponsor_copy">jesus.eth</button><span class="proj-sponsor-sep" aria-hidden="true">&middot;</span><a href="https://x.com/messages/compose?recipient_id=1386099253580345344" target="_blank" rel="noopener" data-event="creditcards_sponsor_click">DM @jesusdoteth <span class="arrow">&rarr;</span></a></p>
+      </li>
+      <li class="proj-card" data-category="art">
+        <a class="proj-name" href="https://wubbushi.com/debits/duckling.html" target="_blank" rel="noopener" data-event="creditcards_project_click">Duckling</a>
+        <p class="proj-blurb">A Cinderella musical about Debit #3616 and Ella, the yellow its Credit never printed. 17 songs done, a rough cut playing for Debits holders.</p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/wubbushi/status/2106795461537611983" target="_blank" rel="noopener" data-event="creditcards_post_click">@wubbushi</a></span><span>5 Oct 2026</span></p>
       </li>
       <li class="proj-card" data-category="statements">
         <a class="proj-name" href="https://credits.mu" target="_blank" rel="noopener" data-event="creditcards_project_click">Credits Music</a>
@@ -911,8 +916,8 @@
         <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/fmiasp/status/2105930148285493388" target="_blank" rel="noopener" data-event="creditcards_post_click">@fmiasp</a></span><span>2 Oct 2026</span></p>
       </li>
       <li class="proj-card" data-category="statements">
-        <a class="proj-name" href="https://opensea.io/collection/statements" target="_blank" rel="noopener" data-event="creditcards_project_click">Statements</a>
-        <p class="proj-blurb">Jack&#39;s own Statements: 80 Credits burned from one wallet become one print, 1,526 at most, ever.</p>
+        <a class="proj-name" href="https://jack.art/credits/assemble" target="_blank" rel="noopener" data-event="creditcards_project_click">Statements</a>
+        <p class="proj-blurb">Jack&#39;s own Statement maker: arrange 80 Credits from one wallet and burn them into one print, 1,526 at most, ever. Wallet needed.</p>
         <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/jackbutcher/status/2105814966414545233" target="_blank" rel="noopener" data-event="creditcards_post_click">@jackbutcher</a></span><span>2 Oct 2026</span></p>
       </li>
       <li class="proj-card" data-category="games">
@@ -1134,6 +1139,13 @@
           <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/LATE_FX/status/2103269221111058849" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@LATE_FX</a></span><time datetime="2026-09-24">24 Sept 2026</time></p>
         </li>
         <li data-standing-slot></li>
+        <li class="proj-card perk-card perk-card--ended" data-perk="roonz-free-mint" data-status="ended">
+          <p class="perk-tags"><span class="perk-status">Ended</span><span class="perk-type">Free mint</span></p>
+          <a class="proj-name" href="https://opensea.io/collection/roonz-by-budz" target="_blank" rel="noopener" data-event="creditcards_perk_click">ROONZ</a>
+          <p class="proj-blurb">A free ROONZ, one of 4,269 on Robinhood Chain, for holders with a WL spot. First come, first served, before the public mint.</p>
+          <p class="perk-for"><span class="perk-for-label">For</span> Credits holders, plus a few other communities</p>
+          <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/Budzukoji/status/2106207875102380316" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@Budzukoji</a></span><time datetime="2026-10-03">Ended 3 Oct 2026</time></p>
+        </li>
         <li class="proj-card perk-card perk-card--ended" data-perk="receipts-free-mint" data-status="ended">
           <p class="perk-tags"><span class="perk-status">Ended</span><span class="perk-type">Free mint</span><span class="perk-reason">Closed</span></p>
           <a class="proj-name" href="https://opensea.io/collection/rcpts" target="_blank" rel="noopener" data-event="creditcards_perk_click">RECEIPTS</a>
@@ -1190,7 +1202,7 @@
         </a></li>
         <li><a class="creditor" href="https://x.com/wubbushi" target="_blank" rel="noopener" data-event="creditcards_leaderboard_click">
           <span class="creditor-av" aria-hidden="true">W<img src="https://unavatar.io/x/wubbushi" width="22" height="22" loading="lazy" alt="" onerror="this.remove()"></span>
-          <span class="creditor-handle">@wubbushi</span> <span class="creditor-n">2 projects</span>
+          <span class="creditor-handle">@wubbushi</span> <span class="creditor-n">3 projects</span>
         </a></li>
         <li><a class="creditor" href="https://x.com/Jehoseph" target="_blank" rel="noopener" data-event="creditcards_leaderboard_click">
           <span class="creditor-av" aria-hidden="true">J<img src="https://unavatar.io/x/Jehoseph" width="22" height="22" loading="lazy" alt="" onerror="this.remove()"></span>
@@ -1207,7 +1219,7 @@
     <div>
       <div class="eyebrow"><span class="rule"></span> Standing order</div>
       <h2 class="standing-title" id="standing-title">The next perk, in your <em>inbox.</em></h2>
-      <p class="standing-standfirst"><span data-stat="perksLine">You&#39;ve missed 6 perks for Credits holders so far.</span> We watch X every day and email you when new perks appear.</p>
+      <p class="standing-standfirst"><span data-stat="perksLine">You&#39;ve missed 7 perks for Credits holders so far.</span> We watch X every day and email you when new perks appear.</p>
       <p class="standing-note">No new perk, no email</p>
     </div>
     <div class="standing-card">
