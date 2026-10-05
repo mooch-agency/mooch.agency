@@ -141,6 +141,7 @@ test('the perk search finds a holders post that never names Jack', async () => {
   const topicQuery = queries.find((q) => q.includes('"credits holders"'));
   assert.ok(!topicQuery.includes('has:links'), 'linkless posts are read');
   assert.match(topicQuery, /-from:vvcredits/, 'the collection bot is excluded');
+  assert.match(topicQuery, /\bminting\b/, 'X matches whole words, so minting is listed');
   assert.match(topicQuery, /-"Credit Union pooling"/, 'the union share template is excluded');
 });
 

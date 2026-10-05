@@ -133,7 +133,7 @@ const X_REPLY_MAX_RESULTS = 25;
 // No has:links: a linkless post still resolves through its bio or first
 // self-reply. Overlap with the main query only costs a duplicate read.
 const X_TOPIC_QUERY =
-  '(@vvcredits OR "credits holders" OR "credits holder") (free OR claim OR mint OR airdrop OR allowlist OR WL OR eligible) -from:vvcredits -"Credit Union pooling" -"Join my Credit Union" -is:retweet -is:reply';
+  '(@vvcredits OR "credits holders" OR "credits holder") (free OR claim OR mint OR minting OR airdrop OR allowlist OR WL OR eligible) -from:vvcredits -"Credit Union pooling" -"Join my Credit Union" -is:retweet -is:reply';
 const X_TOPIC_MAX_RESULTS = 25;
 
 // Fields every tweet read asks for: entities for links, referenced tweets for
