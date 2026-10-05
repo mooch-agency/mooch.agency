@@ -114,6 +114,35 @@ test('a failing source leaves its since-id alone and the rest still run', async 
   assert.match(errs.join('\n'), /429 \(Too Many Requests\), rate limited until/);
 });
 
+test('community phrasing finds a post that never names Jack', async () => {
+  // Shaped like Credits Music (3 Oct): "80 credits", no Jack, no link in the
+  // post, the site in the author's own first reply.
+  const root = { id: '2106372386551730307', conversation_id: '2106372386551730307', author_id: '6', text: 'spent the week arranging 80 credits into a supercontinent. statements are midi files now.' };
+  const reply = { id: '2106372386551730400', conversation_id: '2106372386551730307', author_id: '6', text: 'https://t.co/mu', entities: { urls: [link('https://credits.mu/')] } };
+  const topicUsers = [{ id: '6', username: 'galaxy_nose' }];
+  const json = (body) => ({ ok: true, status: 200, headers: new Headers(), json: async () => body });
+  const queries = [];
+  const fetchImpl = async (url) => {
+    const q = new URL(url).searchParams.get('query') || '';
+    queries.push(q);
+    if (q.includes('"80 credits"')) return json({ data: [root], includes: { users: topicUsers }, meta: { newest_id: root.id, result_count: 1 } });
+    if (q.includes(`conversation_id:${root.id}`)) return json({ data: [reply], includes: { users: topicUsers } });
+    return json({ data: [], meta: { result_count: 0 } });
+  };
+  const data = { meta: { sinceId: '1', replySinceId: '1' }, projects: [] };
+  await discover(data, 'token', fetchImpl, () => {}, () => {});
+  const mu = data.projects.find((p) => p.url === 'https://credits.mu');
+  assert.ok(mu, 'found through the self-reply');
+  assert.equal(mu.source, 'topic+thread');
+  assert.equal(mu.post, 'https://x.com/galaxy_nose/status/2106372386551730307');
+  assert.equal(mu.status, 'pending');
+  assert.equal(data.meta.topicSinceId, root.id, 'its own bookmark advances');
+  assert.equal(data.meta.sinceId, '1', 'the main bookmark is untouched');
+  const topicQuery = queries.find((q) => q.includes('"80 credits"'));
+  assert.ok(!topicQuery.includes('has:links'), 'linkless posts are read');
+  assert.match(topicQuery, /"credits holders"/);
+});
+
 test('helpers', () => {
   assert.equal(normaliseUrl('https://www.OpenSea.io/collection/CreditCards/overview?ref=1'), 'https://opensea.io/collection/creditcards');
   assert.equal(acceptableUrl('https://opensea.io/item/ethereum/0x1/3'), false);

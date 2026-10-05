@@ -1,0 +1,27 @@
+# TEMPORARY: runs the community-phrasing backtest once on this branch.
+# Removed before merge. Reads X, writes nothing, commits nothing.
+name: Credit Cards backtest
+on:
+  push:
+    branches: [creditcards/discovery-third-search]
+    paths: ['.github/backtest/**', '.github/workflows/creditcards-backtest.yml']
+permissions:
+  contents: read
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Backtest
+        env:
+          X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+        run: node .github/backtest/creditcards-topic.mjs

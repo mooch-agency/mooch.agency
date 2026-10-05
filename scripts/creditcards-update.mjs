@@ -4,10 +4,11 @@
 //
 // Three jobs, in order, each surviving the others' failure:
 //
-//   1. Discovery (needs X_BEARER_TOKEN, see creditcards-discover.mjs): two
+//   1. Discovery (needs X_BEARER_TOKEN, see creditcards-discover.mjs): three
 //      sources, each with its own since-id in data.meta: the main keyword
-//      search (sinceId) and replies to @jesusdoteth where builders submit
-//      (replySinceId).
+//      search (sinceId), replies to @jesusdoteth where builders submit
+//      (replySinceId), and the community's own phrasing, which never names
+//      Jack (topicSinceId).
 //      Posts are mined for links in the post, in a quoted or reposted post, in
 //      the author's bio when the post says "link in bio", and in the author's
 //      own first reply when the post itself has none. New external links land
@@ -16,7 +17,7 @@
 //      category (a keyword guess, see creditcards-categories.mjs). Nothing
 //      pending ever renders; a human flips it to "approved" (and tidies the
 //      blurb, name and category) first. Rejected entries stay as tombstones so a re-announced URL is
-//      never re-added. Cost control: at most 50 + 25 search posts and
+//      never re-added. Cost control: at most 50 + 25 + 25 search posts and
 //      one 25-post thread lookup a run, windowed by since-ids so a
 //      quiet day reads almost nothing; at most 15 new entries a run and 3 per
 //      author.
@@ -121,6 +122,17 @@ const X_MAX_RESULTS = 50;
 const X_REPLY_HANDLE = 'jesusdoteth';
 const X_REPLY_QUERY = `to:${X_REPLY_HANDLE} is:reply has:links -is:retweet -from:${X_REPLY_HANDLE}`;
 const X_REPLY_MAX_RESULTS = 25;
+
+// Third search: how builders and perk posts talk once they are inside the
+// community, without naming Jack. Credits Music (credits.mu, 3 Oct) said
+// "80 credits" and "statements", linked nothing, and the main query never saw
+// it; perk posts say "Credits holders". Each phrase is specific to Credits,
+// where "holders" or "credits" alone would match half of X. No has:links,
+// because a linkless post still resolves through its bio or first self-reply.
+// Overlap with the main query only costs a duplicate read: candidates dedupe
+// by URL. Worst case adds about $7.50 a month at two runs a day.
+const X_TOPIC_QUERY = '("80 credits" OR "credits statement" OR "credits holders" OR @vvcredits) -is:retweet -is:reply';
+const X_TOPIC_MAX_RESULTS = 25;
 
 // Fields every tweet read asks for: entities for links, referenced tweets for
 // quotes, reposts and threads, and the author's profile link for "link in bio".
@@ -408,6 +420,10 @@ export async function discover(data, token, fetchImpl = fetch, log = console.log
       `X replies to @${X_REPLY_HANDLE}`,
       () =>
         searchSource(pool, token, { query: X_REPLY_QUERY, maxResults: X_REPLY_MAX_RESULTS, sinceKey: 'replySinceId', source: 'replies' }),
+    ],
+    [
+      'X community phrasing',
+      () => searchSource(pool, token, { query: X_TOPIC_QUERY, maxResults: X_TOPIC_MAX_RESULTS, sinceKey: 'topicSinceId', source: 'topic' }),
     ],
   ];
   // Each source survives the others' failure. A failed source leaves its
