@@ -73,7 +73,7 @@ const fetchImpl = async (url, opts) => {
   console.log(`=== breakdown: @vvcredits bot ${bot}, Credit Union template ${union}, with an external link ${linked}, other ${posts.length - bot - union}`);
   for (const t of posts) {
     const links = linkOf(t);
-    if (!links.length) continue;
+    if (!links.length && !OVERRIDE) continue;
     console.log(`--- ${t.created_at} @${users.get(t.author_id)} https://x.com/i/status/${t.id}`);
     console.log(`    ${(t.text || '').replace(/\s+/g, ' ').slice(0, 160)}`);
     console.log(`    links: ${links.join(' ')}`);

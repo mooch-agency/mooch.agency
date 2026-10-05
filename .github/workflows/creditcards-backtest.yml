@@ -24,5 +24,6 @@ jobs:
       - name: Backtest
         env:
           X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+          BACKTEST_QUERY: 'from:wubbushi (duckling OR musical OR ella)'
         run: node .github/backtest/creditcards-topic.mjs
-# run 3: perk-focused query
+# run 4: find the DUCKLING post
