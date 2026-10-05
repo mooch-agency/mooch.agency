@@ -115,6 +115,7 @@ test('a failing source leaves its since-id alone and the rest still run', async 
 });
 
 test('helpers', () => {
+  assert.equal(acceptableUrl('https://opensea.io/collection/statements'), false, "Jack's own Statements collection");
   assert.equal(normaliseUrl('https://www.OpenSea.io/collection/CreditCards/overview?ref=1'), 'https://opensea.io/collection/creditcards');
   assert.equal(acceptableUrl('https://opensea.io/item/ethereum/0x1/3'), false);
   assert.equal(acceptableUrl('https://opensea.io/collection/creditmon'), true);
