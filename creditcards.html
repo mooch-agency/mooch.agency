@@ -274,8 +274,8 @@
   }
   .projects-head h2 { font: inherit; scroll-margin-top: 24px; }
   /* Category filter: pills in the site's .pill/.ghost language. Each pill's
-     total is baked into data-count for the filter script; only the Perks pill
-     shows a number on screen ("N open" while anything is open). Inert without
+     total is baked into data-count for the filter script; All shows the size
+     of the index and Perks its count ("N open" while anything is open). Inert without
      JavaScript (every card stays visible); the inline filter script below
      wires them to data-category and the URL hash. On a phone the row scrolls
      sideways instead of wrapping, with a fade on whichever edge has more. */
@@ -876,7 +876,7 @@
       <p><span data-filter-status aria-live="polite">46 projects</span> &middot; Found daily on X</p>
     </div>
     <div class="cc-filter" role="group" aria-label="Filter projects by category" data-scroller>
-      <button type="button" class="cc-filter-pill" data-filter="all" aria-pressed="true" aria-controls="project-list" data-count="46">All</button>
+      <button type="button" class="cc-filter-pill" data-filter="all" aria-pressed="true" aria-controls="project-list" data-count="46">All <span class="cc-filter-n">46</span></button>
       <button type="button" class="cc-filter-pill" data-filter="perks" aria-pressed="false" aria-controls="perk-list" data-count="9"><span class="cc-filter-dot" aria-hidden="true"></span>Perks <span class="cc-filter-n">2 open</span></button>
       <button type="button" class="cc-filter-pill" data-filter="rarity" aria-pressed="false" aria-controls="project-list" data-count="12">Rarity &amp; data</button>
       <button type="button" class="cc-filter-pill" data-filter="art" aria-pressed="false" aria-controls="project-list" data-count="14">Art &amp; remixes</button>
