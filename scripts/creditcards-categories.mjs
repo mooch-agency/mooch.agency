@@ -12,7 +12,7 @@ export const CATEGORIES = [
   { slug: 'art', label: 'Art & remixes' },
   { slug: 'statements', label: 'Build your Statement' },
   { slug: 'games', label: 'Games' },
-  { slug: 'markets', label: 'Mints, tokens & markets' },
+  { slug: 'markets', label: 'Mints & markets' },
 ];
 
 export const CATEGORY_SLUGS = CATEGORIES.map((c) => c.slug);
