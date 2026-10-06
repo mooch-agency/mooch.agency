@@ -694,7 +694,6 @@
   .cc-sort:hover, .cc-sort[aria-pressed="true"] { color: var(--ink); }
   .cc-sort:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
   .cc-sort-ind { min-width: 8px; }
-  .cc-sort-select { display: none; }
 
   /* Perks as rows: status and type get columns, "For" sits under the blurb. */
   [data-cc-view="list"] .perks > li.perk-card {
@@ -724,7 +723,8 @@
     [data-cc-view="list"] .perks > li.perk-card { grid-template-columns: minmax(0, 1fr) 160px 130px 0; }
   }
   /* Phone: no columns. Each row stacks name, blurb and builder, then type,
-     access and date on one line; the head becomes a sort menu. */
+     access and date on one line. The head row goes: phones keep the
+     newest-first order. */
   @media (max-width: 599px) {
     [data-cc-view="list"] .projects > li.proj-card,
     [data-cc-view="list"] .perks > li.perk-card {
@@ -747,23 +747,8 @@
     [data-cc-view="list"] .proj-card .proj-access { order: 6; }
     [data-cc-view="list"] .proj-card .proj-by time { order: 7; display: block; margin-left: auto; }
     [data-cc-view="list"] .projects > li.proj-card--featured { padding: 20px; }
-    [data-cc-view="list"] .projects .proj-sponsor { padding: 0; }
-    [data-cc-view="list"] .cc-list-head { display: flex; justify-content: flex-end; padding: 4px 0; }
-    [data-cc-view="list"] .cc-list-head .cc-sort, [data-cc-view="list"] .cc-list-head--perks { display: none; }
-    [data-cc-view="list"] .cc-sort-select { display: inline-flex; align-items: center; gap: 10px; }
-    .cc-sort-select select {
-      height: 36px;
-      padding: 0 12px;
-      border: 1px solid var(--hairline);
-      border-radius: 980px;
-      background: var(--paper);
-      color: var(--ink);
-      font-family: var(--sans);
-      font-size: 16px;                 /* >=16px stops iOS zoom-on-focus */
-      text-transform: none;
-      letter-spacing: 0;
-    }
-    .cc-sort-select select:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    [data-cc-view="list"] .projects .proj-sponsor { padding: 0; margin-bottom: 20px; }
+    [data-cc-view="list"] .cc-list-head { display: none; }
   }
 
   /* Top creditors: the three builders with the most approved projects,
@@ -1153,12 +1138,6 @@
         <button type="button" class="cc-sort" data-sort="type">Type<span class="cc-sort-ind" aria-hidden="true"></span></button>
         <button type="button" class="cc-sort" data-sort="access">Access<span class="cc-sort-ind" aria-hidden="true"></span></button>
         <button type="button" class="cc-sort" data-sort="added" aria-pressed="true">Added<span class="cc-sort-ind" aria-hidden="true"></span></button>
-        <label class="cc-sort-select"><span>Sort</span><select data-sort-select>
-          <option value="added">Newest</option>
-          <option value="type">Type</option>
-          <option value="access">Easiest to try</option>
-          <option value="name">A to Z</option>
-        </select></label>
       </li>
       <li class="proj-card" data-category="art" data-access="none" data-added="2026-10-05">
         <a class="proj-name" href="https://credopepen.vercel.app" target="_blank" rel="noopener" data-event="creditcards_project_click">BALANCE</a>
@@ -1805,8 +1784,8 @@
   // Sorting reorders the baked cards in place, after the list head, so the
   // featured card and the paid-slot line stay on top and the filter script's
   // hidden flags travel with the cards. The bake order (newest first) is the
-  // default. Heads sort on desktop, the select on a phone; one state drives
-  // both. Clicking the active head flips its direction.
+  // default. The heads only show from 600px up; a phone keeps the bake
+  // order. Clicking the active head flips its direction.
   (function () {
     var root = document.documentElement;
     var toggle = document.querySelector("[data-view-toggle]");
@@ -1838,7 +1817,6 @@
     var ACCESS_ORDER = ["none", "optional", "wallet", "paid"];
     var cards = [].slice.call(list.querySelectorAll(":scope > li.proj-card:not(.proj-card--featured)"));
     var sortBtns = [].slice.call(head.querySelectorAll("[data-sort]"));
-    var select = head.querySelector("[data-sort-select]");
     var state = { key: "added", dir: "desc" };
     var DEFAULT_DIR = { added: "desc", name: "asc", type: "asc", access: "asc" };
 
@@ -1865,7 +1843,6 @@
         b.setAttribute("aria-pressed", on ? "true" : "false");
         b.querySelector(".cc-sort-ind").textContent = on ? (dir === "asc" ? "↑" : "↓") : "";
       });
-      if (select) select.value = key;
     }
     sortBtns.forEach(function (b) {
       b.addEventListener("click", function () {
@@ -1874,10 +1851,6 @@
         sortBy(key, dir);
         try { if (window.va) window.va("event", { name: "creditcards_sort", data: { key: key, dir: dir } }); } catch (err) {}
       });
-    });
-    if (select) select.addEventListener("change", function () {
-      sortBy(select.value, DEFAULT_DIR[select.value]);
-      try { if (window.va) window.va("event", { name: "creditcards_sort", data: { key: select.value, dir: DEFAULT_DIR[select.value] } }); } catch (err) {}
     });
     sortBy("added", "desc");
   })();

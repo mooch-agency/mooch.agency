@@ -595,9 +595,9 @@ const VIEW_TOGGLE = [
 ].join('\n');
 
 // The list view's column heads, baked as the first row after the featured
-// card (or first in the list). Only shown in the list view. Each head sorts
-// the cards below it; the select stands in for them on a phone, where the
-// columns stack. The sort script reorders the baked cards in place, so the
+// card (or first in the list). Only shown in the list view, and not on a
+// phone, where the columns stack: there the list keeps the bake order.
+// Each head sorts the cards below it. The sort script reorders the baked cards in place, so the
 // bake order (newest first) is the default and nothing is fetched.
 const LIST_HEAD = [
   '      <li class="cc-list-head" data-list-head>',
@@ -605,12 +605,6 @@ const LIST_HEAD = [
   '        <button type="button" class="cc-sort" data-sort="type">Type<span class="cc-sort-ind" aria-hidden="true"></span></button>',
   '        <button type="button" class="cc-sort" data-sort="access">Access<span class="cc-sort-ind" aria-hidden="true"></span></button>',
   '        <button type="button" class="cc-sort" data-sort="added" aria-pressed="true">Added<span class="cc-sort-ind" aria-hidden="true"></span></button>',
-  '        <label class="cc-sort-select"><span>Sort</span><select data-sort-select>',
-  '          <option value="added">Newest</option>',
-  '          <option value="type">Type</option>',
-  '          <option value="access">Easiest to try</option>',
-  '          <option value="name">A to Z</option>',
-  '        </select></label>',
   '      </li>',
 ].join('\n');
 
