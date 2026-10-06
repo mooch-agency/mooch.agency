@@ -717,10 +717,13 @@
 
   @media (max-width: 899px) {
     [data-cc-view="list"] .projects > li.proj-card { grid-template-columns: minmax(0, max-content) minmax(0, 1fr) 160px 130px 0; column-gap: 20px; }
-    [data-cc-view="list"] .proj-card .proj-by time { display: none; }
+    /* Project rows drop the date here (the New tag carries recency); perks
+       keep theirs, since "Ends <date>" is the point of an open perk. */
+    [data-cc-view="list"] #project-list .proj-by time { display: none; }
     [data-cc-view="list"] .cc-list-head { grid-template-columns: minmax(0, 1fr) 160px 130px; gap: 0 20px; }
-    [data-cc-view="list"] .cc-sort[data-sort="added"], [data-cc-view="list"] .cc-list-head--perks span:last-child { display: none; }
-    [data-cc-view="list"] .perks > li.perk-card { grid-template-columns: minmax(0, 1fr) 160px 130px 0; }
+    [data-cc-view="list"] .cc-sort[data-sort="added"] { display: none; }
+    [data-cc-view="list"] .cc-list-head--perks,
+    [data-cc-view="list"] .perks > li.perk-card { grid-template-columns: minmax(0, 1fr) 110px 100px 96px; column-gap: 16px; }
   }
   /* Phone: no columns, rows grouped by type under a sticky header, so the
      type is said once per group instead of on every row. The grouping is
@@ -781,7 +784,10 @@
     /* Basis 0 so a long handle truncates on the access line instead of
        wrapping onto its own. */
     [data-cc-view="list"] .proj-card .proj-by-names { order: 7; flex: 1 1 0; min-width: 0; margin: 0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    [data-cc-view="list"] .proj-card .proj-by time { display: none; }
+    [data-cc-view="list"] #project-list .proj-by time { display: none; }
+    /* Perks keep their date, on the right of the builder's line. */
+    [data-cc-view="list"] .perks .proj-by-names { text-align: left; }
+    [data-cc-view="list"] .perks .proj-by time { order: 8; display: block; flex: none; margin-left: auto; }
     [data-cc-view="list"] .projects > li.proj-card--featured { padding: 20px; }
     [data-cc-view="list"] .projects .proj-sponsor { padding: 0; margin-bottom: 8px; }
     [data-cc-view="list"] .cc-list-head { display: none; }
@@ -1510,7 +1516,7 @@
       </li>
       <li class="cc-type-head" data-category="rarity" aria-hidden="true"><span class="cc-type-head-name">Rarity &amp; data</span><span class="cc-type-head-n">12</span></li>
       <li class="cc-type-head" data-category="art" aria-hidden="true"><span class="cc-type-head-name">Art &amp; remixes</span><span class="cc-type-head-n">15</span></li>
-      <li class="cc-type-head" data-category="statements" aria-hidden="true"><span class="cc-type-head-name">Build your Statement</span><span class="cc-type-head-n">7</span></li>
+      <li class="cc-type-head" data-category="statements" aria-hidden="true"><span class="cc-type-head-name">Build your Statement</span><span class="cc-type-head-n">6</span></li>
       <li class="cc-type-head" data-category="games" aria-hidden="true"><span class="cc-type-head-name">Games</span><span class="cc-type-head-n">4</span></li>
       <li class="cc-type-head" data-category="markets" aria-hidden="true"><span class="cc-type-head-name">Mints, tokens &amp; markets</span><span class="cc-type-head-n">9</span></li>
     </ol>

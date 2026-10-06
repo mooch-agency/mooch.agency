@@ -747,8 +747,10 @@ function renderProjects(projects, slot, perks = [], today = todayUtc()) {
   // creditcards.html), so these sit at the end of the list and the cards
   // keep their bake order in the DOM. aria-hidden: a screen reader reads
   // the list in DOM order, where each card still names its own type.
+  // The featured card sits above every group on a phone, so it doesn't
+  // count towards its type's heading.
   const typeCounts = Object.fromEntries(CATEGORIES.map((c) => [c.slug, 0]));
-  for (const p of approved) typeCounts[p.category] += 1;
+  for (const p of approved) if (p !== featured) typeCounts[p.category] += 1;
   const typeHeads = CATEGORIES.filter((c) => typeCounts[c.slug])
     .map((c) => `      <li class="cc-type-head" data-category="${c.slug}" aria-hidden="true"><span class="cc-type-head-name">${escapeHtml(c.label)}</span><span class="cc-type-head-n">${typeCounts[c.slug]}</span></li>`)
     .join('\n');

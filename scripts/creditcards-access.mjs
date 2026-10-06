@@ -33,10 +33,12 @@ export function accessProblems(projects) {
 
 // --- suggestion ------------------------------------------------------------------
 //
-// A keyword guess from the blurb and post text. The strongest signal wins, in
-// this order: money mentioned, then a wallet required, then a wallet
-// optional, else nothing to connect. It only saves a step at review time; a
-// human still checks it when approving.
+// A keyword guess from the blurb and post text, checked in this order: an
+// explicit "wallet optional"; then a blurb that says free or nothing to
+// connect (our own wording, so it beats anything the post says); then money
+// mentioned; then a wallet required or an OpenSea collection link; else
+// none. It only saves a step at review time; a human still checks it when
+// approving.
 const PAID_RE = /\b\d*\.?\d+\s?eth\b|\$\d|\bpaid\b|\breal money\b|\bprice[ds]?\b|\bbuy\b|\bpresale\b/i;
 const WALLET_RE = /\bwallet (needed|connected|required)\b|\bconnect (your )?wallet\b|\bwallet to mint\b|\bmint\b|\bclaim\b|\bholders? only\b/i;
 const OPTIONAL_RE = /\bwallet optional\b|\boptional wallet\b/i;
