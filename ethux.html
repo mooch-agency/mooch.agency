@@ -499,7 +499,7 @@
   <div class="case-hero-inner">
     <div class="eyebrow reveal d1"><span class="rule"></span> Case Study</div>
     <h1 class="reveal d2">Contributing to Ethereum UX for humans and <em>AI agents</em></h1>
-    <p class="standfirst reveal d3">We contributed plain-language guidance to EthUX.design, an open project that teaches AI agents UX best practice for web3, and tested it with three AI models before it merged.</p>
+    <p class="standfirst reveal d3">We contributed plain-language guidance to EthUX.design, an open project that teaches AI agents UX best practice for web3.</p>
     <dl class="case-meta reveal d4">
       <div><dt>Project</dt><dd>EthUX.design</dd></div>
       <div><dt>Sector</dt><dd>Web3 / AI</dd></div>
@@ -515,14 +515,13 @@
   <div class="case-body-inner">
 
     <h2><span class="num">&sect; 01</span>TL;DR</h2>
-    <p class="lead-stat"><strong>With no guidance, AI agents used crypto jargon where a plain word existed in 7 of 9 test runs. With EthUX.design's guidance, including our changes, 1 in 9.</strong></p>
-    <p>Web3 has had a reputation for bad UX since day one, and AI agents now write more and more of the copy in its wallets, exchanges and apps. We contributed plain-language guidance to <a href="https://ethux.design" data-track="ethux_source_click" data-link="ethux_site">EthUX.design</a>, an open project that teaches those agents UX best practice, and tested it before it merged.</p>
+    <p class="lead-stat"><strong>Crypto jargon from AI agents dropped from 7 in 9 test runs with no guidance to 1 in 9 with EthUX.design's, including our contributions.</strong></p>
 
     <h2><span class="num">&sect; 02</span>The invitation</h2>
-    <p>&ldquo;Bad UX&rdquo; has dogged web3 for so long it's a clich&eacute;. Words are often where it breaks first. A new user meets &ldquo;gas&rdquo; (the fee for using the network), &ldquo;slippage&rdquo; and &ldquo;approve&rdquo; before they've done anything at all.</p>
-    <p>More and more of those words are now written by AI coding agents: assistants that build wallets, exchanges and apps from a developer's instructions. An agent uses whatever words it's given. Fix the guidance it reads, and the fix reaches every screen it builds.</p>
-    <p>That's the idea behind EthUX.design. Jakub Konopka, a designer at the Ethereum Foundation who we'd worked with on <a href="/ethereum" data-track="ethux_related_click" data-to="ethereum">ethereum.org</a>, started it as his own project. It draws on more than 32,000 reports from Ethereum users about where they got stuck, and turns them into fixes published as skills: instruction files an AI agent reads before it writes code.</p>
-    <p>The project was already live when Jakub invited us into the small private group contributing to it. Our part was the plain language.</p>
+    <p>&ldquo;Bad UX&rdquo; has dogged web3 for so long it's a clich&eacute;, and words are often where it starts. A new user meets &ldquo;gas&rdquo; (the fee for using the network), &ldquo;slippage&rdquo; and &ldquo;approve&rdquo; before they've done anything at all.</p>
+    <p>Increasingly, AI coding agents write these words as they build wallets, websites and apps from a developer's instructions. An agent uses whatever words it's given or trained on, so if you fix the guidance it reads, the fix reaches every screen it builds.</p>
+    <p>That's the idea behind <a href="https://ethux.design" data-track="ethux_source_click" data-link="ethux_site">EthUX.design</a>. Jakub Konopka, a designer at the Ethereum Foundation who we'd worked with on <a href="/ethereum" data-track="ethux_related_click" data-to="ethereum">ethereum.org</a>, started it as his own project. It draws on more than 32,000 reports from Ethereum users about where they got stuck, and turns them into fixes published as skills: instruction files an AI agent reads before it writes code.</p>
+    <p>The project was already live when Jakub invited us into the small private group contributing to it. We chose to work on its plain-language guidance.</p>
     <div class="user-need">
       <span class="qual">As a</span> builder using an AI agent on an Ethereum app<br>
       <span class="qual">I want</span> it to write copy a first-time user understands<br>
@@ -532,16 +531,16 @@
     <h2><span class="num">&sect; 03</span>The work</h2>
 
     <h3>1. What was there</h3>
-    <p>EthUX.design's onboarding skill already had a word table: 13 crypto terms on the left, a plain word for each on the right. &ldquo;Gas fee&rdquo; becomes &ldquo;Network fee&rdquo;, &ldquo;Revoke&rdquo; becomes &ldquo;Remove permission&rdquo;. A strong start, with two gaps.</p>
-    <p>Common terms a new user hits were missing, like allowance (how much an app may spend from your wallet), testnet and transaction hash. And a straight swap can mislead. The table turned &ldquo;token&rdquo; into &ldquo;coin&rdquo;, but NFTs are tokens too, and people already know the word.</p>
+    <p>EthUX.design's onboarding skill already had a word table the agent could use: 13 crypto terms on the left, a plain word for each on the right. &ldquo;Gas fee&rdquo; becomes &ldquo;Network fee&rdquo;, &ldquo;Revoke&rdquo; becomes &ldquo;Remove permission&rdquo;.</p>
+    <p>However, some common terms were missing, like allowance (how much an app may spend from your wallet), testnet and transaction hash. On top of that, some translations can mislead: the table suggested using &ldquo;coin&rdquo; in place of &ldquo;token&rdquo;, but NFTs are tokens and not coins.</p>
 
     <h3>2. What we proposed</h3>
-    <p>A fuller table, grouped by what the agent should do with each word: replace it with a plain one, keep it and explain it the first time it appears, or leave it out of the beginner view altogether.</p>
-    <p>The impact we wanted: agents that write copy a first-time user understands, without confusing the people who already know the words.</p>
+    <p>A fuller table, grouped by what the agent should do with each word: replace it with a plain one, keep it and explain it the first time it appears, or avoid it altogether when writing for beginners.</p>
+    <p>Our goal: get agents to write copy a first-time user understands, without confusing the people who already know the words.</p>
 
     <h3>3. Why we started small</h3>
-    <p>EthUX.design is live, and builders install its skills into their own projects. Every renamed word also has a cost for everyone who learned the old one. So we split the work into two pull requests: proposed changes the project's owner can review, then accept or turn down.</p>
-    <p>The first added the 8 least contested words, like allowance to &ldquo;Spending limit&rdquo; and testnet to &ldquo;Practice network&rdquo;. Jakub merged it in 4 days. The second took on the hard words and the regrouping. Feedback from the group, including UX researcher Sasha, shaped what changed, and Jakub's review sharpened it: drop the fee units Gwei and Wei, drop ERC-20 (the name of a technical standard), and map &ldquo;smart contract&rdquo; to a plain &ldquo;App&rdquo;. We took all three.</p>
+    <p>EthUX.design was already live, and builders could install its skills into their own projects. Every renamed word costs something for everyone who learned the old one. So we split the work into two pull requests: proposed changes the project's owner can review, then accept or turn down.</p>
+    <p>The first added the 8 least contested words, like swapping allowance for &ldquo;Spending limit&rdquo; and testnet for &ldquo;Practice network&rdquo;. Jakub merged it in 4 days. The second took on the hard words and the regrouping. Feedback from the group, including UX researcher Sasha, and Jakub's own review shaped what changed. He asked for three changes, and we made all three.</p>
     <blockquote class="client-quote">
       Direction is right and the split is worth keeping.
       <cite>Jakub Konopka, EthUX.design, <a href="https://github.com/konopkja/ethux-design/pull/10#pullrequestreview-5023537531" data-track="ethux_source_click" data-link="pr10_review">review of pull request #10</a></cite>
@@ -549,7 +548,7 @@
     <table class="results words">
       <caption>The word table before and after our two contributions. &ldquo;After&rdquo; quotes the merged text.</caption>
       <thead>
-        <tr><th scope="col">Crypto term</th><th scope="col">Before</th><th scope="col">After</th></tr>
+        <tr><th scope="col">Crypto term</th><th scope="col">Before our contributions</th><th scope="col">After our contributions</th></tr>
       </thead>
       <tbody>
         <tr><th scope="rowgroup" colspan="3">Replace with a plain word</th></tr>
@@ -560,7 +559,7 @@
         <tr><td>Layer 2</td><td class="none">Not in the table</td><td>The network's name, e.g. Base</td></tr>
         <tr><td>ENS name</td><td class="none">Not in the table</td><td>Username / .eth name</td></tr>
         <tr><td>dApp</td><td class="none">Not in the table</td><td>App</td></tr>
-        <tr><td>Secret Recovery Phrase</td><td class="none">Not in the table</td><td>Recovery phrase / Backup words</td></tr>
+        <tr><td>Secret Recovery Phrase</td><td>Only &ldquo;Seed phrase / Mnemonic&rdquo; listed</td><td>Recovery phrase / Backup words</td></tr>
         <tr><td>Smart contract</td><td>App / Service</td><td>App</td></tr>
       </tbody>
       <tbody>
@@ -570,24 +569,24 @@
       </tbody>
       <tbody>
         <tr><th scope="rowgroup" colspan="3">Leave out for beginners</th></tr>
-        <tr><td>Nonce, Gwei, Wei, ERC-20</td><td>Nonce left out; the rest not covered</td><td>Shown only in advanced mode</td></tr>
+        <tr><td>Nonce, Gwei, Wei, ERC-20</td><td>Nonce left out; Gwei and Wei banned by a separate rule; ERC-20 not covered</td><td>One rule for all four: shown only in advanced mode</td></tr>
       </tbody>
     </table>
 
     <h3>4. Test it before it merges</h3>
     <p>Before he merged the second, Jakub asked for proof it wouldn't make agents write worse copy. So we built a small blind test:</p>
     <ul>
-      <li>Three moments a first-time user meets: letting a swap app spend their USDC (a dollar-backed token) and later taking that permission away, a swap that fails because the price moved, and moving funds to a cheaper network.</li>
-      <li>Three AI models: Claude Haiku 4.5, Claude Opus 5.5 and OpenAI's GPT-5.3 Codex.</li>
-      <li>Three setups: no guidance, EthUX.design's guidance before our change, and after it. Each model wrote copy for each moment in each setup: 27 test runs.</li>
-      <li>A separate AI model graded every result against five yes-or-no checks, without knowing which model or setup wrote it. That's what blind means here.</li>
+      <li><em>Three beginner scenarios</em>: letting an app spend their USDC (a dollar-backed token) and later taking that permission away, a swap that fails because the price moved, and moving funds to a cheaper network.</li>
+      <li><em>Three AI models</em>: Claude Haiku 4.5, Claude Opus 5.5 and OpenAI's GPT-5.3 Codex.</li>
+      <li><em>Three setups</em>: no guidance, EthUX.design's guidance before our change, and after it.</li>
     </ul>
+    <p>That's 3 scenarios, 3 models and 3 setups: 27 test runs, each run once. A separate model, Claude Sonnet 5, graded every result against five yes-or-no checks, without knowing which model or setup wrote it.</p>
 
     <h2><span class="num">&sect; 04</span>What we found</h2>
-    <p class="lead-stat"><strong>Guidance mattered most on one check: using the plain word. Runs that slipped into jargon went from 7 in 9 with no guidance, to 3 before our change, to 1 after it.</strong></p>
-    <p>A plain-word miss is a run where the agent wrote the jargon even though the word table gives a plain word, like &ldquo;Revoke&rdquo; instead of &ldquo;Remove permission&rdquo;. Across all five checks, the models scored 39 out of 45 with guidance, before and after our change, and 35 without.</p>
+    <p class="lead-stat"><strong>Test runs that slipped into jargon went from 7 in 9 with no guidance, to 3 before our change, to 1 after it.</strong></p>
+    <p>Scoring: a plain-word miss is a run where the agent wrote the jargon even though the guidance gives a plain word, like &ldquo;Revoke&rdquo; instead of &ldquo;Remove permission&rdquo;. Each setup had 9 runs, each scored on 5 checks, so 45 points. The models scored 39 out of 45 with guidance, before and after our change, and 35 without.</p>
     <table class="results">
-      <caption>Points out of 15 per model: three moments, five checks each. One run per combination.</caption>
+      <caption>Points out of 15 per model: three scenarios, five checks each. One run per combination.</caption>
       <thead>
         <tr><th scope="col">Model</th><th scope="col">No guidance</th><th scope="col">Before our change</th><th scope="col">After our change</th></tr>
       </thead>
@@ -609,8 +608,8 @@
       <div class="stat"><span class="n">2<em>/2</em></span><span class="label">Contributions merged</span></div>
       <div class="stat"><span class="n">27</span><span class="label">Blind-graded test runs</span></div>
     </div>
-    <p>Both contributions now ship in EthUX.design's guidance, for any builder whose agent reads it. And the test travels: a small, blind, repeatable check that tells a maintainer whether a change to agent guidance helps or hurts, before it merges.</p>
-    <p>Thanks to Jakub, for the invitation, a review that made the second pull request better and the request for proof that produced the test. And to Sasha, whose research-backed feedback helped decide what went in first.</p>
+    <p>Both contributions now ship in EthUX.design's guidance, for any builder whose agent reads it. And we can run the same test on any change to agent guidance: a small, blind, repeatable check that tells a maintainer whether the change helps or hurts, before it merges.</p>
+    <p>Thanks to Jakub, for the invitation and for reviews that made our work more rigorous. And to Sasha, whose research-backed feedback helped decide what went in first.</p>
     <p class="source-links">
       <a href="https://github.com/konopkja/ethux-design/pull/9" data-track="ethux_source_click" data-link="pr9">Pull request #9 &rarr;</a>
       <a href="https://github.com/konopkja/ethux-design/pull/10" data-track="ethux_source_click" data-link="pr10">Pull request #10 &rarr;</a>
