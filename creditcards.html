@@ -616,6 +616,12 @@
      in its own column. Names keep their links above the stretched one. */
   [data-cc-view="list"] .proj-card .proj-by { display: contents; }
   [data-cc-view="list"] .proj-card .proj-by-names { grid-area: by; position: relative; z-index: 2; margin-top: 2px; }
+  /* "By" before the handle in the desktop table, in the byline's own mono
+     caps and a step quieter. Phones put the handle at the end of the
+     access line, where it reads without it. */
+  @media (min-width: 600px) {
+    [data-cc-view="list"] .proj-card .proj-by-names::before { content: "By"; margin-right: 8px; color: var(--muted); }
+  }
   [data-cc-view="list"] .proj-card .proj-by time { grid-area: date; justify-self: end; color: var(--muted-small); }
   [data-cc-view="list"] .proj-type,
   [data-cc-view="list"] .proj-access {
