@@ -1,16 +1,16 @@
 {
   "meta": {
-    "sinceId": "2107185409453375853",
-    "lastRun": "2026-10-06T06:25:31.162Z",
+    "sinceId": "2107374587386192303",
+    "lastRun": "2026-10-06T13:15:09.892Z",
     "stats": {
-      "floorEth": 0.0106529,
-      "floorUsd": 29,
-      "supply": 109816,
-      "owners": 13714,
-      "fetchedAt": "2026-10-06T06:25:31.133Z"
+      "floorEth": 0.010355,
+      "floorUsd": 28,
+      "supply": 109736,
+      "owners": 13703,
+      "fetchedAt": "2026-10-06T13:15:09.867Z"
     },
     "replySinceId": "2105930148285493388",
-    "topicSinceId": "2107217351951143131"
+    "topicSinceId": "2107352825475068163"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -1906,6 +1906,48 @@
         "known-host"
       ],
       "tweetText": "Respect to @jackbutcher and Credits. 🙇‍♂️\n\nhttps://t.co/PIieexpyxX"
+    },
+    {
+      "id": "creditsmonitor-com",
+      "name": "creditsmonitor.com",
+      "url": "https://creditsmonitor.com",
+      "x": "Dorsian",
+      "post": "https://x.com/Dorsian/status/2107374587386192303",
+      "blurb": "",
+      "category": "rarity",
+      "access": "paid",
+      "status": "pending",
+      "added": "2026-10-06",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [],
+      "tweetText": "Credits dump seems to be ending. Balances made people realize rating is importantz\n\n💎Top 100 floor price at 0.3 Eth\n💎Top 20 floor price at 1.8 Eth\n\nYou just have to believe. Thats what makes Credits"
+    },
+    {
+      "id": "thestokx-com",
+      "name": "thestokx.com",
+      "url": "https://thestokx.com",
+      "x": "TheSTOKX",
+      "post": "https://x.com/TheSTOKX/status/2107352825475068163",
+      "blurb": "",
+      "category": "markets",
+      "access": "none",
+      "status": "pending",
+      "added": "2026-10-06",
+      "metrics": {
+        "likes": 9,
+        "reposts": 1
+      },
+      "source": "topic",
+      "score": 0,
+      "flags": [
+        "coin"
+      ],
+      "tweetText": "Tokenized stocks are coming to @okx chain. \n\n$STOKX already runs that pipeline in production: 48 rounds a day, 7 tokenized stocks, 336 onchain stock purchases, sent to holders every 30 minutes. \n\nWe p"
     }
   ]
 }
