@@ -1,15 +1,15 @@
 {
   "meta": {
-    "sinceId": "2107374587386192303",
-    "lastRun": "2026-10-06T13:15:09.892Z",
+    "sinceId": "2107521935420891593",
+    "lastRun": "2026-10-06T18:27:47.896Z",
     "stats": {
-      "floorEth": 0.010355,
-      "floorUsd": 28,
-      "supply": 109736,
-      "owners": 13703,
-      "fetchedAt": "2026-10-06T13:15:09.867Z"
+      "floorEth": 0.0097,
+      "floorUsd": 26,
+      "supply": 109576,
+      "owners": 13679,
+      "fetchedAt": "2026-10-06T18:27:47.882Z"
     },
-    "replySinceId": "2105930148285493388",
+    "replySinceId": "2107507102507761814",
     "topicSinceId": "2107352825475068163"
   },
   "featuredSlot": {
@@ -1961,6 +1961,28 @@
         "coin"
       ],
       "tweetText": "Tokenized stocks are coming to @okx chain. \n\n$STOKX already runs that pipeline in production: 48 rounds a day, 7 tokenized stocks, 336 onchain stock purchases, sent to holders every 30 minutes. \n\nWe p"
+    },
+    {
+      "id": "humancredit-co-credit-77449-caben-builder",
+      "name": "humancredit.co",
+      "url": "https://humancredit.co/credit/77449-caben-builder",
+      "x": "cordyjos",
+      "post": "https://x.com/cordyjos/status/2107507102507761814",
+      "blurb": "",
+      "category": "statements",
+      "access": "none",
+      "status": "pending",
+      "added": "2026-10-06",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      },
+      "source": "replies",
+      "score": 2,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "@jesusdoteth One idea. Your Caben row says what Statement Builder does, and his card says why it mattered: \"Built a way to plan a Statement before you burn\" https://t.co/giA5m5RhMe\n\nWould it be useful"
     }
   ]
 }
