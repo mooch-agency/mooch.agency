@@ -185,7 +185,7 @@ card lisbon-restaurant-group \
 card ethux \
   --eyebrow "Selected work" \
   --title "*EthUX*" \
-  --subtitle "Ethereum UX that AI agents actually follow, proven in a blind test." \
+  --subtitle "Ethereum UX that AI agents actually follow, tested blind before it merged." \
   --domain "mooch.agency" \
   --scale 1.45
 

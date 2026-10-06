@@ -7,21 +7,21 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
-<meta name="description" content="Invited in by the Ethereum Foundation's Jakub Konopka, we rewrote the plain-language guidance AI agents read before they build, then proved it in a blind test.">
+<meta name="description" content="Invited in by Jakub Konopka, a designer at the Ethereum Foundation, we rewrote EthUX.design's plain-language guidance for AI agents, then tested it blind.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://mooch.agency/ethux">
 <link rel="canonical" href="https://mooch.agency/ethux">
 <meta property="og:title" content="EthUX.design: Ethereum UX that AI agents actually follow | Mooch">
-<meta property="og:description" content="Invited in by the Ethereum Foundation's Jakub Konopka, we rewrote the plain-language guidance AI agents read before they build, then proved it in a blind test.">
-<meta property="og:image" content="https://mooch.agency/og-ethux.png?v=a1eeae13">
+<meta property="og:description" content="Invited in by Jakub Konopka, a designer at the Ethereum Foundation, we rewrote EthUX.design's plain-language guidance for AI agents, then tested it blind.">
+<meta property="og:image" content="https://mooch.agency/og-ethux.png?v=bc2bd6da">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="EthUX. Ethereum UX that AI agents actually follow.">
+<meta property="og:image:alt" content="EthUX. Ethereum UX that AI agents actually follow, tested blind before it merged.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="EthUX.design: Ethereum UX that AI agents actually follow | Mooch">
-<meta name="twitter:description" content="Invited in by the Ethereum Foundation's Jakub Konopka, we rewrote the plain-language guidance AI agents read before they build, then proved it in a blind test.">
-<meta name="twitter:image" content="https://mooch.agency/og-ethux.png?v=a1eeae13">
-<meta name="twitter:image:alt" content="EthUX. Ethereum UX that AI agents actually follow.">
+<meta name="twitter:description" content="Invited in by Jakub Konopka, a designer at the Ethereum Foundation, we rewrote EthUX.design's plain-language guidance for AI agents, then tested it blind.">
+<meta name="twitter:image" content="https://mooch.agency/og-ethux.png?v=bc2bd6da">
+<meta name="twitter:image:alt" content="EthUX. Ethereum UX that AI agents actually follow, tested blind before it merged.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
@@ -381,7 +381,7 @@
     align-items: center;
     padding: 18px 0;
     border-bottom: 0;
-    transition: padding-left 0.2s ease;
+    transition: padding-left var(--t-deliver) var(--ease-deliver);
   }
   .case-body ul.related a:hover { padding-left: 8px; }
   .case-body ul.related a:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
@@ -392,11 +392,16 @@
     grid-row: 1 / span 2;
     font-family: var(--serif);
     font-size: 28px;
-    transition: transform 0.2s ease;
+    transition: transform var(--t-deliver) var(--ease-deliver);
   }
   .case-body ul.related a:hover .arrow { transform: translateX(6px); }
   .cta { margin-top: clamp(64px, 8vw, 112px); }
-  .case-body .cta a.pill { border-bottom: 1px solid var(--black); }
+  /* .case-body a outranks .pill, so restate the pill's border and transitions here. */
+  .case-body .cta a.pill {
+    border-bottom: 1px solid var(--black);
+    transition: transform var(--t-deliver) var(--ease-deliver),
+                background var(--t-deliver) var(--ease-deliver);
+  }
 
   .colophon {
     padding: 56px var(--pad-x) 40px;
@@ -482,7 +487,7 @@
   <div class="case-hero-inner">
     <div class="eyebrow reveal d1"><span class="rule"></span> Case Study</div>
     <h1 class="reveal d2">Ethereum UX that <em>AI agents</em> actually follow</h1>
-    <p class="standfirst reveal d3">Invited in by the Ethereum Foundation's Jakub Konopka, we rewrote the plain-language guidance AI agents read before they build Ethereum apps, then proved it works in a blind test.</p>
+    <p class="standfirst reveal d3">Invited in by Jakub Konopka, a designer at the Ethereum Foundation, we rewrote EthUX.design's plain-language guidance for AI agents building Ethereum apps, then tested it blind before it merged.</p>
     <dl class="case-meta reveal d4">
       <div><dt>Project</dt><dd>EthUX.design</dd></div>
       <div><dt>Sector</dt><dd>Web3 / AI</dd></div>
@@ -498,13 +503,13 @@
   <div class="case-body-inner">
 
     <h2><span class="num">&sect; 01</span>TL;DR</h2>
-    <p class="lead-stat"><strong>Without guidance, AI agents missed the plain word in 7 of 9 runs. With ours, 1 of 9.</strong></p>
-    <p><a href="https://ethux.design" data-track="ethux_source_click" data-link="ethux_site">EthUX.design</a> turns more than 32,000 Ethereum user reports into UX guidance that AI coding agents read before they build. Its founder, Jakub Konopka, a designer at the Ethereum Foundation, invited us into the small group shaping it. We rewrote its plain-language word list in two pull requests, and both merged. Before the second, Jakub asked for proof it wouldn't make agents worse. So we built a blind test across three leading AI models, and he merged on the results.</p>
+    <p class="lead-stat"><strong>Without guidance, AI agents missed the plain word in 7 of 9 runs. With the guidance we rewrote, 1 of 9.</strong></p>
+    <p><a href="https://ethux.design" data-track="ethux_source_click" data-link="ethux_site">EthUX.design</a> turns more than 32,000 Ethereum user reports into UX guidance that AI coding agents read before they build. Its founder, Jakub Konopka, invited us into the small group shaping it. We rewrote its plain-language word list in two pull requests, and both merged. Before the second, Jakub asked for proof it wouldn't make agents worse. So we built a blind test across three AI models from Anthropic and OpenAI, and he merged on the results.</p>
 
     <h2><span class="num">&sect; 02</span>The brief</h2>
-    <p>Language is where Ethereum UX breaks first. A new user meets &ldquo;gas&rdquo;, &ldquo;slippage&rdquo; and &ldquo;approve&rdquo; before they've done anything at all. AI agents now write a growing share of that copy, and an agent uses whatever words it's given. Fix the guidance an agent reads and you fix every screen it builds.</p>
-    <p>That's the idea behind EthUX.design: a map of 38 Ethereum UX problems, drawn from those 32,000 reports, published as skills, the instruction files agents read before they write code. It's built to put UX best practice in front of every team building at the edge of Ethereum and AI, and in front of the agents doing the building.</p>
-    <p>We'd worked with Jakub before, <a href="/ethereum" data-track="ethux_related_click" data-to="ethereum">rewriting the core pages of ethereum.org</a> for the Ethereum Foundation. This time the brief was a plain-language standard for agents: turn hard jargon into everyday words, bring the reading level down, and spell out what to avoid.</p>
+    <p>Language is where Ethereum UX breaks first. A new user meets &ldquo;gas&rdquo;, &ldquo;slippage&rdquo; and &ldquo;approve&rdquo; before they've done anything at all. AI agents now write a growing share of that copy, and an agent uses whatever words it's given. Fix the guidance an agent reads and the fix reaches every screen it builds.</p>
+    <p>That's the idea behind EthUX.design. Jakub mapped 38 of Ethereum's UX problems from those reports and published the fixes as skills, instruction files an agent reads before it writes code. The aim: UX best practice for teams building at the frontier of Ethereum and AI, and for the agents doing the building.</p>
+    <p>We'd worked with Jakub before, <a href="/ethereum" data-track="ethux_related_click" data-to="ethereum">rewriting the core pages of ethereum.org</a> for the Ethereum Foundation. This time we set the brief ourselves: a plain-language standard for agents that turns hard jargon into everyday words, brings the reading level down and spells out what to avoid.</p>
     <div class="user-need">
       <span class="qual">As a</span> builder using an AI agent on an Ethereum app<br>
       <span class="qual">I want</span> it to write copy a first-time user understands<br>
@@ -514,7 +519,7 @@
     <h2><span class="num">&sect; 03</span>The work</h2>
 
     <h3>1. Ship the safe changes first</h3>
-    <p>Our first glossary renamed a lot, on purpose, to invite challenge. Sasha, a UX researcher in the group, gave it. In her research, people didn't struggle with &ldquo;token&rdquo;, and NFTs are tokens too, so a blanket swap to &ldquo;coin&rdquo; would be wrong. Every rename, she argued, has to be worth the cost to everyone who already knows the old word.</p>
+    <p>Our first glossary renamed a lot, on purpose, to invite challenge. Sasha, a UX researcher in the group, took us up on it. In her research, people didn't struggle with &ldquo;token&rdquo;, and NFTs are tokens too, so a blanket swap to &ldquo;coin&rdquo; would be wrong. Every rename, she argued, has to be worth the cost to everyone who already knows the old word.</p>
     <p>So our first pull request held back everything contested and shipped the eight safest renames. Allowance becomes &ldquo;Spending limit&rdquo;, Tx hash becomes &ldquo;Transaction ID&rdquo;, Testnet becomes &ldquo;Practice network&rdquo;. Jakub merged it in four days.</p>
 
     <h3>2. Rebuild the guidance for agents</h3>
@@ -526,7 +531,7 @@
     </blockquote>
 
     <h3>3. Prove it before it merges</h3>
-    <p>Jakub set the bar: no merge without regression tests showing the change wouldn't make any model write worse copy. Changes to agent guidance usually ship on instinct. This one had to earn its merge, so we built on Jakub's own with-and-without method, using current models:</p>
+    <p>Jakub wanted evidence before he'd merge: regression tests showing the change wouldn't make the models write worse copy. We built them on his own with-and-without method, using current models:</p>
     <ul>
       <li>Three moments a first-time user meets: letting a swap app spend their USDC and later taking that away, a swap that fails because the price moved, and moving funds to a cheaper network.</li>
       <li>Three models: Claude Haiku 4.5, Claude Opus 5.5 and OpenAI's GPT-5.3 Codex.</li>
@@ -535,8 +540,8 @@
     </ul>
 
     <h2><span class="num">&sect; 04</span>What we found</h2>
-    <p class="lead-stat"><strong>The plain word won. Misses fell from 7 in 9 runs to 1.</strong></p>
-    <p>Guidance made the difference on one check above all: whether the copy used the plain term, like &ldquo;Remove permission&rdquo; for revoke or &ldquo;Price change tolerance&rdquo; for slippage. With no guidance, 7 of 9 runs missed it. With the old table, 3 of 9. With ours, 1 of 9. Across all five checks, the models scored 39 out of 45 with guidance and 35 without.</p>
+    <p class="lead-stat"><strong>The existing guidance cut plain-word misses from 7 in 9 runs to 3. Our rebuilt table cut them to 1.</strong></p>
+    <p>Guidance made the difference on one check above all: whether the copy used the plain term, like &ldquo;Remove permission&rdquo; for revoke or &ldquo;Price change tolerance&rdquo; for slippage. Across all five checks, the models scored 39 out of 45 with guidance and 35 without.</p>
     <table class="results">
       <caption>Points out of 15 per model: three moments, five checks each. One run per combination.</caption>
       <thead>
@@ -552,7 +557,7 @@
         <tr><td>Runs that missed the plain word</td><td>7/9</td><td>3/9</td><td>1/9</td></tr>
       </tfoot>
     </table>
-    <p>It's a small test, one run per combination, so a point either way can be chance, and the overall score held at 39 rather than rising. We shared every result with Jakub as it stood, with no reruns. He merged on 2 October.</p>
+    <p>It's a small test, one run per combination, so a point either way can be chance. Opus slipped from 15 to 14, and the overall score held at 39 rather than rising. We shared every result with Jakub as it stood, with no reruns. He merged on 2 October.</p>
 
     <h2><span class="num">&sect; 05</span>Impact</h2>
     <div class="stat-row">
@@ -573,7 +578,7 @@
       <li><a href="/axbeat" data-track="ethux_axbeat_click"><span class="related-name">AXBeat</span><span class="related-line">The top 22 Layer 2s, ranked on how well AI agents can read their website and docs.</span><span class="arrow" aria-hidden="true">&rarr;</span></a></li>
       <li><a href="/octant" data-track="ethux_related_click" data-to="octant"><span class="related-name">Octant</span><span class="related-line">UX research that made Ethereum public-goods funding make sense.</span><span class="arrow" aria-hidden="true">&rarr;</span></a></li>
       <li><a href="/zksync" data-track="ethux_related_click" data-to="zksync"><span class="related-name">zkSync</span><span class="related-line">UX research on developer experience and bridging for an Ethereum Layer 2.</span><span class="arrow" aria-hidden="true">&rarr;</span></a></li>
-      <li><a href="https://github.com/mooch-agency/skills" data-track="ethux_related_click" data-to="skills"><span class="related-name">Open-source skills</span><span class="related-line">Say Less, /deslop and more: our own skills for AI agents, free to install.</span><span class="arrow" aria-hidden="true">&rarr;</span></a></li>
+      <li><a href="https://github.com/mooch-agency/skills" data-track="ethux_related_click" data-to="skills"><span class="related-name">Open-source skills</span><span class="related-line">/deslop, a content audit and more: our own skills for AI agents, free to install.</span><span class="arrow" aria-hidden="true">&rarr;</span></a></li>
     </ul>
 
     <div class="cta">
@@ -642,7 +647,8 @@
   //                       data.link says which (pr9, pr10, pr10_review, ethux_site)
   //   ethux_axbeat_click  the step on to AXBeat (related-work list)
   //   ethux_related_click other Mooch work from this page; data.to names it
-  //                       (ethereum, octant, zksync, skills)
+  //                       (ethereum, octant, zksync, skills), data.placement
+  //                       is "list" or "body"
   //   ethux_contact_click the closing "compare notes" mailto to hey@
   function track(name, data) {
     try { if (window.va) window.va("event", { name: name, data: data || {} }); } catch (e) {}
