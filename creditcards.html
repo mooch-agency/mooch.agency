@@ -552,7 +552,7 @@
   [data-cc-view="list"] .projects[hidden],
   [data-cc-view="list"] .projects > li[hidden] { display: none !important; }
   /* List-only parts stay out of the grid. */
-  .cc-list-head, .cc-type-head, .proj-new, .proj-type, .proj-access { display: none; }
+  .cc-list-head, .cc-type-head, .cc-perk-head, .proj-new, .proj-type, .proj-access { display: none; }
 
   /* Type marks: one process-colour square per type. Cyan is left out on
      purpose: on this page it means only "open perk" (the Perks dot, the Open
@@ -773,7 +773,6 @@
     }
     [data-cc-view="list"] .projects > li.proj-card:hover { background: none; }
     [data-cc-view="list"] .proj-card .proj-blurb,
-    [data-cc-view="list"] .proj-card .perk-for,
     [data-cc-view="list"] .proj-card--featured .proj-flag { flex: 1 1 100%; }
     [data-cc-view="list"] .proj-card--featured .proj-flag { order: -1; }
     [data-cc-view="list"] .proj-card .perk-tags { order: 5; }
@@ -786,8 +785,58 @@
     [data-cc-view="list"] .proj-card .proj-by-names { order: 7; flex: 1 1 0; min-width: 0; margin: 0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     [data-cc-view="list"] #project-list .proj-by time { display: none; }
     /* Perks keep their date, on the right of the builder's line. */
-    [data-cc-view="list"] .perks .proj-by-names { text-align: left; }
-    [data-cc-view="list"] .perks .proj-by time { order: 8; display: block; flex: none; margin-left: auto; }
+    /* Perks on a phone match the project rows: grouped under Open and Ended
+       headings (baked, in DOM order), name with the type as a bordered tag,
+       the blurb, then who it's for on the left and the handle on the
+       right. The heading says the status, so the row's status pill and its
+       reason (Closed, Sent) go, and so does the date. */
+    [data-cc-view="list"] .cc-perk-head {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 14px 0 8px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--hairline-focus);
+    }
+    [data-cc-view="list"] .cc-perk-head-dot { flex: 0 0 7px; height: max(1cap, 7px); background: linear-gradient(var(--credit-c), var(--credit-c)) center / 7px 7px no-repeat; }
+    [data-cc-view="list"] .cc-perk-head-name { font-family: var(--serif); font-size: 24px; line-height: 1.1; letter-spacing: -0.01em; color: var(--black); }
+    [data-cc-view="list"] .cc-perk-head-n { margin-left: auto; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--muted-small); font-variant-numeric: tabular-nums; }
+    [data-cc-view="list"] .perk-card .perk-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    [data-cc-view="list"] .perk-card .perk-reason { display: none; }
+    [data-cc-view="list"] .perk-card .proj-name { order: 1; }
+    [data-cc-view="list"] .perk-card .perk-type {
+      order: 2;
+      align-self: center;
+      padding: 2px 6px 1px;
+      border: 1px solid var(--hairline-focus);
+      border-radius: 4px;
+      font-size: 9px;
+      line-height: 1.4;
+      letter-spacing: 0.12em;
+      color: var(--ink);
+    }
+    [data-cc-view="list"] .perk-card .proj-blurb { order: 3; }
+    [data-cc-view="list"] .perk-card .perk-for {
+      order: 6;
+      flex: 1 1 0;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: var(--mono);
+      font-size: 10px;
+      line-height: 1.6;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink);
+    }
+    [data-cc-view="list"] .perk-card .perk-for-label { margin-right: 4px; font-size: inherit; color: inherit; }
+    [data-cc-view="list"] .perks .proj-by-names { order: 7; flex: none; max-width: 45%; }
+    [data-cc-view="list"] .perks .proj-by time { display: none; }
+    [data-cc-view="list"] .perks > li.perk-card--ended .perk-for { color: var(--muted-small); }
     [data-cc-view="list"] .projects > li.proj-card--featured { padding: 20px; }
     [data-cc-view="list"] .projects .proj-sponsor { padding: 0; margin-bottom: 8px; }
     [data-cc-view="list"] .cc-list-head { display: none; }
@@ -1526,6 +1575,7 @@
         <li class="cc-list-head cc-list-head--perks" aria-hidden="true">
           <span>Perk</span><span>Status</span><span>Type</span><span>Date</span>
         </li>
+        <li class="cc-perk-head" data-status="open"><span class="cc-perk-head-dot" aria-hidden="true"></span><span class="cc-perk-head-name">Open</span><span class="cc-perk-head-n">2</span></li>
         <li class="proj-card perk-card perk-card--open" data-perk="afterflow-allowlist" data-status="open">
           <p class="perk-tags"><span class="perk-status">Open</span><span class="perk-type">Allowlist</span></p>
           <a class="proj-name" href="https://afterflow.disorderly.ai/allowlist.html" target="_blank" rel="noopener" data-event="creditcards_perk_click">Afterflow</a>
@@ -1541,6 +1591,7 @@
           <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/LATE_FX/status/2103269221111058849" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@LATE_FX</a></span><time datetime="2026-09-24">24 Sept 2026</time></p>
         </li>
         <li data-standing-slot></li>
+        <li class="cc-perk-head" data-status="ended"><span class="cc-perk-head-name">Ended</span><span class="cc-perk-head-n">7</span></li>
         <li class="proj-card perk-card perk-card--ended" data-perk="roonz-free-mint" data-status="ended">
           <p class="perk-tags"><span class="perk-status">Ended</span><span class="perk-type">Free mint</span></p>
           <a class="proj-name" href="https://opensea.io/collection/roonz-by-budz" target="_blank" rel="noopener" data-event="creditcards_perk_click">ROONZ</a>

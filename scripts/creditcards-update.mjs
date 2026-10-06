@@ -624,6 +624,7 @@ const daysBefore = (iso, n) => new Date(Date.parse(`${iso}T00:00:00Z`) - n * 86_
 
 const PERK_TYPE_LABEL = Object.fromEntries(PERK_TYPES.map((t) => [t.slug, t.label]));
 const PERK_STATUS_LABEL = { open: 'Open', ended: 'Ended', unknown: 'Status unknown' };
+const PERK_GROUP_LABEL = PERK_STATUS_LABEL;
 
 // The date on a perk card: its end when one is stated ("Ends" or "Ended"),
 // otherwise the day it was announced.
@@ -665,7 +666,24 @@ function renderPerks(perks, dm, today) {
         .map((line) => `  ${line}`)
         .join('\n');
     });
-  const items = [...cards.slice(0, slotAt), slot, ...cards.slice(slotAt)].join('\n');
+  // Status headings for the phone list, one before each status group (the
+  // perks are already sorted open, unknown, ended), so a row no longer needs
+  // its own status pill there. Shown only in the phone list; the grid and
+  // the desktop list keep the per-card status.
+  const statuses = sorted.map((p) => perkStatus(p, today));
+  const groupCount = (st) => statuses.filter((x) => x === st).length;
+  const heads = {};
+  statuses.forEach((st, i) => {
+    if (heads[st] !== undefined) return;
+    heads[st] = i;
+  });
+  const withHeads = cards.map((card, i) => {
+    const st = statuses[i];
+    if (heads[st] !== i) return card;
+    const dot = st === 'open' ? '<span class="cc-perk-head-dot" aria-hidden="true"></span>' : '';
+    return `        <li class="cc-perk-head" data-status="${st}">${dot}<span class="cc-perk-head-name">${PERK_GROUP_LABEL[st]}</span><span class="cc-perk-head-n">${groupCount(st)}</span></li>\n${card}`;
+  });
+  const items = [...withHeads.slice(0, slotAt), slot, ...withHeads.slice(slotAt)].join('\n');
   // Just the ask: the cards and the band below explain the view themselves.
   const ask = dm
     ? `      <p class="perks-intro"><a href="${escapeHtml(dm)}" target="_blank" rel="noopener" data-event="creditcards_perk_submit">Know about a perk? DM @jesusdoteth <span class="arrow">&rarr;</span></a></p>`
