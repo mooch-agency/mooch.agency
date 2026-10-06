@@ -182,5 +182,12 @@ card lisbon-restaurant-group \
   --domain "mooch.agency" \
   --scale 0.95
 
+card ethux \
+  --eyebrow "Selected work" \
+  --title "*EthUX*" \
+  --subtitle "Plain-language guidance for AI agents, tested blind before it merged." \
+  --domain "mooch.agency" \
+  --scale 1.45
+
 echo
 echo "Wrote $COUNT cards to ${PREVIEW:-$ROOT}"

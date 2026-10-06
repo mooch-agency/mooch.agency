@@ -3,25 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lisbon Restaurant Group: AI review automation | Mooch</title>
+<title>EthUX.design: Does UX guidance change what AI writes? | Mooch</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png">
-<meta name="description" content="How Mooch built AI-powered review automation for a Lisbon restaurant group, turning Google reviews into actionable insights and draft replies.">
+<meta name="description" content="Two merged contributions to EthUX.design, and the 27-run blind test that showed plain-language guidance changes the interface copy AI agents write.">
 <meta property="og:type" content="article">
-<meta property="og:url" content="https://mooch.agency/lisbon-restaurant-group">
-<link rel="canonical" href="https://mooch.agency/lisbon-restaurant-group">
-<meta property="og:title" content="Lisbon Restaurant Group: AI review automation | Mooch">
-<meta property="og:description" content="How Mooch built AI-powered review automation for a Lisbon restaurant group, turning Google reviews into actionable insights and draft replies.">
-<meta property="og:image" content="https://mooch.agency/og-lisbon-restaurant-group.png?v=4ae2a637">
+<meta property="og:url" content="https://mooch.agency/ethux">
+<link rel="canonical" href="https://mooch.agency/ethux">
+<meta property="og:title" content="EthUX.design: Does UX guidance change what AI writes? | Mooch">
+<meta property="og:description" content="Two merged contributions to EthUX.design, and the 27-run blind test that showed plain-language guidance changes the interface copy AI agents write.">
+<meta property="og:image" content="https://mooch.agency/og-ethux.png?v=96a99acf">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Lisbon Restaurant Group. AI review automation: Google reviews turned into drafted replies.">
+<meta property="og:image:alt" content="EthUX. Plain-language guidance for AI agents, tested blind before it merged.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Lisbon Restaurant Group: AI review automation | Mooch">
-<meta name="twitter:description" content="How Mooch built AI-powered review automation for a Lisbon restaurant group, turning Google reviews into actionable insights and draft replies.">
-<meta name="twitter:image" content="https://mooch.agency/og-lisbon-restaurant-group.png?v=4ae2a637">
-<meta name="twitter:image:alt" content="Lisbon Restaurant Group. AI review automation: Google reviews turned into drafted replies.">
+<meta name="twitter:title" content="EthUX.design: Does UX guidance change what AI writes? | Mooch">
+<meta name="twitter:description" content="Two merged contributions to EthUX.design, and the 27-run blind test that showed plain-language guidance changes the interface copy AI agents write.">
+<meta name="twitter:image" content="https://mooch.agency/og-ethux.png?v=96a99acf">
+<meta name="twitter:image:alt" content="EthUX. Plain-language guidance for AI agents, tested blind before it merged.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
@@ -320,6 +320,55 @@
   }
   .case-next a.next-card:hover .arrow { transform: translateX(6px); }
 
+  /* Page-local: results table and source links. One-offs, so inline (rule of three). */
+  .results {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0 32px;
+    font-variant-numeric: tabular-nums;
+  }
+  .results caption {
+    caption-side: bottom;
+    text-align: left;
+    padding-top: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+  .results th, .results td {
+    padding: 12px 8px 12px 0;
+    border-bottom: 1px solid var(--hairline);
+    text-align: right;
+    font-size: 16px;
+  }
+  .results th:first-child, .results td:first-child { text-align: left; }
+  .results thead th {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted-small);
+    border-bottom-color: var(--ink);
+    vertical-align: bottom;
+  }
+  .results tfoot td { font-weight: 600; color: var(--black); border-bottom: 0; }
+  .source-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 28px;
+    margin-top: 48px;
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+  .case-body .source-links a {
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 2px;
+  }
+
   .colophon {
     padding: 56px var(--pad-x) 40px;
     background: var(--black);
@@ -393,7 +442,7 @@
 
 <header class="topbar">
   <div class="left">
-    <a href="/">Mooch</a> &nbsp;/&nbsp; <a href="/#work">Work</a> &nbsp;/&nbsp; <span class="you">Lisbon Restaurant Group</span>
+    <a href="/">Mooch</a> &nbsp;/&nbsp; <a href="/#work">Work</a> &nbsp;/&nbsp; <span class="you">EthUX.design</span>
   </div>
   <div class="right">2026</div>
 </header>
@@ -403,15 +452,15 @@
 <section class="case-hero">
   <div class="case-hero-inner">
     <div class="eyebrow reveal d1"><span class="rule"></span> Case Study</div>
-    <h1 class="reveal d2">Replying to every <em>Google</em> review, automatically</h1>
-    <p class="standfirst reveal d3">An AI system that watches Google Reviews and replies in the owner's voice, across four restaurant locations and five languages, within minutes.</p>
+    <h1 class="reveal d2">Plain words for <em>agents</em></h1>
+    <p class="standfirst reveal d3">Two small changes to an open-source Ethereum UX guide, and a blind test showing AI agents write clearer copy when they read it.</p>
     <dl class="case-meta reveal d4">
-      <div><dt>Client</dt><dd>Lisbon Restaurant Group</dd></div>
-      <div><dt>Sector</dt><dd>Hospitality</dd></div>
+      <div><dt>Project</dt><dd>EthUX.design</dd></div>
+      <div><dt>Sector</dt><dd>Web3 / Open source</dd></div>
       <div><dt>Year</dt><dd>2026</dd></div>
-      <div><dt>Services</dt><dd>AI automation, Tone of voice, API integration</dd></div>
-      <div><dt>Deliverables</dt><dd>Reply bot, Tone guide, Weekly digest</dd></div>
-      <div><dt>Discipline</dt><dd>AI</dd></div>
+      <div><dt>Services</dt><dd>Content design, AI testing</dd></div>
+      <div><dt>Deliverables</dt><dd>2 merged pull requests, 27-run test</dd></div>
+      <div><dt>Discipline</dt><dd>UX + AI</dd></div>
     </dl>
   </div>
 </section>
@@ -420,44 +469,76 @@
   <div class="case-body-inner">
 
     <h2><span class="num">&sect; 01</span>TL;DR</h2>
-    <p class="lead-stat"><strong>Live across 4 locations in 5 languages, costing pennies a day.</strong></p>
-    <p>An automated Google review reply system for a Lisbon restaurant group. Replies within minutes, matches the review language, alerts on low ratings, and runs for less than 5 cents a day.</p>
+    <p class="lead-stat"><strong>With the guidance, AI models scored 39 out of 45. Without it, 35.</strong></p>
+    <p><a href="https://ethux.design" data-track="ethux_source_click" data-link="ethux_site">EthUX.design</a> maps where Ethereum trips people up, drawn from more than 32,000 user reports, and publishes the fixes as skills: instruction files that AI coding agents read before they build. We made two contributions to its plain-language word list, and both were merged. Before merging the second, Jakub, who maintains the project, asked for proof it wouldn't make agents worse. So we tested it: 27 runs across three models, graded blind. The whole gap came down to one habit, reaching for the plain word.</p>
 
     <h2><span class="num">&sect; 02</span>The brief</h2>
-    <p>The client is a Lisbon bar and restaurant group with four locations and thousands of Google reviews. Reviews were coming in faster than the team could reply. Late or missing replies hurt search ranking and first impressions. The owner wanted replies that felt like him: formal but warm, in the language of the review, with real urgency when something had gone wrong. Negatives needed an instant alert so a manager could pick up the phone if it mattered.</p>
+    <p>Language is where Ethereum UX breaks first. A new user meets &ldquo;gas&rdquo;, &ldquo;slippage&rdquo; and &ldquo;approve&rdquo; before they've done anything at all. More and more of that copy is now written by AI agents, and an agent uses whatever words it has been given.</p>
+    <p>EthUX.design's onboarding skill carries a table of crypto terms and the plain words to use instead. In July we shared a draft glossary in the EthUX.design community chat. Jakub said go for it, and the group agreed that pull requests on GitHub were the way to contribute.</p>
     <div class="user-need">
-      <span class="qual">As a</span> restaurant owner running multiple locations<br>
-      <span class="qual">I want to</span> reply to every Google review in my voice, fast<br>
-      <span class="qual">so that I can</span> protect my ranking and look after the guests who took the time to write
+      <span class="qual">As a</span> builder using an AI agent on an Ethereum app<br>
+      <span class="qual">I want</span> it to write copy a first-time user understands<br>
+      <span class="qual">so that</span> people don't give up at the first unfamiliar word
     </div>
 
     <h2><span class="num">&sect; 03</span>The work</h2>
-    <p>We built the system end to end: tone guidelines, language detection, reply generation, posting via the Google Business Profile API, and a WhatsApp alert for negatives. Three rounds of test reviews against the owner's standard, then go-live on one location, then a clean expansion to the rest of the group.</p>
 
-    <h3>Tone first</h3>
-    <p>Generic AI replies sound like AI replies. We pulled 17 real examples from the existing review history across nine categories (positive, negative, star-only, billing, staff, language) and wrote a tone guide that covered five languages: Portuguese, English, Spanish, French, Italian. The guide doubled as the system prompt, so the model and the humans were reading from the same script.</p>
+    <h3>First pull request: the easy eight</h3>
+    <p>Our draft renamed a lot. Sasha, a UX researcher in the group, pushed back on several of the renames. Her point on &ldquo;token&rdquo; stuck: swapping it for &ldquo;coin&rdquo; everywhere is wrong, because NFTs are tokens too, and the people in her research had never struggled with the word. She also argued that any rename has to be weighed against everyone who already knows the old word, and that the list should say how its terms were chosen.</p>
+    <p>So we held back everything contested (token, Gwei and Wei, ERC-20, bridge) and sent only the eight least contested. Allowance becomes &ldquo;Spending limit&rdquo;, Tx hash becomes &ldquo;Transaction ID&rdquo;, Testnet becomes &ldquo;Practice network&rdquo;, and so on. One file, ten added lines. Jakub merged it four days later, on 8 August.</p>
 
-    <h3>Detection and posting</h3>
-    <p>The bot polls Google Business Profile hourly across all four locations. Each new review goes through a language check, then into the model with the tone guide as context. The reply gets posted via the GBP API. Reviews of 1 or 2 stars also fire a WhatsApp alert with the rating and a short snippet, so a manager can step in.</p>
+    <h3>Second pull request: the contested terms</h3>
+    <p>The second pull request came back for the words we'd left out. A two-column table can only tell an agent to swap a word, and &ldquo;token&rdquo; needs a different instruction: keep the word and explain it. So we grouped the table by the action to take. Replace the term by default, keep it and explain it in place, or leave it out of the beginner view entirely.</p>
+    <p>Jakub's review asked for three changes. Drop Gwei and Wei, because a beginner never has to act on a fee unit. Drop ERC-20, because our own note said to hide it from everyday users, which made it a row that, in his words, &ldquo;argues against its own existence&rdquo;. And keep &ldquo;smart contract&rdquo; mapped to &ldquo;App&rdquo;, naming the app instead wherever a screen needs both. He was right on all three, and we took them.</p>
+    <p>He also caught a mistake. Our description said one table was unchanged when we had cut it from 20 rows to 17. We rewrote it with the counts row by row and the reason behind each change, which is now how we write every pull request description.</p>
+    <blockquote class="client-quote">
+      Direction is right and the split is worth keeping.
+      <cite>Jakub, EthUX.design, <a href="https://github.com/konopkja/ethux-design/pull/10#pullrequestreview-5023537531" data-track="ethux_source_click" data-link="pr10_review">review of pull request #10</a></cite>
+    </blockquote>
 
-    <h3>Test, ship, expand</h3>
-    <p>The owner ran three rounds of QA against real reviews. We tightened tone on neutral and 2-star replies after the first round (they read as too breezy for the disappointment in the review). After approval we went live on one location, monitored 24 hours, then rolled to the other three. State now lives in Postgres, keyed by location, with a heartbeat ping if the cron stops.</p>
+    <h3>The test</h3>
+    <p>Then Jakub asked for regression tests before merging: checks that the change wouldn't make any model write worse copy. He had tested earlier changes by running scenarios with and without the skill, so we used his method on current models.</p>
+    <ul>
+      <li>Three scenarios a first-time user meets: letting a swap app spend their USDC and later taking that away, a swap that fails because the price moved, and moving funds to a cheaper network.</li>
+      <li>Three models: Claude Haiku 4.5, Claude Opus 5.5 and OpenAI's GPT-5.3 Codex.</li>
+      <li>Three setups: no guidance, the guidance as it stood, and the guidance with our change. That makes 27 runs.</li>
+      <li>A separate model graded every output against five yes-or-no checks, without knowing which model or setup wrote it.</li>
+    </ul>
 
     <h2><span class="num">&sect; 04</span>What we found</h2>
-    <p class="pull">The tone guide did more work than the model.</p>
-    <p>The hard part wasn't the API or the language detection. It was specifying what a good reply looks like when the review is one star and three words long. Real examples beat instructions. Once the tone guide held the answers, the model just followed.</p>
+    <p class="lead-stat"><strong>The gap came down to one habit: using the plain word.</strong></p>
+    <p>With the guidance, the models scored 39 out of 45, both before and after our change. Without it, they scored 35. Between no guidance and the guidance as it stood, all four of those points came from a single check: whether the copy used the plain term, like &ldquo;Remove permission&rdquo; for revoke or &ldquo;Price change tolerance&rdquo; for slippage. With no guidance, 7 of 9 runs missed it. With the old table, 3 of 9. With ours, 1 of 9.</p>
+    <table class="results">
+      <caption>Points out of 15 per model: three scenarios, five checks each. One run per combination.</caption>
+      <thead>
+        <tr><th scope="col">Model</th><th scope="col">No guidance</th><th scope="col">Before our change</th><th scope="col">With our change</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Claude Haiku 4.5</td><td>11</td><td>11</td><td>11</td></tr>
+        <tr><td>Claude Opus 5.5</td><td>12</td><td>15</td><td>14</td></tr>
+        <tr><td>GPT-5.3 Codex</td><td>12</td><td>13</td><td>14</td></tr>
+      </tbody>
+      <tfoot>
+        <tr><td>All models, out of 45</td><td>35</td><td>39</td><td>39</td></tr>
+      </tfoot>
+    </table>
+    <p>It wasn't clean. On the pass rule we'd agreed, our change failed by a point: Opus scored 15 before it and 14 after. That point was the grader's slip. It passed a sentence in one output and failed the identical sentence in the other. Haiku also did better with no guidance on the network scenario than with either table, and with ours it showed users the word &ldquo;calldata&rdquo;. With one run per combination, a point either way can be chance.</p>
+    <p>We sent Jakub the results as they stood, flaws included, with no reruns. He merged on 2 October.</p>
 
     <h2><span class="num">&sect; 05</span>Impact</h2>
     <div class="stat-row">
-      <div class="stat"><span class="n">4</span><span class="label">Locations live</span></div>
-      <div class="stat"><span class="n">5</span><span class="label">Languages supported</span></div>
-      <div class="stat"><span class="n">$0.05<em>/day</em></span><span class="label">Running cost</span></div>
+      <div class="stat"><span class="n">39<em>/45</em></span><span class="label">With the guidance</span></div>
+      <div class="stat"><span class="n">35<em>/45</em></span><span class="label">Without it</span></div>
+      <div class="stat"><span class="n">2<em>/2</em></span><span class="label">Pull requests merged</span></div>
     </div>
-    <p>Live since 1 April 2026. Every new review is replied to within the hour, in its own language, in the owner's voice. Negative reviews fire a WhatsApp alert so the team can follow up directly. The system has been stable enough that the validation work has spun out into a separate product (Reply Bot) for other small businesses with the same problem.</p>
-    <blockquote class="client-quote">
-      The replies sound like us. That's the part I didn't think was possible.
-      <cite>Owner, Lisbon Restaurant Group</cite>
-    </blockquote>
+    <p>Both contributions are now in the guidance EthUX.design serves to every agent that reads it. The method matters as much as the words: a small, blind, repeatable test that tells a maintainer whether a change to agent guidance helps or hurts before it merges.</p>
+    <p>Thanks to Jakub, whose review made the second pull request better and whose request for proof produced the test, and to Sasha, whose research-backed pushback decided what went into the first.</p>
+    <p>Next, we're measuring the other side: how easily agents can read Ethereum's networks in the first place. <a href="/axbeat" data-track="ethux_axbeat_click">AXBeat</a> ranks the biggest Layer 2s on it.</p>
+    <p class="source-links">
+      <a href="https://github.com/konopkja/ethux-design/pull/9" data-track="ethux_source_click" data-link="pr9">Pull request #9 &rarr;</a>
+      <a href="https://github.com/konopkja/ethux-design/pull/10" data-track="ethux_source_click" data-link="pr10">Pull request #10 &rarr;</a>
+      <a href="/axbeat" data-track="ethux_axbeat_click">See AXBeat &rarr;</a>
+    </p>
 
   </div>
 </article>
@@ -465,10 +546,10 @@
 <section class="case-next">
   <div class="case-next-inner">
     <span class="small">Continue &nbsp;/&nbsp; Next case study</span>
-    <a class="next-card" href="/ethux.html">
+    <a class="next-card" href="/gov-uk.html">
       <div>
-        <h3>EthUX.design <em>&middot;</em> Plain words for agents</h3>
-        <p>Two merged contributions to an open-source Ethereum UX guide, and the blind test showing AI agents write clearer copy with it.</p>
+        <h3>gov.uk <em>&middot;</em> Designing government digital services</h3>
+        <p>A "Where to Export" service for UK small businesses, launched on time for a ministerial announcement.</p>
       </div>
       <span class="arrow">&rarr;</span>
     </a>
@@ -512,11 +593,29 @@
 <script defer src="/analytics.js"></script>
 
 <script>
-  // Custom Vercel Analytics events for case study pages.
+  // Custom Vercel Analytics events for this case study. Guarded so a blocked
+  // analytics script never throws into the page.
+  //   next_case_click     the "next case study" card (shared across case studies)
+  //   ethux_source_click  links out to the evidence on GitHub / ethux.design;
+  //                       data.link says which (pr9, pr10, pr10_review, ethux_site)
+  //   ethux_axbeat_click  the step on to AXBeat; data.placement is "body" or "links"
+  function track(name, data) {
+    try { if (window.va) window.va("event", { name: name, data: data || {} }); } catch (e) {}
+  }
   document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".case-next a.next-card").forEach(function (a) {
       a.addEventListener("click", function () {
-        window.va("event", { name: "next_case_click", data: { from: document.title, to: a.textContent.trim() } });
+        track("next_case_click", { from: document.title, to: a.textContent.trim().slice(0, 255) });
+      });
+    });
+    document.querySelectorAll("[data-track]").forEach(function (a) {
+      a.addEventListener("click", function () {
+        var name = a.getAttribute("data-track");
+        if (name === "ethux_axbeat_click") {
+          track(name, { placement: a.closest(".source-links") ? "links" : "body" });
+        } else {
+          track(name, { link: a.getAttribute("data-link") });
+        }
       });
     });
   });
