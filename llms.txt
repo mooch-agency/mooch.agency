@@ -19,7 +19,7 @@ We figure out what people actually need, then build the AI to deliver it. Most o
 - [Big Debate Club](https://mooch.agency/big-debate-club): Brand and product development for Big Debate Club, a debate platform for young people.
 - [Lisbon Restaurant Group](https://mooch.agency/lisbon-restaurant-group): AI-powered review automation for a Lisbon restaurant group.
 - [Ethereum UX](https://mooch.agency/ethereum): UX teardown of Ethereum wallet interactions, scoring clarity and confidence at every step.
-- [EthUX.design](https://mooch.agency/ethux): Ethereum UX that AI agents actually follow. Invited in by Jakub Konopka, a designer at the Ethereum Foundation, we rewrote EthUX.design's plain-language guidance for agents in two merged pull requests. In a 27-run blind test, runs missing the plain word fell from 7 of 9 without guidance to 3 of 9 with the existing guidance and 1 of 9 with our rewrite.
+- [EthUX.design](https://mooch.agency/ethux): Contributing to Ethereum UX for humans and AI agents. Invited in by Jakub Konopka, a designer at the Ethereum Foundation, we rewrote EthUX.design's plain-language guidance for agents in two merged pull requests. In a 27-run blind test, runs missing the plain word fell from 7 of 9 without guidance to 3 of 9 with the existing guidance and 1 of 9 with our rewrite.
 
 ## Measures
 
