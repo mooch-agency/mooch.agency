@@ -39,6 +39,7 @@ import { load } from 'cheerio';
 import { EXCLUDED, shippedPages } from './site-files.mjs';
 import { CATEGORY_SLUGS, categoryProblems } from './creditcards-categories.mjs';
 import { perkProblems } from './creditcards-perks.mjs';
+import { accessProblems } from './creditcards-access.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -579,12 +580,13 @@ function checkCreditCardsData() {
     return;
   }
   for (const msg of categoryProblems(data.projects || [])) fail('Data', dataRel, msg);
+  for (const msg of accessProblems(data.projects || [])) fail('Data', dataRel, msg);
   const perkMsgs = perkProblems(data.perks);
   for (const msg of perkMsgs) fail('Data', dataRel, msg);
   if (!has('creditcards.html')) return;
   const raw = read('creditcards.html');
   const $ = load(raw);
-  $('#project-list > li').each((_, li) => {
+  $('#project-list > li:not(.cc-list-head):not(.cc-type-head)').each((_, li) => {
     const cat = $(li).attr('data-category');
     const ok = $(li).hasClass('proj-sponsor') ? cat === 'all' : CATEGORY_SLUGS.includes(cat);
     if (!ok) fail('Data', 'creditcards.html', `card "${$(li).find('.proj-name').text() || 'sponsor line'}" has data-category "${cat ?? ''}"; re-run node scripts/creditcards-update.mjs --bake-only`);

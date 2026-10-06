@@ -40,6 +40,12 @@
     try { t = localStorage.getItem("mooch-theme"); } catch (e) {}
     if (t !== "dark" && t !== "light") t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     document.documentElement.setAttribute("data-theme", t);
+    // Grid or List for the index, before first paint too: a saved choice,
+    // else the list. With no JavaScript the attribute never lands and the
+    // page is the card grid.
+    var v;
+    try { v = localStorage.getItem("cc-view"); } catch (e) {}
+    document.documentElement.setAttribute("data-cc-view", v === "grid" ? "grid" : "list");
   })();
 </script>
 <link rel="stylesheet" href="/tokens.css">
@@ -396,8 +402,9 @@
     .projects .proj-card--featured { padding: 22px 20px 18px; }
   }
   /* The paid slot line: one quiet mono row tucked under the featured card,
-     same voice as the bylines. Price and address come from
-     data/creditcards.json (featuredSlot). Wraps freely on a phone. */
+     same voice as the bylines. Just the ask and the DM link
+     (data/creditcards.json featuredSlot); the price is not shown since the
+     6 Oct 2026 list view. Wraps freely on a phone. */
   .projects .proj-sponsor { grid-column: 1 / -1; margin-top: -4px; }
   .proj-sponsor p {
     margin: 0;
@@ -410,30 +417,14 @@
     color: var(--muted);
     text-wrap: pretty;
   }
-  .proj-sponsor a,
-  .proj-sponsor-address {
+  .proj-sponsor a {
     color: var(--ink);
+    white-space: nowrap;
     border-bottom: 1px solid var(--hairline);
     transition: border-color 0.15s ease;
   }
-  .proj-sponsor a { white-space: nowrap; }
   .proj-sponsor-sep { margin: 0 0.6em; }
-  .proj-sponsor a:hover,
-  .proj-sponsor-address:hover { border-bottom-color: var(--ink); }
-  .proj-sponsor-address {
-    padding: 0;
-    background: none;
-    border-top: 0;
-    border-left: 0;
-    border-right: 0;
-    border-radius: 0;
-    font: inherit;
-    letter-spacing: 0.04em;
-    text-transform: none;
-    line-height: 1.2;
-    vertical-align: baseline;
-    cursor: copy;
-  }
+  .proj-sponsor a:hover { border-bottom-color: var(--ink); }
   .projects-foot { font-size: 17px; max-width: var(--col); text-wrap: pretty; }
   .projects-foot a { border-bottom: 1px solid var(--hairline); transition: border-color 0.15s ease; }
   .projects-foot a:hover { border-bottom-color: var(--ink); }
@@ -520,6 +511,342 @@
   /* Lead handle plus any co-builders, truncating as one run like a lone handle. */
   .proj-by-names { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .projects-empty { color: var(--muted); font-style: italic; margin: 0 0 40px; }
+
+  /* ---- Grid or List --------------------------------------------------------
+     One baked markup, two layouts. Every card carries its type, access and
+     a New tag; the grid hides them, the list lays the same elements out as
+     table rows with grid-template-areas. So nothing is rendered twice, the
+     list needs no fetch, and with no JavaScript the page is the card grid.
+     The view lives on <html data-cc-view>, set before first paint by the
+     theme script in <head> (saved choice, else the list), so there is no
+     flash of the other layout. Built from the /creditcards list lab, 6 Oct
+     2026. */
+  .cc-bar { display: flex; align-items: flex-start; gap: 16px; margin: 0 0 24px; }
+  .cc-bar .cc-filter { flex: 1 1 auto; min-width: 0; margin: 0; }
+  .cc-view { flex: none; display: inline-flex; gap: 2px; padding: 3px; border-radius: 980px; background: var(--paper); box-shadow: var(--shadow-border); }
+  .cc-view[hidden] { display: none; }
+  .cc-view button {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 32px;
+    border: 0;
+    border-radius: 980px;
+    background: none;
+    color: var(--muted-small);
+    cursor: pointer;
+    transition: background var(--t-deliver) var(--ease-deliver), color var(--t-deliver) var(--ease-deliver);
+  }
+  .cc-view button:hover { color: var(--ink); }
+  .cc-view button[aria-pressed="true"] { background: var(--black); color: var(--paper); }
+  .cc-view button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .cc-view svg { width: 14px; height: 14px; }
+  @media (max-width: 599px) {
+    .cc-bar { gap: 8px; margin-bottom: 20px; }
+    .cc-bar .cc-filter { margin: -4px 0 0 calc(-1 * var(--pad-x)); padding: 4px 8px 4px var(--pad-x); }
+  }
+
+  /* The filter hides lists and cards with the hidden attribute. The list
+     layout's display rules out-rank the plain [hidden] rules above, so
+     hidden has to win outright here. */
+  [data-cc-view="list"] .projects[hidden],
+  [data-cc-view="list"] .projects > li[hidden] { display: none !important; }
+  /* List-only parts stay out of the grid. */
+  .cc-list-head, .cc-type-head, .cc-perk-head, .proj-new, .proj-type, .proj-access { display: none; }
+
+  /* Type marks: one process-colour square per type. Cyan is left out on
+     purpose: on this page it means only "open perk" (the Perks dot, the Open
+     badge). Black, magenta, yellow, the magenta-over-yellow red, and a
+     hollow square. Two gradient layers draw an outer 7px square and an
+     inner 5px one, which gives yellow its hairline edge on white and makes
+     the hollow one. Decorative: the label always sits beside it. */
+  .proj-type::before {
+    content: "";
+    flex: 0 0 7px;
+    height: max(1cap, 7px);
+    background:
+      linear-gradient(var(--mark-in, var(--mark)), var(--mark-in, var(--mark))) center / 5px 5px no-repeat,
+      linear-gradient(var(--mark), var(--mark)) center / 7px 7px no-repeat;
+  }
+  .proj-type[data-c="rarity"] { --mark: var(--black); }
+  .proj-type[data-c="art"] { --mark: var(--credit-m); }
+  .proj-type[data-c="statements"] { --mark: var(--hairline-focus); --mark-in: var(--credit-y); }
+  .proj-type[data-c="games"] { --mark: var(--credit-r); }
+  .proj-type[data-c="markets"] { --mark: var(--black); --mark-in: var(--paper); }
+  .proj-card--featured .proj-type[data-c="rarity"] { --mark: var(--paper); }
+  .proj-card--featured .proj-type[data-c="markets"] { --mark: var(--paper); --mark-in: var(--black); }
+
+  /* The list: rows on hairlines, a sticky head, every blurb in full. */
+  [data-cc-view="list"] .projects { display: block; }
+  [data-cc-view="list"] .projects > li.proj-card {
+    display: grid;
+    grid-template-columns: minmax(0, max-content) minmax(0, 1fr) 190px 150px 104px;
+    grid-template-areas:
+      "name new type access date"
+      "blurb blurb . . ."
+      "by by . . .";
+    gap: 6px 24px;
+    align-items: baseline;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--hairline);
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    transform: none;
+    transition: background var(--t-deliver) var(--ease-deliver);
+  }
+  [data-cc-view="list"] .projects > li.proj-card:hover { background: var(--surface); box-shadow: none; transform: none; }
+  [data-cc-view="list"] .proj-card .proj-name { grid-area: name; font-family: var(--sans); font-size: 16px; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; }
+  [data-cc-view="list"] .proj-new {
+    grid-area: new;
+    justify-self: start;
+    display: inline-block;
+    padding: 2px 6px 1px;
+    border: 1px solid var(--hairline-focus);
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 9px;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink);
+  }
+  [data-cc-view="list"] .proj-card .proj-blurb { grid-area: blurb; max-width: 72ch; font-size: 14px; }
+  /* The byline's two halves become cells: names under the blurb, the date
+     in its own column. Names keep their links above the stretched one. */
+  [data-cc-view="list"] .proj-card .proj-by { display: contents; }
+  [data-cc-view="list"] .proj-card .proj-by-names { grid-area: by; position: relative; z-index: 2; margin-top: 2px; }
+  /* "By" before the handle in the desktop table, in the byline's own mono
+     caps and a step quieter. Phones put the handle at the end of the
+     access line, where it reads without it. */
+  @media (min-width: 600px) {
+    [data-cc-view="list"] .proj-card .proj-by-names::before { content: "By"; margin-right: 8px; color: var(--muted); }
+  }
+  [data-cc-view="list"] .proj-card .proj-by time { grid-area: date; justify-self: end; color: var(--muted-small); }
+  [data-cc-view="list"] .proj-type,
+  [data-cc-view="list"] .proj-access {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    line-height: 1.6;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted-small);
+  }
+  [data-cc-view="list"] .proj-type { grid-area: type; }
+  [data-cc-view="list"] .proj-access { grid-area: access; }
+  /* "No wallet needed" in full ink: the friendliest answer. */
+  [data-cc-view="list"] .proj-access[data-a="none"] { color: var(--ink); }
+  [data-cc-view="list"] .proj-cta { display: none; }
+
+  /* Featured: the one inverted block, above the head, flag on top. */
+  [data-cc-view="list"] .projects > li.proj-card--featured {
+    grid-template-areas:
+      "flag flag type access date"
+      "name new . . ."
+      "blurb blurb . . ."
+      "by by . . .";
+    padding: 24px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--black);
+  }
+  [data-cc-view="list"] .projects > li.proj-card--featured:hover { background: var(--black); }
+  [data-cc-view="list"] .proj-card--featured .proj-flag { grid-area: flag; margin-bottom: 4px; }
+  [data-cc-view="list"] .proj-card--featured .proj-name { font-size: 18px; }
+  [data-cc-view="list"] .proj-card--featured .proj-new { color: var(--paper); border-color: var(--muted-dark); }
+  [data-cc-view="list"] .proj-card--featured .proj-access { color: var(--paper); }
+  [data-cc-view="list"] .projects .proj-sponsor { margin: 10px 0 32px; padding: 0 24px; }
+
+  /* The head row: sticky, a heavy rule on top like the top of a ledger. */
+  [data-cc-view="list"] .cc-list-head {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px 150px 104px;
+    gap: 0 24px;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 24px;
+    background: var(--paper);
+    border-top: 1px solid var(--black);
+    border-bottom: 1px solid var(--hairline);
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted-small);
+  }
+  .cc-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    justify-self: start;
+    min-height: 40px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: var(--muted-small);
+    cursor: pointer;
+  }
+  .cc-sort[data-sort="added"] { justify-self: end; }
+  .cc-sort:hover, .cc-sort[aria-pressed="true"] { color: var(--ink); }
+  .cc-sort:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
+  .cc-sort-ind { min-width: 8px; }
+
+  /* Perks as rows: status and type get columns, "For" sits under the blurb. */
+  [data-cc-view="list"] .perks > li.perk-card {
+    grid-template-columns: minmax(0, 1fr) 190px 150px 104px;
+    grid-template-areas:
+      "name status type date"
+      "blurb reason . ."
+      "for . . ."
+      "by . . .";
+  }
+  [data-cc-view="list"] .perks > li.perk-card--ended { background: none; }
+  [data-cc-view="list"] .perks > li.perk-card--ended:hover { background: var(--surface); }
+  [data-cc-view="list"] .perk-card .perk-tags { display: contents; }
+  [data-cc-view="list"] .perk-card .perk-status { grid-area: status; justify-self: start; }
+  [data-cc-view="list"] .perk-card .perk-type { grid-area: type; }
+  [data-cc-view="list"] .perk-card .perk-reason { grid-area: reason; }
+  [data-cc-view="list"] .perk-card .perk-reason::before { content: none; }
+  [data-cc-view="list"] .perk-card .perk-for { grid-area: for; }
+  [data-cc-view="list"] .cc-list-head--perks span:last-child { justify-self: end; }
+  [data-cc-view="list"] .perks > li[data-standing-slot] { padding: 20px 0; }
+
+  @media (max-width: 899px) {
+    [data-cc-view="list"] .projects > li.proj-card { grid-template-columns: minmax(0, max-content) minmax(0, 1fr) 160px 130px 0; column-gap: 20px; }
+    /* Project rows drop the date here (the New tag carries recency); perks
+       keep theirs, since "Ends <date>" is the point of an open perk. */
+    [data-cc-view="list"] #project-list .proj-by time { display: none; }
+    [data-cc-view="list"] .cc-list-head { grid-template-columns: minmax(0, 1fr) 160px 130px; gap: 0 20px; }
+    [data-cc-view="list"] .cc-sort[data-sort="added"] { display: none; }
+    [data-cc-view="list"] .cc-list-head--perks,
+    [data-cc-view="list"] .perks > li.perk-card { grid-template-columns: minmax(0, 1fr) 110px 100px 96px; column-gap: 16px; }
+  }
+  /* Phone: no columns, rows grouped by type under a sticky header, so the
+     type is said once per group instead of on every row. The grouping is
+     CSS order on a flex column: featured and the paid-slot line first, then
+     each type's header followed by its cards, in the bake's CATEGORIES
+     order (scripts/creditcards-categories.mjs; keep the two in step).
+     Inside a group the cards keep their DOM order, newest first. The
+     column head row goes: phones keep that order. Each row: name and New,
+     blurb, then access on the left and the builder on the right. No date
+     on a phone: the New tag carries recency. */
+  @media (max-width: 599px) {
+    [data-cc-view="list"] #project-list { display: flex; flex-direction: column; }
+    [data-cc-view="list"] #project-list > li.proj-card--featured { order: -2; }
+    [data-cc-view="list"] #project-list > li.proj-sponsor { order: -1; }
+    [data-cc-view="list"] #project-list > [data-category="rarity"] { order: 10; }
+    [data-cc-view="list"] #project-list > [data-category="art"] { order: 20; }
+    [data-cc-view="list"] #project-list > [data-category="statements"] { order: 30; }
+    [data-cc-view="list"] #project-list > [data-category="games"] { order: 40; }
+    [data-cc-view="list"] #project-list > [data-category="markets"] { order: 50; }
+    [data-cc-view="list"] #project-list > li.cc-type-head[data-category="rarity"] { order: 9; }
+    [data-cc-view="list"] #project-list > li.cc-type-head[data-category="art"] { order: 19; }
+    [data-cc-view="list"] #project-list > li.cc-type-head[data-category="statements"] { order: 29; }
+    [data-cc-view="list"] #project-list > li.cc-type-head[data-category="games"] { order: 39; }
+    [data-cc-view="list"] #project-list > li.cc-type-head[data-category="markets"] { order: 49; }
+    [data-cc-view="list"] .cc-type-head {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      padding: 14px 0 8px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--hairline-focus);
+    }
+    [data-cc-view="list"] .cc-type-head-name { font-family: var(--serif); font-size: 24px; line-height: 1.1; letter-spacing: -0.01em; color: var(--black); }
+    [data-cc-view="list"] .cc-type-head-n { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--muted-small); font-variant-numeric: tabular-nums; }
+    [data-cc-view="list"] .projects > li.proj-card,
+    [data-cc-view="list"] .perks > li.perk-card {
+      display: flex;
+      flex-direction: row;             /* the card is a column by default */
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px 16px;
+      padding: 18px 0;
+    }
+    [data-cc-view="list"] .projects > li.proj-card:hover { background: none; }
+    [data-cc-view="list"] .proj-card .proj-blurb,
+    [data-cc-view="list"] .proj-card--featured .proj-flag { flex: 1 1 100%; }
+    [data-cc-view="list"] .proj-card--featured .proj-flag { order: -1; }
+    [data-cc-view="list"] .proj-card .perk-tags { order: 5; }
+    /* The header says the type; the row keeps it for screen readers only. */
+    [data-cc-view="list"] .proj-card:not(.proj-card--featured) .proj-type { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    [data-cc-view="list"] .proj-card .proj-type { order: 5; }
+    [data-cc-view="list"] .proj-card .proj-access { order: 6; }
+    /* Basis 0 so a long handle truncates on the access line instead of
+       wrapping onto its own. */
+    [data-cc-view="list"] .proj-card .proj-by-names { order: 7; flex: 1 1 0; min-width: 0; margin: 0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    [data-cc-view="list"] #project-list .proj-by time { display: none; }
+    /* Perks keep their date, on the right of the builder's line. */
+    /* Perks on a phone match the project rows: grouped under Open and Ended
+       headings (baked, in DOM order), name with the type as a bordered tag,
+       the blurb, then who it's for on the left and the handle on the
+       right. The heading says the status, so the row's status pill and its
+       reason (Closed, Sent) go, and so does the date. */
+    [data-cc-view="list"] .cc-perk-head {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 14px 0 8px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--hairline-focus);
+    }
+    [data-cc-view="list"] .cc-perk-head-dot { flex: 0 0 7px; height: max(1cap, 7px); background: linear-gradient(var(--credit-c), var(--credit-c)) center / 7px 7px no-repeat; }
+    [data-cc-view="list"] .cc-perk-head-name { font-family: var(--serif); font-size: 24px; line-height: 1.1; letter-spacing: -0.01em; color: var(--black); }
+    [data-cc-view="list"] .cc-perk-head-n { margin-left: auto; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--muted-small); font-variant-numeric: tabular-nums; }
+    [data-cc-view="list"] .perk-card .perk-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    [data-cc-view="list"] .perk-card .perk-reason { display: none; }
+    [data-cc-view="list"] .perk-card .proj-name { order: 1; }
+    [data-cc-view="list"] .perk-card .perk-type {
+      order: 2;
+      align-self: center;
+      padding: 2px 6px 1px;
+      border: 1px solid var(--hairline-focus);
+      border-radius: 4px;
+      font-size: 9px;
+      line-height: 1.4;
+      letter-spacing: 0.12em;
+      color: var(--ink);
+    }
+    [data-cc-view="list"] .perk-card .proj-blurb { order: 3; }
+    [data-cc-view="list"] .perk-card .perk-for {
+      order: 6;
+      flex: 1 1 0;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: var(--mono);
+      font-size: 10px;
+      line-height: 1.6;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink);
+    }
+    [data-cc-view="list"] .perk-card .perk-for-label { margin-right: 4px; font-size: inherit; color: inherit; }
+    [data-cc-view="list"] .perks .proj-by-names { order: 7; flex: none; max-width: 45%; }
+    [data-cc-view="list"] .perks .proj-by time { display: none; }
+    [data-cc-view="list"] .perks > li.perk-card--ended .perk-for { color: var(--muted-small); }
+    [data-cc-view="list"] .projects > li.proj-card--featured { padding: 20px; }
+    [data-cc-view="list"] .projects .proj-sponsor { padding: 0; margin-bottom: 8px; }
+    [data-cc-view="list"] .cc-list-head { display: none; }
+  }
 
   /* Top creditors: the three builders with the most approved projects,
      baked from data/creditcards.json by scripts/creditcards-update.mjs (see
@@ -875,322 +1202,449 @@
       <h2 id="projects">The projects</h2>
       <p><span data-filter-status aria-live="polite">47 projects</span> &middot; Found daily on X</p>
     </div>
+    <div class="cc-bar">
     <div class="cc-filter" role="group" aria-label="Filter projects by category" data-scroller>
       <button type="button" class="cc-filter-pill" data-filter="all" aria-pressed="true" aria-controls="project-list" data-count="47">All <span class="cc-filter-n">47</span></button>
       <button type="button" class="cc-filter-pill" data-filter="perks" aria-pressed="false" aria-controls="perk-list" data-count="9"><span class="cc-filter-dot" aria-hidden="true"></span>Perks <span class="cc-filter-n">2 open</span></button>
       <button type="button" class="cc-filter-pill" data-filter="rarity" aria-pressed="false" aria-controls="project-list" data-count="12">Rarity &amp; data</button>
       <button type="button" class="cc-filter-pill" data-filter="art" aria-pressed="false" aria-controls="project-list" data-count="15">Art &amp; remixes</button>
-      <button type="button" class="cc-filter-pill" data-filter="statements" aria-pressed="false" aria-controls="project-list" data-count="7">Build your Statement</button>
+      <button type="button" class="cc-filter-pill" data-filter="statements" aria-pressed="false" aria-controls="project-list" data-count="7">Build a Statement</button>
       <button type="button" class="cc-filter-pill" data-filter="games" aria-pressed="false" aria-controls="project-list" data-count="4">Games</button>
-      <button type="button" class="cc-filter-pill" data-filter="markets" aria-pressed="false" aria-controls="project-list" data-count="9">Mints, tokens &amp; markets</button>
+      <button type="button" class="cc-filter-pill" data-filter="markets" aria-pressed="false" aria-controls="project-list" data-count="9">Mints &amp; markets</button>
+    </div>
+    <div class="cc-view" role="group" aria-label="View" data-view-toggle hidden>
+      <button type="button" data-view="grid" aria-pressed="false" aria-label="Grid view" title="Grid"><svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="8" y="1" width="5" height="5" rx="1"/><rect x="1" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/></svg></button>
+      <button type="button" data-view="list" aria-pressed="false" aria-label="List view" title="List"><svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="1" y="2" width="12" height="2" rx="1"/><rect x="1" y="6" width="12" height="2" rx="1"/><rect x="1" y="10" width="12" height="2" rx="1"/></svg></button>
+    </div>
     </div>
     <ol class="projects" id="project-list">
-      <li class="proj-card proj-card--featured" data-category="statements">
+      <li class="proj-card proj-card--featured" data-category="statements" data-access="wallet" data-added="2026-09-28">
         <p class="proj-flag"><span class="proj-flag-marks" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Sponsored</p>
         <a class="proj-name" href="https://creditunion.fun" target="_blank" rel="noopener" data-event="creditcards_project_click">Credit Union</a>
         <p class="proj-blurb">Pool Credits with other holders until you hit 80. The Statement goes to auction and every member takes a share of the sale.</p>
         <p class="proj-cta"><a class="pill" href="https://creditunion.fun" target="_blank" rel="noopener" data-event="creditcards_featured_click">Open Credit Union <span class="arrow">&rarr;</span></a></p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/bigvibessss/status/2104402862185001233" target="_blank" rel="noopener" data-event="creditcards_post_click">@bigvibessss</a> &amp; <a href="https://x.com/taylor_" target="_blank" rel="noopener" data-event="creditcards_builder_click">@taylor_</a></span><span>28 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/bigvibessss/status/2104402862185001233" target="_blank" rel="noopener" data-event="creditcards_post_click">@bigvibessss</a> &amp; <a href="https://x.com/taylor_" target="_blank" rel="noopener" data-event="creditcards_builder_click">@taylor_</a></span><time datetime="2026-09-28">28 Sept 2026</time></p>
+        <p class="proj-type" data-c="statements">Build a Statement</p>
+        <p class="proj-access" data-a="wallet">Wallet needed</p>
       </li>
       <li class="proj-sponsor" data-category="all">
-        <p>Feature your project here: 80 USDC a week or 1 Credit to <button type="button" class="proj-sponsor-address" data-copy="jesus.eth" title="Copy jesus.eth on Ethereum mainnet" data-event="creditcards_sponsor_copy">jesus.eth</button><span class="proj-sponsor-sep" aria-hidden="true">&middot;</span><a href="https://x.com/messages/compose?recipient_id=1386099253580345344" target="_blank" rel="noopener" data-event="creditcards_sponsor_click">DM @jesusdoteth <span class="arrow">&rarr;</span></a></p>
+        <p>Feature your project here<span class="proj-sponsor-sep" aria-hidden="true">&middot;</span><a href="https://x.com/messages/compose?recipient_id=1386099253580345344" target="_blank" rel="noopener" data-event="creditcards_sponsor_click">DM @jesusdoteth <span class="arrow">&rarr;</span></a></p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="cc-list-head" data-list-head>
+        <button type="button" class="cc-sort" data-sort="name">Project<span class="cc-sort-ind" aria-hidden="true"></span></button>
+        <button type="button" class="cc-sort" data-sort="type">Type<span class="cc-sort-ind" aria-hidden="true"></span></button>
+        <button type="button" class="cc-sort" data-sort="access">Access<span class="cc-sort-ind" aria-hidden="true"></span></button>
+        <button type="button" class="cc-sort" data-sort="added" aria-pressed="true">Added<span class="cc-sort-ind" aria-hidden="true"></span></button>
+      </li>
+      <li class="proj-card" data-category="art" data-access="none" data-added="2026-10-05">
         <a class="proj-name" href="https://credopepen.vercel.app" target="_blank" rel="noopener" data-event="creditcards_project_click">BALANCE</a>
+        <span class="proj-new">New</span>
         <p class="proj-blurb">Credits remapped into Opepen blocks by ink-parity of each color; editions group by how many 8s are in the Credit.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/avsingh_eth/status/2107167115463832051" target="_blank" rel="noopener" data-event="creditcards_post_click">@avsingh_eth</a></span><span>5 Oct 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/avsingh_eth/status/2107167115463832051" target="_blank" rel="noopener" data-event="creditcards_post_click">@avsingh_eth</a></span><time datetime="2026-10-05">5 Oct 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="proj-card" data-category="art" data-access="wallet" data-added="2026-10-05">
         <a class="proj-name" href="https://wubbushi.com/debits/duckling.html" target="_blank" rel="noopener" data-event="creditcards_project_click">Duckling</a>
+        <span class="proj-new">New</span>
         <p class="proj-blurb">A Cinderella musical about Debit #3616 and Ella, the yellow its Credit never printed. 17 songs done, a rough cut playing for Debits holders.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/wubbushi/status/2106795461537611983" target="_blank" rel="noopener" data-event="creditcards_post_click">@wubbushi</a></span><span>5 Oct 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/wubbushi/status/2106795461537611983" target="_blank" rel="noopener" data-event="creditcards_post_click">@wubbushi</a></span><time datetime="2026-10-05">5 Oct 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="wallet">Wallet needed</p>
       </li>
-      <li class="proj-card" data-category="statements">
+      <li class="proj-card" data-category="statements" data-access="none" data-added="2026-10-04">
         <a class="proj-name" href="https://credits.mu" target="_blank" rel="noopener" data-event="creditcards_project_click">Credits Music</a>
+        <span class="proj-new">New</span>
         <p class="proj-blurb">Hear a Statement: load any 80 Credit Statement by ID, play it back and download the MIDI. No wallet needed.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/galaxy_nose/status/2106372386551730307" target="_blank" rel="noopener" data-event="creditcards_post_click">@galaxy_nose</a></span><span>4 Oct 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/galaxy_nose/status/2106372386551730307" target="_blank" rel="noopener" data-event="creditcards_post_click">@galaxy_nose</a></span><time datetime="2026-10-04">4 Oct 2026</time></p>
+        <p class="proj-type" data-c="statements">Build a Statement</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="proj-card" data-category="art" data-access="paid" data-added="2026-10-03">
         <a class="proj-name" href="https://nullmint.com/host" target="_blank" rel="noopener" data-event="creditcards_project_click">NULL Host</a>
+        <span class="proj-new">New</span>
         <p class="proj-blurb">Apply a NULL to a Credit you own and mint the system it makes, fully onchain. Needs a NULL and a Credit in one wallet, 0.0069 ETH.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/manicdistopia/status/2106435007673729247" target="_blank" rel="noopener" data-event="creditcards_post_click">@manicdistopia</a></span><span>3 Oct 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/manicdistopia/status/2106435007673729247" target="_blank" rel="noopener" data-event="creditcards_post_click">@manicdistopia</a></span><time datetime="2026-10-03">3 Oct 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="paid">Costs money</p>
       </li>
-      <li class="proj-card" data-category="statements">
+      <li class="proj-card" data-category="statements" data-access="paid" data-added="2026-10-02">
         <a class="proj-name" href="https://recredits.live" target="_blank" rel="noopener" data-event="creditcards_project_click">ReCredits</a>
+        <span class="proj-new">New</span>
         <p class="proj-blurb">Burned a Credit for a Statement? Mint it back once as a ReCredit with the same number and print. 0.00037 ETH each, wallet needed.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/fmiasp/status/2105930148285493388" target="_blank" rel="noopener" data-event="creditcards_post_click">@fmiasp</a></span><span>2 Oct 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/fmiasp/status/2105930148285493388" target="_blank" rel="noopener" data-event="creditcards_post_click">@fmiasp</a></span><time datetime="2026-10-02">2 Oct 2026</time></p>
+        <p class="proj-type" data-c="statements">Build a Statement</p>
+        <p class="proj-access" data-a="paid">Costs money</p>
       </li>
-      <li class="proj-card" data-category="statements">
+      <li class="proj-card" data-category="statements" data-access="wallet" data-added="2026-10-02">
         <a class="proj-name" href="https://jack.art/credits/assemble" target="_blank" rel="noopener" data-event="creditcards_project_click">Statements</a>
+        <span class="proj-new">New</span>
         <p class="proj-blurb">Jack&#39;s own Statement maker: arrange 80 Credits from one wallet and burn them into one print, 1,526 at most, ever. Wallet needed.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/jackbutcher/status/2105814966414545233" target="_blank" rel="noopener" data-event="creditcards_post_click">@jackbutcher</a></span><span>2 Oct 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/jackbutcher/status/2105814966414545233" target="_blank" rel="noopener" data-event="creditcards_post_click">@jackbutcher</a></span><time datetime="2026-10-02">2 Oct 2026</time></p>
+        <p class="proj-type" data-c="statements">Build a Statement</p>
+        <p class="proj-access" data-a="wallet">Wallet needed</p>
       </li>
-      <li class="proj-card" data-category="games">
+      <li class="proj-card" data-category="games" data-access="none" data-added="2026-10-01">
         <a class="proj-name" href="https://credit-crusaders-td3y.vercel.app" target="_blank" rel="noopener" data-event="creditcards_project_click">Credit Crusaders</a>
+        <span class="proj-new">New</span>
         <p class="proj-blurb">A 16-bit shooter across three worlds, hunting The Butcher after a missed Mona Lisa Statement. Hum a melody to score each level. Free, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/dealer1943" target="_blank" rel="noopener" data-event="creditcards_post_click">@dealer1943</a></span><span>1 Oct 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/dealer1943" target="_blank" rel="noopener" data-event="creditcards_post_click">@dealer1943</a></span><time datetime="2026-10-01">1 Oct 2026</time></p>
+        <p class="proj-type" data-c="games">Games</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="rarity">
+      <li class="proj-card" data-category="rarity" data-access="none" data-added="2026-10-01">
         <a class="proj-name" href="https://credits.disorderly.ai" target="_blank" rel="noopener" data-event="creditcards_project_click">Credits Rarity</a>
+        <span class="proj-new">New</span>
         <p class="proj-blurb">Best-value Credit listings by score, cost per point, and a planner for the cheapest 80 to make any Statement. Free, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/BFlTCH/status/2105740460874424321" target="_blank" rel="noopener" data-event="creditcards_post_click">@BFlTCH</a></span><span>1 Oct 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/BFlTCH/status/2105740460874424321" target="_blank" rel="noopener" data-event="creditcards_post_click">@BFlTCH</a></span><time datetime="2026-10-01">1 Oct 2026</time></p>
+        <p class="proj-type" data-c="rarity">Rarity &amp; data</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="proj-card" data-category="art" data-access="none" data-added="2026-10-01">
         <a class="proj-name" href="https://www.humancredit.co" target="_blank" rel="noopener" data-event="creditcards_project_click">Human Credit</a>
+        <span class="proj-new">New</span>
         <p class="proj-blurb">Pick a Credit&#39;s token ID and credit a person for what they contributed. Each acknowledgment gets a public page with the Credit&#39;s artwork. Free, no wallet.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/cordyjos" target="_blank" rel="noopener" data-event="creditcards_post_click">@cordyjos</a></span><span>1 Oct 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/cordyjos" target="_blank" rel="noopener" data-event="creditcards_post_click">@cordyjos</a></span><time datetime="2026-10-01">1 Oct 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="rarity">
+      <li class="proj-card" data-category="rarity" data-access="none" data-added="2026-09-30">
         <a class="proj-name" href="https://jacksonx28.github.io/credits-whale-watch/" target="_blank" rel="noopener" data-event="creditcards_project_click">Credits Whale Watch</a>
+        <span class="proj-new">New</span>
         <p class="proj-blurb">The burn thesis in numbers: holder spread, a bull and a bear case, and a whale tracker from 1 Oct. No wallet needed.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/kingjackson_eth/status/2105106220847861901" target="_blank" rel="noopener" data-event="creditcards_post_click">@kingjackson_eth</a></span><span>30 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/kingjackson_eth/status/2105106220847861901" target="_blank" rel="noopener" data-event="creditcards_post_click">@kingjackson_eth</a></span><time datetime="2026-09-30">30 Sept 2026</time></p>
+        <p class="proj-type" data-c="rarity">Rarity &amp; data</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="markets">
+      <li class="proj-card" data-category="markets" data-access="wallet" data-added="2026-09-30">
         <a class="proj-name" href="https://opensea.io/collection/rcpts" target="_blank" rel="noopener" data-event="creditcards_project_click">RECEIPTS</a>
+        <span class="proj-new">New</span>
         <p class="proj-blurb">10,000 generative 8×8 receipts in CMYK on lime, on Robinhood Chain. Free mint for 2,000 Credits holders, wallet needed.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/TheRCPTS/status/2105304229757812814" target="_blank" rel="noopener" data-event="creditcards_post_click">@TheRCPTS</a></span><span>30 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/TheRCPTS/status/2105304229757812814" target="_blank" rel="noopener" data-event="creditcards_post_click">@TheRCPTS</a></span><time datetime="2026-09-30">30 Sept 2026</time></p>
+        <p class="proj-type" data-c="markets">Mints &amp; markets</p>
+        <p class="proj-access" data-a="wallet">Wallet needed</p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="proj-card" data-category="art" data-access="none" data-added="2026-09-29">
         <a class="proj-name" href="https://genmerch.xyz/creditchecks" target="_blank" rel="noopener" data-event="creditcards_project_click">Credit Checks</a>
         <p class="proj-blurb">Run a Credit Check on any Credit by number and get a Checks-style print in black or white. Save the PNG or share it. Free, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/_JKNFT_/status/2104929550358679890" target="_blank" rel="noopener" data-event="creditcards_post_click">@_JKNFT_</a></span><span>29 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/_JKNFT_/status/2104929550358679890" target="_blank" rel="noopener" data-event="creditcards_post_click">@_JKNFT_</a></span><time datetime="2026-09-29">29 Sept 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="markets">
+      <li class="proj-card" data-category="markets" data-access="paid" data-added="2026-09-29">
         <a class="proj-name" href="https://permissionlessderivatives.com/debits" target="_blank" rel="noopener" data-event="creditcards_project_click">Debits NFT</a>
         <p class="proj-blurb">Every Credit implies a Debit: 80% of mint proceeds buy Credits, and 80 Debits burn into an Arbitrage plus a Credit. 48 hour open edition at 0.0003 ETH, wallet needed.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/jamesrichardfry/status/2104677909214716203" target="_blank" rel="noopener" data-event="creditcards_post_click">@jamesrichardfry</a></span><span>29 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/jamesrichardfry/status/2104677909214716203" target="_blank" rel="noopener" data-event="creditcards_post_click">@jamesrichardfry</a></span><time datetime="2026-09-29">29 Sept 2026</time></p>
+        <p class="proj-type" data-c="markets">Mints &amp; markets</p>
+        <p class="proj-access" data-a="paid">Costs money</p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="proj-card" data-category="art" data-access="none" data-added="2026-09-29">
         <a class="proj-name" href="https://punk.credit" target="_blank" rel="noopener" data-event="creditcards_project_click">Punk / Credit</a>
         <p class="proj-blurb">CryptoPunks rebuilt pixel by pixel, each pixel a whole Credit matched by colour and tone. Remix any Punk, inspect any pixel, save the PNG.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/0xplan_D/status/2104841203099291770" target="_blank" rel="noopener" data-event="creditcards_post_click">@Internetanount</a></span><span>29 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/0xplan_D/status/2104841203099291770" target="_blank" rel="noopener" data-event="creditcards_post_click">@Internetanount</a></span><time datetime="2026-09-29">29 Sept 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="proj-card" data-category="art" data-access="none" data-added="2026-09-28">
         <a class="proj-name" href="https://credonauts.com/" target="_blank" rel="noopener" data-event="creditcards_project_click">Credonauts</a>
         <p class="proj-blurb">Argonauts rebuilt from around 200 real Credits each, never recolored. Click any pixel to open its Credit. Free to browse, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/timsouw/status/2104475099370000674" target="_blank" rel="noopener" data-event="creditcards_post_click">@timsouw</a></span><span>28 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/timsouw/status/2104475099370000674" target="_blank" rel="noopener" data-event="creditcards_post_click">@timsouw</a></span><time datetime="2026-09-28">28 Sept 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="proj-card" data-category="art" data-access="none" data-added="2026-09-27">
         <a class="proj-name" href="https://cr3dits.vercel.app" target="_blank" rel="noopener" data-event="creditcards_project_click">CR3DITS</a>
         <p class="proj-blurb">Enter a Credit&#39;s number to see it as an interactive 3D volume, then download it as a card to share. Free, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/bclever0x/status/2103718642818953340" target="_blank" rel="noopener" data-event="creditcards_post_click">@heyflaw</a></span><span>27 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/bclever0x/status/2103718642818953340" target="_blank" rel="noopener" data-event="creditcards_post_click">@heyflaw</a></span><time datetime="2026-09-27">27 Sept 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="proj-card" data-category="art" data-access="optional" data-added="2026-09-27">
         <a class="proj-name" href="https://credit.k1ller.xyz/" target="_blank" rel="noopener" data-event="creditcards_project_click">Credit // Killers</a>
         <p class="proj-blurb">Combine a Credit with a KILLERS piece, pick the colours and download your remix. Free preview, wallet optional, minting not open yet.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/DTODDART/status/2103213993666240674" target="_blank" rel="noopener" data-event="creditcards_post_click">@DTODDART</a></span><span>27 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/DTODDART/status/2103213993666240674" target="_blank" rel="noopener" data-event="creditcards_post_click">@DTODDART</a></span><time datetime="2026-09-27">27 Sept 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="optional">Wallet optional</p>
       </li>
-      <li class="proj-card" data-category="rarity">
+      <li class="proj-card" data-category="rarity" data-access="none" data-added="2026-09-27">
         <a class="proj-name" href="https://creditscores.vercel.app/scan/" target="_blank" rel="noopener" data-event="creditcards_project_click">Credit Scanner</a>
         <p class="proj-blurb">Point your phone camera at any Credit, on screen or in print, for its score, rank and market. Free, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/devonfigures/status/2103877289788227649" target="_blank" rel="noopener" data-event="creditcards_post_click">@devonfigures</a></span><span>27 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/devonfigures/status/2103877289788227649" target="_blank" rel="noopener" data-event="creditcards_post_click">@devonfigures</a></span><time datetime="2026-09-27">27 Sept 2026</time></p>
+        <p class="proj-type" data-c="rarity">Rarity &amp; data</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="proj-card" data-category="art" data-access="none" data-added="2026-09-27">
         <a class="proj-name" href="https://creditscores.vercel.app" target="_blank" rel="noopener" data-event="creditcards_project_click">Credit Scores</a>
         <p class="proj-blurb">Look up any Credit for its score and download it as a ringtone. Free, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/devonfigures/status/2103157258339442782" target="_blank" rel="noopener" data-event="creditcards_post_click">@devonfigures</a></span><span>27 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/devonfigures/status/2103157258339442782" target="_blank" rel="noopener" data-event="creditcards_post_click">@devonfigures</a></span><time datetime="2026-09-27">27 Sept 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="markets">
+      <li class="proj-card" data-category="markets" data-access="wallet" data-added="2026-09-27">
         <a class="proj-name" href="https://opensea.io/collection/creditmon" target="_blank" rel="noopener" data-event="creditcards_project_click">Creditmon</a>
         <p class="proj-blurb">10,000 creatures inspired by Credits. Mint on OpenSea, wallet needed.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/Jehoseph/status/2103925939285663899" target="_blank" rel="noopener" data-event="creditcards_post_click">@Jehoseph</a></span><span>27 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/Jehoseph/status/2103925939285663899" target="_blank" rel="noopener" data-event="creditcards_post_click">@Jehoseph</a></span><time datetime="2026-09-27">27 Sept 2026</time></p>
+        <p class="proj-type" data-c="markets">Mints &amp; markets</p>
+        <p class="proj-access" data-a="wallet">Wallet needed</p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="proj-card" data-category="art" data-access="none" data-added="2026-09-27">
         <a class="proj-name" href="https://studyfrogs.com/creditpepen" target="_blank" rel="noopener" data-event="creditcards_project_click">Creditpepen</a>
         <p class="proj-blurb">Generate a CMYK proof in the style of Opepen, with plates that overprint and sometimes slip out of register. Download as a 2000px PNG, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/LikeLewis/status/2104293199959494978" target="_blank" rel="noopener" data-event="creditcards_post_click">@LikeLewis</a></span><span>27 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/LikeLewis/status/2104293199959494978" target="_blank" rel="noopener" data-event="creditcards_post_click">@LikeLewis</a></span><time datetime="2026-09-27">27 Sept 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="games">
+      <li class="proj-card" data-category="games" data-access="none" data-added="2026-09-27">
         <a class="proj-name" href="https://winchxyz.github.io/credits-cubed/" target="_blank" rel="noopener" data-event="creditcards_project_click">Credits Cube</a>
         <p class="proj-blurb">Put six Credits on a picture cube, scramble it and turn it back until every side is a Credit again. Free, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/winchxyz/status/2103637645267972456" target="_blank" rel="noopener" data-event="creditcards_post_click">@winchxyz</a></span><span>27 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/winchxyz/status/2103637645267972456" target="_blank" rel="noopener" data-event="creditcards_post_click">@winchxyz</a></span><time datetime="2026-09-27">27 Sept 2026</time></p>
+        <p class="proj-type" data-c="games">Games</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="rarity">
+      <li class="proj-card" data-category="rarity" data-access="none" data-added="2026-09-27">
         <a class="proj-name" href="https://credits-rarity-checker.kimi.pro/" target="_blank" rel="noopener" data-event="creditcards_project_click">Credits Rarity Checker</a>
         <p class="proj-blurb">Paste a Credit&#39;s token ID or OpenSea link for a rarity verdict, plus a live feed of sales against rarity. Free, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/0xlords_/status/2102621801163727016" target="_blank" rel="noopener" data-event="creditcards_post_click">@0xlalitmehra</a></span><span>27 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/0xlords_/status/2102621801163727016" target="_blank" rel="noopener" data-event="creditcards_post_click">@0xlalitmehra</a></span><time datetime="2026-09-27">27 Sept 2026</time></p>
+        <p class="proj-type" data-c="rarity">Rarity &amp; data</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="games">
+      <li class="proj-card" data-category="games" data-access="none" data-added="2026-09-27">
         <a class="proj-name" href="https://mod80.art/play" target="_blank" rel="noopener" data-event="creditcards_project_click">MOD80 BREAK</a>
         <p class="proj-blurb">Turn any Credit into a retro Breakout game and smash its actual blocks. Free, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/intr3pico/status/2102967868052877335" target="_blank" rel="noopener" data-event="creditcards_post_click">@intr3pico</a></span><span>27 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/intr3pico/status/2102967868052877335" target="_blank" rel="noopener" data-event="creditcards_post_click">@intr3pico</a></span><time datetime="2026-09-27">27 Sept 2026</time></p>
+        <p class="proj-type" data-c="games">Games</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="games">
+      <li class="proj-card" data-category="games" data-access="none" data-added="2026-09-26">
         <a class="proj-name" href="https://credit-limit-vv.vercel.app" target="_blank" rel="noopener" data-event="creditcards_project_click">Credit Limit</a>
         <p class="proj-blurb">Higher or lower with Credits: pick the rarer score until one miss reaches your limit, or play the Daily 8. Free, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/0xhiromasa/status/2103862962830393355" target="_blank" rel="noopener" data-event="creditcards_post_click">@0xhiromasa</a></span><span>26 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/0xhiromasa/status/2103862962830393355" target="_blank" rel="noopener" data-event="creditcards_post_click">@0xhiromasa</a></span><time datetime="2026-09-26">26 Sept 2026</time></p>
+        <p class="proj-type" data-c="games">Games</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="rarity">
+      <li class="proj-card" data-category="rarity" data-access="none" data-added="2026-09-26">
         <a class="proj-name" href="https://exaltedlove.com/debits/miles" target="_blank" rel="noopener" data-event="creditcards_project_click">Credit Miles</a>
         <p class="proj-blurb">A frequent flyer program for Credits: miles for every hour held, every sale a flight. Look up any wallet, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/wubbushi/status/2103638750295159126" target="_blank" rel="noopener" data-event="creditcards_post_click">@wubbushi</a></span><span>26 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/wubbushi/status/2103638750295159126" target="_blank" rel="noopener" data-event="creditcards_post_click">@wubbushi</a></span><time datetime="2026-09-26">26 Sept 2026</time></p>
+        <p class="proj-type" data-c="rarity">Rarity &amp; data</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="proj-card" data-category="art" data-access="none" data-added="2026-09-26">
         <a class="proj-name" href="https://creditscores.vercel.app/creditizer/" target="_blank" rel="noopener" data-event="creditcards_project_click">Creditizer</a>
         <p class="proj-blurb">Turn any image into a mosaic of Credits, up to 256 across, and download it as a 4K PNG or SVG with a map of every Credit used. Nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/devonfigures" target="_blank" rel="noopener" data-event="creditcards_post_click">@devonfigures</a></span><span>26 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/devonfigures" target="_blank" rel="noopener" data-event="creditcards_post_click">@devonfigures</a></span><time datetime="2026-09-26">26 Sept 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="proj-card" data-category="art" data-access="none" data-added="2026-09-26">
         <a class="proj-name" href="https://pour-eight.vercel.app/" target="_blank" rel="noopener" data-event="creditcards_project_click">Pour</a>
         <p class="proj-blurb">Pour any Credit&#39;s colors onto a canvas like acrylic paint, tilt it, add salt, alcohol or soap and save the image. Free, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/dealer1943/status/2103691502870553059" target="_blank" rel="noopener" data-event="creditcards_post_click">@dealer1943</a></span><span>26 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/dealer1943/status/2103691502870553059" target="_blank" rel="noopener" data-event="creditcards_post_click">@dealer1943</a></span><time datetime="2026-09-26">26 Sept 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="statements">
+      <li class="proj-card" data-category="statements" data-access="none" data-added="2026-09-26">
         <a class="proj-name" href="https://www.statement-builder.xyz/" target="_blank" rel="noopener" data-event="creditcards_project_click">Statement Builder</a>
         <p class="proj-blurb">Build Statements from 80 real Credits or the ones an address owns, turn an image into Credits and hear your Statement. No wallet connection.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/Caben_nft" target="_blank" rel="noopener" data-event="creditcards_post_click">@Caben_nft</a></span><span>26 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/Caben_nft" target="_blank" rel="noopener" data-event="creditcards_post_click">@Caben_nft</a></span><time datetime="2026-09-26">26 Sept 2026</time></p>
+        <p class="proj-type" data-c="statements">Build a Statement</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="markets">
+      <li class="proj-card" data-category="markets" data-access="paid" data-added="2026-09-25">
         <a class="proj-name" href="https://buybits.art" target="_blank" rel="noopener" data-event="creditcards_project_click">BITS</a>
         <p class="proj-blurb">Credits&#39; $8 X Money mechanic, rebuilt on Solana. A separate collection.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/EightBits11/status/2103342460047085643" target="_blank" rel="noopener" data-event="creditcards_post_click">@EightBits11</a></span><span>25 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/EightBits11/status/2103342460047085643" target="_blank" rel="noopener" data-event="creditcards_post_click">@EightBits11</a></span><time datetime="2026-09-25">25 Sept 2026</time></p>
+        <p class="proj-type" data-c="markets">Mints &amp; markets</p>
+        <p class="proj-access" data-a="paid">Costs money</p>
       </li>
-      <li class="proj-card" data-category="markets">
+      <li class="proj-card" data-category="markets" data-access="paid" data-added="2026-09-25">
         <a class="proj-name" href="https://opensea.io/collection/creditcards" target="_blank" rel="noopener" data-event="creditcards_project_click">Credit Cards (Jehoseph)</a>
         <p class="proj-blurb">A separate paid collection inspired by Credits, not part of it. Wallet to mint.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/Jehoseph/status/2103013672541204483" target="_blank" rel="noopener" data-event="creditcards_post_click">@Jehoseph</a></span><span>25 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/Jehoseph/status/2103013672541204483" target="_blank" rel="noopener" data-event="creditcards_post_click">@Jehoseph</a></span><time datetime="2026-09-25">25 Sept 2026</time></p>
+        <p class="proj-type" data-c="markets">Mints &amp; markets</p>
+        <p class="proj-access" data-a="paid">Costs money</p>
       </li>
-      <li class="proj-card" data-category="rarity">
+      <li class="proj-card" data-category="rarity" data-access="optional" data-added="2026-09-25">
         <a class="proj-name" href="https://creditscheck.xyz" target="_blank" rel="noopener" data-event="creditcards_project_click">Credit Check</a>
         <p class="proj-blurb">A report card per Credit: rank, AAA to CCC rating, live price. Wallet optional.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/JimEagle_/status/2103297144015011852" target="_blank" rel="noopener" data-event="creditcards_post_click">@JimEagle_</a></span><span>25 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/JimEagle_/status/2103297144015011852" target="_blank" rel="noopener" data-event="creditcards_post_click">@JimEagle_</a></span><time datetime="2026-09-25">25 Sept 2026</time></p>
+        <p class="proj-type" data-c="rarity">Rarity &amp; data</p>
+        <p class="proj-access" data-a="optional">Wallet optional</p>
       </li>
-      <li class="proj-card" data-category="rarity">
+      <li class="proj-card" data-category="rarity" data-access="none" data-added="2026-09-25">
         <a class="proj-name" href="https://jack.art/credits/rating" target="_blank" rel="noopener" data-event="creditcards_project_click">Credit Ratings</a>
         <p class="proj-blurb">Jack&#39;s own rarity index, every Credit scored from 80 to 800. No wallet needed.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/jackbutcher" target="_blank" rel="noopener" data-event="creditcards_post_click">@jackbutcher</a></span><span>25 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/jackbutcher" target="_blank" rel="noopener" data-event="creditcards_post_click">@jackbutcher</a></span><time datetime="2026-09-25">25 Sept 2026</time></p>
+        <p class="proj-type" data-c="rarity">Rarity &amp; data</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="markets">
+      <li class="proj-card" data-category="markets" data-access="paid" data-added="2026-09-25">
         <a class="proj-name" href="https://www.tokenstrategy.com" target="_blank" rel="noopener" data-event="creditcards_project_click">Credit Strategy</a>
         <p class="proj-blurb">A token whose trade tax buys and relists Credits. Not Jack&#39;s. Wallet connected.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/AlphaAltcoins/status/2103274156620124313" target="_blank" rel="noopener" data-event="creditcards_post_click">@token_works</a></span><span>25 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/AlphaAltcoins/status/2103274156620124313" target="_blank" rel="noopener" data-event="creditcards_post_click">@token_works</a></span><time datetime="2026-09-25">25 Sept 2026</time></p>
+        <p class="proj-type" data-c="markets">Mints &amp; markets</p>
+        <p class="proj-access" data-a="paid">Costs money</p>
       </li>
-      <li class="proj-card" data-category="rarity">
+      <li class="proj-card" data-category="rarity" data-access="none" data-added="2026-09-25">
         <a class="proj-name" href="https://credits-monitor.vercel.app" target="_blank" rel="noopener" data-event="creditcards_project_click">Credits Monitor</a>
         <p class="proj-blurb">Live sales and listings for the Top 100 Credits, ranked by Jack&#39;s official Credit Ratings. Nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/Dorsian/status/2103596011176313307" target="_blank" rel="noopener" data-event="creditcards_post_click">@Dorsian</a></span><span>25 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/Dorsian/status/2103596011176313307" target="_blank" rel="noopener" data-event="creditcards_post_click">@Dorsian</a></span><time datetime="2026-09-25">25 Sept 2026</time></p>
+        <p class="proj-type" data-c="rarity">Rarity &amp; data</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="proj-card" data-category="art" data-access="none" data-added="2026-09-25">
         <a class="proj-name" href="https://exaltedlove.com/debits/" target="_blank" rel="noopener" data-event="creditcards_project_click">Debits</a>
         <p class="proj-blurb">A Debit prints the plates your Credit didn&#39;t show, now with The Second Hand: a film and a clock of your Credits. Unreleased, nothing to connect.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/wubbushi/status/2103650320924774801" target="_blank" rel="noopener" data-event="creditcards_post_click">@wubbushi</a></span><span>25 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/wubbushi/status/2103650320924774801" target="_blank" rel="noopener" data-event="creditcards_post_click">@wubbushi</a></span><time datetime="2026-09-25">25 Sept 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="markets">
+      <li class="proj-card" data-category="markets" data-access="wallet" data-added="2026-09-25">
         <a class="proj-name" href="https://laternow.app/futures" target="_blank" rel="noopener" data-event="creditcards_project_click">Futures</a>
         <p class="proj-blurb">Free mint for holders: a 1 of 1 magic 8 ball, gas only. Wallet connected.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/LATE_FX/status/2103269221111058849" target="_blank" rel="noopener" data-event="creditcards_post_click">@LATE_FX</a></span><span>25 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/LATE_FX/status/2103269221111058849" target="_blank" rel="noopener" data-event="creditcards_post_click">@LATE_FX</a></span><time datetime="2026-09-25">25 Sept 2026</time></p>
+        <p class="proj-type" data-c="markets">Mints &amp; markets</p>
+        <p class="proj-access" data-a="wallet">Wallet needed</p>
       </li>
-      <li class="proj-card" data-category="art">
+      <li class="proj-card" data-category="art" data-access="none" data-added="2026-09-24">
         <a class="proj-name" href="https://3dcredits.vercel.app" target="_blank" rel="noopener" data-event="creditcards_project_click">3D Credits</a>
         <p class="proj-blurb">Your Credit as 3D voxels. Enter a token ID, export a snapshot or a video.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/avsingh_eth/status/2102857294811967660" target="_blank" rel="noopener" data-event="creditcards_post_click">@avsingh_eth</a></span><span>24 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/avsingh_eth/status/2102857294811967660" target="_blank" rel="noopener" data-event="creditcards_post_click">@avsingh_eth</a></span><time datetime="2026-09-24">24 Sept 2026</time></p>
+        <p class="proj-type" data-c="art">Art &amp; remixes</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="markets">
+      <li class="proj-card" data-category="markets" data-access="paid" data-added="2026-09-24">
         <a class="proj-name" href="https://oncave.io/labs/credited-punks" target="_blank" rel="noopener" data-event="creditcards_project_click">Credited Punks</a>
         <p class="proj-blurb">10,000 CryptoPunks recoloured by Credits, onchain. Paid mint, wallet connected.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/defimaestro90/status/2102792764765188313" target="_blank" rel="noopener" data-event="creditcards_post_click">@defimaestro90</a></span><span>24 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/defimaestro90/status/2102792764765188313" target="_blank" rel="noopener" data-event="creditcards_post_click">@defimaestro90</a></span><time datetime="2026-09-24">24 Sept 2026</time></p>
+        <p class="proj-type" data-c="markets">Mints &amp; markets</p>
+        <p class="proj-access" data-a="paid">Costs money</p>
       </li>
-      <li class="proj-card" data-category="statements">
+      <li class="proj-card" data-category="statements" data-access="none" data-added="2026-09-24">
         <a class="proj-name" href="https://mantra-coral-mr7v.here.now" target="_blank" rel="noopener" data-event="creditcards_project_click">Credits Factory</a>
         <p class="proj-blurb">Describe a Statement and an AI picks the 80 Credits, priced from live listings.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/4484/status/2103209362206654605" target="_blank" rel="noopener" data-event="creditcards_post_click">@4484</a></span><span>24 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/4484/status/2103209362206654605" target="_blank" rel="noopener" data-event="creditcards_post_click">@4484</a></span><time datetime="2026-09-24">24 Sept 2026</time></p>
+        <p class="proj-type" data-c="statements">Build a Statement</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="rarity">
+      <li class="proj-card" data-category="rarity" data-access="none" data-added="2026-09-24">
         <a class="proj-name" href="https://credits-intelligence.netlify.app" target="_blank" rel="noopener" data-event="creditcards_project_click">Credits Intelligence</a>
         <p class="proj-blurb">A dashboard for the collection: supply, burns and expected Statements.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/SickAssPen/status/2103093920972312602" target="_blank" rel="noopener" data-event="creditcards_post_click">@SickAssPen</a></span><span>24 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/SickAssPen/status/2103093920972312602" target="_blank" rel="noopener" data-event="creditcards_post_click">@SickAssPen</a></span><time datetime="2026-09-24">24 Sept 2026</time></p>
+        <p class="proj-type" data-c="rarity">Rarity &amp; data</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="rarity">
+      <li class="proj-card" data-category="rarity" data-access="none" data-added="2026-09-24">
         <a class="proj-name" href="https://credits-lab.vercel.app" target="_blank" rel="noopener" data-event="creditcards_project_click">Credits Lab</a>
         <p class="proj-blurb">Metadata explorer for Credits: traits, rarity and renders by token ID.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/0xJohnB/status/2103058107240759350" target="_blank" rel="noopener" data-event="creditcards_post_click">@0xJohnB</a></span><span>24 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/0xJohnB/status/2103058107240759350" target="_blank" rel="noopener" data-event="creditcards_post_click">@0xJohnB</a></span><time datetime="2026-09-24">24 Sept 2026</time></p>
+        <p class="proj-type" data-c="rarity">Rarity &amp; data</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="rarity">
+      <li class="proj-card" data-category="rarity" data-access="none" data-added="2026-09-24">
         <a class="proj-name" href="https://credits.ninja" target="_blank" rel="noopener" data-event="creditcards_project_click">credits.ninja</a>
         <p class="proj-blurb">Rarity, live sales and holder rankings for every Credit. No wallet needed.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/itsmemeworks/status/2103163283482304667" target="_blank" rel="noopener" data-event="creditcards_post_click">@itsmemeworks</a></span><span>24 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/itsmemeworks/status/2103163283482304667" target="_blank" rel="noopener" data-event="creditcards_post_click">@itsmemeworks</a></span><time datetime="2026-09-24">24 Sept 2026</time></p>
+        <p class="proj-type" data-c="rarity">Rarity &amp; data</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="rarity">
+      <li class="proj-card" data-category="rarity" data-access="none" data-added="2026-09-24">
         <a class="proj-name" href="https://creditsmoonmath.xyz" target="_blank" rel="noopener" data-event="creditcards_project_click">creditsmoonmath.xyz</a>
         <p class="proj-blurb">Paste an address, get a rarity rating for every Credit in it. No wallet needed.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/himars/status/2103250902656118893" target="_blank" rel="noopener" data-event="creditcards_post_click">@himars</a></span><span>24 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/himars/status/2103250902656118893" target="_blank" rel="noopener" data-event="creditcards_post_click">@himars</a></span><time datetime="2026-09-24">24 Sept 2026</time></p>
+        <p class="proj-type" data-c="rarity">Rarity &amp; data</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
-      <li class="proj-card" data-category="markets">
+      <li class="proj-card" data-category="markets" data-access="paid" data-added="2026-09-24">
         <a class="proj-name" href="https://sighthood.com" target="_blank" rel="noopener" data-event="creditcards_project_click">Sight</a>
         <p class="proj-blurb">A prediction market on the Credits floor price. Wallet connected, real money.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/sight_hood/status/2103147553948626961" target="_blank" rel="noopener" data-event="creditcards_post_click">@sight_hood</a></span><span>24 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/sight_hood/status/2103147553948626961" target="_blank" rel="noopener" data-event="creditcards_post_click">@sight_hood</a></span><time datetime="2026-09-24">24 Sept 2026</time></p>
+        <p class="proj-type" data-c="markets">Mints &amp; markets</p>
+        <p class="proj-access" data-a="paid">Costs money</p>
       </li>
-      <li class="proj-card" data-category="statements">
+      <li class="proj-card" data-category="statements" data-access="none" data-added="2026-09-24">
         <a class="proj-name" href="https://credits-statement-studio.vercel.app" target="_blank" rel="noopener" data-event="creditcards_project_click">Statement Studio</a>
         <p class="proj-blurb">Arrange your 80 before you burn anything. Read-only lookup of your holdings.</p>
-        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/ivdoublex/status/2103242384775471375" target="_blank" rel="noopener" data-event="creditcards_post_click">@ivdoublex</a></span><span>24 Sept 2026</span></p>
+        <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/ivdoublex/status/2103242384775471375" target="_blank" rel="noopener" data-event="creditcards_post_click">@ivdoublex</a></span><time datetime="2026-09-24">24 Sept 2026</time></p>
+        <p class="proj-type" data-c="statements">Build a Statement</p>
+        <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
+      <li class="cc-type-head" data-category="rarity" aria-hidden="true"><span class="cc-type-head-name">Rarity &amp; data</span><span class="cc-type-head-n">12</span></li>
+      <li class="cc-type-head" data-category="art" aria-hidden="true"><span class="cc-type-head-name">Art &amp; remixes</span><span class="cc-type-head-n">15</span></li>
+      <li class="cc-type-head" data-category="statements" aria-hidden="true"><span class="cc-type-head-name">Build a Statement</span><span class="cc-type-head-n">6</span></li>
+      <li class="cc-type-head" data-category="games" aria-hidden="true"><span class="cc-type-head-name">Games</span><span class="cc-type-head-n">4</span></li>
+      <li class="cc-type-head" data-category="markets" aria-hidden="true"><span class="cc-type-head-name">Mints &amp; markets</span><span class="cc-type-head-n">9</span></li>
     </ol>
     <div class="perks-view" id="perk-list">
       <p class="perks-intro"><a href="https://x.com/messages/compose?recipient_id=1386099253580345344" target="_blank" rel="noopener" data-event="creditcards_perk_submit">Know about a perk? DM @jesusdoteth <span class="arrow">&rarr;</span></a></p>
       <ol class="projects perks">
+        <li class="cc-list-head cc-list-head--perks" aria-hidden="true">
+          <span>Perk</span><span>Status</span><span>Type</span><span>Date</span>
+        </li>
+        <li class="cc-perk-head" data-status="open"><span class="cc-perk-head-dot" aria-hidden="true"></span><span class="cc-perk-head-name">Open</span><span class="cc-perk-head-n">2</span></li>
         <li class="proj-card perk-card perk-card--open" data-perk="afterflow-allowlist" data-status="open">
           <p class="perk-tags"><span class="perk-status">Open</span><span class="perk-type">Allowlist</span></p>
           <a class="proj-name" href="https://afterflow.disorderly.ai/allowlist.html" target="_blank" rel="noopener" data-event="creditcards_perk_click">Afterflow</a>
           <p class="proj-blurb">A two hour early window on Afterflow, a free generative geometry mint of up to 10,000 pieces, 5 per wallet. Check your wallet on the allowlist page.</p>
-          <p class="perk-for"><span class="perk-for-label">For</span> Credits holders at the 30 Sep snapshot</p>
+          <p class="perk-for"><span class="perk-for-label">For</span> Holders at the 30 Sep snapshot</p>
           <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/disorderly_AI/status/2105388511209853117" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@disorderly_AI</a></span><time datetime="2026-09-30">30 Sept 2026</time></p>
         </li>
         <li class="proj-card perk-card perk-card--open" data-perk="laternow-futures-free-mint" data-status="open">
           <p class="perk-tags"><span class="perk-status">Open</span><span class="perk-type">Free mint</span></p>
           <a class="proj-name" href="https://laternow.app/futures" target="_blank" rel="noopener" data-event="creditcards_perk_click">Futures</a>
           <p class="proj-blurb">A free 1 of 1 magic 8 ball drawn from the traits of each Credit you hold. Only that Credit&#39;s owner can claim it. Gas only.</p>
-          <p class="perk-for"><span class="perk-for-label">For</span> Credits holders, one per Credit</p>
+          <p class="perk-for"><span class="perk-for-label">For</span> Holders, one per Credit</p>
           <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/LATE_FX/status/2103269221111058849" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@LATE_FX</a></span><time datetime="2026-09-24">24 Sept 2026</time></p>
         </li>
         <li data-standing-slot></li>
+        <li class="cc-perk-head" data-status="ended"><span class="cc-perk-head-name">Ended</span><span class="cc-perk-head-n">7</span></li>
         <li class="proj-card perk-card perk-card--ended" data-perk="roonz-free-mint" data-status="ended">
           <p class="perk-tags"><span class="perk-status">Ended</span><span class="perk-type">Free mint</span></p>
           <a class="proj-name" href="https://opensea.io/collection/roonz-by-budz" target="_blank" rel="noopener" data-event="creditcards_perk_click">ROONZ</a>
           <p class="proj-blurb">A free ROONZ, one of 4,269 on Robinhood Chain, for holders with a WL spot. First come, first served, before the public mint.</p>
-          <p class="perk-for"><span class="perk-for-label">For</span> Credits holders, plus a few other communities</p>
+          <p class="perk-for"><span class="perk-for-label">For</span> Holders</p>
           <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/Budzukoji/status/2106207875102380316" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@Budzukoji</a></span><time datetime="2026-10-03">Ended 3 Oct 2026</time></p>
         </li>
         <li class="proj-card perk-card perk-card--ended" data-perk="receipts-free-mint" data-status="ended">
           <p class="perk-tags"><span class="perk-status">Ended</span><span class="perk-type">Free mint</span><span class="perk-reason">Closed</span></p>
           <a class="proj-name" href="https://opensea.io/collection/rcpts" target="_blank" rel="noopener" data-event="creditcards_perk_click">RECEIPTS</a>
           <p class="proj-blurb">A free mint of RECEIPTS, 10,000 generative 8×8 records printed in CMYK on a lime field, on Robinhood Chain.</p>
-          <p class="perk-for"><span class="perk-for-label">For</span> 2,000 Credits holders, plus Racerz and Funkari holders</p>
+          <p class="perk-for"><span class="perk-for-label">For</span> 2,000 holders</p>
           <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/TheRCPTS/status/2105304229757812814" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@TheRCPTS</a></span><time datetime="2026-09-30">30 Sept 2026</time></p>
         </li>
         <li class="proj-card perk-card perk-card--ended" data-perk="credonauts-top-holders-airdrop" data-status="ended">
           <p class="perk-tags"><span class="perk-status">Ended</span><span class="perk-type">Airdrop</span><span class="perk-reason">Sent</span></p>
           <a class="proj-name" href="https://credonauts.com/" target="_blank" rel="noopener" data-event="creditcards_perk_click">Credonauts</a>
           <p class="proj-blurb">One Credonaut each, sent by the artist to the top 50 Credits holders. The top 50 Argonauts holders got one too.</p>
-          <p class="perk-for"><span class="perk-for-label">For</span> Top 50 Credits holders</p>
+          <p class="perk-for"><span class="perk-for-label">For</span> Top 50 holders</p>
           <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/timsouw/status/2104789433287635452" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@timsouw</a></span><time datetime="2026-09-29">29 Sept 2026</time></p>
         </li>
         <li class="proj-card perk-card perk-card--ended" data-perk="wubbushi-debits-free-mint" data-status="ended">
           <p class="perk-tags"><span class="perk-status">Ended</span><span class="perk-type">Free mint</span><span class="perk-reason">Closed</span></p>
           <a class="proj-name" href="https://exaltedlove.com/debits/" target="_blank" rel="noopener" data-event="creditcards_perk_click">Debits</a>
           <p class="proj-blurb">One free Debit for every wallet that held a Credit at the snapshot, gas paid. For 24 hours only holders could mint their matched Debits, at $7 after the first.</p>
-          <p class="perk-for"><span class="perk-for-label">For</span> Credits holders at the 28 Sep snapshot</p>
+          <p class="perk-for"><span class="perk-for-label">For</span> Holders at the 28 Sep snapshot</p>
           <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/wubbushi/status/2104586007706267791" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@wubbushi</a></span><time datetime="2026-09-29">29 Sept 2026</time></p>
         </li>
         <li class="proj-card perk-card perk-card--ended" data-perk="jehoseph-credit-cards-allowlist" data-status="ended">
           <p class="perk-tags"><span class="perk-status">Ended</span><span class="perk-type">Allowlist</span></p>
           <a class="proj-name" href="https://opensea.io/collection/creditcards" target="_blank" rel="noopener" data-event="creditcards_perk_click">Credit Cards</a>
           <p class="proj-blurb">An allowlist spot on Credit Cards, 10,000 cards inspired by Credits. The top 2,000 go by Visualize Value&#39;s holder ranking. It closed when the mint opened to everyone at 0.001 ETH.</p>
-          <p class="perk-for"><span class="perk-for-label">For</span> Top 2,000 Credits holders, plus KYC holders</p>
+          <p class="perk-for"><span class="perk-for-label">For</span> Top 2,000 holders</p>
           <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/Jehoseph/status/2103753864449290577" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@Jehoseph</a></span><time datetime="2026-09-26">Ended 26 Sept 2026</time></p>
         </li>
         <li class="proj-card perk-card perk-card--ended" data-perk="credited-punks-holder-mint" data-status="ended">
           <p class="perk-tags"><span class="perk-status">Ended</span><span class="perk-type">Allowlist</span><span class="perk-reason">Sold out</span></p>
           <a class="proj-name" href="https://oncave.io/labs/credited-punks" target="_blank" rel="noopener" data-event="creditcards_perk_click">Credited Punks</a>
           <p class="proj-blurb">A holder mint of 10,000 onchain Punks, each coloured by one of your Credits, at 0.00029 ETH. The Credit stays yours.</p>
-          <p class="perk-for"><span class="perk-for-label">For</span> Credits holders</p>
+          <p class="perk-for"><span class="perk-for-label">For</span> Holders</p>
           <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/wutaner/status/2102691432599633997" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@wutaner</a></span><time datetime="2026-09-23">23 Sept 2026</time></p>
         </li>
         <li class="proj-card perk-card perk-card--ended" data-perk="the-creditors-free-mint" data-status="ended">
           <p class="perk-tags"><span class="perk-status">Ended</span><span class="perk-type">Free mint</span></p>
           <a class="proj-name" href="https://opensea.io/collection/0xf8641504e13b609eecbd1e8811306507ba330176/overview" target="_blank" rel="noopener" data-event="creditcards_perk_click">The Creditors</a>
           <p class="proj-blurb">A free mint of 1 of 1 PFPs made from Credits, on Robinhood Chain. The holder stage ran for two hours before the public mint.</p>
-          <p class="perk-for"><span class="perk-for-label">For</span> Credits holders, plus some Robinhood Chain communities</p>
+          <p class="perk-for"><span class="perk-for-label">For</span> Holders</p>
           <p class="proj-by"><span class="proj-by-names"><a href="https://x.com/TheCreditorsNFT/status/2102767674111537367" target="_blank" rel="noopener" data-event="creditcards_perk_post_click">@TheCreditorsNFT</a></span><time datetime="2026-09-23">Ended 23 Sept 2026</time></p>
         </li>
       </ol>
@@ -1314,18 +1768,6 @@
       })
       .catch(function () {});
 
-    // Tap the payment address to copy it. Falls back to plain text when the
-    // clipboard API is missing or refused: the name is still right there.
-    document.addEventListener("click", function (e) {
-      var btn = e.target.closest ? e.target.closest("[data-copy]") : null;
-      if (!btn || !navigator.clipboard) return;
-      var value = btn.getAttribute("data-copy");
-      navigator.clipboard.writeText(value).then(function () {
-        btn.textContent = "copied";
-        setTimeout(function () { btn.textContent = value; }, 1400);
-      }).catch(function () {});
-    });
-
     // One delegated listener covers every outbound link, including project
     // rows the daily bake adds later. One event name per intent: a project
     // site, its announcement post, and the collection's own links are three
@@ -1436,6 +1878,85 @@
     window.addEventListener("resize", edge);
     apply(fromHash(), false);
     edge();
+  })();
+</script>
+<script>
+  // Grid or List, and sorting the list. The <head> script already set
+  // <html data-cc-view> before paint; this wires the toggle (hidden until
+  // now, so it never shows dead) and remembers the choice per device.
+  //
+  // Sorting reorders the baked cards in place, after the list head, so the
+  // featured card and the paid-slot line stay on top and the filter script's
+  // hidden flags travel with the cards. The bake order (newest first) is the
+  // default. The heads only show from 600px up; a phone keeps the bake
+  // order. Clicking the active head flips its direction.
+  (function () {
+    var root = document.documentElement;
+    var toggle = document.querySelector("[data-view-toggle]");
+    var list = document.getElementById("project-list");
+    var head = document.querySelector("[data-list-head]");
+    if (!toggle || !list || !head) return;
+    var viewBtns = [].slice.call(toggle.querySelectorAll("[data-view]"));
+
+    function showView(v) {
+      root.setAttribute("data-cc-view", v);
+      viewBtns.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-view") === v ? "true" : "false"); });
+    }
+    showView(root.getAttribute("data-cc-view") === "grid" ? "grid" : "list");
+    toggle.hidden = false;
+    toggle.addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest("[data-view]") : null;
+      if (!b) return;
+      var v = b.getAttribute("data-view");
+      if (v === root.getAttribute("data-cc-view")) return;
+      showView(v);
+      try { localStorage.setItem("cc-view", v); } catch (err) {}
+      try { if (window.va) window.va("event", { name: "creditcards_view", data: { view: v } }); } catch (err) {}
+    });
+
+    // ---- Sort
+    // Type follows the pills' order (the bake's CATEGORIES); access goes
+    // easiest first, mirroring scripts/creditcards-access.mjs.
+    var typeOrder = [].map.call(document.querySelectorAll(".cc-filter [data-filter]"), function (p) { return p.getAttribute("data-filter"); });
+    var ACCESS_ORDER = ["none", "optional", "wallet", "paid"];
+    var cards = [].slice.call(list.querySelectorAll(":scope > li.proj-card:not(.proj-card--featured)"));
+    var sortBtns = [].slice.call(head.querySelectorAll("[data-sort]"));
+    var state = { key: "added", dir: "desc" };
+    var DEFAULT_DIR = { added: "desc", name: "asc", type: "asc", access: "asc" };
+
+    function name(li) { var a = li.querySelector(".proj-name"); return a ? a.textContent.trim() : ""; }
+    function added(li) { return li.getAttribute("data-added") || ""; }
+    function byNewest(a, b) { return added(b).localeCompare(added(a)) || name(a).localeCompare(name(b), "en", { sensitivity: "base" }); }
+    function compare(a, b) {
+      var d = 0;
+      if (state.key === "name") d = name(a).localeCompare(name(b), "en", { sensitivity: "base" });
+      else if (state.key === "type") d = typeOrder.indexOf(a.getAttribute("data-category")) - typeOrder.indexOf(b.getAttribute("data-category"));
+      else if (state.key === "access") d = ACCESS_ORDER.indexOf(a.getAttribute("data-access")) - ACCESS_ORDER.indexOf(b.getAttribute("data-access"));
+      else d = added(a).localeCompare(added(b));
+      if (state.dir === "desc") d = -d;
+      // Ties inside a type or access group read newest first.
+      return d || byNewest(a, b);
+    }
+    function sortBy(key, dir) {
+      state = { key: key, dir: dir };
+      var frag = document.createDocumentFragment();
+      cards.slice().sort(compare).forEach(function (li) { frag.appendChild(li); });
+      list.insertBefore(frag, head.nextSibling);
+      sortBtns.forEach(function (b) {
+        var on = b.getAttribute("data-sort") === key;
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+        b.querySelector(".cc-sort-ind").textContent = on ? (dir === "asc" ? "↑" : "↓") : "";
+      });
+    }
+    sortBtns.forEach(function (b) {
+      b.addEventListener("click", function () {
+        var key = b.getAttribute("data-sort");
+        var dir = key === state.key ? (state.dir === "asc" ? "desc" : "asc") : DEFAULT_DIR[key];
+        sortBy(key, dir);
+        try { if (window.va) window.va("event", { name: "creditcards_sort", data: { key: key, dir: dir } }); } catch (err) {}
+      });
+    });
+    sortBy("added", "desc");
   })();
 </script>
 <script>

@@ -91,6 +91,7 @@ import {
   strayTcoLinks,
 } from './creditcards-discover.mjs';
 import { CATEGORIES, categoryProblems, suggestCategory } from './creditcards-categories.mjs';
+import { ACCESS, accessProblems, suggestAccess } from './creditcards-access.mjs';
 import { PERK_TYPES, perkProblems, perkStatus, sortPerks, todayUtc } from './creditcards-perks.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -365,6 +366,10 @@ class Pool {
         // A suggestion only, from name, url and post text; a human checks it
         // when approving. Kept as the real field so approval is one edit.
         category: suggestCategory({ name: host, url: c.url, tweetText: c.tweet.text || '', flags: c.flags }),
+        // Same deal: a guess at what it takes to try (no wallet, wallet,
+        // money), checked by a human at approval. The bake refuses an
+        // approved project without one.
+        access: suggestAccess({ url: c.url, tweetText: c.tweet.text || '' }),
         status: 'pending',
         added: today,
         metrics: {
@@ -515,21 +520,18 @@ async function refreshStatsDirect(data, fetchImpl) {
 
 // --- bake ----------------------------------------------------------------------
 
-// The paid slot line under the featured card. Price, the Credit alternative,
-// the payment address and the DM link all come from data.featuredSlot, so a
-// price change is a data edit, not a template edit. No featuredSlot, no line.
+// The paid slot line under the featured card: just the ask and the DM link
+// (data.featuredSlot.dm / dmLabel). Price and payment address stay in the
+// data for the conversation, but since the 6 Oct 2026 list view they are not
+// shown: the line reads as an invitation, not a rate card. No featuredSlot,
+// no line.
 function renderSponsorLine(slot) {
-  if (!slot) return null;
-  const price = escapeHtml(stripDashes(slot.price));
-  const per = escapeHtml(stripDashes(slot.per));
-  const credit = escapeHtml(stripDashes(slot.credit));
-  const address = escapeHtml(slot.address);
-  const network = slot.network ? ` on ${escapeHtml(slot.network)}` : '';
+  if (!slot || !slot.dm) return null;
   const dm = escapeHtml(slot.dm);
   const dmLabel = escapeHtml(stripDashes(slot.dmLabel));
   return [
     '      <li class="proj-sponsor" data-category="all">',
-    `        <p>Feature your project here: ${price} a ${per} or ${credit} to <button type="button" class="proj-sponsor-address" data-copy="${address}" title="Copy ${address}${network}" data-event="creditcards_sponsor_copy">${address}</button><span class="proj-sponsor-sep" aria-hidden="true">&middot;</span><a href="${dm}" target="_blank" rel="noopener" data-event="creditcards_sponsor_click">${dmLabel} <span class="arrow">&rarr;</span></a></p>`,
+    `        <p>Feature your project here<span class="proj-sponsor-sep" aria-hidden="true">&middot;</span><a href="${dm}" target="_blank" rel="noopener" data-event="creditcards_sponsor_click">${dmLabel} <span class="arrow">&rarr;</span></a></p>`,
     '      </li>',
   ].join('\n');
 }
@@ -571,17 +573,58 @@ function renderFilter(approved, perkCount, perksOpen = 0) {
     ...CATEGORIES.map((c) => ({ ...c, total: counts[c.slug], controls: 'project-list' })),
   ];
   return [
+    '    <div class="cc-bar">',
     '    <div class="cc-filter" role="group" aria-label="Filter projects by category" data-scroller>',
     ...pills.map(
       (c) =>
         `      <button type="button" class="cc-filter-pill" data-filter="${c.slug}" aria-pressed="${c.slug === 'all'}" aria-controls="${c.controls}" data-count="${c.total}">${c.dot ? '<span class="cc-filter-dot" aria-hidden="true"></span>' : ''}${escapeHtml(c.label)}${c.n === undefined ? '' : ` <span class="cc-filter-n">${c.n}</span>`}</button>`,
     ),
     '    </div>',
+    VIEW_TOGGLE,
+    '    </div>',
   ].join('\n');
 }
 
+// Grid or List. Hidden until the view script wires it, so with no
+// JavaScript there is no dead control and the page is the card grid.
+const VIEW_TOGGLE = [
+  '    <div class="cc-view" role="group" aria-label="View" data-view-toggle hidden>',
+  '      <button type="button" data-view="grid" aria-pressed="false" aria-label="Grid view" title="Grid"><svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="8" y="1" width="5" height="5" rx="1"/><rect x="1" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/></svg></button>',
+  '      <button type="button" data-view="list" aria-pressed="false" aria-label="List view" title="List"><svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="1" y="2" width="12" height="2" rx="1"/><rect x="1" y="6" width="12" height="2" rx="1"/><rect x="1" y="10" width="12" height="2" rx="1"/></svg></button>',
+  '    </div>',
+].join('\n');
+
+// The list view's column heads, baked as the first row after the featured
+// card (or first in the list). Only shown in the list view, and not on a
+// phone, where the columns stack: there the list keeps the bake order.
+// Each head sorts the cards below it. The sort script reorders the baked cards in place, so the
+// bake order (newest first) is the default and nothing is fetched.
+const LIST_HEAD = [
+  '      <li class="cc-list-head" data-list-head>',
+  '        <button type="button" class="cc-sort" data-sort="name">Project<span class="cc-sort-ind" aria-hidden="true"></span></button>',
+  '        <button type="button" class="cc-sort" data-sort="type">Type<span class="cc-sort-ind" aria-hidden="true"></span></button>',
+  '        <button type="button" class="cc-sort" data-sort="access">Access<span class="cc-sort-ind" aria-hidden="true"></span></button>',
+  '        <button type="button" class="cc-sort" data-sort="added" aria-pressed="true">Added<span class="cc-sort-ind" aria-hidden="true"></span></button>',
+  '      </li>',
+].join('\n');
+
+// The same for the Perks list: labels only, perks have one order.
+const PERK_LIST_HEAD = [
+  '        <li class="cc-list-head cc-list-head--perks" aria-hidden="true">',
+  '          <span>Perk</span><span>Status</span><span>Type</span><span>Date</span>',
+  '        </li>',
+].join('\n');
+
+const CATEGORY_LABEL = Object.fromEntries(CATEGORIES.map((c) => [c.slug, c.label]));
+const ACCESS_LABEL = Object.fromEntries(ACCESS.map((a) => [a.slug, a.label]));
+// "New" marks a project added in the last week of the bake. The bake runs
+// daily, so the mark falls off on its own.
+const NEW_DAYS = 7;
+const daysBefore = (iso, n) => new Date(Date.parse(`${iso}T00:00:00Z`) - n * 86_400_000).toISOString().slice(0, 10);
+
 const PERK_TYPE_LABEL = Object.fromEntries(PERK_TYPES.map((t) => [t.slug, t.label]));
 const PERK_STATUS_LABEL = { open: 'Open', ended: 'Ended', unknown: 'Status unknown' };
+const PERK_GROUP_LABEL = PERK_STATUS_LABEL;
 
 // The date on a perk card: its end when one is stated ("Ends" or "Ended"),
 // otherwise the day it was announced.
@@ -623,7 +666,24 @@ function renderPerks(perks, dm, today) {
         .map((line) => `  ${line}`)
         .join('\n');
     });
-  const items = [...cards.slice(0, slotAt), slot, ...cards.slice(slotAt)].join('\n');
+  // Status headings for the phone list, one before each status group (the
+  // perks are already sorted open, unknown, ended), so a row no longer needs
+  // its own status pill there. Shown only in the phone list; the grid and
+  // the desktop list keep the per-card status.
+  const statuses = sorted.map((p) => perkStatus(p, today));
+  const groupCount = (st) => statuses.filter((x) => x === st).length;
+  const heads = {};
+  statuses.forEach((st, i) => {
+    if (heads[st] !== undefined) return;
+    heads[st] = i;
+  });
+  const withHeads = cards.map((card, i) => {
+    const st = statuses[i];
+    if (heads[st] !== i) return card;
+    const dot = st === 'open' ? '<span class="cc-perk-head-dot" aria-hidden="true"></span>' : '';
+    return `        <li class="cc-perk-head" data-status="${st}">${dot}<span class="cc-perk-head-name">${PERK_GROUP_LABEL[st]}</span><span class="cc-perk-head-n">${groupCount(st)}</span></li>\n${card}`;
+  });
+  const items = [...withHeads.slice(0, slotAt), slot, ...withHeads.slice(slotAt)].join('\n');
   // Just the ask: the cards and the band below explain the view themselves.
   const ask = dm
     ? `      <p class="perks-intro"><a href="${escapeHtml(dm)}" target="_blank" rel="noopener" data-event="creditcards_perk_submit">Know about a perk? DM @jesusdoteth <span class="arrow">&rarr;</span></a></p>`
@@ -632,6 +692,7 @@ function renderPerks(perks, dm, today) {
     '    <div class="perks-view" id="perk-list">',
     ...(ask ? [ask] : []),
     '      <ol class="projects perks">',
+    PERK_LIST_HEAD,
     items,
     '      </ol>',
     '    </div>',
@@ -657,6 +718,7 @@ function renderProjects(projects, slot, perks = [], today = todayUtc()) {
   const featured = approved.find((p) => p.featured);
   const ordered = featured ? [featured, ...approved.filter((p) => p !== featured)] : approved;
 
+  const newSince = daysBefore(today, NEW_DAYS - 1);
   const items = ordered
     .map((p) => {
       const isFeatured = p === featured;
@@ -673,26 +735,46 @@ function renderProjects(projects, slot, perks = [], today = todayUtc()) {
         ? `<span class="proj-by-names"><a href="${escapeHtml(p.post)}" target="_blank" rel="noopener" data-event="creditcards_post_click">@${handle}</a>${co}</span>`
         : '<span></span>';
       return [
-        `      <li class="proj-card${isFeatured ? ' proj-card--featured' : ''}" data-category="${p.category}">`,
+        // data-added and data-access let the list view sort the baked cards
+        // in place. The type and access lines only show in the list view.
+        `      <li class="proj-card${isFeatured ? ' proj-card--featured' : ''}" data-category="${p.category}" data-access="${p.access}" data-added="${p.added}">`,
         isFeatured
           ? `        <p class="proj-flag"><span class="proj-flag-marks" aria-hidden="true"><i></i><i></i><i></i><i></i></span>${p.sponsored ? 'Sponsored' : 'Featured'}</p>`
           : null,
         `        <a class="proj-name" href="${url}" target="_blank" rel="noopener" data-event="creditcards_project_click">${name}</a>`,
+        p.added >= newSince ? '        <span class="proj-new">New</span>' : null,
         blurb ? `        <p class="proj-blurb">${blurb}</p>` : null,
         isFeatured
           ? `        <p class="proj-cta"><a class="pill" href="${url}" target="_blank" rel="noopener" data-event="creditcards_featured_click">Open ${name} <span class="arrow">&rarr;</span></a></p>`
           : null,
-        `        <p class="proj-by">${by}<span>${fmtDate(p.added)}</span></p>`,
+        `        <p class="proj-by">${by}<time datetime="${p.added}">${fmtDate(p.added)}</time></p>`,
+        `        <p class="proj-type" data-c="${p.category}">${escapeHtml(CATEGORY_LABEL[p.category])}</p>`,
+        `        <p class="proj-access" data-a="${p.access}">${escapeHtml(ACCESS_LABEL[p.access])}</p>`,
         '      </li>',
         isFeatured ? renderSponsorLine(slot) : null,
+        isFeatured ? LIST_HEAD : null,
       ]
         .filter(Boolean)
         .join('\n');
     })
     .join('\n');
 
+  // No featured card: the list head leads the list instead.
+  // Type headers for the phone list, which groups rows by type under a
+  // sticky header. CSS order does the grouping (see .cc-type-head in
+  // creditcards.html), so these sit at the end of the list and the cards
+  // keep their bake order in the DOM. aria-hidden: a screen reader reads
+  // the list in DOM order, where each card still names its own type.
+  // The featured card sits above every group on a phone, so it doesn't
+  // count towards its type's heading.
+  const typeCounts = Object.fromEntries(CATEGORIES.map((c) => [c.slug, 0]));
+  for (const p of approved) if (p !== featured) typeCounts[p.category] += 1;
+  const typeHeads = CATEGORIES.filter((c) => typeCounts[c.slug])
+    .map((c) => `      <li class="cc-type-head" data-category="${c.slug}" aria-hidden="true"><span class="cc-type-head-name">${escapeHtml(c.label)}</span><span class="cc-type-head-n">${typeCounts[c.slug]}</span></li>`)
+    .join('\n');
+  const list = `${featured ? items : `${LIST_HEAD}\n${items}`}\n${typeHeads}`;
   const perksBlock = renderPerks(perks, slot && slot.dm, today);
-  return `\n${renderHead(approved.length)}\n${renderFilter(approved, perks.length, perks.filter((p) => perkStatus(p, today) === 'open').length)}\n    <ol class="projects" id="project-list">\n${items}\n    </ol>\n${perksBlock ? `${perksBlock}\n` : ''}    `;
+  return `\n${renderHead(approved.length)}\n${renderFilter(approved, perks.length, perks.filter((p) => perkStatus(p, today) === 'open').length)}\n    <ol class="projects" id="project-list">\n${list}\n    </ol>\n${perksBlock ? `${perksBlock}\n` : ''}    `;
 }
 
 // --- top creditors -------------------------------------------------------------
@@ -766,7 +848,7 @@ function bakeStat(html, key, value) {
 }
 
 function bake(html, data, today = todayUtc()) {
-  const problems = [...categoryProblems(data.projects), ...perkProblems(data.perks)];
+  const problems = [...categoryProblems(data.projects), ...accessProblems(data.projects), ...perkProblems(data.perks)];
   if (problems.length) throw new Error(`${DATA_FILE}: ${problems.join('; ')}`);
   if (!MARKER_RE.test(html)) throw new Error(`creditcards:projects markers missing from ${PAGE_FILE}`);
   let next = html.replace(MARKER_RE, (_, open, __, close) => `${open}${renderProjects(data.projects, data.featuredSlot, data.perks || [], today)}${close}`);

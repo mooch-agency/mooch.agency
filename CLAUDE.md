@@ -247,6 +247,22 @@ dropped 17 Sep 2026: the board is public, so gating on it added nothing); its
 guards are local-part syntax, Mailchecker's disposable blocklist, an MX lookup
 that fails open on timeout, and per-domain plus global rate limits.
 
+## Credit Cards index (`/creditcards`)
+
+Every approved project in `data/creditcards.json` needs a `category` and an
+`access` (`none`, `optional`, `wallet`, `paid`: what it takes to try it, see
+`scripts/creditcards-access.mjs`). Discovery suggests both on each pending
+entry; check them when approving. The bake and `ci:check` refuse an approved
+project without them.
+
+The index has two views from **one baked markup**: a card grid and a list
+(Grid/List toggle, remembered per device, list by default). Each card carries
+its type, access and a New tag (added in the last 7 days of the bake); the
+grid hides them, the list lays them out as sortable rows. With no JavaScript
+the page is the grid. Cyan means one thing on this page, an open perk: the
+type marks use the other process inks (`--credit-r` is the magenta-over-yellow
+red). Events: `creditcards_view`, `creditcards_sort`.
+
 ## Credit Cards alerts (paid perk alerts)
 
 The standing-order band on `/creditcards` sells an email of **new perks for

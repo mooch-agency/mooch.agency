@@ -109,6 +109,7 @@
   --credit-c: #00aeef;
   --credit-m: #ec008c;
   --credit-y: #fff200;
+  --credit-r: #ed1c24;  /* magenta over yellow, the process red overprint */
 
   /* Pixel-wipe theme switch (/creditcards). The viewport is cut into
      --wipe-cols square "pixels" a row, like a Credit's 8x8 grid, and the new
