@@ -320,6 +320,18 @@ stays true. Band events carry `data.placement` (`perks` or `foot`).
   confirmation link to it unsigned ("Manage"), so a subscriber can manage
   before their first alert arrives: set `STRIPE_PORTAL_LOGIN_URL`, or that
   link lands on a "check your email" page.
+- `api/creditcards-welcome.js` is a Stripe webhook (`checkout.session.completed`
+  only) that emails each new subscriber one confirmation through Resend: what
+  is open right now, how many perks have passed, and the signed Manage link.
+  It exists because Stripe sends a receipt only when it charges a card, so a
+  sign-up on a 100% promotion code heard nothing (Donal, 1 Oct). It verifies
+  Stripe's signature over the raw request bytes (never `req.body`), welcomes
+  only a live subscription on `STRIPE_PRICE_ID`, and keys the Resend send on
+  the Checkout session id, so Stripe's retries never double-send within 24h.
+  A Resend outage answers 5xx so Stripe redelivers; a bad address answers 200.
+  Rules in `api/_creditcards-welcome.js`, tested offline with a payload signed
+  by the real Stripe SDK. Both emails share one frame (`renderShell`) and one
+  sender (`makeSender` in `api/_creditcards.js`).
 - The rules live in `api/_creditcards-digest.js` with every side effect
   injected; `pnpm test` covers selection, subject, email HTML, the state
   rules, the Checkout shape (no trial) and the already-subscribed lookup with
@@ -328,7 +340,8 @@ stays true. Band events carry `data.placement` (`perks` or `foot`).
 
 Env on the Vercel project: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`,
 `RESEND_API_KEY`, `CRON_SECRET`, `BLOB_READ_WRITE_TOKEN` (a **private** Blob
-store), plus optional `STRIPE_PORTAL_LOGIN_URL` (the portal's login link). The
+store), `STRIPE_WEBHOOK_SECRET` (the welcome webhook's signing secret, from its
+endpoint in Stripe), plus optional `STRIPE_PORTAL_LOGIN_URL` (the portal's login link). The
 portal configuration exists in both Stripe modes (created via the API, ids in
 the Keystore). With no Stripe key the band answers "not open yet" (503).
 Checkout returns to production, or to the dev server / Vercel preview that

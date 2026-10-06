@@ -39,7 +39,8 @@
     "api/say-less.js": { "maxDuration": 60 },
     "api/deslop.js": { "includeFiles": "prompts/deslop.html", "maxDuration": 120 },
     "api/axbeat-lead.js": { "maxDuration": 15 },
-    "api/creditcards-digest.js": { "includeFiles": "data/creditcards.json", "maxDuration": 300 }
+    "api/creditcards-digest.js": { "includeFiles": "data/creditcards.json", "maxDuration": 300 },
+    "api/creditcards-welcome.js": { "includeFiles": "data/creditcards.json", "maxDuration": 30 }
   },
   "crons": [
     { "path": "/api/creditcards-digest", "schedule": "0 9 * * *" }
