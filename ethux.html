@@ -527,20 +527,26 @@
       <span class="qual">I want</span> it to write copy a first-time user understands<br>
       <span class="qual">so that</span> people don't give up at the first unfamiliar word
     </div>
+    <div class="user-need">
+      <span class="qual">As a</span> first-time user of a crypto wallet or app<br>
+      <span class="qual">I want</span> to understand what each screen is asking me to do<br>
+      <span class="qual">so that</span> I can act with confidence and avoid costly mistakes
+    </div>
 
     <h2><span class="num">&sect; 03</span>The work</h2>
 
     <h3>1. What was there</h3>
     <p>EthUX.design's onboarding skill already had a word table the agent could use: 13 crypto terms on the left, a plain word for each on the right. &ldquo;Gas fee&rdquo; becomes &ldquo;Network fee&rdquo;, &ldquo;Revoke&rdquo; becomes &ldquo;Remove permission&rdquo;.</p>
-    <p>However, some common terms were missing, like allowance (how much an app may spend from your wallet), testnet and transaction hash. On top of that, some translations can mislead: the table suggested using &ldquo;coin&rdquo; in place of &ldquo;token&rdquo;, but NFTs are tokens and not coins.</p>
+    <p>However, some common terms were missing, like allowance (how much an app may spend from your wallet), testnet and transaction hash. On top of that, we felt some translations might mislead users: the table suggested using &ldquo;coin&rdquo; in place of &ldquo;token&rdquo;, but NFTs are tokens and not coins.</p>
 
     <h3>2. What we proposed</h3>
     <p>A fuller table, grouped by what the agent should do with each word: replace it with a plain one, keep it and explain it the first time it appears, or avoid it altogether when writing for beginners.</p>
-    <p>Our goal: get agents to write copy a first-time user understands, without confusing the people who already know the words.</p>
+    <p>Our goal was to get agents to write copy a first-time user understands, without confusing the people who already know the words.</p>
 
     <h3>3. Why we started small</h3>
-    <p>EthUX.design was already live, and builders could install its skills into their own projects. Every renamed word costs something for everyone who learned the old one. So we split the work into two pull requests: proposed changes the project's owner can review, then accept or turn down.</p>
-    <p>The first added the 8 least contested words, like swapping allowance for &ldquo;Spending limit&rdquo; and testnet for &ldquo;Practice network&rdquo;. Jakub merged it in 4 days. The second took on the hard words and the regrouping. Feedback from the group, including UX researcher Sasha, and Jakub's own review shaped what changed. He asked for three changes, and we made all three.</p>
+    <p>EthUX.design was already live, and builders could install its skills into their own projects. Every renamed word costs something for everyone who learned the old one. So we split the work into two parts.</p>
+    <p>The first part added 8 words we felt were missing but were least likely to be contested. For example, we suggested swapping allowance for &ldquo;Spending limit&rdquo; and testnet for &ldquo;Practice network&rdquo;. Jakub accepted them in 4 days.</p>
+    <p>The second took on the contested words, like &ldquo;token&rdquo; and &ldquo;bridge&rdquo;, and split the table into three groups: replace with a plain-language alternative, keep and explain, or avoid the term altogether for beginners. We spent time navigating these changes with feedback from the group, including UX researcher Sasha, and from Jakub's own review. He asked for three changes, and we made all three.</p>
     <blockquote class="client-quote">
       Direction is right and the split is worth keeping.
       <cite>Jakub Konopka, EthUX.design, <a href="https://github.com/konopkja/ethux-design/pull/10#pullrequestreview-5023537531" data-track="ethux_source_click" data-link="pr10_review">review of pull request #10</a></cite>
@@ -574,19 +580,26 @@
     </table>
 
     <h3>4. Test it before it merges</h3>
-    <p>Before he merged the second, Jakub asked for proof it wouldn't make agents write worse copy. So we built a small blind test:</p>
+    <p>Before he accepted the second set of larger changes, Jakub asked for proof they wouldn't make agents write worse copy. So we built a small blind test:</p>
     <ul>
-      <li><em>Three beginner scenarios</em>: letting an app spend their USDC (a dollar-backed token) and later taking that permission away, a swap that fails because the price moved, and moving funds to a cheaper network.</li>
-      <li><em>Three AI models</em>: Claude Haiku 4.5, Claude Opus 5.5 and OpenAI's GPT-5.3 Codex.</li>
-      <li><em>Three setups</em>: no guidance, EthUX.design's guidance before our change, and after it.</li>
+      <li><strong>Three beginner scenarios</strong>: letting an app spend their USDC (a dollar-backed token) and later taking that permission away, a swap that fails because the price moved, and moving funds to a cheaper network.</li>
+      <li><strong>Three AI models</strong>: Claude Haiku 4.5, Claude Opus 5.5 and OpenAI's GPT-5.3 Codex.</li>
+      <li><strong>Three setups</strong>: no guidance, EthUX.design's guidance before our change, and after it.</li>
     </ul>
-    <p>That's 3 scenarios, 3 models and 3 setups: 27 test runs, each run once. A separate model, Claude Sonnet 5, graded every result against five yes-or-no checks, without knowing which model or setup wrote it.</p>
+    <p>That's 3 scenarios, 3 models and 3 setups: 27 test runs, each run once. A separate model, Claude Sonnet 5, graded every result without knowing which model or setup wrote it. It gave one point for each rule the copy passed:</p>
+    <ol>
+      <li>No bare jargon like &ldquo;gas&rdquo;, &ldquo;nonce&rdquo; or &ldquo;seed phrase&rdquo;.</li>
+      <li>Every crypto term is replaced or explained where it first appears.</li>
+      <li>It uses the plain word, like &ldquo;Network fee&rdquo; for gas fee.</li>
+      <li>It names the app (say, &ldquo;Uniswap&rdquo;) instead of saying &ldquo;smart contract&rdquo;.</li>
+      <li>Any technical term appears only in an advanced section.</li>
+    </ol>
 
     <h2><span class="num">&sect; 04</span>What we found</h2>
     <p class="lead-stat"><strong>Test runs that slipped into jargon went from 7 in 9 with no guidance, to 3 before our change, to 1 after it.</strong></p>
-    <p>Scoring: a plain-word miss is a run where the agent wrote the jargon even though the guidance gives a plain word, like &ldquo;Revoke&rdquo; instead of &ldquo;Remove permission&rdquo;. Each setup had 9 runs, each scored on 5 checks, so 45 points. The models scored 39 out of 45 with guidance, before and after our change, and 35 without.</p>
+    <p>With guidance, the models scored 39 out of 45, before and after our change. With none, 35.</p>
     <table class="results">
-      <caption>Points out of 15 per model: three scenarios, five checks each. One run per combination.</caption>
+      <caption>Points out of 15 per model (3 scenarios &times; 5 rules), 45 per column. A plain-word miss is a run that failed rule 3, like &ldquo;Revoke&rdquo; instead of &ldquo;Remove permission&rdquo;.</caption>
       <thead>
         <tr><th scope="col">Model</th><th scope="col">No guidance</th><th scope="col">Before our change</th><th scope="col">After our change</th></tr>
       </thead>
@@ -600,7 +613,14 @@
         <tr><td>Runs with a plain-word miss</td><td>7/9</td><td>3/9</td><td>1/9</td></tr>
       </tfoot>
     </table>
-    <p>It's a small test, one run per combination, so a point either way can be chance. Opus slipped from 15 to 14, and the overall score held at 39 rather than rising. We shared every result with Jakub as it stood, with no reruns. He merged on 2 October.</p>
+    <p><strong>What this doesn't show.</strong> While jargon successfully fell from 3 to 1, our change didn't raise the overall score across the 5 checks: it stayed at 39 out of 45. Claude Haiku slipped into jargon on one scenario, and the grader failed Claude Opus for a sentence it had passed, word for word, under the old guidance.</p>
+    <p>This shows the limit of running each combination just once: an AI grader isn't perfectly consistent. Given the chance to run these tests again we would:</p>
+    <ul>
+      <li>conduct several runs per combination</li>
+      <li>grade each result a few times</li>
+      <li>check the word rules with a fixed list instead of an AI</li>
+    </ul>
+    <p>We sent Jakub every result without a rerun, and flagged the grading slip. He merged on 2 October.</p>
 
     <h2><span class="num">&sect; 05</span>Impact</h2>
     <div class="stat-row">
@@ -608,12 +628,18 @@
       <div class="stat"><span class="n">2<em>/2</em></span><span class="label">Contributions merged</span></div>
       <div class="stat"><span class="n">27</span><span class="label">Blind-graded test runs</span></div>
     </div>
-    <p>Both contributions now ship in EthUX.design's guidance, for any builder whose agent reads it. And we can run the same test on any change to agent guidance: a small, blind, repeatable check that tells a maintainer whether the change helps or hurts, before it merges.</p>
-    <p>Thanks to Jakub, for the invitation and for reviews that made our work more rigorous. And to Sasha, whose research-backed feedback helped decide what went in first.</p>
+    <p>Both contributions now ship in EthUX.design's guidance, for any web3 builder who points their agent at it.</p>
+    <p>Thanks to Jakub, for the invitation and rounds of reviews that made our work more rigorous. And to Sasha, whose research-backed feedback helped decide what went in first.</p>
     <p class="source-links">
       <a href="https://github.com/konopkja/ethux-design/pull/9" data-track="ethux_source_click" data-link="pr9">Pull request #9 &rarr;</a>
       <a href="https://github.com/konopkja/ethux-design/pull/10" data-track="ethux_source_click" data-link="pr10">Pull request #10 &rarr;</a>
     </p>
+
+    <div class="cta">
+      <p class="lead-stat"><strong>Working on agent experience (AX)? Let's compare notes.</strong></p>
+      <p>We're working on <a href="/axbeat" data-track="ethux_axbeat_click">AXBeat</a>. AX is how well AI agents can find, read and act on your product, its site and its docs. If you're building for or with agents, on Ethereum or anywhere else, email us. We'd love to talk.</p>
+      <a class="pill" href="mailto:hey@mooch.agency?subject=Agent%20experience" data-track="ethux_contact_click">hey@mooch.agency <span class="arrow" aria-hidden="true">&rarr;</span></a>
+    </div>
 
     <h2><span class="num">&sect; 06</span>Related work</h2>
     <ul class="related">
@@ -623,12 +649,6 @@
       <li><a href="/zksync" data-track="ethux_related_click" data-to="zksync"><span class="related-name">zkSync</span><span class="related-line">Content, voice and information architecture for zkSync Era's public launch.</span><span class="arrow" aria-hidden="true">&rarr;</span></a></li>
       <li><a href="https://github.com/mooch-agency/skills" data-track="ethux_related_click" data-to="skills"><span class="related-name">Open-source skills</span><span class="related-line">/deslop, a content audit and more: our own skills for AI agents, free to install.</span><span class="arrow" aria-hidden="true">&rarr;</span></a></li>
     </ul>
-
-    <div class="cta">
-      <p class="lead-stat"><strong>Working on agent experience (AX)? Let's compare notes.</strong></p>
-      <p>AX is how well AI agents can find, read and act on your product, its site and its docs. If you're building for or with agents, on Ethereum or anywhere else, email us. We'd like to hear what you're seeing.</p>
-      <a class="pill" href="mailto:hey@mooch.agency?subject=Agent%20experience" data-track="ethux_contact_click">hey@mooch.agency <span class="arrow" aria-hidden="true">&rarr;</span></a>
-    </div>
 
   </div>
 </article>
@@ -688,7 +708,8 @@
   //   next_case_click     the "next case study" card (shared across case studies)
   //   ethux_source_click  links out to the evidence on GitHub / ethux.design;
   //                       data.link says which (pr9, pr10, pr10_review, ethux_site)
-  //   ethux_axbeat_click  the step on to AXBeat (related-work list)
+  //   ethux_axbeat_click  the step on to AXBeat; data.placement is "list"
+  //                       (related work) or "cta" (closing compare-notes block)
   //   ethux_related_click other Mooch work from this page; data.to names it
   //                       (ethereum, octant, zksync, skills), data.placement
   //                       is "list" or "body"
@@ -709,6 +730,8 @@
           track(name, { link: a.getAttribute("data-link") });
         } else if (name === "ethux_related_click") {
           track(name, { to: a.getAttribute("data-to"), placement: a.closest(".related") ? "list" : "body" });
+        } else if (name === "ethux_axbeat_click") {
+          track(name, { placement: a.closest(".related") ? "list" : "cta" });
         } else {
           track(name);
         }
