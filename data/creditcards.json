@@ -1,16 +1,16 @@
 {
   "meta": {
-    "sinceId": "2107149928686371181",
-    "lastRun": "2026-10-05T18:19:20.689Z",
+    "sinceId": "2107185409453375853",
+    "lastRun": "2026-10-06T00:01:38.169Z",
     "stats": {
-      "floorEth": 0.009274,
-      "floorUsd": 25,
-      "supply": 110376,
-      "owners": 13828,
-      "fetchedAt": "2026-10-05T18:19:20.675Z"
+      "floorEth": 0.0106,
+      "floorUsd": 29,
+      "supply": 110296,
+      "owners": 13777,
+      "fetchedAt": "2026-10-06T00:01:38.110Z"
     },
     "replySinceId": "2105930148285493388",
-    "topicSinceId": "2106920066948419922"
+    "topicSinceId": "2107217351951143131"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -1835,6 +1835,27 @@
         "known-host"
       ],
       "tweetText": "Our @jackbutcher credits @mememaxxers  creator leaderboard is updated after wk 2!\n\nhttps://t.co/tdpNm9PnrX\n\nopt in to $JACKOFF or be a $Jackass with us in Discord:\nhttps://t.co/EusQj4piEg\n\nperhaps we "
+    },
+    {
+      "id": "wubbushi-com-debits-erased-credits-html",
+      "name": "wubbushi.com",
+      "url": "https://wubbushi.com/debits/erased-credits.html",
+      "x": "wubbushi",
+      "post": "https://x.com/wubbushi/status/2107175438229606607",
+      "blurb": "",
+      "category": "art",
+      "status": "pending",
+      "added": "2026-10-06",
+      "metrics": {
+        "likes": 55,
+        "reposts": 4
+      },
+      "source": "search",
+      "score": 2,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "Respect to @jackbutcher and Credits. 🙇‍♂️\n\nhttps://t.co/PIieexpyxX"
     }
   ]
 }
