@@ -586,7 +586,7 @@ function checkCreditCardsData() {
   if (!has('creditcards.html')) return;
   const raw = read('creditcards.html');
   const $ = load(raw);
-  $('#project-list > li:not(.cc-list-head)').each((_, li) => {
+  $('#project-list > li:not(.cc-list-head):not(.cc-type-head)').each((_, li) => {
     const cat = $(li).attr('data-category');
     const ok = $(li).hasClass('proj-sponsor') ? cat === 'all' : CATEGORY_SLUGS.includes(cat);
     if (!ok) fail('Data', 'creditcards.html', `card "${$(li).find('.proj-name').text() || 'sponsor line'}" has data-category "${cat ?? ''}"; re-run node scripts/creditcards-update.mjs --bake-only`);

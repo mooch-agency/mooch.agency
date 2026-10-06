@@ -742,7 +742,17 @@ function renderProjects(projects, slot, perks = [], today = todayUtc()) {
     .join('\n');
 
   // No featured card: the list head leads the list instead.
-  const list = featured ? items : `${LIST_HEAD}\n${items}`;
+  // Type headers for the phone list, which groups rows by type under a
+  // sticky header. CSS order does the grouping (see .cc-type-head in
+  // creditcards.html), so these sit at the end of the list and the cards
+  // keep their bake order in the DOM. aria-hidden: a screen reader reads
+  // the list in DOM order, where each card still names its own type.
+  const typeCounts = Object.fromEntries(CATEGORIES.map((c) => [c.slug, 0]));
+  for (const p of approved) typeCounts[p.category] += 1;
+  const typeHeads = CATEGORIES.filter((c) => typeCounts[c.slug])
+    .map((c) => `      <li class="cc-type-head" data-category="${c.slug}" aria-hidden="true"><span class="cc-type-head-name">${escapeHtml(c.label)}</span><span class="cc-type-head-n">${typeCounts[c.slug]}</span></li>`)
+    .join('\n');
+  const list = `${featured ? items : `${LIST_HEAD}\n${items}`}\n${typeHeads}`;
   const perksBlock = renderPerks(perks, slot && slot.dm, today);
   return `\n${renderHead(approved.length)}\n${renderFilter(approved, perks.length, perks.filter((p) => perkStatus(p, today) === 'open').length)}\n    <ol class="projects" id="project-list">\n${list}\n    </ol>\n${perksBlock ? `${perksBlock}\n` : ''}    `;
 }

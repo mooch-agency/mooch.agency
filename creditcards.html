@@ -552,7 +552,7 @@
   [data-cc-view="list"] .projects[hidden],
   [data-cc-view="list"] .projects > li[hidden] { display: none !important; }
   /* List-only parts stay out of the grid. */
-  .cc-list-head, .proj-new, .proj-type, .proj-access { display: none; }
+  .cc-list-head, .cc-type-head, .proj-new, .proj-type, .proj-access { display: none; }
 
   /* Type marks: one process-colour square per type. Cyan is left out on
      purpose: on this page it means only "open perk" (the Perks dot, the Open
@@ -722,11 +722,43 @@
     [data-cc-view="list"] .cc-sort[data-sort="added"], [data-cc-view="list"] .cc-list-head--perks span:last-child { display: none; }
     [data-cc-view="list"] .perks > li.perk-card { grid-template-columns: minmax(0, 1fr) 160px 130px 0; }
   }
-  /* Phone: no columns. Each row stacks name and blurb, then one line with
-     type and access on the left and the builder on the right. No date on a
-     phone: the New tag carries recency. The head row goes: phones keep the
-     newest-first order. */
+  /* Phone: no columns, rows grouped by type under a sticky header, so the
+     type is said once per group instead of on every row. The grouping is
+     CSS order on a flex column: featured and the paid-slot line first, then
+     each type's header followed by its cards, in the bake's CATEGORIES
+     order (scripts/creditcards-categories.mjs; keep the two in step).
+     Inside a group the cards keep their DOM order, newest first. The
+     column head row goes: phones keep that order. Each row: name and New,
+     blurb, then access on the left and the builder on the right. No date
+     on a phone: the New tag carries recency. */
   @media (max-width: 599px) {
+    [data-cc-view="list"] #project-list { display: flex; flex-direction: column; }
+    [data-cc-view="list"] #project-list > li.proj-card--featured { order: -2; }
+    [data-cc-view="list"] #project-list > li.proj-sponsor { order: -1; }
+    [data-cc-view="list"] #project-list > [data-category="rarity"] { order: 10; }
+    [data-cc-view="list"] #project-list > [data-category="art"] { order: 20; }
+    [data-cc-view="list"] #project-list > [data-category="statements"] { order: 30; }
+    [data-cc-view="list"] #project-list > [data-category="games"] { order: 40; }
+    [data-cc-view="list"] #project-list > [data-category="markets"] { order: 50; }
+    [data-cc-view="list"] #project-list > li.cc-type-head[data-category="rarity"] { order: 9; }
+    [data-cc-view="list"] #project-list > li.cc-type-head[data-category="art"] { order: 19; }
+    [data-cc-view="list"] #project-list > li.cc-type-head[data-category="statements"] { order: 29; }
+    [data-cc-view="list"] #project-list > li.cc-type-head[data-category="games"] { order: 39; }
+    [data-cc-view="list"] #project-list > li.cc-type-head[data-category="markets"] { order: 49; }
+    [data-cc-view="list"] .cc-type-head {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      padding: 14px 0 8px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--hairline-focus);
+    }
+    [data-cc-view="list"] .cc-type-head-name { font-family: var(--serif); font-size: 24px; line-height: 1.1; letter-spacing: -0.01em; color: var(--black); }
+    [data-cc-view="list"] .cc-type-head-n { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--muted-small); font-variant-numeric: tabular-nums; }
     [data-cc-view="list"] .projects > li.proj-card,
     [data-cc-view="list"] .perks > li.perk-card {
       display: flex;
@@ -742,14 +774,16 @@
     [data-cc-view="list"] .proj-card--featured .proj-flag { flex: 1 1 100%; }
     [data-cc-view="list"] .proj-card--featured .proj-flag { order: -1; }
     [data-cc-view="list"] .proj-card .perk-tags { order: 5; }
+    /* The header says the type; the row keeps it for screen readers only. */
+    [data-cc-view="list"] .proj-card:not(.proj-card--featured) .proj-type { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     [data-cc-view="list"] .proj-card .proj-type { order: 5; }
     [data-cc-view="list"] .proj-card .proj-access { order: 6; }
-    /* Basis 0 so a long handle truncates on the tags' line instead of
+    /* Basis 0 so a long handle truncates on the access line instead of
        wrapping onto its own. */
     [data-cc-view="list"] .proj-card .proj-by-names { order: 7; flex: 1 1 0; min-width: 0; margin: 0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     [data-cc-view="list"] .proj-card .proj-by time { display: none; }
     [data-cc-view="list"] .projects > li.proj-card--featured { padding: 20px; }
-    [data-cc-view="list"] .projects .proj-sponsor { padding: 0; margin-bottom: 20px; }
+    [data-cc-view="list"] .projects .proj-sponsor { padding: 0; margin-bottom: 8px; }
     [data-cc-view="list"] .cc-list-head { display: none; }
   }
 
@@ -1474,6 +1508,11 @@
         <p class="proj-type" data-c="statements">Build your Statement</p>
         <p class="proj-access" data-a="none">No wallet needed</p>
       </li>
+      <li class="cc-type-head" data-category="rarity" aria-hidden="true"><span class="cc-type-head-name">Rarity &amp; data</span><span class="cc-type-head-n">12</span></li>
+      <li class="cc-type-head" data-category="art" aria-hidden="true"><span class="cc-type-head-name">Art &amp; remixes</span><span class="cc-type-head-n">15</span></li>
+      <li class="cc-type-head" data-category="statements" aria-hidden="true"><span class="cc-type-head-name">Build your Statement</span><span class="cc-type-head-n">7</span></li>
+      <li class="cc-type-head" data-category="games" aria-hidden="true"><span class="cc-type-head-name">Games</span><span class="cc-type-head-n">4</span></li>
+      <li class="cc-type-head" data-category="markets" aria-hidden="true"><span class="cc-type-head-name">Mints, tokens &amp; markets</span><span class="cc-type-head-n">9</span></li>
     </ol>
     <div class="perks-view" id="perk-list">
       <p class="perks-intro"><a href="https://x.com/messages/compose?recipient_id=1386099253580345344" target="_blank" rel="noopener" data-event="creditcards_perk_submit">Know about a perk? DM @jesusdoteth <span class="arrow">&rarr;</span></a></p>
