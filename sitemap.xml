@@ -41,6 +41,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://mooch.agency/ethux</loc>
+    <lastmod>2026-10-06</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://mooch.agency/say-less</loc>
     <lastmod>2026-08-13</lastmod>
     <priority>0.6</priority>
