@@ -138,6 +138,19 @@
       "start": "2026-10-03",
       "end": "2026-10-03",
       "checked": "2026-10-05"
+    },
+    {
+      "id": "computers-free-mint",
+      "project": "Computers",
+      "x": "xkirteria",
+      "type": "free-mint",
+      "eligibility": "Credits holders",
+      "description": "A free mint of Computers: 2026, pixel PCs with more than 80 screen scenes, open to Credits holders for 12 hours.",
+      "url": "https://opensea.io/collection/computers2026",
+      "post": "https://x.com/xkirteria/status/2107044453093658686",
+      "start": "2026-10-05",
+      "end": "2026-10-05",
+      "checked": "2026-10-06"
     }
   ],
   "projects": [
@@ -605,9 +618,9 @@
     {
       "id": "credits-monitor-vercel-app",
       "name": "Credits Monitor",
-      "url": "https://credits-monitor.vercel.app",
+      "url": "https://creditsmonitor.com",
       "x": "Dorsian",
-      "post": "https://x.com/Dorsian/status/2103596011176313307",
+      "post": "https://x.com/Dorsian/status/2105658439175209267",
       "blurb": "Live sales and listings for the Top 100 Credits, ranked by Jack's official Credit Ratings. Nothing to connect.",
       "category": "rarity",
       "access": "none",
@@ -1834,7 +1847,7 @@
       "blurb": "",
       "category": "markets",
       "access": "wallet",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-05",
       "metrics": {
         "likes": 1,
@@ -1870,7 +1883,7 @@
       "blurb": "",
       "category": "markets",
       "access": "none",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-05",
       "metrics": {
         "likes": 6,
@@ -1894,7 +1907,7 @@
       "blurb": "",
       "category": "art",
       "access": "none",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-06",
       "metrics": {
         "likes": 55,
@@ -1916,7 +1929,7 @@
       "blurb": "",
       "category": "rarity",
       "access": "paid",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-06",
       "metrics": {
         "likes": 1,
@@ -1936,7 +1949,7 @@
       "blurb": "",
       "category": "markets",
       "access": "none",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-06",
       "metrics": {
         "likes": 9,
