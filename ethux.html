@@ -497,7 +497,7 @@
     </blockquote>
 
     <h3>The test</h3>
-    <p>Then Jakub asked for regression tests before merging: checks that the change wouldn't make any model write worse copy. He had tested earlier changes by running scenarios with and without the skill, so we used his method on current models.</p>
+    <p>Then Jakub asked for regression tests before merging: checks that the change wouldn't make any model write worse copy. He had tested the skill himself by running scenarios with and without it, so we used his method on current models.</p>
     <ul>
       <li>Three scenarios a first-time user meets: letting a swap app spend their USDC and later taking that away, a swap that fails because the price moved, and moving funds to a cheaper network.</li>
       <li>Three models: Claude Haiku 4.5, Claude Opus 5.5 and OpenAI's GPT-5.3 Codex.</li>
@@ -522,7 +522,7 @@
         <tr><td>All models, out of 45</td><td>35</td><td>39</td><td>39</td></tr>
       </tfoot>
     </table>
-    <p>It wasn't clean. On the pass rule we'd agreed, our change failed by a point: Opus scored 15 before it and 14 after. That point was the grader's slip. It passed a sentence in one output and failed the identical sentence in the other. Haiku also did better with no guidance on the network scenario than with either table, and with ours it showed users the word &ldquo;calldata&rdquo;. With one run per combination, a point either way can be chance.</p>
+    <p>It wasn't clean. On the pass rule we'd agreed, our change failed by a point: Opus scored 15 before it and 14 after. We put that point down to the grader: it passed a sentence in one output and failed the identical sentence in the other. Haiku also did better with no guidance on the network scenario than with either table, and with ours it showed users the word &ldquo;calldata&rdquo;. With one run per combination, a point either way can be chance.</p>
     <p>We sent Jakub the results as they stood, flaws included, with no reruns. He merged on 2 October.</p>
 
     <h2><span class="num">&sect; 05</span>Impact</h2>
