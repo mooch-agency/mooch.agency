@@ -722,8 +722,9 @@
     [data-cc-view="list"] .cc-sort[data-sort="added"], [data-cc-view="list"] .cc-list-head--perks span:last-child { display: none; }
     [data-cc-view="list"] .perks > li.perk-card { grid-template-columns: minmax(0, 1fr) 160px 130px 0; }
   }
-  /* Phone: no columns. Each row stacks name, blurb and builder, then type,
-     access and date on one line. The head row goes: phones keep the
+  /* Phone: no columns. Each row stacks name and blurb, then one line with
+     type and access on the left and the builder on the right. No date on a
+     phone: the New tag carries recency. The head row goes: phones keep the
      newest-first order. */
   @media (max-width: 599px) {
     [data-cc-view="list"] .projects > li.proj-card,
@@ -737,15 +738,16 @@
     }
     [data-cc-view="list"] .projects > li.proj-card:hover { background: none; }
     [data-cc-view="list"] .proj-card .proj-blurb,
-    [data-cc-view="list"] .proj-card .proj-by-names,
     [data-cc-view="list"] .proj-card .perk-for,
     [data-cc-view="list"] .proj-card--featured .proj-flag { flex: 1 1 100%; }
     [data-cc-view="list"] .proj-card--featured .proj-flag { order: -1; }
     [data-cc-view="list"] .proj-card .perk-tags { order: 5; }
-    [data-cc-view="list"] .proj-card .proj-by-names { order: 4; }
     [data-cc-view="list"] .proj-card .proj-type { order: 5; }
     [data-cc-view="list"] .proj-card .proj-access { order: 6; }
-    [data-cc-view="list"] .proj-card .proj-by time { order: 7; display: block; margin-left: auto; }
+    /* Basis 0 so a long handle truncates on the tags' line instead of
+       wrapping onto its own. */
+    [data-cc-view="list"] .proj-card .proj-by-names { order: 7; flex: 1 1 0; min-width: 0; margin: 0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    [data-cc-view="list"] .proj-card .proj-by time { display: none; }
     [data-cc-view="list"] .projects > li.proj-card--featured { padding: 20px; }
     [data-cc-view="list"] .projects .proj-sponsor { padding: 0; margin-bottom: 20px; }
     [data-cc-view="list"] .cc-list-head { display: none; }
