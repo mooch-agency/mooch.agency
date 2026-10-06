@@ -5,16 +5,32 @@
 // The pipeline in one breath: /creditcards posts an email to
 // api/creditcards-subscribe.js, which opens a Stripe Checkout subscription
 // (paid up front, no trial). Stripe is the subscriber list: there is no database.
-// A daily cron, api/creditcards-digest.js, emails each new perk for Credits
-// holders to every active or trialing subscription. Each email carries a signed link to
+// When Checkout completes, Stripe calls api/creditcards-welcome.js, which
+// emails a confirmation. A daily cron, api/creditcards-digest.js, emails each
+// new perk for Credits holders to every active or trialing subscription. Each email carries a signed link to
 // api/creditcards-portal.js, which opens that customer's Stripe billing
 // portal (manage, cancel). See "Credit Cards alerts" in CLAUDE.md.
 
 const crypto = require("node:crypto");
+const fs = require("node:fs/promises");
+const path = require("node:path");
 
 const SITE = "https://mooch.agency";
 const INDEX_URL = `${SITE}/creditcards`;
 const PORTAL_PATH = "/api/creditcards-portal";
+const FEED_PATH = path.join(__dirname, "..", "data", "creditcards.json");
+
+const RESEND_URL = "https://api.resend.com/emails";
+const FROM_ADDRESS = "Credit Cards <mb@mooch.agency>";
+// "Reply and a human answers" has to be true, so replies go to the public
+// inbox Tahi and Natalie read, not the sending address.
+const REPLY_TO = "hey@mooch.agency";
+// Resend's default limit is a couple of requests a second. Sends go one at a
+// time with this gap; at ~0.6s each, maxDuration 300 covers ~450 subscribers.
+// Past that, move to Resend's /emails/batch (100 per call).
+const SEND_GAP_MS = 600;
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // --- Email syntax --------------------------------------------------------------
 //
@@ -140,6 +156,96 @@ function makeRateLimiter({ perMin, perDay }) {
   };
 }
 
+// --- Feed: perks[], read by the digest and the welcome email -----------------------------------------------------------------------------
+
+/** perks[], each with `status` for today (UTC, as the page's bake works it
+ * out) and `typeLabel` for the email. A literal import path, so Vercel's file
+ * tracer bundles the module with the function. */
+async function loadPerks(now = new Date()) {
+  const { perkStatus, PERK_TYPES, todayUtc } = await import("../scripts/creditcards-perks.mjs");
+  const labels = Object.fromEntries(PERK_TYPES.map((t) => [t.slug, t.label]));
+  const today = todayUtc(now);
+  const data = JSON.parse(await fs.readFile(FEED_PATH, "utf8"));
+  return (Array.isArray(data.perks) ? data.perks : []).map((p) => ({ ...p, status: perkStatus(p, today), typeLabel: labels[p.type] || "" }));
+}
+
+// --- Send (Resend): the digest and the welcome email -----------------------------------------------------------------------------
+
+/** One Resend send, shared by the digest and the welcome email. Never throws. One retry on a network error, 5xx or 429;
+ * the Idempotency-Key makes that retry safe if the first attempt actually
+ * landed and only the response was lost. The key only ever goes in the
+ * Authorization header and is never echoed. */
+function makeSender(apiKey) {
+  let last = 0;
+  return async function send(msg) {
+    if (!apiKey) return { ok: false, error: "RESEND_API_KEY is not set" };
+    const wait = last + SEND_GAP_MS - Date.now();
+    if (wait > 0) await sleep(wait);
+    last = Date.now();
+
+    const body = JSON.stringify({
+      from: FROM_ADDRESS,
+      to: [msg.to],
+      reply_to: REPLY_TO,
+      subject: msg.subject,
+      html: msg.html,
+      text: msg.text,
+      headers: { "List-Unsubscribe": `<${msg.manageUrl}>` },
+    });
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await fetch(RESEND_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+            "Idempotency-Key": msg.idempotencyKey,
+          },
+          body,
+          signal: AbortSignal.timeout(15_000),
+        });
+        if (res.ok) {
+          const json = await res.json().catch(() => ({}));
+          return { ok: true, id: json.id };
+        }
+        // 409 means Resend already has a send under this key: either the
+        // payload differs (a by-hand re-run after UK midnight, when the date
+        // in the email has moved on) or the first request is still in flight
+        // (Vercel delivering the cron twice). Either way this person has, or
+        // is getting, this digest. Counting it as a failure would hold state
+        // and turn the documented re-run into one that can never succeed.
+        if (res.status === 409) return { ok: true, deduped: true };
+        if (attempt === 0 && (res.status >= 500 || res.status === 429)) {
+          await sleep(1500);
+          continue;
+        }
+        const detail = (await res.text().catch(() => "")).slice(0, 200);
+        // Scrub addresses: Resend validation errors can quote the recipient,
+        // and this string ends up in the cron log.
+        return {
+          ok: false,
+          // 4xx is about this send, so runDigest may still advance state.
+          // 5xx is the pipe: it withholds. So is a 429 that survived the
+          // retry: Resend's quota is shared across every Mooch sender, so a
+          // 429 mid-run means the pipe is shut for everyone still to come,
+          // not that this address is bad. A 4xx on EVERY recipient (bad key,
+          // unverified domain) still withholds, because runDigest needs at
+          // least one success.
+          perRecipient: res.status >= 400 && res.status < 500 && res.status !== 429,
+          error: `Resend responded ${res.status}${detail ? `: ${detail.replace(/[^\s"'<>@]+@[^\s"'<>]+/g, "[email]")}` : ""}`,
+        };
+      } catch (err) {
+        if (attempt === 0) {
+          await sleep(1500);
+          continue;
+        }
+        return { ok: false, error: err && err.name === "TimeoutError" ? "Resend timed out" : "Resend unreachable" };
+      }
+    }
+    return { ok: false, error: "Resend failed" };
+  };
+}
+
 module.exports = {
   SITE,
   INDEX_URL,
@@ -152,4 +258,6 @@ module.exports = {
   originAllowed,
   clientIp,
   makeRateLimiter,
+  loadPerks,
+  makeSender,
 };

@@ -142,41 +142,33 @@ ${meta ? `<p style="margin:0;${monoStyle(10, C.muted)}">${meta}</p>` : ""}
 }
 
 /**
- * The alert email: self-contained, table-based HTML so it holds up in Gmail,
- * Apple Mail and Outlook, readable on a phone (one 600px column that shrinks).
- * `manageUrl` is this recipient's signed portal link: Manage and Unsubscribe
+ * The frame every Credit Cards email shares (the perk alert and the welcome):
+ * self-contained, table-based HTML so it holds up in Gmail, Apple Mail and
+ * Outlook, readable on a phone (one 600px column that shrinks). `body` is the
+ * already-escaped content of the white card; the frame adds the head, the
+ * preheader, the All perks / Manage / Unsubscribe row and the footer.
+ * `manageUrl` is the recipient's signed portal link: Manage and Unsubscribe
  * both go there, because cancelling IS unsubscribing (Stripe is the list).
  */
-function buildEmailHtml(items, { now = new Date(), manageUrl, indexUrl = PERKS_URL } = {}) {
-  const n = items.length;
-  const noun = n === 1 ? "perk" : "perks";
+function renderShell({ title, preheader, body, manageUrl, indexUrl = PERKS_URL }) {
   const manage = escapeHtml(manageUrl || indexUrl);
   const index = escapeHtml(indexUrl);
-  const preheader = escapeHtml(items.map((p) => p.project).join(", "));
   const link = `color:${C.muted};`;
-  const rows = items.map((p, i) => renderItem(p, i === n - 1, now)).join("\n");
-
   return `<!doctype html>
 <html lang="en-GB">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>${escapeHtml(buildSubject(items))}</title>
+<title>${escapeHtml(title)}</title>
 </head>
 <body style="margin:0;padding:0;background:${C.ground};">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${preheader}</div>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.ground};">
 <tr><td align="center" style="padding:32px 12px 40px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:${C.paper};border:1px solid #e2e2e0;border-radius:10px;">
 <tr><td style="padding:32px 28px 26px;font-family:${SANS};color:${C.ink};">
-<p style="margin:0;${monoStyle(10, C.muted, "letter-spacing:0.14em;")}">Credit Cards &middot; Perk alert &middot; ${escapeHtml(formatDate(now))}</p>
-<h1 style="margin:16px 0 6px;font-family:${SERIF};font-weight:400;font-size:34px;line-height:1.05;letter-spacing:-0.01em;color:${C.black};">${n} new <em style="font-style:italic;">${noun}.</em></h1>
-<p style="margin:0 0 20px;font-size:15px;line-height:1.5;color:${C.mutedSmall};">For Credits holders, found since the last scan. <a href="${index}" style="color:${C.ink};">See every perk &rarr;</a></p>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ${C.hairline};border-bottom:1px solid ${C.hairline};">
-${rows}
-</table>
-<p style="margin:18px 0 0;font-size:13px;line-height:1.6;color:${C.muted};">Check the builder's own post before you connect a wallet. You pay for this, so we keep it honest: no sponsors in the email, ever. Reply and a human answers.</p>
+${body}
 <p style="margin:10px 0 0;${monoStyle(10, C.muted)}"><a href="${index}" style="${link}">All perks</a> &middot; <a href="${manage}" style="${link}">Manage</a> &middot; <a href="${manage}" style="${link}">Unsubscribe</a></p>
 </td></tr>
 </table>
@@ -185,6 +177,22 @@ ${rows}
 </table>
 </body>
 </html>`;
+}
+
+/** The perk alert: the new perks, in the shared frame. */
+function buildEmailHtml(items, { now = new Date(), manageUrl, indexUrl = PERKS_URL } = {}) {
+  const n = items.length;
+  const noun = n === 1 ? "perk" : "perks";
+  const index = escapeHtml(indexUrl);
+  const rows = items.map((p, i) => renderItem(p, i === n - 1, now)).join("\n");
+  const body = `<p style="margin:0;${monoStyle(10, C.muted, "letter-spacing:0.14em;")}">Credit Cards &middot; Perk alert &middot; ${escapeHtml(formatDate(now))}</p>
+<h1 style="margin:16px 0 6px;font-family:${SERIF};font-weight:400;font-size:34px;line-height:1.05;letter-spacing:-0.01em;color:${C.black};">${n} new <em style="font-style:italic;">${noun}.</em></h1>
+<p style="margin:0 0 20px;font-size:15px;line-height:1.5;color:${C.mutedSmall};">For Credits holders, found since the last scan. <a href="${index}" style="color:${C.ink};">See every perk &rarr;</a></p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ${C.hairline};border-bottom:1px solid ${C.hairline};">
+${rows}
+</table>
+<p style="margin:18px 0 0;font-size:13px;line-height:1.6;color:${C.muted};">Check the builder's own post before you connect a wallet. You pay for this, so we keep it honest: no sponsors in the email, ever. Reply and a human answers.</p>`;
+  return renderShell({ title: buildSubject(items), preheader: items.map((p) => p.project).join(", "), body, manageUrl, indexUrl });
 }
 
 /** Plain-text part. Mail clients that block HTML, and spam filters, both
@@ -311,6 +319,11 @@ async function runDigest({ now = new Date(), loadPerks, loadState, saveState, li
 
 module.exports = {
   PERKS_URL,
+  C,
+  SERIF,
+  monoStyle,
+  renderItem,
+  renderShell,
   escapeHtml,
   safeUrl,
   formatDate,

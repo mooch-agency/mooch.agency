@@ -41,25 +41,12 @@ const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
 const { timingSafeEqual } = require("node:crypto");
-const { getStripe, normaliseEmail, portalUrl } = require("./_creditcards");
+const { getStripe, normaliseEmail, portalUrl, makeSender, loadPerks } = require("./_creditcards");
 const { runDigest } = require("./_creditcards-digest");
 
-const FEED_PATH = path.join(__dirname, "..", "data", "creditcards.json");
 // perks-state, not state: the first version tracked project ids and was
 // never deployed. A fresh name means no run can ever read those as perks.
 const STATE_PATH = "creditcards-digest/perks-state.json";
-
-const RESEND_URL = "https://api.resend.com/emails";
-const FROM_ADDRESS = "Credit Cards <mb@mooch.agency>";
-// "Reply and a human answers" has to be true, so replies go to the public
-// inbox Tahi and Natalie read, not the sending address.
-const REPLY_TO = "hey@mooch.agency";
-// Resend's default limit is a couple of requests a second. Sends go one at a
-// time with this gap; at ~0.6s each, maxDuration 300 covers ~450 subscribers.
-// Past that, move to Resend's /emails/batch (100 per call).
-const SEND_GAP_MS = 600;
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // --- Auth ----------------------------------------------------------------------------
 
@@ -157,19 +144,6 @@ async function saveState(merge) {
   if (!check || check.sentIds.length < next.sentIds.length) throw new Error("Digest state did not persist");
 }
 
-// --- Feed -----------------------------------------------------------------------------
-
-/** perks[], each with `status` for today (UTC, as the page's bake works it
- * out) and `typeLabel` for the email. A literal import path, so Vercel's file
- * tracer bundles the module with the function. */
-async function loadPerks(now = new Date()) {
-  const { perkStatus, PERK_TYPES, todayUtc } = await import("../scripts/creditcards-perks.mjs");
-  const labels = Object.fromEntries(PERK_TYPES.map((t) => [t.slug, t.label]));
-  const today = todayUtc(now);
-  const data = JSON.parse(await fs.readFile(FEED_PATH, "utf8"));
-  return (Array.isArray(data.perks) ? data.perks : []).map((p) => ({ ...p, status: perkStatus(p, today), typeLabel: labels[p.type] || "" }));
-}
-
 // --- Recipients -----------------------------------------------------------------------
 
 /** Every active or trialing subscription on our price, one entry per email.
@@ -185,83 +159,6 @@ async function listRecipients(stripe, price) {
     if (email && !byEmail.has(email.toLowerCase())) byEmail.set(email.toLowerCase(), { email, customerId: c.id });
   }
   return [...byEmail.values()];
-}
-
-// --- Send -----------------------------------------------------------------------------
-
-/** One Resend send. Never throws. One retry on a network error, 5xx or 429;
- * the Idempotency-Key makes that retry safe if the first attempt actually
- * landed and only the response was lost. The key only ever goes in the
- * Authorization header and is never echoed. */
-function makeSender(apiKey) {
-  let last = 0;
-  return async function send(msg) {
-    if (!apiKey) return { ok: false, error: "RESEND_API_KEY is not set" };
-    const wait = last + SEND_GAP_MS - Date.now();
-    if (wait > 0) await sleep(wait);
-    last = Date.now();
-
-    const body = JSON.stringify({
-      from: FROM_ADDRESS,
-      to: [msg.to],
-      reply_to: REPLY_TO,
-      subject: msg.subject,
-      html: msg.html,
-      text: msg.text,
-      headers: { "List-Unsubscribe": `<${msg.manageUrl}>` },
-    });
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const res = await fetch(RESEND_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-            "Idempotency-Key": msg.idempotencyKey,
-          },
-          body,
-          signal: AbortSignal.timeout(15_000),
-        });
-        if (res.ok) {
-          const json = await res.json().catch(() => ({}));
-          return { ok: true, id: json.id };
-        }
-        // 409 means Resend already has a send under this key: either the
-        // payload differs (a by-hand re-run after UK midnight, when the date
-        // in the email has moved on) or the first request is still in flight
-        // (Vercel delivering the cron twice). Either way this person has, or
-        // is getting, this digest. Counting it as a failure would hold state
-        // and turn the documented re-run into one that can never succeed.
-        if (res.status === 409) return { ok: true, deduped: true };
-        if (attempt === 0 && (res.status >= 500 || res.status === 429)) {
-          await sleep(1500);
-          continue;
-        }
-        const detail = (await res.text().catch(() => "")).slice(0, 200);
-        // Scrub addresses: Resend validation errors can quote the recipient,
-        // and this string ends up in the cron log.
-        return {
-          ok: false,
-          // 4xx is about this send, so runDigest may still advance state.
-          // 5xx is the pipe: it withholds. So is a 429 that survived the
-          // retry: Resend's quota is shared across every Mooch sender, so a
-          // 429 mid-run means the pipe is shut for everyone still to come,
-          // not that this address is bad. A 4xx on EVERY recipient (bad key,
-          // unverified domain) still withholds, because runDigest needs at
-          // least one success.
-          perRecipient: res.status >= 400 && res.status < 500 && res.status !== 429,
-          error: `Resend responded ${res.status}${detail ? `: ${detail.replace(/[^\s"'<>@]+@[^\s"'<>]+/g, "[email]")}` : ""}`,
-        };
-      } catch (err) {
-        if (attempt === 0) {
-          await sleep(1500);
-          continue;
-        }
-        return { ok: false, error: err && err.name === "TimeoutError" ? "Resend timed out" : "Resend unreachable" };
-      }
-    }
-    return { ok: false, error: "Resend failed" };
-  };
 }
 
 // --- Handler ----------------------------------------------------------------------------
