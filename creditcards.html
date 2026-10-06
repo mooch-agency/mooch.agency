@@ -777,7 +777,12 @@
       gap: 8px 16px;
       padding: 18px 0;
     }
-    [data-cc-view="list"] .projects > li.proj-card:hover { background: none; }
+    /* No hover fill on a phone, except the featured card keeps its black:
+       its text is paper-coloured, so a cleared background hid it. */
+    [data-cc-view="list"] .projects > li.proj-card:not(.proj-card--featured):hover { background: none; }
+    /* The featured card shows its type and access, so its builder gets its
+       own line rather than squeezing into theirs (it truncated to "…"). */
+    [data-cc-view="list"] .projects > li.proj-card--featured .proj-by-names { flex: 1 1 100%; text-align: left; }
     [data-cc-view="list"] .proj-card .proj-blurb,
     [data-cc-view="list"] .proj-card--featured .proj-flag { flex: 1 1 100%; }
     [data-cc-view="list"] .proj-card--featured .proj-flag { order: -1; }
