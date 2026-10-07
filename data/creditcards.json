@@ -1,13 +1,13 @@
 {
   "meta": {
-    "sinceId": "2107801870282682588",
-    "lastRun": "2026-10-07T13:15:59.944Z",
+    "sinceId": "2107849539608891507",
+    "lastRun": "2026-10-07T18:28:34.089Z",
     "stats": {
-      "floorEth": 0.010543575,
-      "floorUsd": 27,
-      "supply": 109181,
-      "owners": 13599,
-      "fetchedAt": "2026-10-07T13:15:59.693Z"
+      "floorEth": 0.0102999,
+      "floorUsd": 26,
+      "supply": 109101,
+      "owners": 13559,
+      "fetchedAt": "2026-10-07T18:28:34.063Z"
     },
     "replySinceId": "2107777899277279639",
     "topicSinceId": "2107801870282682588"
@@ -1983,6 +1983,28 @@
         "known-host"
       ],
       "tweetText": "@jesusdoteth One idea. Your Caben row says what Statement Builder does, and his card says why it mattered: \"Built a way to plan a Statement before you burn\" https://t.co/giA5m5RhMe\n\nWould it be useful"
+    },
+    {
+      "id": "humancredit-co-credit-77449-dealer-folds-builder",
+      "name": "humancredit.co",
+      "url": "https://humancredit.co/credit/77449-dealer-folds-builder",
+      "x": "dealer1943",
+      "post": "https://x.com/dealer1943/status/2107849539608891507",
+      "blurb": "",
+      "category": "art",
+      "access": "none",
+      "status": "pending",
+      "added": "2026-10-07",
+      "metrics": {
+        "likes": 3,
+        "reposts": 0
+      },
+      "source": "search",
+      "score": 1,
+      "flags": [
+        "known-host"
+      ],
+      "tweetText": "Thanks cordy. \n\nhttps://t.co/rt7pb0leJU\n\nThanks @jackbutcher ! I have never seen anything like this credits community. https://t.co/Xpu86wdK8k"
     }
   ]
 }
