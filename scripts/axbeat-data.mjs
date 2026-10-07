@@ -6,7 +6,12 @@
 // website host and one docs host each, ranked on how many of the scan's scored
 // checks each host passes. The scan itself lives in the private
 // `ax-audit` repo; this script is the only bridge between the two, and it runs
-// on a machine that has both, never in CI.
+// on a machine that has both, never in this repo's CI.
+//
+// Weekly, ax-audit's own weekly-scan workflow runs it after a publishable scan and
+// opens (or refreshes) a PR here on the `scan/axbeat-weekly` branch, with a summary
+// of what changed. Merging that PR is the human publish step. The token for that
+// lives in ax-audit, so nothing in this repo holds a credential for the private one.
 //
 //   pnpm axbeat:build [../ax-audit]   read the scan, rebuild the baked block
 //   pnpm axbeat:check                 verify what is baked (no scan needed)

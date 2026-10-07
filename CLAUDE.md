@@ -204,6 +204,15 @@ pnpm axbeat:build ../ax-audit   # re-bake from a local ax-audit clone (pull it f
 pnpm axbeat:check               # verify what is baked; runs in ci:check
 ```
 
+**Weekly publish loop (added 7 Oct 2026):** ax-audit's `weekly-scan` workflow
+(Mondays 06:00 UTC) scans, commits a publishable result there, then runs this bake
+and opens or refreshes a PR here on `scan/axbeat-weekly` with a per-host summary of
+what changed. **Merging that PR is the publish step**, so a human sees every score
+change before it goes live. A held or broken scan opens an issue in ax-audit
+instead. The PAT that opens the PR (`MOOCH_AGENCY_PR_TOKEN`) lives in ax-audit's
+secrets, so this repo still holds no credential for the private one. A hand bake
+(above) is still fine for an off-cycle scan.
+
 `scripts/axbeat-data.mjs` is the only bridge to the private `mooch-agency/ax-audit`
 repo, and it runs on a machine that has both, never in CI. It reads that repo's
 `results/l2-top22-latest.json`, writes two things into `axbeat.html` in one pass
