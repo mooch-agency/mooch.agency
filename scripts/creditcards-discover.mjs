@@ -1,18 +1,20 @@
 // ---------------------------------------------------------------------------
 // creditcards-discover.mjs: the X side of creditcards-update.mjs.
 //
-// Four sources feed one candidate pool; the three searches each keep their own
+// Five sources feed one candidate pool; the four searches each keep their own
 // since-id bookmark in data.meta so none ever skips another's posts:
 //
-//   search   the main keyword query                     meta.sinceId
+//   search   keywords, plus Jack's own link posts       meta.sinceId
 //   replies  replies addressed to @jesusdoteth          meta.replySinceId
 //   topic    perk posts to holders, no Jack named       meta.topicSinceId
+//   mentions posts anywhere that tag @jesusdoteth       meta.mentionSinceId
 //   thread   self-replies under a post that had no link (derived, no bookmark)
 //
 // What each post is mined for, in order:
 //   1. its own links (entities, plus any t.co in the text that X left out of
 //      entities, resolved by reading t.co's redirect, no API cost);
-//   2. the links of a post it quotes or reposts, credited to that post's author;
+//   2. the links of a post it quotes or reposts, credited to that post's author
+//      (and, for a mention, of the post it replies to);
 //   3. "link in bio": the author's profile link, when the post says so;
 //   4. otherwise, if it is a thread root, a later self-reply ("link in first
 //      reply"), fetched in one batched search for the whole run.
@@ -95,7 +97,8 @@ export const MAX_NEW_PER_AUTHOR = 3;
 export const THREAD_MAX_CONVERSATIONS = 8;
 export const TCO_MAX_RESOLVE = 20;
 
-const SOURCE_BASE_SCORE = { replies: 2, search: 1, topic: 1 };
+// A tag is someone pointing the index at a thing, as good as a reply.
+const SOURCE_BASE_SCORE = { replies: 2, mentions: 2, search: 1, topic: 1 };
 
 // Hosts many unrelated projects share, where "same host" says nothing.
 const SHARED_HOSTS = new Set(['opensea.io', 'github.com', 'gitlab.com']);
