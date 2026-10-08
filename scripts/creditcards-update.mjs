@@ -4,20 +4,22 @@
 //
 // Three jobs, in order, each surviving the others' failure:
 //
-//   1. Discovery (needs X_BEARER_TOKEN, see creditcards-discover.mjs): three
+//   1. Discovery (needs X_BEARER_TOKEN, see creditcards-discover.mjs): four
 //      sources, each with its own since-id in data.meta: the main keyword
-//      search (sinceId), replies to @jesusdoteth where builders submit
-//      (replySinceId), and perk posts addressed to Credits holders, which
-//      rarely name Jack (topicSinceId).
+//      search plus Jack's own link posts (sinceId), replies to @jesusdoteth
+//      where builders submit (replySinceId), perk posts addressed to Credits
+//      holders, which rarely name Jack (topicSinceId), and posts anywhere
+//      that tag @jesusdoteth (mentionSinceId).
 //      Posts are mined for links in the post, in a quoted or reposted post, in
-//      the author's bio when the post says "link in bio", and in the author's
-//      own first reply when the post itself has none. New external links land
+//      the author's bio when the post says "link in bio", in the post a
+//      mention replies to (a tag under someone's announcement), and in the
+//      author's own first reply when the post itself has none. New external links land
 //      in data/creditcards.json as status "pending", with a score and flags
 //      (coin, denylist, article) that only rank and label, plus a suggested
 //      category (a keyword guess, see creditcards-categories.mjs). Nothing
 //      pending ever renders; a human flips it to "approved" (and tidies the
 //      blurb, name and category) first. Rejected entries stay as tombstones so a re-announced URL is
-//      never re-added. Cost control: at most 50 + 25 + 25 search posts and
+//      never re-added. Cost control: at most 50 + 25 + 25 + 25 search posts and
 //      one 25-post thread lookup a run, windowed by since-ids so a
 //      quiet day reads almost nothing; at most 15 new entries a run and 3 per
 //      author.
@@ -109,9 +111,12 @@ const PAGE_FILE = 'creditcards.html';
 // on Jack's name or the mint page URL because "credits" alone matches half the
 // internet; replies and reposts are noise at this budget. No lang filter:
 // grid-art projects announce in any language, and the human review gate
-// absorbs what the query lets through.
+// absorbs what the query lets through. Jack's own link posts ride along: he
+// shares builds without naming himself and often without the whole word
+// "credits" ("credit destroyers by @DesLucrece", 7 Oct, missed until we were
+// tagged in it), and anything he shares is worth a look.
 const X_QUERY =
-  '(credits ("jack butcher" OR jackbutcher OR @jackbutcher) OR url:"jack.art/credits") has:links -is:retweet -is:reply';
+  '(credits ("jack butcher" OR jackbutcher OR @jackbutcher) OR url:"jack.art/credits" OR from:jackbutcher) has:links -is:retweet -is:reply';
 const X_MAX_RESULTS = 50;
 
 // Second, smaller search: replies to @jesusdoteth's own posts. Builders often
@@ -136,6 +141,15 @@ const X_REPLY_MAX_RESULTS = 25;
 const X_TOPIC_QUERY =
   '(@vvcredits OR "credits holders" OR "credits holder") (free OR claim OR mint OR minting OR airdrop OR allowlist OR WL OR eligible) -from:vvcredits -"Credit Union pooling" -"Join my Credit Union" -is:retweet -is:reply';
 const X_TOPIC_MAX_RESULTS = 25;
+
+// Fourth search: posts anywhere that tag @jesusdoteth. People who know the
+// index now tag it under an announcement ("@jackbutcher @jesusdoteth you on
+// it, another one for the books"), usually as a linkless reply, so the link
+// is read from the post it replies to. No has:links for that reason. The
+// bookmark was seeded on 8 Oct at that post, so the search only ever reads
+// new tags; anything earlier was handled by hand.
+const X_MENTION_QUERY = `@${X_REPLY_HANDLE} -from:${X_REPLY_HANDLE} -is:retweet`;
+const X_MENTION_MAX_RESULTS = 25;
 
 // Fields every tweet read asks for: entities for links, referenced tweets for
 // quotes, reposts and threads, and the author's profile link for "link in bio".
@@ -301,6 +315,21 @@ class Pool {
       }
       if (found) continue;
 
+      // A tag under someone else's post: the project is that post's, so
+      // credit its author. Mentions only, since every other source either
+      // drops replies or replies to Tahi's own posts.
+      if (source === 'mentions') {
+        const refId = refOf(tweet, 'replied_to');
+        const ref = refId && this.tweets.get(refId);
+        if (ref && this.handleOf(ref).toLowerCase() !== X_REPLY_HANDLE) {
+          for (const url of await this.linksOf(ref)) {
+            this.offer(url, ref, source, 'parent', `${ref.text || ''} ${text}`);
+            found++;
+          }
+        }
+        if (found) continue;
+      }
+
       // "Link in bio": the author's profile link stands in for the post's.
       if (mentionsLinkInBio(text)) {
         const u = this.users.get(tweet.author_id);
@@ -431,6 +460,11 @@ export async function discover(data, token, fetchImpl = fetch, log = console.log
     [
       'X perk posts',
       () => searchSource(pool, token, { query: X_TOPIC_QUERY, maxResults: X_TOPIC_MAX_RESULTS, sinceKey: 'topicSinceId', source: 'topic' }),
+    ],
+    [
+      `X mentions of @${X_REPLY_HANDLE}`,
+      () =>
+        searchSource(pool, token, { query: X_MENTION_QUERY, maxResults: X_MENTION_MAX_RESULTS, sinceKey: 'mentionSinceId', source: 'mentions' }),
     ],
   ];
   // Each source survives the others' failure. A failed source leaves its

@@ -10,7 +10,8 @@
       "fetchedAt": "2026-10-08T18:23:05.883Z"
     },
     "replySinceId": "2108135048251625841",
-    "topicSinceId": "2107801870282682588"
+    "topicSinceId": "2107801870282682588",
+    "mentionSinceId": "2108236762397250012"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -1993,7 +1994,7 @@
       "blurb": "",
       "category": "art",
       "access": "none",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-07",
       "metrics": {
         "likes": 3,
@@ -2005,6 +2006,22 @@
         "known-host"
       ],
       "tweetText": "Thanks cordy. \n\nhttps://t.co/rt7pb0leJU\n\nThanks @jackbutcher ! I have never seen anything like this credits community. https://t.co/Xpu86wdK8k"
+    },
+    {
+      "id": "credits-bit-mon-com",
+      "name": "Credit Destroyer",
+      "url": "https://credits.bit-mon.com",
+      "x": "DesLucrece",
+      "post": "https://x.com/jackbutcher/status/2107948495399231540",
+      "blurb": "A pixel arcade shooter: pick up to eight BitMON pilots and blast through Credits and Statements across six stages. Plays in the browser, wallet optional.",
+      "category": "games",
+      "access": "optional",
+      "status": "approved",
+      "added": "2026-10-08",
+      "metrics": {
+        "likes": 113,
+        "reposts": 0
+      }
     }
   ]
 }

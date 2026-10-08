@@ -145,6 +145,39 @@ test('the perk search finds a holders post that never names Jack', async () => {
   assert.match(topicQuery, /-"Credit Union pooling"/, 'the union share template is excluded');
 });
 
+test('a tag under an announcement finds the link in the post it replies to', async () => {
+  // Credit Destroyer (7 to 8 Oct): Jack shared it without the word "credits",
+  // and the tag that surfaced it is a linkless reply to his post.
+  const jack = { id: '2107948495399231540', conversation_id: '2107948495399231540', author_id: '7', text: 'credit destroyers by @DesLucrece https://t.co/Af4tqk7hs3', entities: { urls: [link('https://credits.bit-mon.com/')] } };
+  const tag = { id: '2108236762397250013', conversation_id: jack.id, author_id: '8', text: '@jackbutcher @DesLucrece @jesusdoteth you on it, another one for the books', referenced_tweets: [{ type: 'replied_to', id: jack.id }] };
+  // A tag under Tahi's own post must not hand back Tahi's own links.
+  const own = { id: '2108236762397250000', conversation_id: '2108236762397250000', author_id: '9', text: 'new on the index', entities: { urls: [link('https://own-link.example/')] } };
+  const ownTag = { id: '2108236762397250014', conversation_id: own.id, author_id: '8', text: '@jesusdoteth nice', referenced_tweets: [{ type: 'replied_to', id: own.id }] };
+  const mentionUsers = [{ id: '7', username: 'jackbutcher' }, { id: '8', username: 'matriona_fails' }, { id: '9', username: 'jesusdoteth' }];
+  const json = (body) => ({ ok: true, status: 200, headers: new Headers(), json: async () => body });
+  const queries = [];
+  const fetchImpl = async (url) => {
+    const q = new URL(url).searchParams.get('query') || '';
+    queries.push(q);
+    if (q.startsWith('@jesusdoteth')) {
+      return json({ data: [tag, ownTag], includes: { users: mentionUsers, tweets: [jack, own] }, meta: { newest_id: ownTag.id, result_count: 2 } });
+    }
+    return json({ data: [], meta: { result_count: 0 } });
+  };
+  const data = { meta: { sinceId: '1', replySinceId: '1', mentionSinceId: '2108236762397250012' }, projects: [] };
+  await discover(data, 'token', fetchImpl, () => {}, () => {});
+  const found = data.projects.find((p) => p.url === 'https://credits.bit-mon.com');
+  assert.ok(found, 'found through the parent post');
+  assert.equal(found.source, 'mentions+parent');
+  assert.equal(found.post, `https://x.com/jackbutcher/status/${jack.id}`, 'credited to the announcement');
+  assert.ok(!data.projects.some((p) => p.url.includes('own-link')), "Tahi's own links are skipped");
+  assert.equal(data.meta.mentionSinceId, ownTag.id, 'its own bookmark advances');
+  const mentionQuery = queries.find((q) => q.startsWith('@jesusdoteth'));
+  assert.ok(!mentionQuery.includes('has:links'), 'linkless tags are read');
+  assert.match(mentionQuery, /-from:jesusdoteth/);
+  assert.match(queries.find((q) => q.includes('"jack butcher"')), /OR from:jackbutcher\)/, "Jack's own link posts are in the main search");
+});
+
 test('helpers', () => {
   assert.equal(acceptableUrl('https://opensea.io/collection/statements'), false, "Jack's own Statements collection");
   assert.equal(normaliseUrl('https://www.OpenSea.io/collection/CreditCards/overview?ref=1'), 'https://opensea.io/collection/creditcards');
