@@ -515,8 +515,8 @@
   <div class="case-body-inner">
 
     <h2><span class="num">&sect; 01</span>TL;DR</h2>
-    <p class="lead-stat"><strong>We helped cut web3 jargon from AI agents by 86%.</strong></p>
-    <p>We gave AI agents everyday words for the web3 terms beginners trip over. Before it went live, a blind test with three AI models found jargon in 7 in 9 attempts with no guidance, and 1 in 9 with the updated guidelines.</p>
+    <p class="lead-stat"><strong>In a blind test, we helped cut web3 jargon from AI agents by 86%.</strong></p>
+    <p>We gave AI agents everyday words for the web3 terms beginners trip over. Before Jakub accepted our changes, a blind test with three AI models found jargon in 7 in 9 attempts with no guidance, and 1 in 9 with the updated guidance.</p>
 
     <h2><span class="num">&sect; 02</span>The invitation</h2>
     <p>&ldquo;Bad UX&rdquo; has dogged web3 for so long it's a clich&eacute;, and words are often where it starts. A new user meets &ldquo;gas&rdquo; (the fee for using the network), &ldquo;slippage&rdquo; and &ldquo;approve&rdquo; before they've done anything at all.</p>
@@ -600,7 +600,7 @@
     <p class="lead-stat"><strong>Test runs that slipped into jargon went from 7 in 9 with no guidance, to 3 before our change, to 1 after it.</strong></p>
     <p>With guidance, the models scored 39 out of 45, before and after our change. With none, 35.</p>
     <table class="results">
-      <caption>Points out of 15 per model (3 scenarios &times; 5 rules), 45 per column. A plain-word miss is a run that failed rule 3, like &ldquo;Revoke&rdquo; instead of &ldquo;Remove permission&rdquo;.</caption>
+      <caption>Points out of 15 per model (3 scenarios &times; 5 rules), 45 per column. A plain-word miss is a run that failed rule 3: it used jargon where the table gives a plain word, like &ldquo;Revoke&rdquo; instead of &ldquo;Remove permission&rdquo;.</caption>
       <thead>
         <tr><th scope="col">Model</th><th scope="col">No guidance</th><th scope="col">Before our change</th><th scope="col">After our change</th></tr>
       </thead>
@@ -614,7 +614,7 @@
         <tr><td>Runs with a plain-word miss</td><td>7/9</td><td>3/9</td><td>1/9</td></tr>
       </tfoot>
     </table>
-    <p><strong>What this doesn't show.</strong> While jargon successfully fell from 3 to 1, our change didn't raise the overall score across the 5 checks: it stayed at 39 out of 45. Claude Haiku slipped into jargon on one scenario, and the grader failed Claude Opus for a sentence it had passed, word for word, under the old guidance.</p>
+    <p><strong>What this doesn't show.</strong> While jargon fell from 3 to 1, our change didn't raise the overall score across the 5 checks: it stayed at 39 out of 45. Claude Haiku slipped into jargon on one scenario, and the grader failed Claude Opus for a sentence it had passed, word for word, under the old guidance.</p>
     <p>This shows the limit of running each combination just once: an AI grader isn't perfectly consistent. Given the chance to run these tests again we would:</p>
     <ul>
       <li>conduct several runs per combination</li>
