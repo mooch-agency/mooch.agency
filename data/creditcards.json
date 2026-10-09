@@ -1,16 +1,16 @@
 {
   "meta": {
     "sinceId": "2108091788875739146",
-    "lastRun": "2026-10-08T23:19:13.096Z",
+    "lastRun": "2026-10-09T06:21:46.847Z",
     "stats": {
-      "floorEth": 0.009099,
+      "floorEth": 0.0092499066,
       "floorUsd": 23,
-      "supply": 108710,
-      "owners": 13391,
-      "fetchedAt": "2026-10-08T23:19:13.054Z"
+      "supply": 108647,
+      "owners": 13364,
+      "fetchedAt": "2026-10-09T06:21:46.814Z"
     },
     "replySinceId": "2108135048251625841",
-    "topicSinceId": "2107801870282682588",
+    "topicSinceId": "2108405991855559040",
     "mentionSinceId": "2108280285410296241"
   },
   "featuredSlot": {
