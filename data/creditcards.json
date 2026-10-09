@@ -1,17 +1,17 @@
 {
   "meta": {
     "sinceId": "2108091788875739146",
-    "lastRun": "2026-10-09T06:21:46.847Z",
+    "lastRun": "2026-10-09T13:11:15.639Z",
     "stats": {
-      "floorEth": 0.0092499066,
-      "floorUsd": 23,
-      "supply": 108647,
-      "owners": 13364,
-      "fetchedAt": "2026-10-09T06:21:46.814Z"
+      "floorEth": 0.008655999,
+      "floorUsd": 22,
+      "supply": 108407,
+      "owners": 13353,
+      "fetchedAt": "2026-10-09T13:11:15.603Z"
     },
     "replySinceId": "2108135048251625841",
-    "topicSinceId": "2108405991855559040",
-    "mentionSinceId": "2108280285410296241"
+    "topicSinceId": "2108542196148216070",
+    "mentionSinceId": "2108543600166306017"
   },
   "featuredSlot": {
     "price": "80 USDC",
@@ -2022,6 +2022,28 @@
         "likes": 113,
         "reposts": 0
       }
+    },
+    {
+      "id": "opensea-io-collection-cactus-not-jack",
+      "name": "opensea.io",
+      "url": "https://opensea.io/collection/cactus-not-jack",
+      "x": "cactusnotjack",
+      "post": "https://x.com/cactusnotjack/status/2108451503031603590",
+      "blurb": "",
+      "category": "markets",
+      "access": "wallet",
+      "status": "pending",
+      "added": "2026-10-09",
+      "metrics": {
+        "likes": 10,
+        "reposts": 5
+      },
+      "source": "topic+quote",
+      "score": 2,
+      "flags": [
+        "via-quote"
+      ],
+      "tweetText": "gM 🌵\n\nFRIENDS phase is live on @opensea\n\n422 mints locked in. \n63 unique holders so far. \n\nCheck the pinned post to see collections eligible for this phase. \nREVEAL happens after mint. \n\nhttps://t.co"
     }
   ]
 }
