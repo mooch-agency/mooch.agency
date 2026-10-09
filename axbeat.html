@@ -209,7 +209,9 @@ h1.display, .display {
    line, so a two-sentence lede like this one still broke into one full-width
    line plus a short trailing clause that read as orphaned. balance spreads
    both lines to a similar length instead. */
-.lede { margin-top:12px; font-size:clamp(15px,1.3vw,16.5px); color:var(--ink); max-width:70ch; text-wrap:balance; }
+/* 96ch fits the full two-sentence lede on one line on desktop (~970px at
+   16.5px); narrower screens still wrap it, balanced. */
+.lede { margin-top:12px; font-size:clamp(15px,1.3vw,16.5px); color:var(--ink); max-width:96ch; text-wrap:balance; }
 
 .morein p { font-size:13.5px; color:var(--muted); text-wrap:pretty; max-width:62ch; }
 /* Was a flex row sharing space with a right-justified scan date (see hero()'s
@@ -755,7 +757,7 @@ form.mail { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 <div>
 <p class="eyebrowrow"><span class="eyebrow">Agent Experience</span></p>
 <h1 class="display">How <em>agent friendly</em> is your Layer 2?</h1>
-<p class="lede">L2Beat ranks security. AXBeat ranks AX, agent experience, how well agents can read a protocol’s website and docs.</p>
+<p class="lede">L2Beat ranks security. AXBeat ranks agent experience (AX), how well AI can read a protocol’s website and docs on behalf of a user.</p>
 <p class="caveat">We run <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s agent-readiness</a> scan against a protocol’s website and docs. It checks that agent signposts exist, not whether they’re correct. Onchain AX, how well an agent can take onchain actions, is TBD.</p>
 </div>
 <div class="tablewrap"><table class="board">
@@ -1156,7 +1158,7 @@ function renderA(view) {
   s.innerHTML = '<div class="pad pad-hero">' +
     hero({
       headline: 'How <em>agent friendly</em> is your Layer 2?',
-      lede: "L2Beat ranks security. AXBeat ranks AX, agent experience, how well agents can read a protocol’s website and docs.",
+      lede: "L2Beat ranks security. AXBeat ranks agent experience (AX), how well AI can read a protocol’s website and docs on behalf of a user.",
       methodId: "method-a"
     }) +
     '<div class="boardcol">' +

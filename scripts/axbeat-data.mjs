@@ -626,7 +626,7 @@ function staticBoard(data) {
 <div>
 <p class="eyebrowrow"><span class="eyebrow">Agent Experience</span></p>
 <h1 class="display">How <em>agent friendly</em> is your Layer 2?</h1>
-<p class="lede">L2Beat ranks security. AXBeat ranks AX, agent experience, how well agents can read a protocol’s website and docs.</p>
+<p class="lede">L2Beat ranks security. AXBeat ranks agent experience (AX), how well AI can read a protocol’s website and docs on behalf of a user.</p>
 <p class="caveat">We run <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s agent-readiness</a> scan against a protocol’s website and docs. It checks that agent signposts exist, not whether they’re correct. Onchain AX, how well an agent can take onchain actions, is TBD.</p>
 </div>
 <div class="tablewrap"><table class="board">
