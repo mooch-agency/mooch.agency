@@ -357,15 +357,27 @@
   .results tfoot td { font-weight: 600; color: var(--black); border-bottom: 0; }
   /* Word table: text, not numbers, so every column reads left to right. */
   .results.words th, .results.words td { text-align: left; vertical-align: top; padding-right: 16px; }
-  .results.words tbody th {
-    padding-top: 28px;
+  /* Three tables, one per group: fixed layout + shared col widths align them. */
+  .word-tables { margin: 24px 0 32px; }
+  .word-tables .results { table-layout: fixed; margin: 0; }
+  .word-tables .results + .results { margin-top: 28px; }
+  .word-tables .c-term { width: 24%; }
+  .word-tables .c-before, .word-tables .c-after { width: 38%; }
+  .results.words caption {
+    caption-side: top;
+    padding: 0 0 12px;
     font-family: var(--mono);
     font-size: 11px;
-    font-weight: 400;
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--ink);
   }
+  .results.words td { overflow-wrap: anywhere; }
+  .results.words .vh {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  .word-note { margin-top: 12px; font-size: 14px; line-height: 1.5; color: var(--muted); }
   .results.words td.none { color: var(--muted); }
   .source-links {
     display: flex;
@@ -552,13 +564,17 @@
       Direction is right and the split is worth keeping.
       <cite>Jakub Konopka, EthUX.design, <a href="https://github.com/konopkja/ethux-design/pull/10#pullrequestreview-5023537531" data-track="ethux_source_click" data-link="pr10_review">review of pull request #10</a></cite>
     </blockquote>
+    <!-- Word table as three tables, one per group. Shared colgroup widths +
+         table-layout: fixed keep the columns aligned across all three; only the
+         first shows its header row (the others keep it for screen readers). -->
+    <div class="word-tables">
     <table class="results words">
-      <caption>The word table before and after our two contributions. &ldquo;After&rdquo; quotes the merged text.</caption>
+      <caption>Replace with a plain word</caption>
+      <colgroup><col class="c-term"><col class="c-before"><col class="c-after"></colgroup>
       <thead>
         <tr><th scope="col">Crypto term</th><th scope="col">Before our contributions</th><th scope="col">After our contributions</th></tr>
       </thead>
       <tbody>
-        <tr><th scope="rowgroup" colspan="3">Replace with a plain word</th></tr>
         <tr><td>Allowance</td><td class="none">Not in the table</td><td>Spending limit</td></tr>
         <tr><td>Tx hash</td><td class="none">Not in the table</td><td>Transaction ID</td></tr>
         <tr><td>Mainnet</td><td class="none">Not in the table</td><td>Main network</td></tr>
@@ -569,16 +585,30 @@
         <tr><td>Secret Recovery Phrase</td><td>Only &ldquo;Seed phrase / Mnemonic&rdquo; listed</td><td>Recovery phrase / Backup words</td></tr>
         <tr><td>Smart contract</td><td>App / Service</td><td>App</td></tr>
       </tbody>
+    </table>
+    <table class="results words">
+      <caption>Keep the word, explain it on first use</caption>
+      <colgroup><col class="c-term"><col class="c-before"><col class="c-after"></colgroup>
+      <thead class="vh">
+        <tr><th scope="col">Crypto term</th><th scope="col">Before our contributions</th><th scope="col">After our contributions</th></tr>
+      </thead>
       <tbody>
-        <tr><th scope="rowgroup" colspan="3">Keep the word, explain it on first use</th></tr>
         <tr><td>Token</td><td>Asset / Coin</td><td>Token: &ldquo;an item you own, like a coin or a collectible&rdquo;</td></tr>
         <tr><td>Bridge</td><td class="none">Not in the table</td><td>Bridge: &ldquo;moves your tokens from one network to another&rdquo;</td></tr>
       </tbody>
+    </table>
+    <table class="results words">
+      <caption>Leave out for beginners</caption>
+      <colgroup><col class="c-term"><col class="c-before"><col class="c-after"></colgroup>
+      <thead class="vh">
+        <tr><th scope="col">Crypto term</th><th scope="col">Before our contributions</th><th scope="col">After our contributions</th></tr>
+      </thead>
       <tbody>
-        <tr><th scope="rowgroup" colspan="3">Leave out for beginners</th></tr>
         <tr><td>Nonce, Gwei, Wei, ERC-20</td><td>Nonce left out; Gwei and Wei banned by a separate rule; ERC-20 not covered</td><td>One rule for all four: shown only in advanced mode</td></tr>
       </tbody>
     </table>
+      <p class="word-note">The word table before and after our two contributions. &ldquo;After&rdquo; quotes the merged text.</p>
+    </div>
 
     <h3>4. Test it before it merges</h3>
     <p>Before he accepted the second set of larger changes, Jakub asked for proof they wouldn't make agents write worse copy. So we built a small blind test:</p>
