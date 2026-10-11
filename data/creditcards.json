@@ -1,17 +1,17 @@
 {
   "meta": {
     "sinceId": "2108983607788540314",
-    "lastRun": "2026-10-11T06:19:49.319Z",
+    "lastRun": "2026-10-11T12:43:34.643Z",
     "stats": {
-      "floorEth": 0.008198999,
-      "floorUsd": 21,
-      "supply": 108167,
-      "owners": 13253,
-      "fetchedAt": "2026-10-11T06:19:49.307Z"
+      "floorEth": 0.0088779,
+      "floorUsd": 22,
+      "supply": 108087,
+      "owners": 13229,
+      "fetchedAt": "2026-10-11T12:43:34.617Z"
     },
     "replySinceId": "2108135048251625841",
-    "topicSinceId": "2108542196148216070",
-    "mentionSinceId": "2109024854607298599"
+    "topicSinceId": "2109240810063474722",
+    "mentionSinceId": "2109258222582616294"
   },
   "featuredSlot": {
     "price": "80 USDC",
