@@ -21,6 +21,13 @@ export function capProblems(projects) {
     : [];
 }
 
+// The line under the title while places remain ("2 places left."), baked
+// into the data-stat="capLine" span. Empty once all 50 are in.
+export function capLine(projects) {
+  const left = Math.max(0, PROJECT_CAP - approvedCount(projects));
+  return left ? `${left} ${left === 1 ? 'place' : 'places'} left.` : '';
+}
+
 // The reminder once the cap is reached, or null before it.
 export function capNotice(projects) {
   return approvedCount(projects) >= PROJECT_CAP

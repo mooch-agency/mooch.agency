@@ -105,7 +105,7 @@ card soundlikeme \
 card creditcards \
   --eyebrow "Community index" \
   --title "Credit *Cards*" \
-  --subtitle "Every project built on Jack Butcher's\nCredits, in one place. Refreshed daily." \
+  --subtitle "The first 50 projects built on\nJack Butcher's Credits." \
   --domain "mooch.agency/creditcards" \
   --tint plaything --scale 1.3
 
