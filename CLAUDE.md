@@ -258,6 +258,10 @@ that fails open on timeout, and per-domain plus global rate limits.
 
 ## Credit Cards index (`/creditcards`)
 
+Capped at the first 50 projects we came across: a showcase, not a daily feed.
+The bake and `ci:check` refuse a 51st approved project, and both flag the 50th
+with a pointer to the freeze checklist in issue #101 (`scripts/creditcards-cap.mjs`).
+
 Every approved project in `data/creditcards.json` needs a `category` and an
 `access` (`none`, `optional`, `wallet`, `paid`: what it takes to try it, see
 `scripts/creditcards-access.mjs`). Discovery suggests both on each pending

@@ -93,6 +93,7 @@ import {
   strayTcoLinks,
 } from './creditcards-discover.mjs';
 import { CATEGORIES, categoryProblems, suggestCategory } from './creditcards-categories.mjs';
+import { capNotice, capProblems } from './creditcards-cap.mjs';
 import { ACCESS, accessProblems, suggestAccess } from './creditcards-access.mjs';
 import { PERK_TYPES, perkProblems, perkStatus, sortPerks, todayUtc } from './creditcards-perks.mjs';
 
@@ -883,7 +884,12 @@ function bakeStat(html, key, value) {
 }
 
 function bake(html, data, today = todayUtc()) {
-  const problems = [...categoryProblems(data.projects), ...accessProblems(data.projects), ...perkProblems(data.perks)];
+  const problems = [
+    ...categoryProblems(data.projects),
+    ...accessProblems(data.projects),
+    ...capProblems(data.projects),
+    ...perkProblems(data.perks),
+  ];
   if (problems.length) throw new Error(`${DATA_FILE}: ${problems.join('; ')}`);
   if (!MARKER_RE.test(html)) throw new Error(`creditcards:projects markers missing from ${PAGE_FILE}`);
   let next = html.replace(MARKER_RE, (_, open, __, close) => `${open}${renderProjects(data.projects, data.featuredSlot, data.perks || [], today)}${close}`);
@@ -924,6 +930,10 @@ export async function run({ xToken, fetchImpl = fetch, root = ROOT, dry = DRY, b
   }
 
   const nextHtml = bake(html, data, today);
+  // An annotation on the daily Actions run as well as the log line, so the
+  // freeze reminder shows on the run summary without opening the log.
+  const notice = capNotice(data.projects);
+  if (notice) console.log(process.env.GITHUB_ACTIONS ? `::warning::${notice}` : `! ${notice}`);
   const nextJson = JSON.stringify(data, null, 2) + '\n';
   const htmlChanged = nextHtml !== html;
   const jsonChanged = nextJson !== readFileSync(dataFile, 'utf8');
