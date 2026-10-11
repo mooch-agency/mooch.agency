@@ -152,6 +152,19 @@
       "start": "2026-10-05",
       "end": "2026-10-05",
       "checked": "2026-10-06"
+    },
+    {
+      "id": "cactus-not-jack-free-mint",
+      "project": "Cactus, Not Jack",
+      "x": "cactusnotjack",
+      "type": "free-mint",
+      "eligibility": "Credits holders",
+      "description": "A free mint of Cactus, Not Jack, 3,333 pixel art cacti, in a FRIENDS phase for holders of Credits and five other collections.",
+      "url": "https://opensea.io/collection/cactus-not-jack",
+      "post": "https://x.com/cactusnotjack/status/2108235774315352210",
+      "start": "2026-10-08",
+      "ended": "Holders phase closed",
+      "checked": "2026-10-11"
     }
   ],
   "projects": [
