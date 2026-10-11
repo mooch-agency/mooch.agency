@@ -28,7 +28,7 @@ test('perkStatus: end dates, ended reasons and unknowns', () => {
   assert.equal(perkStatus(perk({ end: '2026-10-01' }), '2026-09-29'), 'open');
   assert.equal(perkStatus(perk({ end: '2026-10-01' }), '2026-10-01'), 'open', 'open through its last day');
   assert.equal(perkStatus(perk({ end: '2026-10-01' }), '2026-10-02'), 'ended');
-  assert.equal(perkStatus(perk({ start: '2026-10-05', end: '2026-10-09' }), '2026-09-29'), 'unknown', 'not started yet');
+  assert.equal(perkStatus(perk({ start: '2026-10-05', end: '2026-10-09' }), '2026-09-29'), 'upcoming', 'not started yet');
   assert.equal(perkStatus(perk({ ended: 'Sold out' }), '2026-09-29'), 'ended');
   assert.equal(perkStatus(perk({ start: '2026-09-23' }), '2026-09-29'), 'unknown');
   assert.equal(perkStatus(perk({ seenOpen: '2026-09-29' }), '2026-09-29'), 'open', 'seen live today');
@@ -36,14 +36,15 @@ test('perkStatus: end dates, ended reasons and unknowns', () => {
   assert.equal(perkStatus(perk({ seenOpen: '2026-09-29' }), '2026-10-07'), 'unknown', 'a stale check stops vouching');
 });
 
-test('sortPerks: open, then unknown, then ended, newest first', () => {
+test('sortPerks: open, upcoming, unknown, then ended, newest first', () => {
   const list = [
     perk({ id: 'a', ended: 'Sold out', start: '2026-09-28' }),
     perk({ id: 'b', start: '2026-09-20' }),
     perk({ id: 'c', end: '2026-10-01', start: '2026-09-21' }),
     perk({ id: 'd', start: '2026-09-25' }),
+    perk({ id: 'e', start: '2026-10-26', end: '2026-10-26' }),
   ];
-  assert.deepEqual(sortPerks(list, '2026-09-29').map((p) => p.id), ['c', 'd', 'b', 'a']);
+  assert.deepEqual(sortPerks(list, '2026-09-29').map((p) => p.id), ['c', 'e', 'd', 'b', 'a']);
 });
 
 test('perkProblems: required fields, types, dates, dashes, no stored status', () => {

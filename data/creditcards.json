@@ -85,8 +85,8 @@
       "url": "https://laternow.app/futures",
       "post": "https://x.com/LATE_FX/status/2103269221111058849",
       "start": "2026-09-24",
-      "seenOpen": "2026-09-29",
-      "checked": "2026-09-29"
+      "seenOpen": "2026-10-11",
+      "checked": "2026-10-11"
     },
     {
       "id": "credonauts-top-holders-airdrop",
@@ -119,13 +119,13 @@
       "project": "Afterflow",
       "x": "disorderly_AI",
       "type": "allowlist",
-      "eligibility": "Holders at the 30 Sep snapshot",
-      "description": "A two hour early window on Afterflow, a free generative geometry mint of up to 10,000 pieces, 5 per wallet. Check your wallet on the allowlist page.",
+      "eligibility": "Holders at the 7 Oct snapshot",
+      "description": "A two hour early window on Afterflow, a free generative geometry mint of up to 10,000 pieces, 5 per wallet. Credits is one of 24 collections in the holder snapshot. Check your wallet on the allowlist page.",
       "url": "https://afterflow.disorderly.ai/allowlist.html",
       "post": "https://x.com/disorderly_AI/status/2105388511209853117",
-      "start": "2026-09-30",
-      "checked": "2026-10-02",
-      "seenOpen": "2026-10-02"
+      "start": "2026-10-26",
+      "checked": "2026-10-11",
+      "end": "2026-10-26"
     },
     {
       "id": "roonz-free-mint",

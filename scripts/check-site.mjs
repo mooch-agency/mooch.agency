@@ -38,7 +38,7 @@ import path from 'node:path';
 import { load } from 'cheerio';
 import { EXCLUDED, shippedPages } from './site-files.mjs';
 import { CATEGORY_SLUGS, categoryProblems } from './creditcards-categories.mjs';
-import { perkProblems } from './creditcards-perks.mjs';
+import { PERK_STATUSES, perkProblems } from './creditcards-perks.mjs';
 import { accessProblems } from './creditcards-access.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -609,7 +609,7 @@ function checkCreditCardsData() {
   if (pill.length && pill.prev().attr('data-filter') !== 'all') fail('Data', 'creditcards.html', 'the Perks pill must come straight after All');
   $('#perk-list li[data-perk]').each((_, li) => {
     const s = $(li).attr('data-status');
-    if (!['open', 'ended', 'unknown'].includes(s)) fail('Data', 'creditcards.html', `perk card "${$(li).attr('data-perk')}" has data-status "${s ?? ''}"; ${rebake}`);
+    if (!PERK_STATUSES.includes(s)) fail('Data', 'creditcards.html', `perk card "${$(li).attr('data-perk')}" has data-status "${s ?? ''}"; ${rebake}`);
   });
 }
 
