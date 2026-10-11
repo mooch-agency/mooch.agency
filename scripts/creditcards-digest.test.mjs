@@ -67,6 +67,7 @@ test('subject pluralises', () => {
 test('dates: an end still ahead, or a start not reached yet', () => {
   assert.equal(when(perk({ end: '2026-10-03' }), NOW), 'Until 3 Oct');
   assert.equal(when(perk({ start: '2026-10-05', status: 'unknown' }), NOW), 'From 5 Oct');
+  assert.equal(when(perk({ start: '2026-10-26', end: '2026-10-26', status: 'upcoming' }), NOW), 'On 26 Oct', 'a one-day window says when, not until');
   assert.equal(when(perk(), NOW), '');
 });
 

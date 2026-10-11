@@ -45,7 +45,7 @@ export const PERK_TYPES = [
 ];
 
 export const PERK_TYPE_SLUGS = PERK_TYPES.map((t) => t.slug);
-export const PERK_STATUSES = ['open', 'ended', 'unknown'];
+export const PERK_STATUSES = ['open', 'upcoming', 'ended', 'unknown'];
 export const PERK_REQUIRED = ['id', 'project', 'x', 'type', 'eligibility', 'description', 'url', 'post'];
 
 // How long a "seen open" check vouches for a perk with no end date.
@@ -66,21 +66,22 @@ const addDays = (iso, n) => new Date(Date.parse(`${iso}T00:00:00Z`) + n * 86_400
 
 // open: a stated end date that hasn't passed yet (and, if a start is given,
 // it has started), or no end date but seen live within SEEN_OPEN_DAYS.
-// ended: an "ended" reason, or an end date before today. unknown: anything
-// else. Builders rarely give an end date.
+// upcoming: a start date still ahead (Afterflow's holder window, dated weeks
+// out). ended: an "ended" reason, or an end date before today. unknown:
+// anything else. Builders rarely give an end date.
 export function perkStatus(perk, today = todayUtc()) {
   if (perk.ended) return 'ended';
   if (perk.end && perk.end < today) return 'ended';
-  if (perk.start && perk.start > today) return 'unknown';
+  if (perk.start && perk.start > today) return 'upcoming';
   if (perk.end) return 'open';
   if (perk.seenOpen && perk.seenOpen <= today && today <= addDays(perk.seenOpen, SEEN_OPEN_DAYS)) return 'open';
   return 'unknown';
 }
 
-// Open first, then unknown, then ended; newest start first inside each; then
+// Open first, then upcoming, then unknown, then ended; newest start first inside each; then
 // by name. A pure function of the data and the day, so the bake stays stable.
 export function sortPerks(perks, today = todayUtc()) {
-  const rank = { open: 0, unknown: 1, ended: 2 };
+  const rank = { open: 0, upcoming: 1, unknown: 2, ended: 3 };
   return perks
     .map((p) => ({ p, s: perkStatus(p, today) }))
     .sort((a, b) => rank[a.s] - rank[b.s] || (b.p.start || '').localeCompare(a.p.start || '') || a.p.project.localeCompare(b.p.project))

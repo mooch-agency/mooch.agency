@@ -657,12 +657,13 @@ const NEW_DAYS = 7;
 const daysBefore = (iso, n) => new Date(Date.parse(`${iso}T00:00:00Z`) - n * 86_400_000).toISOString().slice(0, 10);
 
 const PERK_TYPE_LABEL = Object.fromEntries(PERK_TYPES.map((t) => [t.slug, t.label]));
-const PERK_STATUS_LABEL = { open: 'Open', ended: 'Ended', unknown: 'Status unknown' };
+const PERK_STATUS_LABEL = { open: 'Open', upcoming: 'Upcoming', ended: 'Ended', unknown: 'Status unknown' };
 const PERK_GROUP_LABEL = PERK_STATUS_LABEL;
 
-// The date on a perk card: its end when one is stated ("Ends" or "Ended"),
-// otherwise the day it was announced.
+// The date on a perk card: when it opens if that is still ahead, its end
+// when one is stated ("Ends" or "Ended"), otherwise the day it was announced.
 function perkDate(p, status) {
+  if (status === 'upcoming') return `<time datetime="${p.start}">Opens ${fmtDate(p.start)}</time>`;
   if (p.end) return `<time datetime="${p.end}">${status === 'ended' ? 'Ended' : 'Ends'} ${fmtDate(p.end)}</time>`;
   if (p.start) return `<time datetime="${p.start}">${fmtDate(p.start)}</time>`;
   return '<span></span>';
@@ -677,7 +678,7 @@ function renderPerks(perks, dm, today) {
   if (!perks || !perks.length) return null;
   const sorted = sortPerks(perks, today);
   // Where the paid-alert band goes in this view: straight after the perks
-  // you can still claim (open, then unknown), before the ended ones. Empty in
+  // you can still claim (open, upcoming, then unknown), before the ended ones. Empty in
   // the HTML; the band's script moves the one #subscribe band in here while
   // the Perks view is showing, so the form sits where the intent is.
   const firstEnded = sorted.findIndex((p) => perkStatus(p, today) === 'ended');
@@ -701,7 +702,7 @@ function renderPerks(perks, dm, today) {
         .join('\n');
     });
   // Status headings for the phone list, one before each status group (the
-  // perks are already sorted open, unknown, ended), so a row no longer needs
+  // perks are already sorted open, upcoming, unknown, ended), so a row no longer needs
   // its own status pill there. Shown only in the phone list; the grid and
   // the desktop list keep the per-card status.
   const statuses = sorted.map((p) => perkStatus(p, today));

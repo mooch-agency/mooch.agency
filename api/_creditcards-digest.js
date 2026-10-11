@@ -9,7 +9,7 @@
 // claim, and most perks close within days. Changed from projects 1 Oct 2026.
 //
 // Items arrive decorated by the caller: each perk carries `status` (open,
-// ended or unknown, from perkStatus in scripts/creditcards-perks.mjs for the
+// upcoming, ended or unknown, from perkStatus in scripts/creditcards-perks.mjs for the
 // day of the run) and `typeLabel` ("Free mint"). Status logic lives in that
 // one ESM module, so this file never copies it.
 //
@@ -79,17 +79,18 @@ function shortDate(iso) {
 /**
  * What an alert lists: perks not sent before that haven't ended. A perk that
  * was over before anyone could hear about it is never worth an email. Open
- * first, then status unknown (no end date given, or not started yet), then by
+ * first, then upcoming (a start date still ahead), then status unknown (no
+ * end date given), then by
  * start date and name, so the order is stable between runs.
  */
 function selectNew(perks, sentIds) {
   const sent = new Set(sentIds || []);
-  const rank = { open: 0, unknown: 1 };
+  const rank = { open: 0, upcoming: 1, unknown: 2 };
   return (perks || [])
     .filter((p) => p && p.id && p.status !== "ended" && !sent.has(p.id))
     .sort(
       (a, b) =>
-        (rank[a.status] ?? 2) - (rank[b.status] ?? 2) ||
+        (rank[a.status] ?? 3) - (rank[b.status] ?? 3) ||
         String(a.start || "").localeCompare(String(b.start || "")) ||
         String(a.project).localeCompare(String(b.project)),
     );
@@ -101,11 +102,12 @@ function buildSubject(items) {
   return `${n} new ${n === 1 ? "perk" : "perks"} for Credits holders`;
 }
 
-/** "Until 26 Sept" while a stated end is ahead, "From 3 Oct" before a start. */
+/** "From 3 Oct" (or "On 26 Oct" for a one-day window) before a start,
+ * "Until 26 Sept" while a stated end is ahead. */
 function when(p, now) {
   const today = now.toISOString().slice(0, 10);
+  if (p.start && p.start > today) return `${p.end === p.start ? "On" : "From"} ${shortDate(p.start)}`;
   if (p.end && p.end >= today) return `Until ${shortDate(p.end)}`;
-  if (p.start && p.start > today) return `From ${shortDate(p.start)}`;
   return "";
 }
 
