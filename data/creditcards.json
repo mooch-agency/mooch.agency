@@ -2057,6 +2057,22 @@
         "via-quote"
       ],
       "tweetText": "gM 🌵\n\nFRIENDS phase is live on @opensea\n\n422 mints locked in. \n63 unique holders so far. \n\nCheck the pinned post to see collections eligible for this phase. \nREVEAL happens after mint. \n\nhttps://t.co"
+    },
+    {
+      "id": "oncave-io-labs-credits-market",
+      "name": "Credits Market",
+      "url": "https://oncave.io/labs/credits-market/",
+      "x": "wutaner",
+      "post": "https://x.com/wutaner/status/2109306418939703774",
+      "blurb": "Ranks listed Credits and Statements by ETH per 1,000 points, then buys a bundle in one transaction. Browsing is free; buying needs a wallet. Opens in Chinese, with English top right.",
+      "category": "markets",
+      "access": "optional",
+      "status": "approved",
+      "added": "2026-10-11",
+      "metrics": {
+        "likes": 25,
+        "reposts": 0
+      }
     }
   ]
 }
