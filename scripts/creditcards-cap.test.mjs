@@ -1,7 +1,7 @@
 // Offline checks for the 50-project cap: node --test scripts/
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { PROJECT_CAP, capNotice, capProblems } from './creditcards-cap.mjs';
+import { PROJECT_CAP, capLine, capNotice, capProblems } from './creditcards-cap.mjs';
 
 const projects = (approved, other = 3) => [
   ...Array.from({ length: approved }, (_, i) => ({ id: `a${i}`, status: 'approved' })),
@@ -16,4 +16,10 @@ test('the cap: quiet below 50, a reminder at 50, a refusal past it', () => {
   assert.deepEqual(capProblems(projects(50)), [], '50 is allowed');
   assert.match(capProblems(projects(51))[0], /51 approved projects; .*capped at the first 50/);
   assert.equal(capNotice(projects(10, 60)), null, 'rejected and pending entries never count');
+});
+
+test('the places-left line under the title', () => {
+  assert.equal(capLine(projects(48)), '2 places left.');
+  assert.equal(capLine(projects(49)), '1 place left.');
+  assert.equal(capLine(projects(50)), '');
 });

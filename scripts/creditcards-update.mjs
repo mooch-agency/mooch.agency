@@ -93,7 +93,7 @@ import {
   strayTcoLinks,
 } from './creditcards-discover.mjs';
 import { CATEGORIES, categoryProblems, suggestCategory } from './creditcards-categories.mjs';
-import { capNotice, capProblems } from './creditcards-cap.mjs';
+import { capLine, capNotice, capProblems } from './creditcards-cap.mjs';
 import { ACCESS, accessProblems, suggestAccess } from './creditcards-access.mjs';
 import { PERK_TYPES, perkProblems, perkStatus, sortPerks, todayUtc } from './creditcards-perks.mjs';
 
@@ -580,8 +580,8 @@ function renderHead(total) {
     '    <div class="projects-head">',
     '      <h2 id="projects">The projects</h2>',
     count
-      ? `      <p><span data-filter-status aria-live="polite">${count}</span> &middot; Found daily on X</p>`
-      : '      <p>Found daily on X</p>',
+      ? `      <p><span data-filter-status aria-live="polite">${count}</span> &middot; The first 50 found on X</p>`
+      : '      <p>The first 50 found on X</p>',
     '    </div>',
   ].join('\n');
 }
@@ -901,6 +901,7 @@ function bake(html, data, today = todayUtc()) {
   next = bakeStat(next, 'supply', fmtInt(s.supply));
   next = bakeStat(next, 'owners', fmtInt(s.owners));
   next = bakeStat(next, 'perksLine', escapeHtml(perksLine(data.perks, today)));
+  next = bakeStat(next, 'capLine', capLine(data.projects));
   return next;
 }
 
