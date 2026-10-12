@@ -322,6 +322,9 @@
      cyan square before "Perks" and swaps its count for "N open". Otherwise
      the Perks pill is a plain pill like the rest. */
   .cc-filter-dot { flex: 0 0 6px; height: max(1cap, 6px); margin-right: -2px; background: linear-gradient(var(--credit-c), var(--credit-c)) center / 6px 6px no-repeat; }
+  /* Perks, the one live thing, sits before a hairline that sets it apart
+     from the frozen 50 (All and the types). */
+  .cc-filter-sep { flex: 0 0 1px; align-self: stretch; margin: 6px 4px; background: var(--hairline); }
   .projects[hidden], .projects > li[hidden] { display: none; }
   @keyframes cc-filter-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: no-preference) {
@@ -1209,8 +1212,9 @@
     </div>
     <div class="cc-bar">
     <div class="cc-filter" role="group" aria-label="Filter projects by category" data-scroller>
-      <button type="button" class="cc-filter-pill" data-filter="all" aria-pressed="true" aria-controls="project-list" data-count="50">All <span class="cc-filter-n">50</span></button>
       <button type="button" class="cc-filter-pill" data-filter="perks" aria-pressed="false" aria-controls="perk-list" data-count="11"><span class="cc-filter-dot" aria-hidden="true"></span>Perks <span class="cc-filter-n">1 open</span></button>
+      <span class="cc-filter-sep" aria-hidden="true"></span>
+      <button type="button" class="cc-filter-pill" data-filter="all" aria-pressed="true" aria-controls="project-list" data-count="50">All <span class="cc-filter-n">50</span></button>
       <button type="button" class="cc-filter-pill" data-filter="rarity" aria-pressed="false" aria-controls="project-list" data-count="13">Rarity &amp; data</button>
       <button type="button" class="cc-filter-pill" data-filter="art" aria-pressed="false" aria-controls="project-list" data-count="15">Art &amp; remixes</button>
       <button type="button" class="cc-filter-pill" data-filter="statements" aria-pressed="false" aria-controls="project-list" data-count="7">Build a Statement</button>
