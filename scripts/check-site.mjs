@@ -613,7 +613,7 @@ function checkCreditCardsData() {
   const label = open ? `${open} open` : String(want.length);
   if (want.length && (!pill.length || pill.find('.cc-filter-n').text() !== label)) fail('Data', 'creditcards.html', `the Perks pill is missing or doesn't read "${label}"; ${rebake}`);
   if (pill.length && pill.find('.cc-filter-dot').length !== (open ? 1 : 0)) fail('Data', 'creditcards.html', `the Perks pill ${open ? 'needs' : 'must not have'} the live dot with ${open} perk${open === 1 ? '' : 's'} open; ${rebake}`);
-  if (pill.length && pill.prev().attr('data-filter') !== 'all') fail('Data', 'creditcards.html', 'the Perks pill must come straight after All');
+  if (pill.length && (pill.prev().length || !pill.next().is('.cc-filter-sep') || pill.next().next().attr('data-filter') !== 'all')) fail('Data', 'creditcards.html', 'the Perks pill must come first, then the divider, then All');
   $('#perk-list li[data-perk]').each((_, li) => {
     const s = $(li).attr('data-status');
     if (!PERK_STATUSES.includes(s)) fail('Data', 'creditcards.html', `perk card "${$(li).attr('data-perk')}" has data-status "${s ?? ''}"; ${rebake}`);

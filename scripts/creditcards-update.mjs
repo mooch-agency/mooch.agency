@@ -593,9 +593,11 @@ function renderHead(total) {
   ].join('\n');
 }
 
-// The category pills: All first, then Perks when there are any (straight
-// after All, so on a phone it sits on the first screen of the sideways row
-// rather than off the end), then CATEGORIES in their fixed order, each with
+// The category pills: Perks first when there are any, then a hairline
+// divider, then All and CATEGORIES in their fixed order. Perks is the one
+// live thing on a page whose 50 projects are frozen, so the divider sets it
+// apart; first rather than last so a phone shows it on the first screen of
+// the sideways row instead of off the end. Each pill carries
 // its total in data-count (the filter script reads it). All and Perks show a
 // number on screen, All the size of the index; the categories are bare
 // labels, so the row reads as choices rather than a table of figures. Plain buttons with aria-pressed; they do nothing
@@ -608,18 +610,22 @@ function renderFilter(approved, perkCount, perksOpen = 0) {
   const counts = Object.fromEntries(CATEGORIES.map((c) => [c.slug, 0]));
   for (const p of approved) counts[p.category] += 1;
   const pills = [
-    { slug: 'all', label: 'All', total: approved.length, n: approved.length, controls: 'project-list' },
     ...(perkCount
-      ? [{ slug: 'perks', label: 'Perks', total: perkCount, n: perksOpen ? `${perksOpen} open` : perkCount, dot: perksOpen > 0, controls: 'perk-list' }]
+      ? [
+          { slug: 'perks', label: 'Perks', total: perkCount, n: perksOpen ? `${perksOpen} open` : perkCount, dot: perksOpen > 0, controls: 'perk-list' },
+          { sep: true },
+        ]
       : []),
+    { slug: 'all', label: 'All', total: approved.length, n: approved.length, controls: 'project-list' },
     ...CATEGORIES.map((c) => ({ ...c, total: counts[c.slug], controls: 'project-list' })),
   ];
   return [
     '    <div class="cc-bar">',
     '    <div class="cc-filter" role="group" aria-label="Filter projects by category" data-scroller>',
-    ...pills.map(
-      (c) =>
-        `      <button type="button" class="cc-filter-pill" data-filter="${c.slug}" aria-pressed="${c.slug === 'all'}" aria-controls="${c.controls}" data-count="${c.total}">${c.dot ? '<span class="cc-filter-dot" aria-hidden="true"></span>' : ''}${escapeHtml(c.label)}${c.n === undefined ? '' : ` <span class="cc-filter-n">${c.n}</span>`}</button>`,
+    ...pills.map((c) =>
+      c.sep
+        ? '      <span class="cc-filter-sep" aria-hidden="true"></span>'
+        : `      <button type="button" class="cc-filter-pill" data-filter="${c.slug}" aria-pressed="${c.slug === 'all'}" aria-controls="${c.controls}" data-count="${c.total}">${c.dot ? '<span class="cc-filter-dot" aria-hidden="true"></span>' : ''}${escapeHtml(c.label)}${c.n === undefined ? '' : ` <span class="cc-filter-n">${c.n}</span>`}</button>`,
     ),
     '    </div>',
     VIEW_TOGGLE,
