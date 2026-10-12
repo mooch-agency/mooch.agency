@@ -1,17 +1,17 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-12T06:29:08.260Z",
+    "lastRun": "2026-10-12T15:17:28.150Z",
     "stats": {
-      "floorEth": 0.0077565,
-      "floorUsd": 20,
+      "floorEth": 0.0076999,
+      "floorUsd": 19,
       "supply": 107847,
-      "owners": 13151,
-      "fetchedAt": "2026-10-12T06:29:08.235Z"
+      "owners": 13133,
+      "fetchedAt": "2026-10-12T15:15:36.065Z"
     },
     "replySinceId": "2108135048251625841",
-    "topicSinceId": "2109240810063474722",
-    "mentionSinceId": "2109514795200217310",
+    "topicSinceId": "2109659943565471994",
+    "mentionSinceId": "2109628299399798964",
     "frozenOn": "2026-10-12"
   },
   "featuredSlot": {
@@ -188,7 +188,8 @@
       "metrics": {
         "likes": 227,
         "reposts": 22
-      }
+      },
+      "archive": "https://web.archive.org/web/20261012151545/https://creditunion.fun"
     },
     {
       "id": "jack-art-credits-rating",
@@ -204,7 +205,8 @@
       "metrics": {
         "likes": 0,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261012151609/https://jack.art/credits/rating"
     },
     {
       "id": "creditsmoonmath-xyz",
@@ -220,7 +222,8 @@
       "metrics": {
         "likes": 1,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261012151631/https://creditsmoonmath.xyz"
     },
     {
       "id": "credits-statement-studio-vercel-app",
@@ -236,7 +239,8 @@
       "metrics": {
         "likes": 1,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261012151653/https://credits-statement-studio.vercel.app"
     },
     {
       "id": "mantra-coral-mr7v-here-now",
@@ -252,7 +256,8 @@
       "metrics": {
         "likes": 76,
         "reposts": 3
-      }
+      },
+      "archive": "https://web.archive.org/web/20261012151713/https://mantra-coral-mr7v.here.now"
     },
     {
       "id": "credits-ninja",
