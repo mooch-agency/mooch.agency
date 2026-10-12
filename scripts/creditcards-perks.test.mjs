@@ -85,7 +85,8 @@ test('bake: Perks pill first, then the divider and All, one card per perk, statu
     // Buttons only: the page CSS also names [data-filter="perks"].
     const order = [...html.matchAll(/<button [^>]*data-filter="([a-z]+)"/g)].map((m) => m[1]);
     assert.deepEqual(order.slice(0, 3), ['perks', 'all', 'rarity']);
-    assert.match(html, /data-filter="perks"[^\n]*<\/button>\n\s*<span class="cc-filter-sep" aria-hidden="true"><\/span>\n\s*<button [^>]*data-filter="all"/, 'the divider sits between Perks and All');
+    assert.match(html, /data-filter="perks"[\s\S]*?<\/button>\s*<span class="cc-filter-sep"[^>]*><\/span>\s*<button [^>]*data-filter="all"/, 'the divider sits between Perks and All');
+    assert.equal(html.match(/class="cc-filter-sep"/g).length, 1, 'one divider');
     assert.match(html, /data-filter="perks"[^>]*aria-controls="perk-list" data-count="\d+"><span class="cc-filter-dot" aria-hidden="true"><\/span>Perks <span class="cc-filter-n">1 open<\/span>/);
     assert.match(html, /data-perk="one" data-status="open"/);
     assert.match(html, /data-perk="two" data-status="ended"/);
@@ -110,6 +111,7 @@ test('bake: no perks, no pill and no view; a bad perk fails the bake', async () 
     const html = readFileSync(path.join(dir, 'creditcards.html'), 'utf8');
     assert.doesNotMatch(html, /<button [^>]*data-filter="perks"/);
     assert.doesNotMatch(html, /id="perk-list"/);
+    assert.doesNotMatch(html, /class="cc-filter-sep"/, 'no divider without Perks');
     await assert.rejects(run({ root: sandbox([perk({ type: 'raffle' })]), bakeOnly: true, dry: true }), /type "raffle"/);
   } finally {
     console.log = log;

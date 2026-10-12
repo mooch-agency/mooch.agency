@@ -321,10 +321,10 @@
   /* The live dot: while any perk is open the bake puts the Open badge's
      cyan square before "Perks" and swaps its count for "N open". Otherwise
      the Perks pill is a plain pill like the rest. */
+  .cc-filter-dot { flex: 0 0 6px; height: max(1cap, 6px); margin-right: -2px; background: linear-gradient(var(--credit-c), var(--credit-c)) center / 6px 6px no-repeat; }
   /* Perks, the one live thing, sits before a hairline that sets it apart
      from the frozen 50 (All and the types). */
-  .cc-filter-sep { flex: 0 0 1px; align-self: stretch; margin: 6px 4px; background: var(--hairline-focus); }
-  .cc-filter-dot { flex: 0 0 6px; height: max(1cap, 6px); margin-right: -2px; background: linear-gradient(var(--credit-c), var(--credit-c)) center / 6px 6px no-repeat; }
+  .cc-filter-sep { flex: 0 0 1px; align-self: stretch; margin: 6px 4px; background: var(--hairline); }
   .projects[hidden], .projects > li[hidden] { display: none; }
   @keyframes cc-filter-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: no-preference) {
