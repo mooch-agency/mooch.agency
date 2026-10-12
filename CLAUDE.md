@@ -260,8 +260,7 @@ that fails open on timeout, and per-domain plus global rate limits.
 
 Capped at the first 50 projects we came across: a showcase, not a daily feed.
 It filled on 12 Oct 2026 and froze the same day (`meta.frozenOn`). The bake and
-`ci:check` refuse a 51st approved project (`scripts/creditcards-cap.mjs`), and
-the line under the title reads the span the 50 came in over. Since the freeze
+`ci:check` refuse a 51st approved project (`scripts/creditcards-cap.mjs`). Since the freeze
 the daily job runs no project searches, only the perk and mention searches
 (their pending entries are perk leads, never a 51st project), and saves each
 project to the Wayback Machine a few a run (`scripts/creditcards-archive.mjs`,

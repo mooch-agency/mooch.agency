@@ -22,7 +22,7 @@ test('the cap: quiet below 50, a reminder at 50, a refusal past it', () => {
 test('the places-left line under the title', () => {
   assert.equal(capLine(projects(48)), '2 places left.');
   assert.equal(capLine(projects(49)), '1 place left.');
-  assert.equal(capLine(projects(50)), 'Collected 24 Sept to 12 Oct 2026.', 'once full, the span the 50 came in over');
+  assert.equal(capLine(projects(50)), '');
   assert.equal(isFull(projects(49)), false);
   assert.equal(isFull(projects(50)), true);
 });

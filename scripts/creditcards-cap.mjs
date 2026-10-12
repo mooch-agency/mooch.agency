@@ -16,8 +16,6 @@ const approvedCount = (projects) => projects.filter((p) => p.status === 'approve
 // True once all 50 are in: discovery stops looking for projects.
 export const isFull = (projects) => approvedCount(projects) >= PROJECT_CAP;
 
-const fmt = (iso, opts) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { ...opts, timeZone: 'UTC' });
-
 // A 51st approved project, as a readable problem. Empty array means fine.
 export function capProblems(projects) {
   const n = approvedCount(projects);
@@ -26,18 +24,11 @@ export function capProblems(projects) {
     : [];
 }
 
-// The line under the title, baked into the data-stat="capLine" span: the
-// places left while there are any ("2 places left."), then the span the 50
-// were collected over ("Collected 24 Sept to 12 Oct 2026.").
+// The line under the title while places remain ("2 places left."), baked
+// into the data-stat="capLine" span. Empty once all 50 are in.
 export function capLine(projects) {
   const left = Math.max(0, PROJECT_CAP - approvedCount(projects));
-  if (left) return `${left} ${left === 1 ? 'place' : 'places'} left.`;
-  const days = projects.filter((p) => p.status === 'approved').map((p) => p.added).sort();
-  const first = days[0];
-  const last = days[days.length - 1];
-  const sameYear = first.slice(0, 4) === last.slice(0, 4);
-  const from = fmt(first, sameYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' });
-  return `Collected ${from} to ${fmt(last, { day: 'numeric', month: 'short', year: 'numeric' })}.`;
+  return left ? `${left} ${left === 1 ? 'place' : 'places'} left.` : '';
 }
 
 // The reminder once the cap is reached, or null before it. Silent once the
