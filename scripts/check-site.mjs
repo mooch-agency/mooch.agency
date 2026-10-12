@@ -39,6 +39,7 @@ import { load } from 'cheerio';
 import { EXCLUDED, shippedPages } from './site-files.mjs';
 import { CATEGORY_SLUGS, categoryProblems } from './creditcards-categories.mjs';
 import { capNotice, capProblems } from './creditcards-cap.mjs';
+import { archiveProblems } from './creditcards-archive.mjs';
 import { PERK_STATUSES, perkProblems } from './creditcards-perks.mjs';
 import { accessProblems } from './creditcards-access.mjs';
 
@@ -583,8 +584,9 @@ function checkCreditCardsData() {
   for (const msg of categoryProblems(data.projects || [])) fail('Data', dataRel, msg);
   for (const msg of accessProblems(data.projects || [])) fail('Data', dataRel, msg);
   for (const msg of capProblems(data.projects || [])) fail('Data', dataRel, msg);
+  for (const msg of archiveProblems(data.projects || [])) fail('Data', dataRel, msg);
   // Not a failure at exactly 50: the PR that approves the 50th says so on CI.
-  const notice = capNotice(data.projects || []);
+  const notice = capNotice(data.projects || [], data.meta && data.meta.frozenOn);
   if (notice) console.log(process.env.GITHUB_ACTIONS ? `::warning file=${dataRel}::${notice}` : `! ${notice}`);
   const perkMsgs = perkProblems(data.perks);
   for (const msg of perkMsgs) fail('Data', dataRel, msg);

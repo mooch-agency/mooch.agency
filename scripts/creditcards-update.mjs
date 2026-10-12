@@ -93,7 +93,8 @@ import {
   strayTcoLinks,
 } from './creditcards-discover.mjs';
 import { CATEGORIES, categoryProblems, suggestCategory } from './creditcards-categories.mjs';
-import { capLine, capNotice, capProblems } from './creditcards-cap.mjs';
+import { capLine, capNotice, capProblems, isFull } from './creditcards-cap.mjs';
+import { archiveProblems, archiveProjects } from './creditcards-archive.mjs';
 import { ACCESS, accessProblems, suggestAccess } from './creditcards-access.mjs';
 import { PERK_TYPES, perkProblems, perkStatus, sortPerks, todayUtc } from './creditcards-perks.mjs';
 
@@ -451,7 +452,8 @@ async function searchSource(pool, token, { query, maxResults, sinceKey, source }
 
 export async function discover(data, token, fetchImpl = fetch, log = console.log, logErr = console.error) {
   const pool = new Pool(data, fetchImpl);
-  const sources = [
+  const full = isFull(data.projects);
+  const all = [
     ['X search', () => searchSource(pool, token, { query: X_QUERY, maxResults: X_MAX_RESULTS, sinceKey: 'sinceId', source: 'search' })],
     [
       `X replies to @${X_REPLY_HANDLE}`,
@@ -468,6 +470,11 @@ export async function discover(data, token, fetchImpl = fetch, log = console.log
         searchSource(pool, token, { query: X_MENTION_QUERY, maxResults: X_MENTION_MAX_RESULTS, sinceKey: 'mentionSinceId', source: 'mentions' }),
     ],
   ];
+  // Once all 50 are in, the project searches stop. The perk and mention
+  // searches keep running: they surface perks (pending entries to review as
+  // perks, never to approve as a 51st project) until perks move to MTS.
+  const sources = full ? all.filter(([label]) => label === 'X perk posts' || label.startsWith('X mentions')) : all;
+  if (full) log('= Credit Cards is full (50): project searches off, perk and mention searches still run');
   // Each source survives the others' failure. A failed source leaves its
   // since-id where it was, so the next run re-reads the gap (search windows
   // reach back 7 days).
@@ -759,9 +766,12 @@ function renderProjects(projects, slot, perks = [], today = todayUtc()) {
     .map((p) => {
       const isFeatured = p === featured;
       const name = escapeHtml(stripDashes(p.name));
-      const blurb = escapeHtml(stripDashes(p.blurb));
+      // A project whose site has gone opens its Wayback copy instead, and
+      // the blurb says so (creditcards-archive.mjs).
+      const gone = Boolean(p.offline && p.archive);
+      const blurb = escapeHtml(stripDashes(gone ? `${p.blurb} Offline now: the link opens an archived copy.` : p.blurb));
       const handle = escapeHtml(p.x);
-      const url = escapeHtml(p.url);
+      const url = escapeHtml(gone ? p.archive : p.url);
       // Co-builders from "with" follow the lead handle, each linking to their
       // own profile; the lead handle still opens the announcement post.
       const co = (p.with || [])
@@ -888,6 +898,7 @@ function bake(html, data, today = todayUtc()) {
     ...categoryProblems(data.projects),
     ...accessProblems(data.projects),
     ...capProblems(data.projects),
+    ...archiveProblems(data.projects),
     ...perkProblems(data.perks),
   ];
   if (problems.length) throw new Error(`${DATA_FILE}: ${problems.join('; ')}`);
@@ -927,13 +938,21 @@ export async function run({ xToken, fetchImpl = fetch, root = ROOT, dry = DRY, b
     } catch (e) {
       console.error(`✗ Stats refresh failed, keeping baked stats: ${e.message}`);
     }
+    if (isFull(data.projects)) {
+      try {
+        const { archived, left } = await archiveProjects(data.projects, fetchImpl);
+        console.log(`✓ Archive: ${archived} project(s) saved to the Wayback Machine, ${left} to go`);
+      } catch (e) {
+        console.error(`✗ Archive step failed, continuing: ${e.message}`);
+      }
+    }
     data.meta.lastRun = new Date().toISOString();
   }
 
   const nextHtml = bake(html, data, today);
   // An annotation on the daily Actions run as well as the log line, so the
   // freeze reminder shows on the run summary without opening the log.
-  const notice = capNotice(data.projects);
+  const notice = capNotice(data.projects, data.meta.frozenOn);
   if (notice) console.log(process.env.GITHUB_ACTIONS ? `::warning::${notice}` : `! ${notice}`);
   const nextJson = JSON.stringify(data, null, 2) + '\n';
   const htmlChanged = nextHtml !== html;
