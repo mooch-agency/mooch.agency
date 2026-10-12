@@ -1,9 +1,10 @@
 name: Credit Cards daily
 
-# Keeps /creditcards fresh: one X API search a day for new Credits community
-# projects (landing as "pending" in data/creditcards.json for human review),
-# a re-bake of the approved list and the fallback stat numbers, then a commit
-# to master, which Vercel deploys.
+# Keeps /creditcards fresh: the X API searches (since the 12 Oct freeze at 50
+# projects, only the perk and mention searches, landing as "pending" in
+# data/creditcards.json for human review), the Wayback archive step, a re-bake
+# of the approved list and the fallback stat numbers, then a commit to master,
+# which Vercel deploys.
 #
 # Three ways in:
 #   schedule            the daily run (discovery + stats + bake)
@@ -43,7 +44,8 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # 15, not 10: the archive step can wait up to 80s on each of 5 saves.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 

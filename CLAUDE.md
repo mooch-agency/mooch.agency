@@ -259,8 +259,15 @@ that fails open on timeout, and per-domain plus global rate limits.
 ## Credit Cards index (`/creditcards`)
 
 Capped at the first 50 projects we came across: a showcase, not a daily feed.
-The bake and `ci:check` refuse a 51st approved project, and both flag the 50th
-with a pointer to the freeze checklist in issue #101 (`scripts/creditcards-cap.mjs`).
+It filled on 12 Oct 2026 and froze the same day (`meta.frozenOn`). The bake and
+`ci:check` refuse a 51st approved project (`scripts/creditcards-cap.mjs`), and
+the line under the title reads the span the 50 came in over. Since the freeze
+the daily job runs no project searches, only the perk and mention searches
+(their pending entries are perk leads, never a 51st project), and saves each
+project to the Wayback Machine a few a run (`scripts/creditcards-archive.mjs`,
+stored as `archive`). A project whose site dies gets `"offline": true` by hand
+and its card then opens the archived copy. Perks move to Monitoring the
+Situation separately (issue #101, Notion ticket).
 
 Every approved project in `data/creditcards.json` needs a `category` and an
 `access` (`none`, `optional`, `wallet`, `paid`: what it takes to try it, see
