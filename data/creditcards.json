@@ -2073,6 +2073,23 @@
         "likes": 25,
         "reposts": 0
       }
+    },
+    {
+      "id": "crediteye-xyz",
+      "name": "CreditEye",
+      "url": "https://crediteye.xyz",
+      "x": "l_wrench",
+      "post": "https://x.com/l_wrench/status/2109447792431415670",
+      "blurb": "Deep trait search, best value per point, and live market and holder data for Credits and Statements. No wallet needed.",
+      "category": "rarity",
+      "access": "none",
+      "status": "approved",
+      "added": "2026-10-12",
+      "source": "submission",
+      "metrics": {
+        "likes": 2,
+        "reposts": 0
+      }
     }
   ]
 }
