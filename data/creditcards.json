@@ -1,16 +1,16 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-13T00:38:31.361Z",
+    "lastRun": "2026-10-13T06:25:22.624Z",
     "stats": {
-      "floorEth": 0.01365939,
-      "floorUsd": 33,
-      "supply": 106647,
-      "owners": 12858,
-      "fetchedAt": "2026-10-13T00:37:17.598Z"
+      "floorEth": 0.0124439,
+      "floorUsd": 31,
+      "supply": 106407,
+      "owners": 12841,
+      "fetchedAt": "2026-10-13T06:21:25.290Z"
     },
     "replySinceId": "2108135048251625841",
-    "topicSinceId": "2109800462224367862",
+    "topicSinceId": "2109811361295253935",
     "mentionSinceId": "2109774495246582223",
     "frozenOn": "2026-10-12"
   },
@@ -597,7 +597,8 @@
       "metrics": {
         "likes": 15,
         "reposts": 2
-      }
+      },
+      "archive": "https://web.archive.org/web/20261013062507/https://opensea.io/collection/creditcards"
     },
     {
       "id": "creditscheck-xyz-browse-all",
