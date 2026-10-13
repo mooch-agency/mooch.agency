@@ -1,17 +1,17 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-13T14:08:23.984Z",
+    "lastRun": "2026-10-13T18:41:54.512Z",
     "stats": {
-      "floorEth": 0.012745,
-      "floorUsd": 32,
-      "supply": 106247,
-      "owners": 12798,
-      "fetchedAt": "2026-10-13T14:06:07.382Z"
+      "floorEth": 0.013565,
+      "floorUsd": 34,
+      "supply": 106087,
+      "owners": 12740,
+      "fetchedAt": "2026-10-13T18:38:37.776Z"
     },
     "replySinceId": "2108135048251625841",
     "topicSinceId": "2109811361295253935",
-    "mentionSinceId": "2109995848742342779",
+    "mentionSinceId": "2110034521769021869",
     "frozenOn": "2026-10-12"
   },
   "featuredSlot": {
@@ -584,7 +584,8 @@
       "metrics": {
         "likes": 0,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261013140726/https://www.tokenstrategy.com/"
     },
     {
       "id": "opensea-io-collection-creditcards",
@@ -659,7 +660,8 @@
       "metrics": {
         "likes": 0,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261013140828/https://www.creditsmonitor.com/"
     },
     {
       "id": "creditscores-vercel-app-creditizer",
@@ -2126,6 +2128,26 @@
       "score": 2,
       "flags": [],
       "tweetText": "TRONE mint opens in 1 hour ⚡\n\n🕐 01:00 UTC\n\nEligible for FREE mint:\n\n→ DEBITS holders @wubbushi\n→ CREDITS holders @jackbutcher\n→ All whitelisted wallets\n\nMint : https://t.co/Lv91zilQeb\n\nYour neon iden"
+    },
+    {
+      "id": "gridphantoms-app-credits",
+      "name": "gridphantoms.app",
+      "url": "https://gridphantoms.app/credits",
+      "x": "ktrap",
+      "post": "https://x.com/ktrap/status/2110034521769021869",
+      "blurb": "",
+      "category": "art",
+      "access": "none",
+      "status": "pending",
+      "added": "2026-10-13",
+      "metrics": {
+        "likes": 0,
+        "reposts": 0
+      },
+      "source": "mentions",
+      "score": 2,
+      "flags": [],
+      "tweetText": "@jesusdoteth Looks like I just missed your 50 cutoff- just launched this today https://t.co/Vi8ho4Kv7L"
     }
   ]
 }
