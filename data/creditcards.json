@@ -1,17 +1,17 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-12T18:38:02.371Z",
+    "lastRun": "2026-10-13T00:38:31.361Z",
     "stats": {
-      "floorEth": 0.0148883999,
-      "floorUsd": 37,
-      "supply": 107447,
-      "owners": 13010,
-      "fetchedAt": "2026-10-12T18:36:09.801Z"
+      "floorEth": 0.01365939,
+      "floorUsd": 33,
+      "supply": 106647,
+      "owners": 12858,
+      "fetchedAt": "2026-10-13T00:37:17.598Z"
     },
     "replySinceId": "2108135048251625841",
-    "topicSinceId": "2109659943565471994",
-    "mentionSinceId": "2109628299399798964",
+    "topicSinceId": "2109800462224367862",
+    "mentionSinceId": "2109774495246582223",
     "frozenOn": "2026-10-12"
   },
   "featuredSlot": {
@@ -319,7 +319,8 @@
       "metrics": {
         "likes": 6,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261013003726/https://credits-intelligence.netlify.app"
     },
     {
       "id": "credits-lab-vercel-app",
@@ -335,7 +336,8 @@
       "metrics": {
         "likes": 4,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20260924161137/https://credits-lab.vercel.app/"
     },
     {
       "id": "3dcredits-vercel-app",
@@ -368,7 +370,8 @@
       "metrics": {
         "likes": 13,
         "reposts": 2
-      }
+      },
+      "archive": "https://web.archive.org/web/20261005212039/https://credopepen.vercel.app/"
     },
     {
       "id": "gmgn-ai-robinhood-address-mjhhuwaq-0x63623d092e67fd2529e11dd6e74503748b00865b",
@@ -412,7 +415,8 @@
       "metrics": {
         "likes": 35,
         "reposts": 8
-      }
+      },
+      "archive": "https://web.archive.org/web/20261013003754/https://oncave.io/labs/credited-punks"
     },
     {
       "id": "homeofficeos-com",
@@ -498,7 +502,8 @@
       "metrics": {
         "likes": 1,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261013003816/https://buybits.art"
     },
     {
       "id": "chainhawk-io",
@@ -2097,6 +2102,26 @@
         "likes": 2,
         "reposts": 0
       }
+    },
+    {
+      "id": "opensea-io-collection-trone",
+      "name": "opensea.io",
+      "url": "https://opensea.io/collection/trone",
+      "x": "Trone4x",
+      "post": "https://x.com/Trone4x/status/2109800462224367862",
+      "blurb": "",
+      "category": "markets",
+      "access": "wallet",
+      "status": "pending",
+      "added": "2026-10-13",
+      "metrics": {
+        "likes": 1,
+        "reposts": 0
+      },
+      "source": "topic",
+      "score": 2,
+      "flags": [],
+      "tweetText": "TRONE mint opens in 1 hour ⚡\n\n🕐 01:00 UTC\n\nEligible for FREE mint:\n\n→ DEBITS holders @wubbushi\n→ CREDITS holders @jackbutcher\n→ All whitelisted wallets\n\nMint : https://t.co/Lv91zilQeb\n\nYour neon iden"
     }
   ]
 }
