@@ -166,6 +166,20 @@
       "start": "2026-10-08",
       "ended": "Holders phase closed",
       "checked": "2026-10-11"
+    },
+    {
+      "id": "trone-free-mint",
+      "project": "Trone",
+      "x": "Trone4x",
+      "type": "free-mint",
+      "eligibility": "Credits holders",
+      "description": "A free mint of Trone, 4,444 neon portraits on Ethereum, in a ten hour window for Credits and Debits holders before the public mint.",
+      "url": "https://opensea.io/collection/trone",
+      "post": "https://x.com/Trone4x/status/2109800462224367862",
+      "start": "2026-10-13",
+      "end": "2026-10-13",
+      "ended": "Holders window closed",
+      "checked": "2026-10-13"
     }
   ],
   "projects": [
@@ -2118,7 +2132,7 @@
       "blurb": "",
       "category": "markets",
       "access": "wallet",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-13",
       "metrics": {
         "likes": 1,
@@ -2138,7 +2152,7 @@
       "blurb": "",
       "category": "art",
       "access": "none",
-      "status": "pending",
+      "status": "rejected",
       "added": "2026-10-13",
       "metrics": {
         "likes": 0,
