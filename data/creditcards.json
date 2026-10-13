@@ -1,17 +1,17 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-13T06:25:22.624Z",
+    "lastRun": "2026-10-13T14:08:23.984Z",
     "stats": {
-      "floorEth": 0.0124439,
-      "floorUsd": 31,
-      "supply": 106407,
-      "owners": 12841,
-      "fetchedAt": "2026-10-13T06:21:25.290Z"
+      "floorEth": 0.012745,
+      "floorUsd": 32,
+      "supply": 106247,
+      "owners": 12798,
+      "fetchedAt": "2026-10-13T14:06:07.382Z"
     },
     "replySinceId": "2108135048251625841",
     "topicSinceId": "2109811361295253935",
-    "mentionSinceId": "2109774495246582223",
+    "mentionSinceId": "2109995848742342779",
     "frozenOn": "2026-10-12"
   },
   "featuredSlot": {
@@ -533,7 +533,8 @@
       "metrics": {
         "likes": 3,
         "reposts": 1
-      }
+      },
+      "archive": "https://web.archive.org/web/20261013062236/https://laternow.app/futures"
     },
     {
       "id": "creditscheck-xyz",
@@ -549,7 +550,8 @@
       "metrics": {
         "likes": 0,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261013062334/https://creditscheck.xyz/"
     },
     {
       "id": "exaltedlove-com-debits",
@@ -565,7 +567,8 @@
       "metrics": {
         "likes": 0,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261013062432/https://exaltedlove.com/debits/"
     },
     {
       "id": "tokenstrategy-com",
