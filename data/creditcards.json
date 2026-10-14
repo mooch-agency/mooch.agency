@@ -1,17 +1,17 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-13T22:44:15.767Z",
+    "lastRun": "2026-10-14T06:28:12.342Z",
     "stats": {
-      "floorEth": 0.0186,
-      "floorUsd": 47,
-      "supply": 106007,
-      "owners": 12623,
-      "fetchedAt": "2026-10-13T22:42:39.259Z"
+      "floorEth": 0.0215,
+      "floorUsd": 54,
+      "supply": 105447,
+      "owners": 12473,
+      "fetchedAt": "2026-10-14T06:26:38.007Z"
     },
     "replySinceId": "2108135048251625841",
     "topicSinceId": "2109811361295253935",
-    "mentionSinceId": "2110127390445978023",
+    "mentionSinceId": "2110184694314656219",
     "frozenOn": "2026-10-12"
   },
   "featuredSlot": {
@@ -829,7 +829,8 @@
       "metrics": {
         "likes": 1,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261013224418/https://credit-limit-vv.vercel.app/"
     },
     {
       "id": "discord-com-invite-adhqjepga",
@@ -860,7 +861,8 @@
       "metrics": {
         "likes": 71,
         "reposts": 8
-      }
+      },
+      "archive": "https://web.archive.org/web/20261014062650/https://creditscores.vercel.app/scan/"
     },
     {
       "id": "opensea-io-collection-not-an-artist-888",
@@ -890,7 +892,8 @@
       "metrics": {
         "likes": 3,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261014062712/https://opensea.io/collection/creditmon"
     },
     {
       "id": "winchxyz-github-io-credits-cubed",
@@ -906,7 +909,8 @@
       "metrics": {
         "likes": 1,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261014062732/https://winchxyz.github.io/credits-cubed/"
     },
     {
       "id": "cr3dits-vercel-app",
@@ -922,7 +926,8 @@
       "metrics": {
         "likes": 0,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261014062757/https://cr3dits.vercel.app"
     },
     {
       "id": "credit-k1ller-xyz",
