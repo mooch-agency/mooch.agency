@@ -1201,9 +1201,10 @@ function renderA(view) {
       '<th scope="col" class="opt">AI Rules</th>' +
       '<th scope="col">' + VIEW_COPY[view].label + " score</th>" +
     /* Rows settle in the page's own scroll-reveal language rather than just
-       appearing, capped at 5 like every other list on the site so a
-       22-row board doesn't take forever to finish arriving. */
-    '</tr></thead><tbody data-reveal="child: tr.row; cap: 5">' +
+       appearing, but at a board's pace: a 40ms beat and a 0.6s settle instead
+       of the site's 310ms and 1.34s, which on 22 rows read as slow or broken
+       (Tahi, 14 Oct). Rows still arrive one by one, near-immediately. */
+    '</tr></thead><tbody data-reveal="child: tr.row; cap: 10; beat: 40; dur: 0.6">' +
     list.map(function (r, i) {
       var vw = viewOf(r, view), id = "a-" + r.tvs;
       PANELS[id] = { vw: vw, row: r, view: view };

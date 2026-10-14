@@ -3,7 +3,8 @@
    one place. Two behaviours:
      - Word stagger on any [data-stagger] element (hero subheadings); an optional
        start time in seconds (data-stagger="0.2") leads or trails other elements.
-     - Scroll reveal on any [data-reveal="child: <selector>; cap: <n>"] container.
+     - Scroll reveal on any [data-reveal="child: <selector>; cap: <n>"] container
+       (optionally "; beat: <ms>; dur: <s>" to set its own pace).
    Both are no-ops under reduced motion or without IntersectionObserver, so content
    is always served fully visible — never trapped at opacity 0. */
 (function () {
@@ -57,27 +58,42 @@
   if (reduce || !('IntersectionObserver' in window)) return;
   var beat = cssSeconds('--stagger-beat', 0.1) * 1000; // ms
 
+  // Each row's delay is set when it arrives, by its place among the rows that
+  // arrived with it, not by its place in the whole list. A fixed index delay
+  // made a sharp scroll to row 15 sit blank for cap x beat before anything
+  // started, which read as broken. On first paint every visible row arrives in
+  // one batch, so the opening cascade is unchanged.
   var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-      if (!entry.isIntersecting) return;
-      var el = entry.target;
-      el.classList.add('in');
-      io.unobserve(el);
-      // Once the entrance settles, strip the reveal classes. The .rise animation
-      // fills forwards on transform; leaving it on would pin transform and block
-      // the element's own snappy hover/press lift (--t-deliver). The final visual
-      // state equals the base state, so removal is seamless.
-      el.addEventListener('animationend', function handler(e) {
-        if (e.target !== el) return;
-        el.classList.remove('rise', 'in');
-        el.removeEventListener('animationend', handler);
+    var batch = {}; // per container: how many of its rows arrived in this callback
+    entries
+      .filter(function (entry) { return entry.isIntersecting; })
+      .sort(function (a, b) {
+        return a.target.compareDocumentPosition(b.target) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+      })
+      .forEach(function (entry) {
+        var el = entry.target, spec = el._reveal;
+        var k = batch[spec.id] = (batch[spec.id] || 0) + 1;
+        el.style.setProperty('--rise-delay', Math.min(k - 1, spec.cap) * spec.beat + 'ms');
+        el.classList.add('in');
+        io.unobserve(el);
+        // Once the entrance settles, strip the reveal classes. The .rise animation
+        // fills forwards on transform; leaving it on would pin transform and block
+        // the element's own snappy hover/press lift (--t-deliver). The final visual
+        // state equals the base state, so removal is seamless.
+        el.addEventListener('animationend', function handler(e) {
+          if (e.target !== el) return;
+          el.classList.remove('rise', 'in');
+          el.removeEventListener('animationend', handler);
+        });
       });
-    });
   }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
 
   // Parse data-reveal="child: <selector>; cap: <n>" on each annotated container.
+  // Optional, for a container that needs its own pace (the /axbeat board):
+  // beat: <ms> between siblings (default --stagger-beat) and dur: <s> per
+  // element (default --rise-dur).
   function parseSpec(raw) {
-    var spec = { child: ':scope > *', cap: 5 };
+    var spec = { child: ':scope > *', cap: 5, beat: beat, dur: null };
     (raw || '').split(';').forEach(function (part) {
       var i = part.indexOf(':');
       if (i === -1) return;
@@ -85,15 +101,19 @@
       var val = part.slice(i + 1).trim();
       if (key === 'child') spec.child = val;
       else if (key === 'cap') { var n = parseInt(val, 10); if (!isNaN(n)) spec.cap = n; }
+      else if (key === 'beat') { var b = parseFloat(val); if (!isNaN(b)) spec.beat = b; }
+      else if (key === 'dur') { var d = parseFloat(val); if (!isNaN(d)) spec.dur = d + 's'; }
     });
     return spec;
   }
 
-  document.querySelectorAll('[data-reveal]').forEach(function (container) {
+  document.querySelectorAll('[data-reveal]').forEach(function (container, id) {
     var spec = parseSpec(container.getAttribute('data-reveal'));
-    container.querySelectorAll(spec.child).forEach(function (el, i) {
+    spec.id = id;
+    container.querySelectorAll(spec.child).forEach(function (el) {
+      el._reveal = spec;
       el.classList.add('rise');
-      el.style.setProperty('--rise-delay', Math.min(i, spec.cap) * beat + 'ms');
+      if (spec.dur) el.style.setProperty('--rise-dur', spec.dur);
       io.observe(el);
     });
   });
