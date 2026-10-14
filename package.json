@@ -11,6 +11,7 @@
     "counts:check": "node scripts/copy-counts.mjs --check",
     "md:build": "node scripts/markdown-pages.mjs",
     "md:check": "node scripts/markdown-pages.mjs --check",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
     "skills:build": "node scripts/agent-skills.mjs",
     "skills:sync": "node scripts/agent-skills.mjs --sync",
     "test": "node --test scripts/*.test.mjs"
