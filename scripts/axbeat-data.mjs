@@ -628,6 +628,7 @@ function staticBoard(data) {
 <h1 class="display">How <em>agent friendly</em> is your Layer 2?</h1>
 <p class="lede">L2Beat ranks security. AXBeat ranks agent experience (AX), how well AI can read a protocol’s website and docs on behalf of a user.</p>
 <p class="caveat">We run <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s agent-readiness</a> scan against a protocol’s website and docs. It checks that agent signposts exist, not whether they’re correct. Onchain AX, how well an agent can take onchain actions, is TBD.</p>
+<p class="caveat">Why we built it: <a href="https://moochagency.substack.com/p/ax-ux-for-the-other-half-of-the-web" rel="noopener">AX: UX for the other half of the web</a>, on our Substack.</p>
 </div>
 <div class="tablewrap"><table class="board">
 <caption class="sr">The top ${data.rows.length} Layer 2 rollups by value secured, with how many of Cloudflare's scored agent-readiness checks each passed for their website and their docs, scanned ${esc(when)}.</caption>
