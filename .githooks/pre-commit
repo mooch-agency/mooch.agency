@@ -1,0 +1,17 @@
+#!/bin/sh
+# ---------------------------------------------------------------------------
+# pre-commit: keep the Markdown copies agents get (md/) in step with the pages.
+#
+# If the commit touches a shipped page (a root *.html or prompts/*.html), rebuild
+# md/ and stage it, so nobody has to remember `pnpm md:build`. CI's md:check is
+# still the backstop for anything committed without this hook (GitHub's web
+# editor, a machine that never ran pnpm install).
+#
+# Installed by `pnpm install` (the "prepare" script points core.hooksPath here).
+# It builds from the working tree, so with a partially staged page the copy
+# reflects the unstaged edits too; CI catches any mismatch that leaves.
+# ---------------------------------------------------------------------------
+if git diff --cached --name-only --diff-filter=ACMRD | grep -qE '^([^/]+|prompts/[^/]+)\.html$'; then
+  node scripts/markdown-pages.mjs >/dev/null || { echo "pre-commit: md:build failed, commit stopped" >&2; exit 1; }
+  git add md/
+fi

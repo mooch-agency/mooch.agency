@@ -164,8 +164,10 @@ Four things advertise the site to agents, on top of `llms.txt` and `sitemap.xml`
   Middleware, because Vercel serves an existing file before a `vercel.json`
   rewrite could fire). The copies live in `md/`, generated from each page's
   `<main>` by `scripts/markdown-pages.mjs` and committed, since there is no
-  build step. **Change a page, run `pnpm md:build`**; `ci:check` fails on a
-  stale copy. The two automated bakes (`axbeat-data.mjs`, `creditcards-update.mjs`)
+  build step. A pre-commit hook (`.githooks/pre-commit`, installed by `pnpm
+  install`) rebuilds and stages `md/` whenever a commit touches a page; run
+  `pnpm md:build` by hand only if you commit without it. `ci:check` fails on a
+  stale copy either way. The two automated bakes (`axbeat-data.mjs`, `creditcards-update.mjs`)
   refresh their own page's copy in the same run. Added 14 Oct 2026: it was the
   one check holding the site at 2/5 on the scan AXBeat publishes.
 
