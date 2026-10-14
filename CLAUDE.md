@@ -147,7 +147,7 @@ legitimately goes stale between deploys and would otherwise fail every PR.
 
 ## Agent discovery
 
-Three things advertise the site to agents, on top of `llms.txt` and `sitemap.xml`:
+Four things advertise the site to agents, on top of `llms.txt` and `sitemap.xml`:
 
 - **`Content-Signal` in `robots.txt`** declares how automated systems may use the
   content. All three signals (`ai-train`, `search`, `ai-input`) are `yes` on
@@ -159,6 +159,15 @@ Three things advertise the site to agents, on top of `llms.txt` and `sitemap.xml
 - **`/.well-known/agent-skills/index.json`**, the Agent Skills Discovery index
   (Cloudflare RFC v0.2.0), answering "what skills does mooch publish?" from the
   front door rather than only from GitHub.
+- **Markdown for agents.** Any page requested with `Accept: text/markdown`
+  gets its Markdown copy instead of the HTML (`middleware.js`, Vercel Routing
+  Middleware, because Vercel serves an existing file before a `vercel.json`
+  rewrite could fire). The copies live in `md/`, generated from each page's
+  `<main>` by `scripts/markdown-pages.mjs` and committed, since there is no
+  build step. **Change a page, run `pnpm md:build`**; `ci:check` fails on a
+  stale copy. The two automated bakes (`axbeat-data.mjs`, `creditcards-update.mjs`)
+  refresh their own page's copy in the same run. Added 14 Oct 2026: it was the
+  one check holding the site at 2/5 on the scan AXBeat publishes.
 
 The skills themselves are **vendored** into `.well-known/agent-skills/`, copied
 from `mooch-agency/skills`. That is deliberate, and the same ownership split as

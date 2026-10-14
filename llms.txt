@@ -4,6 +4,8 @@
 
 We figure out what people actually need, then build the AI to deliver it. Most of our clients come to us for one and stay for both.
 
+Every page here is also available as Markdown: request it with `Accept: text/markdown`, or fetch `https://mooch.agency/md/<page>.md` (the homepage is `/md/index.md`).
+
 ## Contact
 
 - Email: hey@mooch.agency
@@ -24,6 +26,7 @@ We figure out what people actually need, then build the AI to deliver it. Most o
 ## Measures
 
 - [AXBeat](https://mooch.agency/axbeat): The top 22 Ethereum Layer 2 rollups ranked on agent experience, website and docs scored separately. Each host scores on how many of Cloudflare's 16 scored agent-readiness checks it passes, republished unaltered, re-scanned weekly.
+- [AX: UX for the other half of the web](https://moochagency.substack.com/p/ax-ux-for-the-other-half-of-the-web): The essay behind AXBeat. What agent experience is, how it extends UX, the five readiness checks that matter for most websites, and what the first AXBeat scans found.
 
 ## Products
 
