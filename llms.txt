@@ -4,6 +4,8 @@
 
 We figure out what people actually need, then build the AI to deliver it. Most of our clients come to us for one and stay for both.
 
+Every page here is also available as Markdown: request it with `Accept: text/markdown`, or fetch `https://mooch.agency/md/<page>.md` (the homepage is `/md/index.md`).
+
 ## Contact
 
 - Email: hey@mooch.agency

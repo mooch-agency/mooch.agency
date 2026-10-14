@@ -58,6 +58,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { writeMarkdown } from './markdown-pages.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -835,6 +836,8 @@ if (CHECK) {
   const start = withStatic.indexOf(OPEN) + OPEN.length;
   const end = withStatic.indexOf(CLOSE, start);
   writeFileSync(PAGE, withStatic.slice(0, start) + JSON.stringify(data) + withStatic.slice(end));
+  // Keep md/axbeat.md (the Markdown copy agents get) in step with the bake.
+  writeMarkdown();
   const levels = data.rows.flatMap((r) => [r.site.level, r.docs.level]);
   console.log(
     `axbeat-data: baked ${data.rows.length} chains (${levels.length} hosts) from ${path.relative(ROOT, scanPath)}\n` +

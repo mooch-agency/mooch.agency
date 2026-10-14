@@ -74,6 +74,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { writeMarkdown } from './markdown-pages.mjs';
 import {
   MAX_NEW_PER_AUTHOR,
   MAX_NEW_PER_RUN,
@@ -970,6 +971,8 @@ export async function run({ xToken, fetchImpl = fetch, root = ROOT, dry = DRY, b
   }
   if (jsonChanged) writeFileSync(dataFile, nextJson);
   if (htmlChanged) writeFileSync(pageFile, nextHtml);
+  // Keep md/creditcards.md (the Markdown copy agents get) in step with the bake.
+  if (htmlChanged) writeMarkdown();
   console.log(`${htmlChanged || jsonChanged ? '✓ wrote' : '= no changes to'} ${PAGE_FILE} + ${DATA_FILE}`);
 }
 

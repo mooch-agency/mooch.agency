@@ -3,18 +3,21 @@
   "scripts": {
     "axbeat:build": "node scripts/axbeat-data.mjs",
     "axbeat:check": "node scripts/axbeat-data.mjs --check",
-    "ci:check": "node scripts/check-site.mjs && node scripts/stamp-cards.mjs --check && node scripts/agent-skills.mjs --check && node scripts/axbeat-data.mjs --check",
-    "ci:validate-html": "html-validate \"*.html\" \"prompts/*.html\"",
     "cards:build": "./mooch-cards/og-site.sh && node scripts/stamp-cards.mjs",
     "cards:stamp": "node scripts/stamp-cards.mjs",
+    "ci:check": "node scripts/check-site.mjs && node scripts/stamp-cards.mjs --check && node scripts/agent-skills.mjs --check && node scripts/axbeat-data.mjs --check && node scripts/markdown-pages.mjs --check",
+    "ci:validate-html": "html-validate \"*.html\" \"prompts/*.html\"",
     "counts:build": "node scripts/copy-counts.mjs",
     "counts:check": "node scripts/copy-counts.mjs --check",
+    "md:build": "node scripts/markdown-pages.mjs",
+    "md:check": "node scripts/markdown-pages.mjs --check",
     "skills:build": "node scripts/agent-skills.mjs",
     "skills:sync": "node scripts/agent-skills.mjs --sync",
     "test": "node --test scripts/*.test.mjs"
   },
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.55.0",
+    "@vercel/functions": "^3.10.1",
     "mailchecker": "^6.0.15",
     "stripe": "^23.0.0",
     "x402": "^1.2.0"
