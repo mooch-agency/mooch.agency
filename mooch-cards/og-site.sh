@@ -127,7 +127,7 @@ echo "Measures"
 card axbeat \
   --eyebrow "Agent experience" \
   --title "How *agent friendly*\nis your Layer 2?" \
-  --subtitle "The top 22 rollups, ranked on how well agents can read their website and docs." \
+  --subtitle "Ethereum L2s ranked by how well agents can read their website and docs." \
   --domain "mooch.agency/axbeat" \
   --scale 1.15
 
