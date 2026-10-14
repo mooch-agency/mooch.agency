@@ -100,6 +100,7 @@ const STATIC_CLOSE = '<!-- @/AXBEAT-STATIC@ -->';
 const DOC_TOOLS = [
   'Docusaurus', 'GitBook', 'MkDocs', 'Mintlify', 'VitePress',
   'Nextra', 'Docsify', 'Sphinx', 'Read the Docs', 'Redocly',
+  'Starlight', 'Vocs', 'Fumadocs',
 ];
 const SITE_FRAMEWORKS = [
   'Framer Sites', 'Next.js', 'Nuxt.js', 'Astro', 'SvelteKit', 'Remix',
@@ -392,10 +393,22 @@ function heldReason(row) {
 //
 // `detected` keeps Cloudflare's full string, so nothing is lost and any future
 // reading of it starts from the original.
-function platformFrom(raw) {
+//
+// `ours` is ax-audit's own fingerprint of the host (`row.builtOn`, added 14 Oct
+// 2026, see its bin/fingerprint.mjs), because Wappalyzer names nothing for docs
+// on Mintlify, Nextra, Vocs or Fumadocs and the board called them all "Custom".
+// Cloudflare stays first at each tier, so ours only fills a gap: a doc tool
+// either one names beats a framework either one names, then Cloudflare's
+// framework, then ours. Display only, like the rest of this column.
+function platformFrom(raw, ours) {
   const apps = String(raw || '').split(', ').map((a) => a.trim()).filter(Boolean);
+  const mine = ours && BUILDERS.includes(ours.name) ? ours.name : null;
   return {
-    builder: BUILDERS.find((b) => apps.includes(b)) || null,
+    builder: DOC_TOOLS.find((b) => apps.includes(b))
+      || (DOC_TOOLS.includes(mine) ? mine : null)
+      || SITE_FRAMEWORKS.find((b) => apps.includes(b))
+      || mine
+      || null,
     cloudflare: apps.includes('Cloudflare'),
     otherHost: apps.some((a) => HOSTS.includes(a)),
     detected: raw || '',
@@ -409,7 +422,7 @@ function hostFrom(row) {
     url: row.url.replace(/^https?:\/\//, '').replace(/\/$/, ''),
     level: ar.level,
     levelName: ar.levelName,
-    platform: platformFrom(row.platform),
+    platform: platformFrom(row.platform, row.builtOn),
     scannedAt: row.scannedAt,
     reportUrl: row.reportUrl,
     checks: flattenChecks(ar),
