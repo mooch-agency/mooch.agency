@@ -12,7 +12,7 @@ We run [Cloudflare’s agent-readiness](https://blog.cloudflare.com/agent-readin
 
 Why we built it: [AX: UX for the other half of the web](https://moochagency.substack.com/p/ax-ux-for-the-other-half-of-the-web), on our Substack.
 
-The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's scored agent-readiness checks each passed for their website and their docs, scanned 5 October 2026.
+The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's scored agent-readiness checks each passed for their website and their docs, scanned 14 October 2026.
 
 | # | Chain | Website score | Docs score |
 | --- | --- | --- | --- |
@@ -32,7 +32,7 @@ The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's score
 | 14 | Scroll scroll.io | 3/16 Basic Web Presence | 1/16 Not Ready |
 | 15 | Taiko taiko.xyz | 3/16 Basic Web Presence | 3/16 Basic Web Presence |
 | 16 | Honeypot v2 cartesi.io | 3/16 Basic Web Presence | 1/16 Not Ready |
-| 17 | Arbitrum arbitrum.io | 2/16 Not Ready | 8/16 Agent-Integrated |
+| 17 | Arbitrum arbitrum.io | 2/16 Not Ready | 7/16 Bot-Aware |
 | 18 | Aztec aztec.network | 1/16 Not Ready | 4/16 Basic Web Presence |
 | 19 | Unichain unichain.org | 0/16 Not Ready | 9/16 Agent-Integrated |
 | 20 | ADI Chain adi.foundation | 0/16 Not Ready | 7/16 Agent-Integrated |
