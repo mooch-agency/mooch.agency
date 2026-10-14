@@ -1,17 +1,17 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-14T18:20:14.802Z",
+    "lastRun": "2026-10-14T21:41:02.997Z",
     "stats": {
-      "floorEth": 0.01997,
-      "floorUsd": 48,
-      "supply": 104087,
-      "owners": 12338,
-      "fetchedAt": "2026-10-14T18:18:12.148Z"
+      "floorEth": 0.0183999,
+      "floorUsd": 45,
+      "supply": 103927,
+      "owners": 12327,
+      "fetchedAt": "2026-10-14T21:39:07.157Z"
     },
     "replySinceId": "2108135048251625841",
     "topicSinceId": "2109811361295253935",
-    "mentionSinceId": "2110337011793928309",
+    "mentionSinceId": "2110457542774038723",
     "frozenOn": "2026-10-12"
   },
   "featuredSlot": {
@@ -976,7 +976,8 @@
       "metrics": {
         "likes": 43,
         "reposts": 4
-      }
+      },
+      "archive": "https://web.archive.org/web/20261014181940/https://credits-rarity-checker.kimi.pro/"
     },
     {
       "id": "studyfrogs-com-creditpepen",
@@ -992,7 +993,8 @@
       "metrics": {
         "likes": 4,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261014114850/https://studyfrogs.com/creditpepen"
     },
     {
       "id": "mylesdaughtry-com",
@@ -1026,7 +1028,8 @@
       "metrics": {
         "likes": 360,
         "reposts": 50
-      }
+      },
+      "archive": "https://web.archive.org/web/20261014213939/https://creditscores.vercel.app"
     },
     {
       "id": "opensea-io-collection-aura-2222",
