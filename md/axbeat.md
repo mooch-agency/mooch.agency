@@ -10,7 +10,7 @@ L2Beat ranks security. AXBeat ranks agent experience (AX), how well AI can read 
 
 We run [Cloudflare’s agent-readiness](https://blog.cloudflare.com/agent-readiness) scan against a protocol’s website and docs. It checks that agent signposts exist, not whether they’re correct. Onchain AX, how well an agent can take onchain actions, is TBD.
 
-Why we built it: [AX: UX for the other half of the web](https://moochagency.substack.com/p/ax-ux-for-the-other-half-of-the-web), on our Substack.
+[What is AX?](https://moochagency.substack.com/p/ax-ux-for-the-other-half-of-the-web) Our essay on agent experience, and why we built AXBeat.
 
 The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's scored agent-readiness checks each passed for their website and their docs, scanned 14 October 2026.
 
