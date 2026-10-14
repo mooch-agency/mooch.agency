@@ -132,6 +132,19 @@ button, input { font-family:inherit; }
 }
 .pilltoggle:hover, .pilltoggle:focus-visible { color:var(--ink); border-color:var(--hairline-focus); }
 .pilltoggle[aria-expanded="true"] { color:var(--ink); border-color:var(--ink); }
+/* The hero's pill and its "What is AX?" essay link, one row. The link takes
+   the pill's mono caps so the pair reads as one control strip, and an
+   underline rather than a border so it stays the lighter of the two. */
+.herolinks { display:flex; align-items:center; flex-wrap:wrap; gap:0 18px; }
+.essaylink {
+  margin-top:14px; padding:9px 0;
+  font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--muted-small); text-decoration:underline; text-underline-offset:4px;
+  text-decoration-color:var(--hairline-focus);
+  transition:color var(--t-deliver) var(--ease-deliver), text-decoration-color var(--t-deliver) var(--ease-deliver);
+}
+.essaylink:hover, .essaylink:focus-visible { color:var(--ink); text-decoration-color:var(--ink); }
+.boardfoot { margin-top:16px; }
 /* .detwrap (below) is the same recipe wrapped around an opened row. */
 /* margin-top only applies once open, so the hero's "How it works" pill and
    the per-row "Show N more" toggle both keep their own tight padding when
@@ -759,7 +772,7 @@ form.mail { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 <h1 class="display">How <em>agent friendly</em> is your Layer 2?</h1>
 <p class="lede">L2Beat ranks security. AXBeat ranks agent experience (AX), how well AI can read a protocol’s website and docs on behalf of a user.</p>
 <p class="caveat">We run <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s agent-readiness</a> scan against a protocol’s website and docs. It checks that agent signposts exist, not whether they’re correct. Onchain AX, how well an agent can take onchain actions, is TBD.</p>
-<p class="caveat">Why we built it: <a href="https://moochagency.substack.com/p/ax-ux-for-the-other-half-of-the-web" rel="noopener">AX: UX for the other half of the web</a>, on our Substack.</p>
+<p class="caveat"><a href="https://moochagency.substack.com/p/ax-ux-for-the-other-half-of-the-web" rel="noopener">What is AX?</a> Our essay on agent experience, and why we built AXBeat.</p>
 </div>
 <div class="tablewrap"><table class="board">
 <caption class="sr">The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's scored agent-readiness checks each passed for their website and their docs, scanned 14 October 2026.</caption>
@@ -1066,6 +1079,9 @@ function aiCell(view) {
    that, works with no backend and no new abuse surface, and lands in the
    same inbox as everything else. The click is tracked so we can see whether
    anyone uses it; `where` tags which spot on the page it was clicked from. */
+/* The essay that makes the case for AX and launched the board (14 Oct 2026). */
+var ESSAY_URL = "https://moochagency.substack.com/p/ax-ux-for-the-other-half-of-the-web";
+
 function missingLink(where) {
   return '<a class="secondary" data-ev="axbeat_missing_click" data-where="' + esc(where) + '" ' +
     'href="mailto:hey@mooch.agency?subject=' + encodeURIComponent("AXBeat: a missing L2") +
@@ -1095,9 +1111,17 @@ function hero(o) {
        one at a time rather than the whole line appearing at once. */
     '<h1 class="display reveal-words" data-stagger="0.2">' + o.headline + "</h1>" +
     '<p class="lede">' + esc(o.lede) + "</p>" +
+    /* The pill and the essay link share one row (14 Oct 2026, Tahi's pick
+       from four mockups): the essay sat inside the disclosure as a third
+       stacked line and made it read as clutter. Beside the pill it is
+       visible without a click and the disclosure is back to one paragraph. */
+    '<div class="herolinks">' +
     '<button class="moretoggle pilltoggle" type="button" aria-expanded="false" aria-controls="' + o.methodId + '" ' +
       'data-ev="axbeat_method_open">' +
       '<span class="chev" aria-hidden="true">&rsaquo;</span>How it works</button>' +
+    '<a class="essaylink" href="' + ESSAY_URL + '" data-ev="axbeat_essay_click" rel="noopener">' +
+      'What is AX?<span aria-hidden="true"> \u2197</span></a>' +
+    "</div>" +
     '<div class="morewrap" id="' + o.methodId + '" data-open="false"><div class="morein">' +
       /* Onchain AX (can an agent transact) is a separate, unshipped measure;
          naming it here is what stops a skim-reader assuming this scan covers
@@ -1107,14 +1131,6 @@ function hero(o) {
         "agent-readiness</a> scan against a protocol’s website and docs. It checks that agent signposts " +
         "exist, not whether they’re correct. Onchain AX, how well an agent can take onchain actions, is " +
         "TBD.</p>" +
-      /* The essay that makes the case for AX and launched the board (14 Oct
-         2026). It sits in the method disclosure rather than the fold: the
-         fold stays headline, lede, board, and the reader who opens "How it
-         works" is the one asking why this exists. */
-      '<p>Why we built it: <a href="https://moochagency.substack.com/p/ax-ux-for-the-other-half-of-the-web" ' +
-        'data-ev="axbeat_essay_click" rel="noopener">AX: UX for the other half of ' +
-        "the web</a>, on our Substack.</p>" +
-      missingLink("how") +
     "</div></div>" +
   "</div>";
 }
@@ -1233,8 +1249,10 @@ function renderA(view) {
         "</div></div></td></tr>";
     }).join("") +
     "</tbody></table></div>" +
-    '<div class="empty" data-role="empty" hidden><p>No chain on the board matches that.</p>' +
-      missingLink("empty") + "</div>" +
+    '<div class="empty" data-role="empty" hidden><p>No chain on the board matches that.</p></div>' +
+    /* Under the board rather than in "How it works": the reader who has just
+       scanned all 22 rows and not found their chain is the one to ask. */
+    '<p class="boardfoot">' + missingLink("foot") + "</p>" +
     "</div>" +
     "</div>";
   wire(s);
@@ -1369,7 +1387,7 @@ function wire(section) {
   /* Every form.mail is now built lazily, inside a row's own panel the first
      time it opens (fillPanel calls wireReportForms(pad) itself), so there is
      nothing of that kind to wire here at render. The tracked links are not
-     lazy (both missingLink() calls above are in the initial markup), so
+     lazy (the essay link and missingLink() are in the initial markup), so
      wireEvLinks still runs once, here, against the whole section. */
   wireEvLinks(section);
 }
