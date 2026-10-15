@@ -97,6 +97,13 @@ const STATIC_CLOSE = '<!-- @/AXBEAT-STATIC@ -->';
 //
 // Order matters only as a tiebreak when a host reports two; the first match
 // wins, which is why a Docusaurus site on Next.js still reads Docusaurus.
+//
+// No headless CMS belongs on either list. A CMS stores the content; something
+// else builds the pages, so "Built on: Sanity" names the wrong thing. Sanity and
+// Contentful were listed until 15 Oct 2026 and put exactly that on optimism.io
+// and linea.build, both of which are Next.js sites Cloudflare fails to detect
+// (#122). Where Cloudflare only names the CMS, the row honestly reads "Not
+// detected".
 const DOC_TOOLS = [
   'Docusaurus', 'GitBook', 'MkDocs', 'Mintlify', 'VitePress',
   'Nextra', 'Docsify', 'Sphinx', 'Read the Docs', 'Redocly',
@@ -104,7 +111,7 @@ const DOC_TOOLS = [
 const SITE_FRAMEWORKS = [
   'Framer Sites', 'Next.js', 'Nuxt.js', 'Astro', 'SvelteKit', 'Remix',
   'Gatsby', 'Hugo', 'Jekyll', 'Eleventy', 'WordPress', 'Webflow', 'Squarespace',
-  'Wix', 'Sanity', 'Contentful', 'Vue.js', 'React',
+  'Wix', 'Vue.js', 'React',
 ];
 const BUILDERS = [...DOC_TOOLS, ...SITE_FRAMEWORKS];
 
