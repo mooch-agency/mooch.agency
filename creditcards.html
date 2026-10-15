@@ -954,7 +954,9 @@
   .perk-card--ended:hover { box-shadow: 0 0 0 1px var(--hairline-focus); }
   .perk-card--ended .proj-name { color: var(--muted); }
   .perk-card--ended .perk-for { color: var(--muted-small); }
-  /* Standing order: the paid perk alerts ($8 a month). Inverted on purpose
+  /* Perk alerts band: a link to Monitoring the Situation (mts.mooch.agency),
+     which took the perk alerts over when the index froze at 50 projects
+     (#101). Until then this was the $8 standing-order form. Inverted on purpose
      (design 5a, 1 Oct 2026): the one black block on a white page, so it is
      noticed without moving, popping up or counting down. --black and
      --paper swap in the dark theme, so there it becomes the one white block.
@@ -963,10 +965,8 @@
 
      One band, two homes. It sits at the foot of the index, and in the Perks
      view the script below moves it into the slot the bake leaves after the
-     open perks ([data-standing-slot]), where the intent is. One form, one
-     id, so nothing is duplicated. With no JavaScript it stays at the foot and
-     posts straight to /api/creditcards-subscribe, which 303s to Checkout.
-     Pipeline: CLAUDE.md, "Credit Cards alerts". */
+     open perks ([data-standing-slot]), where the intent is. One band, one
+     id, so nothing is duplicated. With no JavaScript it stays at the foot. */
   .standing { padding: 0 var(--pad-x) clamp(64px, 9vw, 112px); scroll-margin-top: 24px; }
   .standing-inner {
     max-width: var(--max);
@@ -1009,74 +1009,12 @@
     color: var(--muted-dark);
   }
   .standing-note { margin-top: 18px; }
-  .standing-card { width: 100%; max-width: 480px; }
-  /* display: grid would otherwise beat the hidden attribute. */
-  .standing-form { display: grid; gap: 12px; }
-  .standing-form[hidden], .standing-done[hidden], .standing-error[hidden] { display: none; }
-  /* last baseline lines the label up with the price, not the tag above it. */
-  .standing-head { display: flex; justify-content: space-between; align-items: baseline; align-items: last baseline; gap: 16px; }
-  .standing-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: var(--paper);
-  }
-  /* No struck "was" price: $15 was never charged (ASA reference-pricing
-     risk, ruled out 1 Oct 2026). The tag says what $8 is instead. */
-  .standing-price-wrap { display: grid; justify-items: end; gap: 6px; }
-  .standing-tag {
-    font-family: var(--mono);
-    font-size: 10px;
-    line-height: 1;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: var(--muted-dark);
-  }
-  .standing-price { font-family: var(--serif); font-size: 28px; line-height: 1; color: var(--paper); white-space: nowrap; }
-  .standing-per { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-dark); }
-  .standing-field { font-size: 14px; font-weight: 500; color: var(--paper); margin-top: 4px; }
-  .standing-input {
-    width: 100%;
-    height: 48px;
-    padding: 0 16px;
-    font-family: var(--sans);
-    font-size: 16px;                 /* >=16px stops iOS zoom-on-focus */
-    color: var(--paper);
-    background: transparent;
-    border: 1px solid var(--hairline-focus);
-    border-radius: 6px;
-    transition: border-color var(--t-deliver) var(--ease-deliver);
-  }
-  .standing-input::placeholder { color: var(--muted-dark); }
-  .standing-input:hover { border-color: var(--paper); }
-  .standing-input:focus-visible { outline: none; border-color: var(--paper); box-shadow: 0 0 0 1px var(--paper); }
-  .standing-input[aria-invalid="true"] { border-color: var(--error-dark); }
+  .standing-card { width: 100%; max-width: 480px; display: grid; gap: 12px; }
   /* The primary pill, inverted for the black ground (as the featured card). */
-  .standing-cta { width: 100%; min-height: 48px; margin-top: 2px; background: var(--paper); color: var(--black); }
+  .standing-cta { width: 100%; min-height: 48px; justify-content: center; background: var(--paper); color: var(--black); }
   .standing-cta:hover { background: var(--surface); }
   .standing-cta:focus-visible { outline-color: var(--paper); }
-  .standing-error { font-size: 14px; line-height: 1.45; color: var(--error-dark); }
-  /* Same slot, not an error: "that address already has a standing order". */
-  .standing-error.is-note { color: var(--paper); }
-  /* Quiet Manage link (unsigned, so the portal sends it to Stripe's login).
-     Vertical padding grows the hit area without moving the line. */
-  .standing-manage {
-    color: var(--paper);
-    text-decoration: underline;
-    text-decoration-color: var(--hairline-focus);
-    text-underline-offset: 3px;
-    padding: 12px 4px;
-    margin: 0 -4px;
-    transition: text-decoration-color var(--t-deliver) var(--ease-deliver);
-  }
-  .standing-manage:hover { text-decoration-color: var(--paper); }
-  .standing-manage:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
   .standing-small { text-align: center; text-wrap: balance; }
-  .standing-done-title { font-family: var(--serif); font-size: 28px; line-height: 1.1; color: var(--paper); margin-bottom: 8px; }
-  .standing-done-body { font-size: 15px; line-height: 1.5; color: var(--muted-dark); text-wrap: pretty; }
-  .standing-done-manage { text-align: left; margin-top: 12px; }
-  .standing-done:focus { outline: none; }
   @media (max-width: 599px) {
     .standing-title { margin-top: 16px; }
   }
@@ -1714,31 +1652,14 @@
 <section class="standing" id="subscribe" aria-labelledby="standing-title">
   <div class="standing-inner">
     <div>
-      <div class="eyebrow"><span class="rule"></span> Standing order</div>
+      <div class="eyebrow"><span class="rule"></span> Perk alerts</div>
       <h2 class="standing-title" id="standing-title">The next perk, in your <em>inbox.</em></h2>
-      <p class="standing-standfirst"><span data-stat="perksLine">You&#39;ve missed 10 perks for Credits holders so far.</span> We watch X every day and email you when new perks appear.</p>
+      <p class="standing-standfirst"><span data-stat="perksLine">You&#39;ve missed 10 perks for Credits holders so far.</span> New ones now come from Monitoring the Situation: we watch X every day, check each find by hand, and email you the real ones.</p>
       <p class="standing-note">No new perk, no email</p>
     </div>
     <div class="standing-card">
-      <form class="standing-form" action="/api/creditcards-subscribe" method="post" data-standing-form>
-        <div class="standing-head">
-          <span class="standing-label">Perk alerts</span>
-          <span class="standing-price-wrap">
-            <span class="standing-tag">Launch price</span>
-            <span class="standing-price">$8 <span class="standing-per">/ mo</span></span>
-          </span>
-        </div>
-        <label class="standing-field" for="standing-email">Your email</label>
-        <input class="standing-input" id="standing-email" name="email" type="email" inputmode="email" autocomplete="email" spellcheck="false" placeholder="you@example.com" required aria-describedby="standing-error standing-small">
-        <p class="standing-error" id="standing-error" role="alert" hidden></p>
-        <button type="submit" class="pill standing-cta"><span data-standing-label>Subscribe &middot; $8 a month</span> <span class="arrow" aria-hidden="true">&rarr;</span></button>
-        <p class="standing-small" id="standing-small">The mint price of one Credit &middot; Cancel any time &middot; <a class="standing-manage" href="/api/creditcards-portal">Manage</a></p>
-      </form>
-      <div class="standing-done" tabindex="-1" data-standing-done hidden>
-        <p class="standing-done-title">Standing order placed.</p>
-        <p class="standing-done-body">We'll email you as soon as there's a new perk for Credits holders. Manage or cancel your subscription from the email.</p>
-        <p class="standing-small standing-done-manage"><a class="standing-manage" href="/api/creditcards-portal">Manage</a></p>
-      </div>
+      <a class="pill standing-cta" href="https://mts.mooch.agency/?collection=credits" data-event="creditcards_mts_click">Get Credits perks &middot; $5 a month <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <p class="standing-small">On Monitoring the Situation, a mooch product &middot; Cancel any time</p>
     </div>
   </div>
 </section>
@@ -1998,40 +1919,18 @@
   })();
 </script>
 <script>
-  // Standing order band. Without this script the form still works: it posts
-  // to /api/creditcards-subscribe, which 303s to Stripe Checkout. This
-  // upgrades it to a fetch (so errors show inline, not on a bare page), fires
-  // the two analytics events, and shows the confirmation when Stripe sends
-  // the visitor back to ?subscribed=1. Cancel returns to the plain page.
+  // Perk alerts band: one band, two homes. In the Perks view it moves into
+  // the slot the bake leaves after the open perks; anywhere else it goes back
+  // to the foot of the index. The filter script announces each view with a
+  // "creditcards:view" event; the initial check covers a #perks deep link,
+  // which the filter applies before this script runs.
   (function () {
-    var form = document.querySelector("[data-standing-form]");
-    var done = document.querySelector("[data-standing-done]");
-    if (!form || !done || !window.fetch) return;
-    var input = form.querySelector("input[name=email]");
-    var error = form.querySelector(".standing-error");
-    var btn = form.querySelector("button[type=submit]");
-    var label = btn.querySelector("[data-standing-label]");
-    var idle = label.textContent;
-    var busy = false;
-
-    // Every band event says where the band was (the Perks slot or the foot
-    // of the index), so the two homes can be compared in analytics.
     var band = document.getElementById("subscribe");
-    function track(name) {
-      var placement = band && band.parentNode && band.parentNode.hasAttribute("data-standing-slot") ? "perks" : "foot";
-      try { if (window.va) window.va("event", { name: name, data: { placement: placement } }); } catch (err) {}
-    }
-
-    // One band, two homes. In the Perks view it moves into the slot the bake
-    // leaves after the open perks; anywhere else it goes back to the foot of
-    // the index. The filter script announces each view with a
-    // "creditcards:view" event; the initial check covers a #perks deep link,
-    // which the filter applies before this script runs.
     var slot = document.querySelector("[data-standing-slot]");
-    var home = band ? band.parentNode : null;
-    var homeNext = band ? band.nextSibling : null;
+    if (!band || !slot) return;
+    var home = band.parentNode;
+    var homeNext = band.nextSibling;
     function place(view) {
-      if (!band || !slot) return;
       var target = view === "perks" ? slot : home;
       if (band.parentNode === target) return;
       if (target === slot) slot.appendChild(band);
@@ -2040,103 +1939,7 @@
     var perkView = document.getElementById("perk-list");
     place(perkView && !perkView.hidden ? "perks" : "all");
     document.addEventListener("creditcards:view", function (e) { place(e.detail && e.detail.view); });
-
-    function reset() {
-      busy = false;
-      btn.removeAttribute("aria-busy");
-      label.textContent = idle;
-    }
-    // Only a bad address marks the field invalid; a server or network
-    // failure isn't the visitor's typing.
-    // asNote: the same slot in ink, not error red (the already-subscribed
-    // answer is information, not a mistake).
-    function fail(message, badEmail, asNote) {
-      reset();
-      error.textContent = message;
-      error.classList.toggle("is-note", !!asNote);
-      error.hidden = false;
-      if (badEmail) input.setAttribute("aria-invalid", "true");
-      input.focus();
-    }
-
-    // The URL flag alone proves nothing: anyone can type ?subscribed=1. So
-    // the submit handler below leaves a marker in sessionStorage before it
-    // hands the tab to Stripe, and only a tab carrying that marker gets the
-    // confirmation and the success event. A shared or typed link just loses
-    // the flag and sees the form. Storage can be blocked (private mode), in
-    // which case a real subscriber sees the form too: the standing order
-    // still stands, and the already-subscribed answer catches a retry.
-    var MARK = "cc-standing";
-    function marked(set) {
-      try {
-        if (set) { sessionStorage.setItem(MARK, "1"); return true; }
-        var had = sessionStorage.getItem(MARK) === "1";
-        sessionStorage.removeItem(MARK);
-        return had;
-      } catch (err) { return false; }
-    }
-
-    // Back from Checkout. Drop the flag from the URL straight away, so a
-    // reload or a shared link doesn't count a second success.
-    var params = new URLSearchParams(location.search);
-    if (params.get("subscribed") === "1") {
-      var genuine = marked(false);
-      params.delete("subscribed");
-      var rest = params.toString();
-      history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash);
-    }
-    if (genuine) {
-      form.hidden = true;
-      done.hidden = false;
-      track("creditcards_subscribe_success");
-      // Land on the confirmation, not the top of a long page. Instant, and on
-      // load: run any earlier and the browser's own initial scroll wins.
-      var land = function () {
-        document.getElementById("subscribe").scrollIntoView({ block: "center" });
-        done.focus({ preventScroll: true });
-      };
-      if (document.readyState === "complete") land();
-      else window.addEventListener("load", land);
-    }
-
-    input.addEventListener("input", function () {
-      input.removeAttribute("aria-invalid");
-      error.hidden = true;
-    });
-
-    // The browser's own required/type=email check runs before this fires.
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      if (busy) return;
-      busy = true;
-      error.hidden = true;
-      btn.setAttribute("aria-busy", "true");
-      label.textContent = "Opening checkout…";
-      track("creditcards_subscribe_click");
-      fetch(form.action, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ email: input.value.trim() })
-      })
-        .then(function (r) {
-          return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; });
-        })
-        .then(function (x) {
-          if (x.ok && x.d.url && /^https:\/\//.test(x.d.url)) { marked(true); location.href = x.d.url; return; }
-          // This address already pays: no Checkout, so no second bill.
-          if (x.ok && x.d.already) {
-            track("creditcards_subscribe_already");
-            fail(x.d.message || "That address already has a standing order. Manage it from the link in any scan email.", false, true);
-            return;
-          }
-          fail(x.d.message || "Checkout didn't open. Give it a minute and try again.", x.d.error === "email");
-        })
-        .catch(function () { fail("Couldn't reach checkout. Check your connection and try again."); });
-    });
-
-    // Back button from Stripe restores this page from the bfcache with the
-    // button still saying "Opening checkout". Put it back.
-    window.addEventListener("pageshow", function (e) { if (e.persisted) reset(); });
+    // The CTA's click is tracked by the page's delegated [data-event] listener.
   })();
 </script>
 <script>
