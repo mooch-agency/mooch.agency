@@ -18,9 +18,9 @@ Mint price $8 Per Credit
 
 Floor 0.0173 ETH $41
 
-Holders 12,279 Wallets
+Holders 12,259 Wallets
 
-Supply 103,207 Of 122,154
+Supply 103,127 Of 122,154
 
 Live from OpenSea, every half hour
 

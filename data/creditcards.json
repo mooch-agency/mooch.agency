@@ -1,13 +1,13 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-15T06:28:08.685Z",
+    "lastRun": "2026-10-15T11:23:31.329Z",
     "stats": {
-      "floorEth": 0.017287,
+      "floorEth": 0.0173,
       "floorUsd": 41,
-      "supply": 103207,
-      "owners": 12279,
-      "fetchedAt": "2026-10-15T06:27:43.676Z"
+      "supply": 103127,
+      "owners": 12259,
+      "fetchedAt": "2026-10-15T11:22:21.937Z"
     },
     "replySinceId": "2108135048251625841",
     "topicSinceId": "2109811361295253935",
@@ -1298,7 +1298,8 @@
       "source": "search",
       "score": 2,
       "flags": [],
-      "tweetText": "Credit Checks\n\nJust for fun, I put together a website to run a Credit Check on your @jackbutcher Credits.\n\nI've always loved the simplicity, creativity, and cleverness that Jack's projects foster and "
+      "tweetText": "Credit Checks\n\nJust for fun, I put together a website to run a Credit Check on your @jackbutcher Credits.\n\nI've always loved the simplicity, creativity, and cleverness that Jack's projects foster and ",
+      "archive": "https://web.archive.org/web/20261015112232/https://genmerch.xyz/creditchecks"
     },
     {
       "id": "creditunion-fun-union-0xbd28b3b85d79ffc819bb09157042999f981f9af5",
@@ -1490,7 +1491,8 @@
       "flags": [
         "coin"
       ],
-      "tweetText": "RECEIPTS Mint is Live 🧾 \n\n2000 Credits holders by (@jackbutcher) +\n@Racerz_eth + @FunkariNft Holders Are Eligible for Free Mint\n\nhttps://t.co/SYvEtyLcER\n\nmake sure to keep holding your RECEIPTS\n\n$RCP"
+      "tweetText": "RECEIPTS Mint is Live 🧾 \n\n2000 Credits holders by (@jackbutcher) +\n@Racerz_eth + @FunkariNft Holders Are Eligible for Free Mint\n\nhttps://t.co/SYvEtyLcER\n\nmake sure to keep holding your RECEIPTS\n\n$RCP",
+      "archive": "https://web.archive.org/web/20261015112307/https://opensea.io/collection/rcpts"
     },
     {
       "id": "creditunion-fun-union-0x4c33b1ba63d02114efc522bc808ae937c82e174f",
@@ -1625,7 +1627,8 @@
       "access": "none",
       "status": "approved",
       "added": "2026-10-01",
-      "source": "submission"
+      "source": "submission",
+      "archive": "https://web.archive.org/web/20261006001641/https://credit-crusaders-td3y.vercel.app/"
     },
     {
       "id": "humancredit-co",
