@@ -16,11 +16,11 @@ From 1 October 2026, any 80 Credits can be burned to make one Statement. Every b
 
 Mint price $8 Per Credit
 
-Floor 0.0184 ETH $45
+Floor 0.0173 ETH $41
 
-Holders 12,327 Wallets
+Holders 12,279 Wallets
 
-Supply 103,927 Of 122,154
+Supply 103,207 Of 122,154
 
 Live from OpenSea, every half hour
 
@@ -35,7 +35,7 @@ Unofficial fan index. Not affiliated with Jack Butcher.
 1. 
 2. [CreditEye](https://crediteye.xyz) New Deep trait search, best value per point, and live market and holder data for Credits and Statements. No wallet needed. [@l_wrench](https://x.com/l_wrench/status/2109447792431415670)12 Oct 2026 Rarity & data No wallet needed
 3. [Credits Market](https://oncave.io/labs/credits-market) New Ranks listed Credits and Statements by ETH per 1,000 points, then buys a bundle in one transaction. Browsing is free; buying needs a wallet. [@wutaner](https://x.com/wutaner/status/2109306418939703774)11 Oct 2026 Mints & markets Wallet optional
-4. [Credit Destroyer](https://credits.bit-mon.com) New A pixel arcade shooter: pick up to eight BitMON pilots and blast through Credits and Statements across six stages. Plays in the browser, wallet optional. [@DesLucrece](https://x.com/jackbutcher/status/2107948495399231540)8 Oct 2026 Games Wallet optional
+4. [Credit Destroyer](https://credits.bit-mon.com) A pixel arcade shooter: pick up to eight BitMON pilots and blast through Credits and Statements across six stages. Plays in the browser, wallet optional. [@DesLucrece](https://x.com/jackbutcher/status/2107948495399231540)8 Oct 2026 Games Wallet optional
 5. [BALANCE](https://credopepen.vercel.app) Credits remapped into Opepen blocks by ink-parity of each color; editions group by how many 8s are in the Credit. [@avsingh_eth](https://x.com/avsingh_eth/status/2107167115463832051)5 Oct 2026 Art & remixes No wallet needed
 6. [Duckling](https://wubbushi.com/debits/duckling.html) A Cinderella musical about Debit #3616 and Ella, the yellow its Credit never printed. 17 songs done, a rough cut playing for Debits holders. [@wubbushi](https://x.com/wubbushi/status/2106795461537611983)5 Oct 2026 Art & remixes Wallet needed
 7. [Credits Music](https://credits.mu) Hear a Statement: load any 80 Credit Statement by ID, play it back and download the MIDI. No wallet needed. [@galaxy_nose](https://x.com/galaxy_nose/status/2106372386551730307)4 Oct 2026 Build a Statement No wallet needed

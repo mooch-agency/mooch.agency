@@ -1,13 +1,13 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-14T21:41:02.997Z",
+    "lastRun": "2026-10-15T06:28:08.685Z",
     "stats": {
-      "floorEth": 0.0183999,
-      "floorUsd": 45,
-      "supply": 103927,
-      "owners": 12327,
-      "fetchedAt": "2026-10-14T21:39:07.157Z"
+      "floorEth": 0.017287,
+      "floorUsd": 41,
+      "supply": 103207,
+      "owners": 12279,
+      "fetchedAt": "2026-10-15T06:27:43.676Z"
     },
     "replySinceId": "2108135048251625841",
     "topicSinceId": "2109811361295253935",
@@ -1101,7 +1101,8 @@
       "metrics": {
         "likes": 0,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261014214100/https://credonauts.com/"
     },
     {
       "id": "opensea-io-collection-ether-bunnys-club",
@@ -1177,7 +1178,8 @@
       "metrics": {
         "likes": 0,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261008115512/https://permissionlessderivatives.com/debits/"
     },
     {
       "id": "opensea-io-collection-hood-credits",
@@ -1256,7 +1258,8 @@
       "source": "search",
       "score": 2,
       "flags": [],
-      "tweetText": "MEET PUNKS x CREDITS\n\nA 4,444 piece collection by A.C.J @Internetanount, live at https://t.co/4hWBFRbSdc\n\nEach Punk is rebuilt pixel-by-pixel, every visible pixel replaced with a full 48x48 CREDIT (by"
+      "tweetText": "MEET PUNKS x CREDITS\n\nA 4,444 piece collection by A.C.J @Internetanount, live at https://t.co/4hWBFRbSdc\n\nEach Punk is rebuilt pixel-by-pixel, every visible pixel replaced with a full 48x48 CREDIT (by",
+      "archive": "https://web.archive.org/web/20260929043848/https://punk.credit/"
     },
     {
       "id": "proofofreal-app-social-creditsleaderboard",
