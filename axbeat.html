@@ -1037,12 +1037,14 @@ function rowCta(row, id) {
       '<span class="said" role="status" data-role="said"></span>' +
     "</form></div>";
 }
-/* What built the docs, or "Custom" when nothing on the builder list was found.
-   The build script picks this out of Cloudflare's detection list; see
+/* What built the docs, or "Not detected" when nothing on the builder list was
+   found. The build script picks this out of Cloudflare's detection list; see
    scripts/axbeat-data.mjs for what qualifies as a builder and why the host is
-   deliberately not shown. */
+   deliberately not shown. Cloudflare's detection misses Mintlify, App Router
+   Next.js, Nextra, Vocs, Fumadocs and Astro (issue #120), so a null builder is
+   a gap in the scan and must never read as a verdict like "Custom". */
 function platformText(p) {
-  return (p && p.builder) || "Custom";
+  return (p && p.builder) || "Not detected";
 }
 /* The AI access policy, read at build time off Cloudflare's robotsTxtAiRules
    check (see aiPolicyFrom in scripts/axbeat-data.mjs) and only labelled here.
@@ -1130,7 +1132,8 @@ function hero(o) {
       '<p>We run <a href="https://blog.cloudflare.com/agent-readiness/" rel="noopener">Cloudflare’s ' +
         "agent-readiness</a> scan against a protocol’s website and docs. It checks that agent signposts " +
         "exist, not whether they’re correct. Onchain AX, how well an agent can take onchain actions, is " +
-        "TBD.</p>" +
+        "TBD. Built on is whatever Cloudflare’s technology detection names, and it misses some docs " +
+        "platforms, so Not detected is a gap in the scan.</p>" +
     "</div></div>" +
   "</div>";
 }

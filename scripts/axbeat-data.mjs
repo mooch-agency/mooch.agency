@@ -92,7 +92,7 @@ const STATIC_CLOSE = '<!-- @/AXBEAT-STATIC@ -->';
 // That reasoning still holds and the fix is in the copy, not the list: the
 // column describes a stack, it never explains a score, and the method note
 // says so with the numbers. Without them every row on the website view reads
-// "Custom" (with them, 12 of 22 are named on the 28 Sep scan), which tells a
+// "Not detected" (with them, 12 of 22 are named on the 28 Sep scan), which tells a
 // reader nothing at all.
 //
 // Order matters only as a tiebreak when a host reports two; the first match
@@ -379,7 +379,7 @@ function heldReason(row) {
 // board needs two things out of it, and neither is "the list".
 //
 //   builder   the tool that builds the pages, when it is one that ships these
-//             files by default (see BUILDERS). Otherwise null, shown as "Custom".
+//             files by default (see BUILDERS). Otherwise null, shown as "Not detected".
 //   cloudflare / otherHost
 //             whether Cloudflare was detected, and whether another hosting
 //             provider was detected alongside it. Both are facts about the
