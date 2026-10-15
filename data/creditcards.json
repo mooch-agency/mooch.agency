@@ -1,17 +1,17 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-15T11:23:31.329Z",
+    "lastRun": "2026-10-15T18:22:12.420Z",
     "stats": {
-      "floorEth": 0.0173,
-      "floorUsd": 41,
-      "supply": 103127,
-      "owners": 12259,
-      "fetchedAt": "2026-10-15T11:22:21.937Z"
+      "floorEth": 0.0161,
+      "floorUsd": 39,
+      "supply": 102967,
+      "owners": 12224,
+      "fetchedAt": "2026-10-15T18:20:28.405Z"
     },
     "replySinceId": "2108135048251625841",
     "topicSinceId": "2109811361295253935",
-    "mentionSinceId": "2110457542774038723",
+    "mentionSinceId": "2110778594607653335",
     "frozenOn": "2026-10-12"
   },
   "featuredSlot": {
@@ -1641,7 +1641,8 @@
       "added": "2026-10-01",
       "source": "submission",
       "x": "cordyjos",
-      "post": "https://x.com/cordyjos"
+      "post": "https://x.com/cordyjos",
+      "archive": "https://web.archive.org/web/20261007145805/https://www.humancredit.co/builders"
     },
     {
       "id": "humancredit-co-credit-77449-jesus-eth-connector",
