@@ -1,13 +1,13 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-15T18:22:12.420Z",
+    "lastRun": "2026-10-15T21:21:34.963Z",
     "stats": {
-      "floorEth": 0.0161,
-      "floorUsd": 39,
-      "supply": 102967,
-      "owners": 12224,
-      "fetchedAt": "2026-10-15T18:20:28.405Z"
+      "floorEth": 0.0167,
+      "floorUsd": 41,
+      "supply": 102887,
+      "owners": 12210,
+      "fetchedAt": "2026-10-15T21:20:26.453Z"
     },
     "replySinceId": "2108135048251625841",
     "topicSinceId": "2109811361295253935",
@@ -1406,7 +1406,8 @@
       "source": "search",
       "score": 3,
       "flags": [],
-      "tweetText": "built a site for credits to statements thesis gained from current onchain data: https://t.co/aJ7ie8pUpK\n\nCredits Whale Watch breaks down the burn thesis behind @jackbutcher Credits and what whale acti"
+      "tweetText": "built a site for credits to statements thesis gained from current onchain data: https://t.co/aJ7ie8pUpK\n\nCredits Whale Watch breaks down the burn thesis behind @jackbutcher Credits and what whale acti",
+      "archive": "https://web.archive.org/web/20261015182129/https://jacksonx28.github.io/credits-whale-watch/"
     },
     {
       "id": "creditunion-fun-union-0x3e4ae126a14f16c8e55b138cb05f9e35506a5017",
@@ -1683,7 +1684,8 @@
       "source": "search",
       "score": 2,
       "flags": [],
-      "tweetText": "Credits Rarity is live: https://t.co/4eUpN4t9dn\n\nA free toolkit for Credits, built on @jackbutcher's Credit scores:\n\n• cost per point + best value listings\n• planner: cheapest 80 for any rating\n• live"
+      "tweetText": "Credits Rarity is live: https://t.co/4eUpN4t9dn\n\nA free toolkit for Credits, built on @jackbutcher's Credit scores:\n\n• cost per point + best value listings\n• planner: cheapest 80 for any rating\n• live",
+      "archive": "https://web.archive.org/web/20261015212104/https://credits.disorderly.ai"
     },
     {
       "id": "opensea-io-collection-statements",
@@ -1705,7 +1707,8 @@
       "flags": [
         "via-thread"
       ],
-      "tweetText": "make a statement\n\nhttps://t.co/Ai8zClOtaD"
+      "tweetText": "make a statement\n\nhttps://t.co/Ai8zClOtaD",
+      "archive": "https://web.archive.org/web/20261002005342/https://jack.art/credits/assemble"
     },
     {
       "id": "creditunion-fun-auctions",
