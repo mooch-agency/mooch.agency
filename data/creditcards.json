@@ -1,13 +1,13 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-15T21:21:34.963Z",
+    "lastRun": "2026-10-16T06:21:49.268Z",
     "stats": {
-      "floorEth": 0.0167,
+      "floorEth": 0.01694,
       "floorUsd": 41,
       "supply": 102887,
-      "owners": 12210,
-      "fetchedAt": "2026-10-15T21:20:26.453Z"
+      "owners": 12177,
+      "fetchedAt": "2026-10-16T06:21:11.123Z"
     },
     "replySinceId": "2108135048251625841",
     "topicSinceId": "2109811361295253935",
@@ -1810,7 +1810,8 @@
       "source": "replies",
       "score": 3,
       "flags": [],
-      "tweetText": "@jesusdoteth Lfg!\nYou can reclaim your burned credits at https://t.co/BKuvNwMIk6 https://t.co/1DkyFvLxjr"
+      "tweetText": "@jesusdoteth Lfg!\nYou can reclaim your burned credits at https://t.co/BKuvNwMIk6 https://t.co/1DkyFvLxjr",
+      "archive": "https://web.archive.org/web/20261002021431/https://recredits.live/"
     },
     {
       "id": "opensea-io-collection-hoodiegroupies",
@@ -1889,7 +1890,8 @@
       "source": "search",
       "score": 2,
       "flags": [],
-      "tweetText": "NULL Host now hosts Credits by Jack Butcher.\n\nhold a NULL and a Credit, press New, mint.\n100% on-chain. \n\nhttps://t.co/sQbGKslrUV https://t.co/zRp6fSBj6x"
+      "tweetText": "NULL Host now hosts Credits by Jack Butcher.\n\nhold a NULL and a Credit, press New, mint.\n100% on-chain. \n\nhttps://t.co/sQbGKslrUV https://t.co/zRp6fSBj6x",
+      "archive": "https://web.archive.org/web/20261003005711/https://nullmint.com/host"
     },
     {
       "id": "credits-mu",
@@ -1905,7 +1907,8 @@
       "metrics": {
         "likes": 39,
         "reposts": 8
-      }
+      },
+      "archive": "https://web.archive.org/web/20261016062118/https://credits.mu"
     },
     {
       "id": "opensea-io-collection-computers2026",
