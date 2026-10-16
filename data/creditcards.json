@@ -1,13 +1,13 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-16T06:21:49.268Z",
+    "lastRun": "2026-10-16T11:18:24.191Z",
     "stats": {
-      "floorEth": 0.01694,
+      "floorEth": 0.0165,
       "floorUsd": 41,
       "supply": 102887,
-      "owners": 12177,
-      "fetchedAt": "2026-10-16T06:21:11.123Z"
+      "owners": 12162,
+      "fetchedAt": "2026-10-16T11:17:21.159Z"
     },
     "replySinceId": "2108135048251625841",
     "topicSinceId": "2109811361295253935",
@@ -1944,7 +1944,8 @@
       "metrics": {
         "likes": 33,
         "reposts": 6
-      }
+      },
+      "archive": "https://web.archive.org/web/20261016111730/https://wubbushi.com/debits/duckling.html"
     },
     {
       "id": "discord-com-invite-7bspnqad3",
@@ -2130,7 +2131,8 @@
       "metrics": {
         "likes": 25,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261016111808/https://oncave.io/labs/credits-market/"
     },
     {
       "id": "crediteye-xyz",
@@ -2147,7 +2149,8 @@
       "metrics": {
         "likes": 2,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261012005807/https://crediteye.xyz/"
     },
     {
       "id": "opensea-io-collection-trone",
