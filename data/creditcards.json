@@ -1,13 +1,13 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-16T18:29:05.477Z",
+    "lastRun": "2026-10-16T21:04:45.243Z",
     "stats": {
-      "floorEth": 0.0159,
-      "floorUsd": 38,
+      "floorEth": 0.0147999,
+      "floorUsd": 36,
       "supply": 102887,
-      "owners": 12120,
-      "fetchedAt": "2026-10-16T18:27:49.527Z"
+      "owners": 12111,
+      "fetchedAt": "2026-10-16T21:04:40.207Z"
     },
     "replySinceId": "2108135048251625841",
     "topicSinceId": "2109811361295253935",
@@ -2093,7 +2093,8 @@
       "metrics": {
         "likes": 113,
         "reposts": 0
-      }
+      },
+      "archive": "https://web.archive.org/web/20261016182857/https://credits.bit-mon.com/"
     },
     {
       "id": "opensea-io-collection-cactus-not-jack",
