@@ -471,11 +471,15 @@ export async function discover(data, token, fetchImpl = fetch, log = console.log
         searchSource(pool, token, { query: X_MENTION_QUERY, maxResults: X_MENTION_MAX_RESULTS, sinceKey: 'mentionSinceId', source: 'mentions' }),
     ],
   ];
-  // Once all 50 are in, the project searches stop. The perk and mention
-  // searches keep running: they surface perks (pending entries to review as
-  // perks, never to approve as a 51st project) until perks move to MTS.
-  const sources = full ? all.filter(([label]) => label === 'X perk posts' || label.startsWith('X mentions')) : all;
-  if (full) log('= Credit Cards is full (50): project searches off, perk and mention searches still run');
+  // Once all 50 are in, every search stops. The perk and mention searches
+  // ran on past the freeze only until perks moved to Monitoring the
+  // Situation (mts.mooch.agency), which now runs both and emails Credits
+  // holders each perk it finds (#101).
+  const sources = full ? [] : all;
+  if (full) {
+    log('= Credit Cards is full (50): discovery off; Credits perks are found by Monitoring the Situation');
+    return 0;
+  }
   // Each source survives the others' failure. A failed source leaves its
   // since-id where it was, so the next run re-reads the gap (search windows
   // reach back 7 days).

@@ -178,7 +178,7 @@ test('a tag under an announcement finds the link in the post it replies to', asy
   assert.match(queries.find((q) => q.includes('"jack butcher"')), /OR from:jackbutcher\)/, "Jack's own link posts are in the main search");
 });
 
-test('once all 50 are in, only the perk and mention searches run', async () => {
+test('once all 50 are in, no search runs: perks are Monitoring the Situation\'s job now', async () => {
   const queries = [];
   const fetchImpl = async (url) => {
     queries.push(new URL(url).searchParams.get('query') || '');
@@ -186,11 +186,8 @@ test('once all 50 are in, only the perk and mention searches run', async () => {
   };
   const projects = Array.from({ length: 50 }, (_, i) => ({ id: `a${i}`, url: `https://a${i}.example`, status: 'approved', added: '2026-10-01' }));
   const data = { meta: { sinceId: '1', replySinceId: '1', topicSinceId: '1', mentionSinceId: '1' }, projects };
-  await discover(data, 'token', fetchImpl, () => {}, () => {});
-  assert.equal(queries.length, 2);
-  assert.ok(queries.some((q) => q.includes('"credits holders"')), 'perk search');
-  assert.ok(queries.some((q) => q.startsWith('@jesusdoteth')), 'mention search');
-  assert.ok(!queries.some((q) => q.includes('from:jackbutcher') || q.startsWith('to:')), 'project searches off');
+  assert.equal(await discover(data, 'token', fetchImpl, () => {}, () => {}), 0);
+  assert.deepEqual(queries, [], 'nothing is read, so nothing is paid for');
 });
 
 test('helpers', () => {

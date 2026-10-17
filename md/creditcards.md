@@ -113,13 +113,17 @@ Ties go to whoever got there first
 2. [@wubbushi 3 projects](https://x.com/wubbushi)
 3. [@Jehoseph 2 projects](https://x.com/Jehoseph)
 
-Standing order
+Perk alerts
 
 ## The next perk, in your *inbox.*
 
-You've missed 10 perks for Credits holders so far. We watch X every day and email you when new perks appear.
+You've missed 10 perks for Credits holders so far. New ones now come from Monitoring the Situation: we watch X every day, check each find by hand, and email you the real ones.
 
 No new perk, no email
+
+[Get Credits perks · $5 a month](https://mts.mooch.agency/?collection=credits)
+
+On Monitoring the Situation, a mooch product · Cancel any time
 
 Source: https://mooch.agency/creditcards  
 Contact: hey@mooch.agency
