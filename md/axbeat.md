@@ -12,17 +12,17 @@ We run [Cloudflare’s agent-readiness](https://blog.cloudflare.com/agent-readin
 
 [What is AX?](https://moochagency.substack.com/p/ax-ux-for-the-other-half-of-the-web) Our essay on agent experience, and why we built AXBeat.
 
-The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's scored agent-readiness checks each passed for their website and their docs, scanned 14 October 2026.
+The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's scored agent-readiness checks each passed for their website and their docs, scanned 19 October 2026.
 
 | # | Chain | Website score | Docs score |
 | --- | --- | --- | --- |
 | 1 | BOB gobob.xyz | 11/16 Agent-Native | 3/16 Basic Web Presence |
 | 2 | Lighter lighter.xyz | 4/16 Basic Web Presence | 7/16 Agent-Integrated |
-| 3 | INTMAX intmax.io | 4/16 Basic Web Presence | 1/16 Not Ready |
-| 4 | Base base.org | 3/16 Basic Web Presence | 10/16 Agent-Integrated |
-| 5 | Optimism optimism.io | 3/16 Basic Web Presence | 10/16 Agent-Integrated |
-| 6 | Mantle mantle.xyz | 3/16 Basic Web Presence | 7/16 Agent-Integrated |
-| 7 | Starknet starknet.io | 3/16 Basic Web Presence | 9/16 Agent-Integrated |
+| 3 | Starknet starknet.io | 4/16 Basic Web Presence | 9/16 Agent-Integrated |
+| 4 | INTMAX intmax.io | 4/16 Basic Web Presence | 1/16 Not Ready |
+| 5 | Base base.org | 3/16 Basic Web Presence | 10/16 Agent-Integrated |
+| 6 | Optimism optimism.io | 3/16 Basic Web Presence | 10/16 Agent-Integrated |
+| 7 | Mantle mantle.xyz | 3/16 Basic Web Presence | 7/16 Agent-Integrated |
 | 8 | Linea linea.build | 3/16 Basic Web Presence | 7/16 Agent-Integrated |
 | 9 | Ink inkonchain.com | 3/16 Basic Web Presence | 3/16 Basic Web Presence |
 | 10 | ZKsync zksync.io | 3/16 Basic Web Presence | 3/16 Basic Web Presence |
