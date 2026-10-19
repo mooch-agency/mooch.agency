@@ -16,11 +16,11 @@ From 1 October 2026, any 80 Credits can be burned to make one Statement. Every b
 
 Mint price $8 Per Credit
 
-Floor 0.0165 ETH $39
+Floor 0.0174 ETH $42
 
-Holders 11,946 Wallets
+Holders 11,902 Wallets
 
-Supply 102,327 Of 122,154
+Supply 102,247 Of 122,154
 
 Live from OpenSea, every half hour
 
@@ -33,7 +33,7 @@ Unofficial fan index. Not affiliated with Jack Butcher.
 50 projects · The first 50 found on X
 
 1. 
-2. [CreditEye](https://crediteye.xyz) New Deep trait search, best value per point, and live market and holder data for Credits and Statements. No wallet needed. [@l_wrench](https://x.com/l_wrench/status/2109447792431415670)12 Oct 2026 Rarity & data No wallet needed
+2. [CreditEye](https://crediteye.xyz) Deep trait search, best value per point, and live market and holder data for Credits and Statements. No wallet needed. [@l_wrench](https://x.com/l_wrench/status/2109447792431415670)12 Oct 2026 Rarity & data No wallet needed
 3. [Credits Market](https://oncave.io/labs/credits-market) Ranks listed Credits and Statements by ETH per 1,000 points, then buys a bundle in one transaction. Browsing is free; buying needs a wallet. [@wutaner](https://x.com/wutaner/status/2109306418939703774)11 Oct 2026 Mints & markets Wallet optional
 4. [Credit Destroyer](https://credits.bit-mon.com) A pixel arcade shooter: pick up to eight BitMON pilots and blast through Credits and Statements across six stages. Plays in the browser, wallet optional. [@DesLucrece](https://x.com/jackbutcher/status/2107948495399231540)8 Oct 2026 Games Wallet optional
 5. [BALANCE](https://credopepen.vercel.app) Credits remapped into Opepen blocks by ink-parity of each color; editions group by how many 8s are in the Credit. [@avsingh_eth](https://x.com/avsingh_eth/status/2107167115463832051)5 Oct 2026 Art & remixes No wallet needed
@@ -86,10 +86,10 @@ Unofficial fan index. Not affiliated with Jack Butcher.
 
 [Know about a perk? DM @jesusdoteth →](https://x.com/messages/compose?recipient_id=1386099253580345344)
 
-1. Open 1
-2. Open Free mint [Futures](https://laternow.app/futures) A free 1 of 1 magic 8 ball drawn from the traits of each Credit you hold. Only that Credit's owner can claim it. Gas only. For Holders, one per Credit [@LATE_FX](https://x.com/LATE_FX/status/2103269221111058849)24 Sept 2026
-3. Upcoming 1
-4. Upcoming Allowlist [Afterflow](https://afterflow.disorderly.ai/allowlist.html) A two hour early window on Afterflow, a free generative geometry mint of up to 10,000 pieces, 5 per wallet. Credits is one of 24 collections in the holder snapshot. Check your wallet on the allowlist page. For Holders at the 7 Oct snapshot [@disorderly_AI](https://x.com/disorderly_AI/status/2105388511209853117)Opens 26 Oct 2026
+1. Upcoming 1
+2. Upcoming Allowlist [Afterflow](https://afterflow.disorderly.ai/allowlist.html) A two hour early window on Afterflow, a free generative geometry mint of up to 10,000 pieces, 5 per wallet. Credits is one of 24 collections in the holder snapshot. Check your wallet on the allowlist page. For Holders at the 7 Oct snapshot [@disorderly_AI](https://x.com/disorderly_AI/status/2105388511209853117)Opens 26 Oct 2026
+3. Status unknown 1
+4. Status unknown Free mint [Futures](https://laternow.app/futures) A free 1 of 1 magic 8 ball drawn from the traits of each Credit you hold. Only that Credit's owner can claim it. Gas only. For Holders, one per Credit [@LATE_FX](https://x.com/LATE_FX/status/2103269221111058849)24 Sept 2026
 5. 
 6. Ended 10
 7. Ended Free mint Holders window closed [Trone](https://opensea.io/collection/trone) A free mint of Trone, 4,444 neon portraits on Ethereum, in a ten hour window for Credits and Debits holders before the public mint. For Credits holders [@Trone4x](https://x.com/Trone4x/status/2109800462224367862)Ended 13 Oct 2026
