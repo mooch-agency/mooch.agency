@@ -1,13 +1,13 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-10-20T11:30:26.817Z",
+    "lastRun": "2026-10-20T14:57:16.197Z",
     "stats": {
-      "floorEth": 0.0199,
-      "floorUsd": 47,
-      "supply": 94407,
-      "owners": 11580,
-      "fetchedAt": "2026-10-20T11:30:25.465Z"
+      "floorEth": 0.021995984188,
+      "floorUsd": 54,
+      "supply": 93047,
+      "owners": 11497,
+      "fetchedAt": "2026-10-20T14:56:33.420Z"
     },
     "replySinceId": "2108135048251625841",
     "topicSinceId": "2109811361295253935",
@@ -2191,7 +2191,8 @@
       "source": "mentions",
       "score": 2,
       "flags": [],
-      "tweetText": "@jesusdoteth Looks like I just missed your 50 cutoff- just launched this today https://t.co/Vi8ho4Kv7L"
+      "tweetText": "@jesusdoteth Looks like I just missed your 50 cutoff- just launched this today https://t.co/Vi8ho4Kv7L",
+      "archive": "https://web.archive.org/web/20261020145701/https://gridphantoms.app/credits"
     }
   ]
 }
