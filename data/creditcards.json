@@ -955,7 +955,7 @@
       "blurb": "Turn any Credit into a retro Breakout game and smash its actual blocks. Free, nothing to connect.",
       "category": "games",
       "access": "none",
-      "status": "approved",
+      "status": "rejected",
       "added": "2026-09-27",
       "metrics": {
         "likes": 14,
@@ -2175,15 +2175,15 @@
     },
     {
       "id": "gridphantoms-app-credits",
-      "name": "gridphantoms.app",
+      "name": "Grid Phantoms",
       "url": "https://gridphantoms.app/credits",
       "x": "ktrap",
-      "post": "https://x.com/ktrap/status/2110034521769021869",
-      "blurb": "",
-      "category": "art",
+      "post": "https://x.com/ktrap/status/2110930439259279509",
+      "blurb": "Compares asks on loose Credits and Statements to find the most Credit Rating for your ETH. No wallet needed.",
+      "category": "markets",
       "access": "none",
-      "status": "rejected",
-      "added": "2026-10-13",
+      "status": "approved",
+      "added": "2026-10-20",
       "metrics": {
         "likes": 0,
         "reposts": 0
