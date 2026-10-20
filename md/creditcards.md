@@ -33,7 +33,7 @@ Unofficial fan index. Not affiliated with Jack Butcher.
 50 projects · The first 50 found on X
 
 1. 
-2. [Grid Phantoms](https://gridphantoms.app/credits) New Compares asks on loose Credits and Statements to find the most Credit Rating for your ETH. No wallet needed. [@ktrap](https://x.com/ktrap/status/2110034521769021869)20 Oct 2026 Mints & markets No wallet needed
+2. [Grid Phantoms](https://gridphantoms.app/credits) New Compares asks on loose Credits and Statements to find the most Credit Rating for your ETH. No wallet needed. [@ktrap](https://x.com/ktrap/status/2110930439259279509)20 Oct 2026 Mints & markets No wallet needed
 3. [CreditEye](https://crediteye.xyz) Deep trait search, best value per point, and live market and holder data for Credits and Statements. No wallet needed. [@l_wrench](https://x.com/l_wrench/status/2109447792431415670)12 Oct 2026 Rarity & data No wallet needed
 4. [Credits Market](https://oncave.io/labs/credits-market) Ranks listed Credits and Statements by ETH per 1,000 points, then buys a bundle in one transaction. Browsing is free; buying needs a wallet. [@wutaner](https://x.com/wutaner/status/2109306418939703774)11 Oct 2026 Mints & markets Wallet optional
 5. [Credit Destroyer](https://credits.bit-mon.com) A pixel arcade shooter: pick up to eight BitMON pilots and blast through Credits and Statements across six stages. Plays in the browser, wallet optional. [@DesLucrece](https://x.com/jackbutcher/status/2107948495399231540)8 Oct 2026 Games Wallet optional
