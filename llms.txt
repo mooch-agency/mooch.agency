@@ -30,6 +30,7 @@ Every page here is also available as Markdown: request it with `Accept: text/mar
 
 ## Products
 
+- [Monitoring the Situation](https://mts.mooch.agency): Email alerts for free mints, allowlists and airdrops offered to holders of CryptoPunks and Credits, found on X and checked by hand. $5/month per collection. Its own [llms.txt](https://mts.mooch.agency/llms.txt).
 - [toneofvoice.app](https://toneofvoice.app): Generate professional tone of voice guidelines.
 - [fortress](https://usefortress.vercel.app): Run a full content audit on your website. Private alpha.
 - [highway](https://joinhighway.vercel.app): Automate SEO-optimised articles on your site. Waitlist.
