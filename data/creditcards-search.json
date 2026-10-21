@@ -1,0 +1,207 @@
+{
+  "_readme": "Discovery search tiers for /creditcards. Every term here must appear in docs/credits-glossary.md (checked by scripts/creditcards-search.test.mjs). Queries are built by scripts/creditcards-search.mjs: (any) AND (all groups) AND each operator AND NOT each exclude. Caps are posts per request; maxPages bounds pagination inside one since_id window. schedule 'every' runs on both daily slots, 'morning' only on the first run of the UTC day. Not wired into creditcards-update.mjs yet.",
+  "glossary": "docs/credits-glossary.md",
+  "noise": {
+    "_readme": "Excluded from every tier that does not anchor on Jack, and scored down everywhere.",
+    "exclude": [
+      "gmgn",
+      "dexscreener",
+      "\"statement credit\"",
+      "\"statement credits\"",
+      "cashback",
+      "\"cash back\"",
+      "amex",
+      "fico",
+      "mentorship"
+    ]
+  },
+  "tiers": [
+    {
+      "id": "anchor",
+      "label": "A: anchored on Jack, jack.art, the contract or the OpenSea slug",
+      "source": "search",
+      "sinceKey": "sinceId",
+      "maxResults": 50,
+      "maxPages": 2,
+      "schedule": "every",
+      "any": [
+        "@jackbutcher",
+        "\"jack butcher\"",
+        "jackbutcher",
+        "url:\"jack.art/credits\"",
+        "url:\"opensea.io/collection/credits\"",
+        "0x97630aa70ab14ed9883b41dafccbc11349723043"
+      ],
+      "all": [
+        [
+          "credits",
+          "credit",
+          "statement",
+          "statements",
+          "debits"
+        ]
+      ],
+      "operators": [
+        "-is:retweet",
+        "-is:reply"
+      ],
+      "exclude": [
+        "gmgn",
+        "dexscreener"
+      ],
+      "useNoise": false
+    },
+    {
+      "id": "vocab",
+      "label": "B: \"credits\" plus community-only vocabulary, no Jack, no link required, Credit Union join posts left out",
+      "source": "vocab",
+      "sinceKey": "vocabSinceId",
+      "maxResults": 25,
+      "maxPages": 1,
+      "schedule": "morning",
+      "any": [
+        "credits"
+      ],
+      "all": [
+        [
+          "\"80 credits\"",
+          "\"burn 80\"",
+          "\"stranded credits\"",
+          "\"x money\"",
+          "cmyk",
+          "8x8",
+          "overprint",
+          "\"122,154\"",
+          "122154",
+          "\"1,526\"",
+          "\"credit rating\"",
+          "\"credit ratings\"",
+          "\"statement builder\""
+        ]
+      ],
+      "operators": [
+        "-is:retweet",
+        "-is:reply"
+      ],
+      "exclude": [
+        "@jackbutcher",
+        "jackbutcher",
+        "\"jack butcher\"",
+        "url:\"creditunion.fun\""
+      ],
+      "useNoise": true
+    },
+    {
+      "id": "derivative",
+      "label": "C: derivative names, slang and tool hosts, no Jack (no bare url:credits or url:debits, see docs/creditcards-search-test-2026-09-29.md)",
+      "source": "derivative",
+      "sinceKey": "derivativeSinceId",
+      "maxResults": 25,
+      "maxPages": 1,
+      "schedule": "morning",
+      "any": [
+        "\"permissionless derivative\"",
+        "\"every credit implies\"",
+        "(debits credits)",
+        "(credits (url:vercel.app OR url:netlify.app OR url:github.io OR url:here.now OR url:workers.dev OR url:kimi.page))"
+      ],
+      "all": [],
+      "operators": [
+        "-is:retweet",
+        "-is:reply"
+      ],
+      "exclude": [
+        "@jackbutcher",
+        "jackbutcher",
+        "\"jack butcher\"",
+        "url:\"jack.art\"",
+        "url:\"opensea.io/collection/credits\"",
+        "lovable",
+        "replit",
+        "\"free credits\""
+      ],
+      "useNoise": true
+    },
+    {
+      "id": "replies",
+      "label": "R: replies addressed to @jesusdoteth, links no longer required",
+      "source": "replies",
+      "sinceKey": "replySinceId",
+      "maxResults": 25,
+      "maxPages": 1,
+      "schedule": "every",
+      "any": [
+        "to:jesusdoteth"
+      ],
+      "all": [],
+      "operators": [
+        "is:reply",
+        "-is:retweet",
+        "-from:jesusdoteth"
+      ],
+      "exclude": [],
+      "useNoise": false
+    }
+  ],
+  "experimental": [
+    {
+      "id": "jack-replies",
+      "label": "X: replies to @jackbutcher that carry a link (volume unknown, test before enabling)",
+      "source": "jack-replies",
+      "sinceKey": "jackReplySinceId",
+      "maxResults": 25,
+      "maxPages": 1,
+      "schedule": "morning",
+      "any": [
+        "to:jackbutcher"
+      ],
+      "all": [],
+      "operators": [
+        "is:reply",
+        "has:links",
+        "-is:retweet",
+        "-from:jackbutcher"
+      ],
+      "exclude": [
+        "gmgn",
+        "dexscreener"
+      ],
+      "useNoise": true
+    }
+  ],
+  "bioFallback": {
+    "_readme": "A linkless post borrows the author's profile link when it says 'link in bio', or when it has an announcement verb AND a strong glossary term. Profile links arrive with the search expansion, so this costs no extra reads.",
+    "announce": [
+      "built",
+      "made",
+      "vibecoded",
+      "shipped",
+      "launch",
+      "launched",
+      "launching",
+      "goes live",
+      "now live",
+      "live now",
+      "mint goes live",
+      "minting now",
+      "introducing",
+      "try it",
+      "check it out",
+      "drops"
+    ],
+    "strong": [
+      "burn 80",
+      "80 credits",
+      "stranded credits",
+      "1,526",
+      "122,154",
+      "permissionless derivative",
+      "debits",
+      "statement",
+      "statements",
+      "credits by @jackbutcher",
+      "@jackbutcher credits",
+      "@jackbutcher's credits"
+    ]
+  }
+}
