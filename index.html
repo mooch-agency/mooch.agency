@@ -275,7 +275,10 @@
   .audit-form { margin-top: 32px; }
   /* flex-end keeps the button on the input's baseline now the fields carry labels. */
   .audit-fields { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
-  .audit-label {
+  /* The newsletter band reuses the field look (label + input) but not the
+     audit's two-step layout, hence the shared selectors. */
+  .audit-label,
+  .news-label {
     display: block;
     font-family: var(--mono);
     font-size: 11px;
@@ -285,7 +288,8 @@
     margin-bottom: 8px;
     white-space: nowrap;
   }
-  .audit-input {
+  .audit-input,
+  .news-input {
     flex: 1 1 220px;
     min-width: 0;
     font-family: var(--sans);
@@ -297,8 +301,10 @@
     padding: 13px 16px;
     transition: border-color 0.15s ease;
   }
-  .audit-input::placeholder { color: var(--muted); }
-  .audit-input:focus-visible { outline: none; border-color: var(--ink); }
+  .audit-input::placeholder,
+  .news-input::placeholder { color: var(--muted); }
+  .audit-input:focus-visible,
+  .news-input:focus-visible { outline: none; border-color: var(--ink); }
   .audit-input[aria-invalid="true"] { border-color: var(--error); }
   .audit-submit { flex: 0 0 auto; }
   /* Two-step disclosure: the URL field is asked for on its own, then the email
@@ -644,6 +650,33 @@
     .fi-end { grid-column: 2; text-align: left; align-items: flex-start; }
   }
 
+  /* ───────── Newsletter band ───────── */
+  /* Hands off to Substack's own /subscribe page with the email prefilled,
+     rather than embedding Substack's iframe: the iframe can't take our tokens,
+     the CSP blocks frames, and a click inside it never reaches track(). Half
+     the usual rhythm, so it reads as a strip between sections, not a fifth one. */
+  .news-band { padding-block: calc(var(--rhythm) / 2); }
+  .news-inner {
+    max-width: var(--max);
+    margin: 0 auto;
+    display: grid;
+    gap: 32px;
+  }
+  .news-band .section-num { margin-bottom: 24px; }
+  .news-band .section-lead { margin-top: 16px; }
+  /* Button under the field, at its natural width, so it lines up with the
+     "Book a discovery call" pill in the same column of the closer below. */
+  .news-fields { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+  .news-field { width: 100%; max-width: 420px; }
+  .news-field .news-input { width: 100%; }
+  /* A <button> doesn't inherit type like the <a> pills do, so it came out 5px
+     shorter than "Book a discovery call" right below it. */
+  .news-submit { font-family: inherit; line-height: inherit; }
+  .news-note { margin-top: 12px; font-size: 14px; color: var(--muted-small); }
+  @media (min-width: 880px) {
+    .news-inner { grid-template-columns: 1fr 1fr; gap: 80px; align-items: end; }
+  }
+
   /* ───────── About / Contact split ───────── */
   .closer {
     padding: var(--rhythm) var(--pad-x);
@@ -658,7 +691,8 @@
     gap: 48px;
   }
   .closer-block { display: flex; flex-direction: column; gap: 20px; }
-  .closer-block h3 {
+  .closer-block h3,
+  .news-title {
     font-family: var(--serif);
     font-weight: 400;
     font-size: clamp(32px, 4vw, 52px);
@@ -667,7 +701,8 @@
     color: var(--black);
     text-wrap: balance;
   }
-  .closer-block h3 em { font-style: italic; }
+  .closer-block h3 em,
+  .news-title em { font-style: italic; }
   .closer-block p {
     font-size: 17px;
     line-height: 1.55;
@@ -950,6 +985,13 @@
   </div>
 </section>
 <script>
+// Vercel Analytics custom events, shared by the audit band and the newsletter
+// band. window.va is bootstrapped near the insights script at the end of the
+// page; guarded so it no-ops if analytics is blocked.
+function track(name, data) {
+  try { if (window.va) window.va("event", Object.assign({ name: name }, data || {})); } catch (e) {}
+}
+
 // Free audit band: client-side validation + submit to /api/audit. The server
 // re-validates (mailchecker + dns.resolveMx), so this layer only catches obvious
 // typos fast and drives the 3 visual states. No fake progress: "validating" just
@@ -972,12 +1014,6 @@
   }
 
   function setStep(step) { band.setAttribute("data-step", step); }
-
-  // Vercel Analytics custom events. window.va is bootstrapped near the insights
-  // script at the end of the page; guarded so it no-ops if analytics is blocked.
-  function track(name, data) {
-    try { if (window.va) window.va("event", Object.assign({ name: name }, data || {})); } catch (e) {}
-  }
 
   // Comparison slide-out toggle ("What we audit for").
   var disclose = band.querySelector(".audit-disclose");
@@ -1241,6 +1277,41 @@
     </div>
   </div>
 </section>
+
+<section class="section news-band" id="newsletter" aria-labelledby="news-title">
+  <div class="news-inner" data-reveal="child: :scope > *; cap: 4">
+    <div>
+      <div class="section-num">Last Week in AI <span class="rule"></span></div>
+      <h2 class="news-title" id="news-title">AI news and tips, <em>weekly</em>.</h2>
+      <p class="section-lead">We sift through the week's AI news and bring you the stories that matter. A 5-minute read, every Monday. Free.</p>
+    </div>
+    <!-- A plain GET to Substack's own sign-up page, which prefills the email
+         and confirms there. Works with no JavaScript; JS only adds the event. -->
+    <form class="news-form" id="newsletterForm" action="https://moochagency.substack.com/subscribe" method="get" target="_blank" rel="noopener">
+      <div class="news-fields">
+        <div class="news-field">
+          <label class="news-label" for="news-email">Your email</label>
+          <input id="news-email" class="news-input" type="email" name="email" autocomplete="email" spellcheck="false" placeholder="you@acme.com" required>
+        </div>
+        <button class="pill news-submit" type="submit">Subscribe <span class="arrow" aria-hidden="true">&rarr;</span></button>
+      </div>
+      <p class="news-note">Opens Substack to confirm. Unsubscribe any time.</p>
+    </form>
+  </div>
+</section>
+
+<script>
+// Newsletter band: count the hand-off to Substack. "submit" only fires once the
+// browser's own email validation passes, so this counts real attempts, not
+// empty clicks. The form opens in a new tab, so the beacon isn't cut short.
+(function () {
+  var form = document.getElementById("newsletterForm");
+  if (!form) return;
+  form.addEventListener("submit", function () {
+    track("newsletter_subscribe_click", {});
+  });
+})();
+</script>
 
 <section class="closer" id="about">
   <div class="closer-inner" data-reveal="child: .closer-block > *; cap: 8">
