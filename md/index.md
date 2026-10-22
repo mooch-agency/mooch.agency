@@ -91,6 +91,12 @@ A few ways to start with us depending on what's important to you.
 
 - [02 One week UX Research *Sprint* One week of focused user research that tells you what to build next, and what to drop. Starts with a 20-min call From €15,000 Start a sprint→](https://cal.eu/mooch/discovery?notes=UX%20Research%20Sprint)
 
+Last Week in AI
+
+## AI news and tips, *weekly*.
+
+We sift through the week's AI news and bring you the stories that matter. A 5-minute read, every Monday. Free.
+
 04 / About
 
 ### A husband-and-wife team of *two*, working from London & Lisbon.
