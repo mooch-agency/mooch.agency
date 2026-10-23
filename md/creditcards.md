@@ -16,11 +16,11 @@ From 1 October 2026, any 80 Credits can be burned to make one Statement. Every b
 
 Mint price $8 Per Credit
 
-Floor 0.0103 ETH $25
+Floor 0.0092 ETH $22
 
-Holders 10,612 Wallets
+Holders 10,614 Wallets
 
-Supply 77,447 Of 122,154
+Supply 77,287 Of 122,154
 
 Live from OpenSea, every half hour
 
