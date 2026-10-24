@@ -18,6 +18,12 @@ const SAYLESS_SYSTEM = require("./_say-less-system.js");
 const { startRun, endRun } = require("./_langsmith.js");
 
 const MODEL = process.env.SAYLESS_MODEL || "claude-sonnet-5";
+// Say-less has its own Anthropic key, not the ANTHROPIC_API_KEY that
+// rewrite.js and deslop.js share: a leak or a spend cap on one product
+// shouldn't take the others down with it (the shared key was rotated on
+// 15 Oct 2026 after another project leaked it). Read per request, so a
+// changed value applies without a code change.
+const apiKey = () => process.env.SAYLESS_ANTHROPIC_API_KEY;
 const MAX_TOKENS = 1500;           // headroom over the longest benchmark reply (~330 words)
 const WORD_CAP = 200;              // a real question, not an essay pasted in
 const RATE_PER_MIN = 4;            // two Anthropic calls per ask; half rewrite.js's 8/min
@@ -83,7 +89,7 @@ async function streamArm(arm, system, question, write, signal) {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "x-api-key": apiKey(),
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify(body),
@@ -181,7 +187,8 @@ module.exports = async function handler(req, res) {
     res.statusCode = 413;
     return res.end(`Keep it under ${WORD_CAP} words. That was ${words}.`);
   }
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!apiKey()) {
+    console.error("say-less: SAYLESS_ANTHROPIC_API_KEY is not set");
     res.statusCode = 500;
     return res.end("Server missing API key.");
   }
