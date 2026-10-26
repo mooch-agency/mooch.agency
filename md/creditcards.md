@@ -16,9 +16,9 @@ From 1 October 2026, any 80 Credits can be burned to make one Statement. Every b
 
 Mint price $8 Per Credit
 
-Floor 0.0089 ETH $21
+Floor 0.0083 ETH $19
 
-Holders 10,559 Wallets
+Holders 10,557 Wallets
 
 Supply 77,287 Of 122,154
 
@@ -86,8 +86,8 @@ Unofficial fan index. Not affiliated with Jack Butcher.
 
 [Know about a perk? DM @jesusdoteth →](https://x.com/messages/compose?recipient_id=1386099253580345344)
 
-1. Upcoming 1
-2. Upcoming Allowlist [Afterflow](https://afterflow.disorderly.ai/allowlist.html) A two hour early window on Afterflow, a free generative geometry mint of up to 10,000 pieces, 5 per wallet. Credits is one of 24 collections in the holder snapshot. Check your wallet on the allowlist page. For Holders at the 7 Oct snapshot [@disorderly_AI](https://x.com/disorderly_AI/status/2105388511209853117)Opens 26 Oct 2026
+1. Open 1
+2. Open Allowlist [Afterflow](https://afterflow.disorderly.ai/allowlist.html) A two hour early window on Afterflow, a free generative geometry mint of up to 10,000 pieces, 5 per wallet. Credits is one of 24 collections in the holder snapshot. Check your wallet on the allowlist page. For Holders at the 7 Oct snapshot [@disorderly_AI](https://x.com/disorderly_AI/status/2105388511209853117)Ends 26 Oct 2026
 3. Status unknown 1
 4. Status unknown Free mint [Futures](https://laternow.app/futures) A free 1 of 1 magic 8 ball drawn from the traits of each Credit you hold. Only that Credit's owner can claim it. Gas only. For Holders, one per Credit [@LATE_FX](https://x.com/LATE_FX/status/2103269221111058849)24 Sept 2026
 5. 
