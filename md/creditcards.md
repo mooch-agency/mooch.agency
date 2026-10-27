@@ -16,9 +16,9 @@ From 1 October 2026, any 80 Credits can be burned to make one Statement. Every b
 
 Mint price $8 Per Credit
 
-Floor 0.0087 ETH $20
+Floor 0.0093 ETH $21
 
-Holders 10,540 Wallets
+Holders 10,499 Wallets
 
 Supply 77,287 Of 122,154
 
@@ -33,7 +33,7 @@ Unofficial fan index. Not affiliated with Jack Butcher.
 50 projects · The first 50 found on X
 
 1. 
-2. [Grid Phantoms](https://gridphantoms.app/credits) New Compares asks on loose Credits and Statements to find the most Credit Rating for your ETH. No wallet needed. [@ktrap](https://x.com/ktrap/status/2110930439259279509)20 Oct 2026 Mints & markets No wallet needed
+2. [Grid Phantoms](https://gridphantoms.app/credits) Compares asks on loose Credits and Statements to find the most Credit Rating for your ETH. No wallet needed. [@ktrap](https://x.com/ktrap/status/2110930439259279509)20 Oct 2026 Mints & markets No wallet needed
 3. [CreditEye](https://crediteye.xyz) Deep trait search, best value per point, and live market and holder data for Credits and Statements. No wallet needed. [@l_wrench](https://x.com/l_wrench/status/2109447792431415670)12 Oct 2026 Rarity & data No wallet needed
 4. [Credits Market](https://oncave.io/labs/credits-market) Ranks listed Credits and Statements by ETH per 1,000 points, then buys a bundle in one transaction. Browsing is free; buying needs a wallet. [@wutaner](https://x.com/wutaner/status/2109306418939703774)11 Oct 2026 Mints & markets Wallet optional
 5. [Credit Destroyer](https://credits.bit-mon.com) A pixel arcade shooter: pick up to eight BitMON pilots and blast through Credits and Statements across six stages. Plays in the browser, wallet optional. [@DesLucrece](https://x.com/jackbutcher/status/2107948495399231540)8 Oct 2026 Games Wallet optional
@@ -86,22 +86,21 @@ Unofficial fan index. Not affiliated with Jack Butcher.
 
 [Know about a perk? DM @jesusdoteth →](https://x.com/messages/compose?recipient_id=1386099253580345344)
 
-1. Open 1
-2. Open Allowlist [Afterflow](https://afterflow.disorderly.ai/allowlist.html) A two hour early window on Afterflow, a free generative geometry mint of up to 10,000 pieces, 5 per wallet. Credits is one of 24 collections in the holder snapshot. Check your wallet on the allowlist page. For Holders at the 7 Oct snapshot [@disorderly_AI](https://x.com/disorderly_AI/status/2105388511209853117)Ends 26 Oct 2026
-3. Status unknown 1
-4. Status unknown Free mint [Futures](https://laternow.app/futures) A free 1 of 1 magic 8 ball drawn from the traits of each Credit you hold. Only that Credit's owner can claim it. Gas only. For Holders, one per Credit [@LATE_FX](https://x.com/LATE_FX/status/2103269221111058849)24 Sept 2026
-5. 
-6. Ended 10
-7. Ended Free mint Holders window closed [Trone](https://opensea.io/collection/trone) A free mint of Trone, 4,444 neon portraits on Ethereum, in a ten hour window for Credits and Debits holders before the public mint. For Credits holders [@Trone4x](https://x.com/Trone4x/status/2109800462224367862)Ended 13 Oct 2026
-8. Ended Free mint Holders phase closed [Cactus, Not Jack](https://opensea.io/collection/cactus-not-jack) A free mint of Cactus, Not Jack, 3,333 pixel art cacti, in a FRIENDS phase for holders of Credits and five other collections. For Credits holders [@cactusnotjack](https://x.com/cactusnotjack/status/2108235774315352210)8 Oct 2026
-9. Ended Free mint [Computers](https://opensea.io/collection/computers2026) A free mint of Computers: 2026, pixel PCs with more than 80 screen scenes, open to Credits holders for 12 hours. For Credits holders [@xkirteria](https://x.com/xkirteria/status/2107044453093658686)Ended 5 Oct 2026
-10. Ended Free mint [ROONZ](https://opensea.io/collection/roonz-by-budz) A free ROONZ, one of 4,269 on Robinhood Chain, for holders with a WL spot. First come, first served, before the public mint. For Holders [@Budzukoji](https://x.com/Budzukoji/status/2106207875102380316)Ended 3 Oct 2026
-11. Ended Free mint Closed [RECEIPTS](https://opensea.io/collection/rcpts) A free mint of RECEIPTS, 10,000 generative 8×8 records printed in CMYK on a lime field, on Robinhood Chain. For 2,000 holders [@TheRCPTS](https://x.com/TheRCPTS/status/2105304229757812814)30 Sept 2026
-12. Ended Airdrop Sent [Credonauts](https://credonauts.com) One Credonaut each, sent by the artist to the top 50 Credits holders. The top 50 Argonauts holders got one too. For Top 50 holders [@timsouw](https://x.com/timsouw/status/2104789433287635452)29 Sept 2026
-13. Ended Free mint Closed [Debits](https://exaltedlove.com/debits) One free Debit for every wallet that held a Credit at the snapshot, gas paid. For 24 hours only holders could mint their matched Debits, at $7 after the first. For Holders at the 28 Sep snapshot [@wubbushi](https://x.com/wubbushi/status/2104586007706267791)29 Sept 2026
-14. Ended Allowlist [Credit Cards](https://opensea.io/collection/creditcards) An allowlist spot on Credit Cards, 10,000 cards inspired by Credits. The top 2,000 go by Visualize Value's holder ranking. It closed when the mint opened to everyone at 0.001 ETH. For Top 2,000 holders [@Jehoseph](https://x.com/Jehoseph/status/2103753864449290577)Ended 26 Sept 2026
-15. Ended Allowlist Sold out [Credited Punks](https://oncave.io/labs/credited-punks) A holder mint of 10,000 onchain Punks, each coloured by one of your Credits, at 0.00029 ETH. The Credit stays yours. For Holders [@wutaner](https://x.com/wutaner/status/2102691432599633997)23 Sept 2026
-16. Ended Free mint [The Creditors](https://opensea.io/collection/0xf8641504e13b609eecbd1e8811306507ba330176/overview) A free mint of 1 of 1 PFPs made from Credits, on Robinhood Chain. The holder stage ran for two hours before the public mint. For Holders [@TheCreditorsNFT](https://x.com/TheCreditorsNFT/status/2102767674111537367)Ended 23 Sept 2026
+1. Status unknown 1
+2. Status unknown Free mint [Futures](https://laternow.app/futures) A free 1 of 1 magic 8 ball drawn from the traits of each Credit you hold. Only that Credit's owner can claim it. Gas only. For Holders, one per Credit [@LATE_FX](https://x.com/LATE_FX/status/2103269221111058849)24 Sept 2026
+3. 
+4. Ended 11
+5. Ended Allowlist [Afterflow](https://afterflow.disorderly.ai/allowlist.html) A two hour early window on Afterflow, a free generative geometry mint of up to 10,000 pieces, 5 per wallet. Credits is one of 24 collections in the holder snapshot. Check your wallet on the allowlist page. For Holders at the 7 Oct snapshot [@disorderly_AI](https://x.com/disorderly_AI/status/2105388511209853117)Ended 26 Oct 2026
+6. Ended Free mint Holders window closed [Trone](https://opensea.io/collection/trone) A free mint of Trone, 4,444 neon portraits on Ethereum, in a ten hour window for Credits and Debits holders before the public mint. For Credits holders [@Trone4x](https://x.com/Trone4x/status/2109800462224367862)Ended 13 Oct 2026
+7. Ended Free mint Holders phase closed [Cactus, Not Jack](https://opensea.io/collection/cactus-not-jack) A free mint of Cactus, Not Jack, 3,333 pixel art cacti, in a FRIENDS phase for holders of Credits and five other collections. For Credits holders [@cactusnotjack](https://x.com/cactusnotjack/status/2108235774315352210)8 Oct 2026
+8. Ended Free mint [Computers](https://opensea.io/collection/computers2026) A free mint of Computers: 2026, pixel PCs with more than 80 screen scenes, open to Credits holders for 12 hours. For Credits holders [@xkirteria](https://x.com/xkirteria/status/2107044453093658686)Ended 5 Oct 2026
+9. Ended Free mint [ROONZ](https://opensea.io/collection/roonz-by-budz) A free ROONZ, one of 4,269 on Robinhood Chain, for holders with a WL spot. First come, first served, before the public mint. For Holders [@Budzukoji](https://x.com/Budzukoji/status/2106207875102380316)Ended 3 Oct 2026
+10. Ended Free mint Closed [RECEIPTS](https://opensea.io/collection/rcpts) A free mint of RECEIPTS, 10,000 generative 8×8 records printed in CMYK on a lime field, on Robinhood Chain. For 2,000 holders [@TheRCPTS](https://x.com/TheRCPTS/status/2105304229757812814)30 Sept 2026
+11. Ended Airdrop Sent [Credonauts](https://credonauts.com) One Credonaut each, sent by the artist to the top 50 Credits holders. The top 50 Argonauts holders got one too. For Top 50 holders [@timsouw](https://x.com/timsouw/status/2104789433287635452)29 Sept 2026
+12. Ended Free mint Closed [Debits](https://exaltedlove.com/debits) One free Debit for every wallet that held a Credit at the snapshot, gas paid. For 24 hours only holders could mint their matched Debits, at $7 after the first. For Holders at the 28 Sep snapshot [@wubbushi](https://x.com/wubbushi/status/2104586007706267791)29 Sept 2026
+13. Ended Allowlist [Credit Cards](https://opensea.io/collection/creditcards) An allowlist spot on Credit Cards, 10,000 cards inspired by Credits. The top 2,000 go by Visualize Value's holder ranking. It closed when the mint opened to everyone at 0.001 ETH. For Top 2,000 holders [@Jehoseph](https://x.com/Jehoseph/status/2103753864449290577)Ended 26 Sept 2026
+14. Ended Allowlist Sold out [Credited Punks](https://oncave.io/labs/credited-punks) A holder mint of 10,000 onchain Punks, each coloured by one of your Credits, at 0.00029 ETH. The Credit stays yours. For Holders [@wutaner](https://x.com/wutaner/status/2102691432599633997)23 Sept 2026
+15. Ended Free mint [The Creditors](https://opensea.io/collection/0xf8641504e13b609eecbd1e8811306507ba330176/overview) A free mint of 1 of 1 PFPs made from Credits, on Robinhood Chain. The holder stage ran for two hours before the public mint. For Holders [@TheCreditorsNFT](https://x.com/TheCreditorsNFT/status/2102767674111537367)Ended 23 Sept 2026
 
 Built something for Credits holders? [Send it over](mailto:hey@mooch.agency?subject=Credit%20Cards%3A%20a%20project%20for%20the%20index&body=Hi%20guys%2C%0D%0A%0D%0AThe%20project%3A%0D%0AThe%20announcement%20post%3A%0D%0AWhat%20it%20does%3A).
 
@@ -117,7 +116,7 @@ Perk alerts
 
 ## The next perk, in your *inbox.*
 
-You've missed 10 perks for Credits holders so far. New ones now come from Monitoring the Situation: we watch X every day, check each find by hand, and email you the real ones.
+You've missed 11 perks for Credits holders so far. New ones now come from Monitoring the Situation: we watch X every day, check each find by hand, and email you the real ones.
 
 No new perk, no email
 
