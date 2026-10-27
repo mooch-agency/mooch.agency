@@ -18,7 +18,7 @@ Mint price $8 Per Credit
 
 Floor 0.0089 ETH $21
 
-Holders 10,497 Wallets
+Holders 10,495 Wallets
 
 Supply 77,287 Of 122,154
 
