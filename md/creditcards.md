@@ -16,9 +16,9 @@ From 1 October 2026, any 80 Credits can be burned to make one Statement. Every b
 
 Mint price $8 Per Credit
 
-Floor 0.0076 ETH $18
+Floor 0.0075 ETH $17
 
-Holders 10,502 Wallets
+Holders 10,495 Wallets
 
 Supply 77,127 Of 122,154
 
