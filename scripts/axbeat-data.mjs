@@ -106,8 +106,12 @@ const STATIC_CLOSE = '<!-- @/AXBEAT-STATIC@ -->';
 // detected".
 //
 // Vocs and Fumadocs joined on 2 Nov 2026. Cloudflare started returning both
-// after its 27 Oct detection change (docs.taiko.xyz, docs.unichain.org), and
-// those rows read "Not detected" only because the names were missing here.
+// around 27 Oct 2026 (docs.taiko.xyz, docs.unichain.org), and those rows read
+// "Not detected" only because the names were missing here. Vocs meets the test
+// above: it generates llms.txt and .md twins of every page itself. Fumadocs
+// only half does: its LLM output is a one-command opt-in, not a default. It
+// sits here anyway because it runs on Next.js and has to win that tie, or the
+// row names the framework instead of the docs tool.
 const DOC_TOOLS = [
   'Docusaurus', 'GitBook', 'MkDocs', 'Mintlify', 'VitePress',
   'Nextra', 'Docsify', 'Sphinx', 'Read the Docs', 'Redocly', 'Vocs', 'Fumadocs',
