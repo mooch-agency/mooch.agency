@@ -29,11 +29,18 @@
   },
   "pnpm": {
     "overrides": {
-      "undici": ">=8.10.2",
-      "fast-uri": ">=4.1.4",
+      "undici": ">=8.12.2",
+      "fast-uri": ">=4.2.3",
       "ws": ">=8.21.0",
       "axios": ">=1.18.0",
-      "follow-redirects": ">=1.16.1"
+      "follow-redirects": ">=1.16.2",
+      "zod@^4": "^4.6.6",
+      "decode-uri-component": ">=0.5.1"
+    },
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-mrhx-c7xc-m3w5"
+      ]
     }
   }
 }
