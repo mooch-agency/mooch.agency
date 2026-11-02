@@ -104,9 +104,13 @@ const STATIC_CLOSE = '<!-- @/AXBEAT-STATIC@ -->';
 // and linea.build, both of which are Next.js sites Cloudflare fails to detect
 // (#122). Where Cloudflare only names the CMS, the row honestly reads "Not
 // detected".
+//
+// Vocs and Fumadocs joined on 2 Nov 2026. Cloudflare started returning both
+// after its 27 Oct detection change (docs.taiko.xyz, docs.unichain.org), and
+// those rows read "Not detected" only because the names were missing here.
 const DOC_TOOLS = [
   'Docusaurus', 'GitBook', 'MkDocs', 'Mintlify', 'VitePress',
-  'Nextra', 'Docsify', 'Sphinx', 'Read the Docs', 'Redocly',
+  'Nextra', 'Docsify', 'Sphinx', 'Read the Docs', 'Redocly', 'Vocs', 'Fumadocs',
 ];
 const SITE_FRAMEWORKS = [
   'Framer Sites', 'Next.js', 'Nuxt.js', 'Astro', 'SvelteKit', 'Remix',
