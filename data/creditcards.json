@@ -1,13 +1,13 @@
 {
   "meta": {
     "sinceId": "2109272534013132984",
-    "lastRun": "2026-11-03T23:19:02.684Z",
+    "lastRun": "2026-11-04T07:21:54.674Z",
     "stats": {
-      "floorEth": 0.006099,
+      "floorEth": 0.0059979,
       "floorUsd": 14,
       "supply": 76487,
-      "owners": 10390,
-      "fetchedAt": "2026-11-03T23:19:02.660Z"
+      "owners": 10384,
+      "fetchedAt": "2026-11-04T07:21:54.349Z"
     },
     "replySinceId": "2108135048251625841",
     "topicSinceId": "2109811361295253935",
