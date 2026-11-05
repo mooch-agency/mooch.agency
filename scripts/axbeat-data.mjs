@@ -129,7 +129,13 @@ const HOSTS = ['Vercel', 'Netlify', 'Amazon Web Services', 'Firebase', 'Google C
 
 const ARGV = process.argv.slice(2);
 const CHECK = ARGV.includes('--check');
-const scanArg = ARGV.find((a) => !a.startsWith('-'));
+// --prev <file>: an axbeat.html whose baked board is the one to measure rank
+// moves against. Defaults to the page itself (see movesFrom). Only needed to
+// re-seed the moves by hand, e.g. from `git show <rev>:axbeat.html`.
+const prevIdx = ARGV.indexOf('--prev');
+const PREV_ARG = prevIdx === -1 ? null : ARGV[prevIdx + 1];
+if (prevIdx !== -1 && !PREV_ARG) { console.error('axbeat-data: --prev needs a file'); process.exit(1); }
+const scanArg = ARGV.find((a, i) => !a.startsWith('-') && i !== prevIdx + 1);
 
 const die = (msg) => { console.error(`axbeat-data: ${msg}`); process.exit(1); };
 
@@ -512,6 +518,73 @@ function slugClash(rows) {
 }
 
 // ---------------------------------------------------------------------------
+// Rank moves: where each chain sat on the previous published board.
+//
+// The move is a RANK move, computed from the same ordering the board shows
+// (checks found, then value secured; see ranked()), never from Cloudflare's
+// level. The level is too coarse to see most movement: on the 2 Nov 2026 scan
+// Starknet's website lost a check (4 found to 3) and fell from 3rd to 7th
+// while its level read 1 both weeks, so a level diff reported no change at all.
+//
+// "Previous" means the last board we published, read off the page being
+// re-baked, not ax-audit's previous scan file. ax-audit can hold a scan that
+// never shipped (an unmerged weekly PR, a held run), and a reader compares
+// against the board they last saw. ax-audit's weekly workflow bakes on a fresh
+// checkout of master, so the page it reads is exactly that board.
+//
+// Baked per row as `was: { site: { r, f }, docs: { r, f } }`, the previous
+// rank and checks found per view, or null for a chain that was not on the
+// previous board. `prev.scannedAt` dates the comparison, because the gap is not
+// always a week (held scans: 19 Oct to 2 Nov was two), so the page must never
+// call it "7D".
+//
+// Re-baking the scan that is already on the page carries its `was` forward
+// unchanged; otherwise a second bake of the same scan would compare the board
+// with itself and zero every move.
+// ---------------------------------------------------------------------------
+const VIEWS = ['site', 'docs'];
+
+// The board's own ordering for one view, as slug -> { r, f }. Mirrors sorted()
+// in axbeat.html and staticBoard()'s list below: ties on checks found break on
+// value secured, so every row gets a distinct rank.
+function ranked(rows, view) {
+  const out = {};
+  [...rows]
+    .sort((a, b) => (scoredCount(b[view]).found - scoredCount(a[view]).found) || (a.tvs - b.tvs))
+    .forEach((r, i) => { out[r.slug] = { r: i + 1, f: scoredCount(r[view]).found }; });
+  return out;
+}
+
+function movesFrom(data, prevData) {
+  if (!prevData || !Array.isArray(prevData.rows) || !prevData.rows.length) return data;
+  if (prevData.scannedAt === data.scannedAt) {
+    // Same scan re-baked: keep the comparison it already shipped with.
+    if (!prevData.prev) return data;
+    const was = new Map(prevData.rows.map((r) => [r.slug, r.was ?? null]));
+    return { ...data, prev: prevData.prev, rows: data.rows.map((r) => ({ ...r, was: was.get(r.slug) ?? null })) };
+  }
+  if (Number.isNaN(Date.parse(prevData.scannedAt)) || Date.parse(prevData.scannedAt) > Date.parse(data.scannedAt)) {
+    die(`the previous board (${prevData.scannedAt}) is not a date before this scan (${data.scannedAt})`);
+  }
+  // Rows are matched across boards by slug, so a previous board with a missing,
+  // malformed or repeated slug, or a row without both hosts, would hand one
+  // chain another's rank. Refuse it rather than guess.
+  const prevRows = prevData.rows;
+  const bad = prevRows.find((r) => typeof r.slug !== 'string' || r.slug !== slugFrom(r.name) || !r.site || !r.docs);
+  if (bad) die(`the previous board's row "${bad.name}" has no usable slug or is missing a host`);
+  if (slugClash(prevRows)) die(`the previous board has two rows on #${slugClash(prevRows)}`);
+  const before = Object.fromEntries(VIEWS.map((v) => [v, ranked(prevRows, v)]));
+  return {
+    ...data,
+    prev: { scannedAt: prevData.scannedAt, count: prevRows.length },
+    rows: data.rows.map((r) => ({
+      ...r,
+      was: before.site[r.slug] ? { site: before.site[r.slug], docs: before.docs[r.slug] } : null,
+    })),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Build
 // ---------------------------------------------------------------------------
 function build(scanPath) {
@@ -631,6 +704,20 @@ function staticBoard(data) {
   // 4/16 could sit under a 3/16 with nothing on the page explaining why. Ties
   // broken on value secured.
   const list = [...data.rows].sort((a, b) => (scoredCount(b.site).found - scoredCount(a.site).found) || (a.tvs - b.tvs));
+  // Rank moves, the same triangles the interactive board draws after each
+  // score (moveMark() in axbeat.html), each against its own view's ranking.
+  const prevWhen = data.prev && new Date(data.prev.scannedAt).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const now = Object.fromEntries(VIEWS.map((v) => [v, ranked(data.rows, v)]));
+  const move = (r, view) => {
+    if (!data.prev) return '';
+    const w = r.was?.[view];
+    if (!w) return ' <span class="mv mv-new">new</span>';
+    const d = w.r - now[view][r.slug].r;
+    if (!d) return '';
+    return ` <span class="mv ${d > 0 ? 'mv-up' : 'mv-down'}" aria-hidden="true">${d > 0 ? '▲' : '▼'}${Math.abs(d)}</span>` +
+      `<span class="sr">, ${d > 0 ? 'up' : 'down'} ${Math.abs(d)} place${Math.abs(d) === 1 ? '' : 's'} since ${esc(prevWhen)}</span>`;
+  };
 
   // Kept in sync by hand with hero()'s own frontloaded copy in axbeat.html
   // (there is no JS here to share it with): eyebrow text, the lede, and the
@@ -658,10 +745,11 @@ ${list.map((r, i) => {
   return `<tr id="${esc(r.slug)}"><td class="rank">${i + 1}</td>` +
     `<td><span class="chainname"><img class="chainlogo" src="${esc(r.logo)}" alt="" width="20" height="20" loading="lazy">` +
     `<span class="brand">${esc(r.name)}</span></span><span class="brandurl">${esc(r.site.url)}</span></td>` +
-    `<td><span class="snum">${site.found}/${site.total}</span> ${esc(r.site.levelName || LEVEL_NAME[r.site.level])}</td>` +
-    `<td><span class="snum">${docs.found}/${docs.total}</span> ${esc(r.docs.levelName || LEVEL_NAME[r.docs.level])}</td></tr>`;
+    `<td><span class="snum">${site.found}/${site.total}</span>${move(r, 'site')} ${esc(r.site.levelName || LEVEL_NAME[r.site.level])}</td>` +
+    `<td><span class="snum">${docs.found}/${docs.total}</span>${move(r, 'docs')} ${esc(r.docs.levelName || LEVEL_NAME[r.docs.level])}</td></tr>`;
 }).join('\n')}
-</tbody></table></div>
+</tbody></table></div>${data.prev ? `
+<p class="movekey">▲▼ Change in rank since the ${esc(prevWhen)} scan.</p>` : ''}
 </div>`;
 }
 
@@ -669,11 +757,11 @@ ${list.map((r, i) => {
 // Checking what is already baked. Runs with no scan present, which is the point:
 // CI has this repo and nothing else.
 // ---------------------------------------------------------------------------
-function readBaked() {
-  if (!existsSync(PAGE)) die('axbeat.html does not exist');
-  const html = readFileSync(PAGE, 'utf8');
+function readBaked(file = PAGE) {
+  if (!existsSync(file)) die(`${path.relative(ROOT, file)} does not exist`);
+  const html = readFileSync(file, 'utf8');
   const start = html.indexOf(OPEN);
-  if (start === -1) die('axbeat.html has no baked scan block');
+  if (start === -1) die(`${path.relative(ROOT, file)} has no baked scan block`);
   const from = start + OPEN.length;
   const end = html.indexOf(CLOSE, from);
   if (end === -1) die('the baked scan block is not closed');
@@ -732,6 +820,61 @@ function check() {
   }
   const clash = slugClash(data.rows || []);
   want(clash === null, `two chains share the row link #${clash}`);
+
+  // Rank moves (see movesFrom). The previous board is not in this repo's CI, so
+  // the ranks cannot be re-derived; what can be asserted is that the block is
+  // well formed, dated before this scan, and that no two chains claim the same
+  // previous rank on one view.
+  //   - prev is exactly { scannedAt, count }, dated before this scan
+  //   - every row has `was`: null (new since then) or { site, docs }, each
+  //     exactly { r, f } integers, r within 1..count, f within 0..that host's
+  //     own scored total
+  //   - no two chains share a previous rank on one view
+  //   - the previous ranks agree with the previous checks found: a chain that
+  //     had more checks cannot sit below one that had fewer, which is the
+  //     ordering ranked() applies and the one thing a hand edit would break
+  //   - the page and this file still agree on the ordering they rank by
+  if (data.prev !== undefined) {
+    const P = data.prev;
+    want(P && typeof P === 'object' && Object.keys(P).sort().join() === 'count,scannedAt',
+      'prev must be exactly { scannedAt, count }');
+    want(typeof P?.scannedAt === 'string' && Date.parse(P.scannedAt) < Date.parse(data.scannedAt),
+      `prev.scannedAt (${P?.scannedAt}) is missing or not before this scan`);
+    want(Number.isInteger(P?.count) && P.count > 0, `prev.count (${P?.count}) is not a positive integer`);
+    want((data.rows || []).some((r) => r.was !== null), 'no row was on the previous board');
+    for (const view of VIEWS) {
+      const seen = new Map();
+      for (const r of data.rows || []) {
+        if (r.was === null) continue;
+        want(r.was && typeof r.was === 'object' && Object.keys(r.was).sort().join() === 'docs,site',
+          `${r.name}: was must be null or exactly { site, docs }`);
+        const w = r.was?.[view];
+        const total = r[view] ? scoredCount(r[view]).total : 0;
+        const ok = w && Object.keys(w).sort().join() === 'f,r' &&
+          Number.isInteger(w.r) && w.r >= 1 && w.r <= (P?.count ?? 0) &&
+          Number.isInteger(w.f) && w.f >= 0 && w.f <= total;
+        want(ok, `${r.name} ${view}: previous rank ${JSON.stringify(w)} is not { r: 1..${P?.count}, f: 0..${total} }`);
+        if (!ok) continue;
+        want(!seen.has(w.r), `${view}: ${r.name} and ${seen.get(w.r)} both claim previous rank ${w.r}`);
+        seen.set(w.r, r.name);
+      }
+      const prior = (data.rows || []).filter((r) => r.was?.[view]).map((r) => ({ n: r.name, ...r.was[view] }))
+        .sort((a, b) => a.r - b.r);
+      for (let i = 1; i < prior.length; i++) {
+        want(prior[i].f <= prior[i - 1].f,
+          `${view}: ${prior[i].n} was ranked ${prior[i].r} with ${prior[i].f} checks, below ` +
+          `${prior[i - 1].n} at ${prior[i - 1].r} with ${prior[i - 1].f}: previous ranks and checks disagree`);
+      }
+    }
+    // Moves are computed against this file's ranked() at bake time and against
+    // sorted() in the page at render time. If either ordering changes alone, the
+    // triangles silently measure against a different board, so pin the page's.
+    want(html.includes('var d = foundCount(viewOf(b, view)) - foundCount(viewOf(a, view));\n    return d || a.tvs - b.tvs;'),
+      "axbeat.html's sorted() no longer ranks on checks found then value secured; " +
+      'update ranked() in scripts/axbeat-data.mjs to match, or the rank moves are wrong');
+  } else {
+    want((data.rows || []).every((r) => r.was === undefined), 'rows carry previous ranks but there is no prev block');
+  }
 
   // The AI access policy is derived at build time from a check message, so it is
   // the one baked field that could silently go stale against its own row. Both
@@ -836,8 +979,9 @@ if (CHECK) {
       '   the weekly scan commits straight to main, so a stale clone rebuilds a stale board)'
     );
   }
-  const data = build(scanPath);
   const { html } = readBaked();
+  const prevData = PREV_ARG ? readBaked(path.resolve(ROOT, PREV_ARG)).data : readBaked().data;
+  const data = movesFrom(build(scanPath), prevData);
 
   // The static board first, so the offsets of the data block are still valid
   // when we splice it. Both are written in one pass: a page carrying a new scan

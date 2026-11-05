@@ -17,12 +17,12 @@ The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's score
 | # | Chain | Website score | Docs score |
 | --- | --- | --- | --- |
 | 1 | BOB gobob.xyz | 11/17 Agent-Native | 3/17 Basic Web Presence |
-| 2 | Base base.org | 6/17 Bot-Aware | 10/17 Agent-Integrated |
-| 3 | Lighter lighter.xyz | 4/17 Basic Web Presence | 7/17 Agent-Integrated |
+| 2 | Base base.org | 6/17 , up 3 places since 19 Oct Bot-Aware | 10/17 Agent-Integrated |
+| 3 | Lighter lighter.xyz | 4/17 , down 1 place since 19 Oct Basic Web Presence | 7/17 Agent-Integrated |
 | 4 | INTMAX intmax.io | 4/17 Basic Web Presence | 1/17 Not Ready |
-| 5 | Optimism optimism.io | 3/17 Basic Web Presence | 10/17 Agent-Integrated |
-| 6 | Mantle mantle.xyz | 3/17 Basic Web Presence | 7/17 Agent-Integrated |
-| 7 | Starknet starknet.io | 3/17 Basic Web Presence | 9/17 Agent-Integrated |
+| 5 | Optimism optimism.io | 3/17 , up 1 place since 19 Oct Basic Web Presence | 10/17 Agent-Integrated |
+| 6 | Mantle mantle.xyz | 3/17 , up 1 place since 19 Oct Basic Web Presence | 7/17 Agent-Integrated |
+| 7 | Starknet starknet.io | 3/17 , down 4 places since 19 Oct Basic Web Presence | 9/17 Agent-Integrated |
 | 8 | Linea linea.build | 3/17 Basic Web Presence | 7/17 Agent-Integrated |
 | 9 | Ink inkonchain.com | 3/17 Basic Web Presence | 3/17 Basic Web Presence |
 | 10 | ZKsync zksync.io | 3/17 Basic Web Presence | 3/17 Basic Web Presence |
@@ -38,6 +38,8 @@ The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's score
 | 20 | ADI Chain adi.foundation | 0/17 Not Ready | 7/17 Agent-Integrated |
 | 21 | Facet facet.org | 0/17 Not Ready | 7/17 Agent-Integrated |
 | 22 | Ethscriptions ethscriptions.com | 0/17 Not Ready | 7/17 Agent-Integrated |
+
+▲▼ Change in rank since the 19 Oct scan.
 
 Source: https://mooch.agency/axbeat  
 Contact: hey@mooch.agency
