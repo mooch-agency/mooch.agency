@@ -251,6 +251,24 @@ Two rules that are easy to break by accident:
   with the ladder itself). If the advice ever returns, quoting it attributed is
   allowed; reading it back into a score, level or ordering is not.
 
+**Rank moves (added 5 Nov 2026).** Each score carries a triangle and count
+(▲3, ▼4) for places gained or lost since the last published board, with the
+date under the board. Rules:
+
+- The move is a **rank** move from the board's own ordering (checks found, then
+  value secured), never from Cloudflare's level. On 2 Nov Starknet dropped 3rd
+  to 7th while its level read 1 both weeks.
+- "Previous" is the board baked in `axbeat.html` at bake time, i.e. the last one
+  readers saw, not ax-audit's previous scan file (which can be a held or
+  unmerged week). The weekly bake runs on a fresh master checkout, so this holds.
+  Re-baking the same scan carries the comparison forward unchanged.
+- Never label it "7D": held scans make the gap longer than a week.
+- To re-seed by hand: `node scripts/axbeat-data.mjs ../ax-audit --prev <old axbeat.html>`
+  (e.g. from `git show <rev>:axbeat.html`).
+- `axbeat:check` fails on a malformed `prev`/`was` block, previous ranks that
+  disagree with previous checks found, duplicate ranks, or the page's `sorted()`
+  drifting from the bake's `ranked()`.
+
 Display copy carrying a chain's name or a reader-facing caveat lives in
 `scripts/axbeat-chains.json`, keyed by the brand in ax-audit's targets file.
 Nothing there can change a score.
