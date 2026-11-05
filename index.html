@@ -1040,6 +1040,20 @@ function track(name, data) {
     io.observe(band);
   }
 
+  // Funnel intent: audit_band_engage fires once, on the first real interaction
+  // with the form (focus on either field or a submit press). band_view is only
+  // "scrolled past", which reads as engagement on the dashboard when it isn't;
+  // this is the first event that means someone actually touched the band.
+  var engaged = false;
+  function markEngaged() {
+    if (engaged) return;
+    engaged = true;
+    track("audit_band_engage", {});
+  }
+  urlEl.addEventListener("focus", markEngaged);
+  emailEl.addEventListener("focus", markEngaged);
+  submit.addEventListener("click", markEngaged);
+
   // Cheap placeholder filter so obvious filler fails before hitting the server.
   // The server's mailchecker blocklist is the real gate.
   var JUNK = /^(test|example|email|domain|a|b|x|y|z|asdf?|qwerty|none|no)@|@(test|example|domain|a|b|x)\.[a-z]+$/i;
