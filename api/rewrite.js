@@ -10,6 +10,7 @@
 const fs = require("fs");
 const path = require("path");
 const { clientAbort, pickers, pumpSSE } = require("./_stream.js");
+const { guard, makeLimiter, refererPolicy, readBody } = require("./_guard.js");
 
 // Provider is a config switch. Default OpenAI (gpt-5.5), the chosen voice for
 // v0.1; Claude is a ready fallback so switching back is a one-env-var change.
@@ -36,73 +37,36 @@ function loadSystem() {
   return _system;
 }
 
-// Best-effort in-memory limiter. Resets when the instance recycles, so it
-// stops casual loops but isn't durable. The hard cost guards are the word cap,
-// max_tokens, the Anthropic monthly spend ceiling, and the kill switch.
-const hits = new Map();
-function rateLimited(ip) {
-  const now = Date.now();
-  const rec = hits.get(ip) || { min: [], day: [] };
-  rec.min = rec.min.filter((t) => now - t < 60_000);
-  rec.day = rec.day.filter((t) => now - t < 86_400_000);
-  if (rec.min.length >= RATE_PER_MIN || rec.day.length >= RATE_PER_DAY) {
-    hits.set(ip, rec);
-    return true;
-  }
-  rec.min.push(now);
-  rec.day.push(now);
-  hits.set(ip, rec);
-  return false;
-}
+// Admission (method, kill switch, origin, per-IP rate caps) goes through
+// api/_guard.js, one door shared by every function here. The limiter is
+// best-effort and per-instance as before; quota is committed only once the
+// input has validated, so a 400 or 413 no longer burns it. The hard cost
+// guards are still the word cap, max_tokens, the Anthropic monthly spend
+// ceiling, and the kill switch.
+const limiter = makeLimiter({ perMin: RATE_PER_MIN, perDay: RATE_PER_DAY });
 
-function originOk(req) {
-  const src = req.headers.origin || req.headers.referer || "";
-  if (!src) return true; // non-browser clients (curl) aren't the threat; cost is
-  let host;
-  try { host = new URL(src).hostname; } catch { return false; }
-  return (
-    ALLOWED_HOSTS.includes(host) ||
-    host.endsWith(".mooch.agency") ||   // www and any other mooch subdomain
-    host.endsWith(".vercel.app")        // preview deployments
-  );
-}
-
-function readBody(req) {
-  // Vercel's Node runtime often pre-parses JSON into req.body. Use it when
-  // present; otherwise read the raw stream ourselves.
-  if (req.body && typeof req.body === "object") return Promise.resolve(req.body);
-  if (typeof req.body === "string") {
-    try { return Promise.resolve(JSON.parse(req.body || "{}")); } catch { return Promise.resolve({}); }
-  }
-  return new Promise((resolve) => {
-    let raw = "";
-    req.on("data", (c) => (raw += c));
-    req.on("end", () => {
-      try { resolve(JSON.parse(raw || "{}")); } catch { resolve({}); }
-    });
-    req.on("error", () => resolve({}));
-  });
-}
+const ADMIT = {
+  methods: ["POST"],
+  killEnv: "REWRITER_DISABLED",
+  // Non-browser clients (curl) aren't the threat; cost is. A missing header
+  // passes, a present one must match.
+  origin: refererPolicy({
+    hosts: ALLOWED_HOSTS,
+    suffixes: [".mooch.agency", ".vercel.app"], // www, subdomains, previews
+  }),
+  limiter,
+  reply: {
+    method: (res) => { res.statusCode = 405; res.end("Method not allowed"); },
+    kill: (res) => { res.statusCode = 503; res.end("The rewriter is paused. Back shortly."); },
+    origin: (res) => { res.statusCode = 403; res.end("Forbidden"); },
+    rate: (res) => { res.statusCode = 429; res.end("Slow down a moment, then try again."); },
+  },
+};
 
 module.exports = async function handler(req, res) {
-  if (req.method !== "POST") {
-    res.statusCode = 405;
-    return res.end("Method not allowed");
-  }
-  if (process.env.REWRITER_DISABLED === "1") {
-    res.statusCode = 503;
-    return res.end("The rewriter is paused. Back shortly.");
-  }
-  if (!originOk(req)) {
-    res.statusCode = 403;
-    return res.end("Forbidden");
-  }
-
-  const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "anon";
-  if (rateLimited(ip)) {
-    res.statusCode = 429;
-    return res.end("Slow down a moment, then try again.");
-  }
+  const admit = guard(req, res, ADMIT);
+  if (!admit) return;
+  if (admit.rateLimited) return admit.replyRate();
 
   const { text } = await readBody(req);
   if (!text || !text.trim()) {
@@ -123,6 +87,9 @@ module.exports = async function handler(req, res) {
   let system;
   try { system = loadSystem(); }
   catch (e) { res.statusCode = 500; return res.end("Server misconfigured."); }
+
+  // Validated and configured: this request now costs quota, and only now.
+  admit.commitRate();
 
   // Stream setup
   res.setHeader("Content-Type", "text/event-stream; charset=utf-8");

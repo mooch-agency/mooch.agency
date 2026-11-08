@@ -39,6 +39,7 @@ const { exact } = require("x402/schemes");
 const { useFacilitator } = require("x402/verify");
 const { processPriceToAtomicAmount, findMatchingPaymentRequirements, toJsonSafe } = require("x402/shared");
 const { settleResponseHeader } = require("x402/types");
+const { guard, makeLimiter } = require("./_guard.js");
 
 const MODEL = process.env.DESLOP_MODEL || "claude-sonnet-5";
 const PRICE = process.env.DESLOP_PRICE_USD || "0.10";
@@ -90,15 +91,25 @@ const WORD_CAP = 2000;            // a post, not a book
 const RATE_PER_MIN = 10;          // paid calls, but still cap runaway loops
 const X402_VERSION = 1;
 
-const hits = new Map();
-function rateLimited(ip) {
-  const now = Date.now();
-  const rec = (hits.get(ip) || []).filter((t) => now - t < 60_000);
-  if (rec.length >= RATE_PER_MIN) { hits.set(ip, rec); return true; }
-  rec.push(now);
-  hits.set(ip, rec);
-  return false;
-}
+// Admission (method, kill switch, per-IP rate cap) goes through api/_guard.js,
+// one door shared by every function here. No origin policy on purpose: agents
+// are the audience and payment is the gate. Quota is committed only once the
+// body has validated, so a 400 no longer burns it.
+const limiter = makeLimiter({ perMin: RATE_PER_MIN });
+
+const ADMIT = {
+  methods: ["POST"],
+  killEnv: "DESLOP_KILL",
+  limiter,
+  reply: {
+    method: (res) => {
+      res.setHeader("Allow", "POST, OPTIONS");
+      res.status(405).json({ error: "POST only. Body: { \"text\": \"...\" }" });
+    },
+    kill: (res) => res.status(503).json({ error: "Endpoint paused." }),
+    rate: (res) => res.status(429).json({ error: "Slow down. 10 calls a minute." }),
+  },
+};
 
 // verify() is a read-only check: it does not spend the payment's nonce, only
 // settle() does, on-chain. Without this, the same signed X-PAYMENT header
@@ -255,13 +266,8 @@ const handler = async (req, res) => {
   res.setHeader("Access-Control-Expose-Headers", "X-PAYMENT-RESPONSE");
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  if (req.method !== "POST") {
-    res.setHeader("Allow", "POST, OPTIONS");
-    return res.status(405).json({ error: "POST only. Body: { \"text\": \"...\" }" });
-  }
-  if (process.env.DESLOP_KILL === "1") {
-    return res.status(503).json({ error: "Endpoint paused." });
-  }
+  const admit = guard(req, res, ADMIT);
+  if (!admit) return;
   if (!process.env.X402_PAY_TO) {
     return res.status(503).json({ error: "Payments not configured yet. Try again soon." });
   }
@@ -278,8 +284,7 @@ const handler = async (req, res) => {
     return res.status(503).json({ error: "Endpoint misconfigured. Try again soon." });
   }
 
-  const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
-  if (rateLimited(ip)) return res.status(429).json({ error: "Slow down. 10 calls a minute." });
+  if (admit.rateLimited) return admit.replyRate();
 
   let accepts;
   try { accepts = buildPaymentRequirements(req); }
@@ -306,6 +311,9 @@ const handler = async (req, res) => {
   if (words > WORD_CAP) {
     return res.status(400).json({ error: `Too long: ${words} words, cap is ${WORD_CAP}.` });
   }
+
+  // Validated: this call now costs quota, and only now.
+  admit.commitRate();
 
   // Claim the nonce before doing any paid work. verify() alone doesn't spend
   // it, so without this a replayed X-PAYMENT header across concurrent

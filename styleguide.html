@@ -174,7 +174,7 @@
         <button class="copy-btn" type="button">Copy</button>
       </span>
     </div>
-    <p class="sg-note">.copy-cluster + .copy-count from ui.css. Pairs the copy button with how many times the prompt has actually been copied. The number is written into the HTML at build time by <code>pnpm counts:build</code>, read from the prompt_copy analytics event, so the page ships static with nothing to fetch. A count of 0 hides itself rather than advertising a zero, and the count is dropped in print.</p>
+    <p class="sg-note">.copy-cluster + .copy-count from ui.css. Pairs the copy button with how many times the prompt has actually been copied. The number is written into the HTML at build time by <code>pnpm counts:build</code>, read from Notion (the same count <code>api/copy-count.js</code> serves), so the page ships static with a sensible number already in it. A count of 0 hides itself rather than advertising a zero, and the count is dropped in print. Behaviour is shared: <code>/state.js</code> binds any <code>[data-copy-target]</code> button (label captured at bind time, restore timer cleared on re-click, so a double click can never stick it on "Copied"), and syncs any <code>.copy-count[data-copy-slug]</code> from the live count, bumping it only after a copy actually lands.</p>
   </section>
 
   <!-- COMPONENTS -->
@@ -196,7 +196,7 @@
         <button class="disclosure-toggle" type="button" aria-expanded="false" aria-controls="sgDisclosure">See more</button>
       </div>
     </div>
-    <p class="sg-note">.disclosure / .disclosure-toggle from ui.css. Collapses to --disclosure-max, fades the cut edge via --disclosure-bg. The clamp is gated behind .is-collapsible, added by the toggle's click handler (copied per-page, see /prompts/deslop), so with no JS the content renders in full rather than being clipped behind a toggle that never appears. The handler releases the measured height once the open animation ends, so a later resize can't re-clip it, and print always expands.</p>
+    <p class="sg-note">.disclosure / .disclosure-toggle from ui.css. Collapses to --disclosure-max, fades the cut edge via --disclosure-bg. The clamp is gated behind .is-collapsible, added by the shared handler in <code>/state.js</code> (this example is live), so with no JS the content renders in full rather than being clipped behind a toggle that never appears. The handler runs an explicit closed/opening/open/closing machine with a generation token, so closing mid-animation stays closed, releases the measured height once the open animation ends so a later resize can't re-clip it, and print always expands.</p>
 
     <div class="sg-buttons" style="margin-top:24px; align-items:flex-start;">
       <p style="max-width:320px; font-size:15px;">A draft with <mark class="flag">some AI phrasing</mark> flagged for removal.</p>
@@ -233,6 +233,7 @@
 <footer class="colophon">Mooch design system &middot; internal reference</footer>
 
 <script src="/motion.js"></script>
+<script src="/state.js"></script>
 <script>
   // Render swatches and the motion-token table from the live :root, so the guide
   // always shows the real shipped values rather than a hardcoded copy.

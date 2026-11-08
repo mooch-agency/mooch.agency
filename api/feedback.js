@@ -9,8 +9,17 @@
 // Reason blank; a blank row is the shown-but-unanswered signal, not noise.
 // The client holds the id returned by "shown" in memory only, so a page
 // reload without answering leaves that row blank, which is correct.
+//
+// Admission (method, kill switch, origin, rate caps) goes through
+// api/_guard.js; quota is committed only once the event has validated, so a
+// bad body no longer burns it. The Notion write goes through api/_notion.js,
+// which carries a real timeout: a timeout answers 504 (nothing known to be
+// wrong, try again), a refusal stays 502. FEEDBACK_KILL=1 pauses the endpoint,
+// same convention as the other functions.
 
-const NOTION_VERSION = "2026-03-11";
+const { guard, makeLimiter, refererPolicy, readBody } = require("./_guard.js");
+const { notion, isNotionTimeout } = require("./_notion.js");
+
 const DATA_SOURCE_ID = "1b1d44d0-1194-45ec-8205-67fcaee0ff07"; // 📣 Feedback
 const ALLOWED_HOSTS = ["mooch.agency", "localhost", "127.0.0.1"];
 const RATE_PER_MIN = 20;   // two writes per real response; generous over say-less.js's ask limit
@@ -27,66 +36,25 @@ const REASONS = new Set([
   "Something else",
 ]);
 
-const hits = new Map();
-function rateLimited(ip) {
-  const now = Date.now();
-  const rec = hits.get(ip) || { min: [], day: [] };
-  rec.min = rec.min.filter((t) => now - t < 60_000);
-  rec.day = rec.day.filter((t) => now - t < 86_400_000);
-  if (rec.min.length >= RATE_PER_MIN || rec.day.length >= RATE_PER_DAY) {
-    hits.set(ip, rec);
-    return true;
-  }
-  rec.min.push(now);
-  rec.day.push(now);
-  hits.set(ip, rec);
-  return false;
-}
+const limiter = makeLimiter({ perMin: RATE_PER_MIN, perDay: RATE_PER_DAY });
 
-function originOk(req) {
-  const src = req.headers.origin || req.headers.referer || "";
-  if (!src) return true; // non-browser clients aren't the cost threat; the caps are
-  let host;
-  try { host = new URL(src).hostname; } catch { return false; }
-  return (
-    ALLOWED_HOSTS.includes(host) ||
-    host.endsWith(".mooch.agency") ||
-    host.endsWith(".vercel.app") // preview deployments
-  );
-}
-
-function readBody(req) {
-  if (req.body && typeof req.body === "object") return Promise.resolve(req.body);
-  if (typeof req.body === "string") {
-    try { return Promise.resolve(JSON.parse(req.body || "{}")); } catch { return Promise.resolve({}); }
-  }
-  return new Promise((resolve) => {
-    let raw = "";
-    req.on("data", (c) => (raw += c));
-    req.on("end", () => {
-      try { resolve(JSON.parse(raw || "{}")); } catch { resolve({}); }
-    });
-    req.on("error", () => resolve({}));
-  });
-}
-
-async function notion(path, method, body) {
-  const res = await fetch(`https://api.notion.com/v1/${path}`, {
-    method,
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${process.env.NOTION_TOKEN}`,
-      "notion-version": NOTION_VERSION,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg = (data && data.message) || `Notion ${res.status}`;
-    throw new Error(msg);
-  }
-  return data;
-}
+const ADMIT = {
+  methods: ["POST"],
+  killEnv: "FEEDBACK_KILL",
+  // Non-browser clients aren't the cost threat; the caps are. So a missing
+  // header passes, a present one must match.
+  origin: refererPolicy({
+    hosts: ALLOWED_HOSTS,
+    suffixes: [".mooch.agency", ".vercel.app"], // previews included
+  }),
+  limiter,
+  reply: {
+    method: (res) => { res.statusCode = 405; res.end("Method not allowed"); },
+    kill: (res) => { res.statusCode = 503; res.end("Feedback is paused. Back shortly."); },
+    origin: (res) => { res.statusCode = 403; res.end("Forbidden"); },
+    rate: (res) => { res.statusCode = 429; res.end("Slow down a moment, then try again."); },
+  },
+};
 
 // A short, human-scannable title, not a UUID: the response id already lives
 // as a client-side value, the title column is for scanning the table.
@@ -94,20 +62,10 @@ function titleFor(now) {
   return now.toISOString().replace("T", " ").slice(0, 16) + " UTC";
 }
 
-module.exports = async function handler(req, res) {
-  if (req.method !== "POST") {
-    res.statusCode = 405;
-    return res.end("Method not allowed");
-  }
-  if (!originOk(req)) {
-    res.statusCode = 403;
-    return res.end("Forbidden");
-  }
-  const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "anon";
-  if (rateLimited(ip)) {
-    res.statusCode = 429;
-    return res.end("Slow down a moment, then try again.");
-  }
+const handler = async function handler(req, res) {
+  const admit = guard(req, res, ADMIT);
+  if (!admit) return;
+  if (admit.rateLimited) return admit.replyRate();
   if (!process.env.NOTION_TOKEN) {
     res.statusCode = 500;
     return res.end("Server missing Notion token.");
@@ -118,8 +76,9 @@ module.exports = async function handler(req, res) {
 
   try {
     if (body.event === "shown") {
+      admit.commitRate();
       const now = new Date();
-      const page = await notion("pages", "POST", {
+      const page = await deps.notion("pages", "POST", {
         parent: { data_source_id: DATA_SOURCE_ID },
         properties: {
           Response: { title: [{ text: { content: titleFor(now) } }] },
@@ -154,7 +113,8 @@ module.exports = async function handler(req, res) {
           properties["Reason detail"] = { rich_text: [{ text: { content: body.note.slice(0, 300) } }] };
         }
       }
-      await notion(`pages/${id}`, "PATCH", { properties });
+      admit.commitRate();
+      await deps.notion(`pages/${id}`, "PATCH", { properties });
       res.statusCode = 200;
       return res.end(JSON.stringify({ ok: true }));
     }
@@ -163,7 +123,14 @@ module.exports = async function handler(req, res) {
     return res.end("Unknown event.");
   } catch (e) {
     console.error("feedback write failed", e && e.message);
-    res.statusCode = 502;
+    // A timeout is "nothing known to be wrong, try again", not Notion saying no.
+    res.statusCode = isNotionTimeout(e) ? 504 : 502;
     return res.end("Feedback write failed.");
   }
 };
+
+// Test seam, same pattern as api/deslop.js.
+const deps = { notion };
+
+module.exports = handler;
+module.exports.deps = deps;

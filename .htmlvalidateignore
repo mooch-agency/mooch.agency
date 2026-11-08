@@ -1,13 +1,14 @@
-# Pages html-validate should skip: templates, internal dev tools, redirect
-# targets and noindex lab pages. This mirrors the EXCLUDED list in
-# scripts/check-site.mjs so both tools validate the same "shipped site" scope.
+# GENERATED from EXCLUDED and VALIDATION_GRANDFATHERED in
+# scripts/site-files.mjs. Do not hand-edit: regenerate with
+# `node scripts/check-site.mjs --write-ignore`.
 404.html
 case-study-template.html
-prompt-template.html
-stagger-tuner.html
-styleguide.html
-ready.html
+og-explorations.html
 paulgraham.html
 portfolio-all.html
-portfolio-explorations.html
 portfolio-explorations-2.html
+portfolio-explorations.html
+prompt-template.html
+ready.html
+stagger-tuner.html
+styleguide.html

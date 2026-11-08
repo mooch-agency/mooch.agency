@@ -14,54 +14,14 @@ name: CI
 
 on:
   pull_request:
-    # Gate only when something that affects the shipped site (or this gate's own
-    # tooling) changes. The site is static HTML/CSS; the tooling paths are here
-    # so a change to the checker re-runs the checker.
-    paths:
-      - '**.html'
-      - '**.css'
-      - 'vercel.json'
-      - 'sitemap.xml'
-      - 'scripts/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - '.htmlvalidate.json'
-      - '.htmlvalidateignore'
-      - 'lighthouserc.json'
-      - '.github/workflows/ci.yml'
-      # audit/ is the self-serve audit runtime that audit-batch.yml runs in
-      # PRODUCTION against real leads' sites. It ships nothing to the static site,
-      # so it sat outside this filter and audit-only PRs merged with no checks at
-      # all (#22, #23). Its unit tests run in the audit-tests job below.
-      - 'audit/**'
-      # api/ and data/ ship to production (serverless functions and the
-      # creditcards data file that gets baked into HTML), so a PR touching only
-      # them must still run the gate.
-      - 'api/**'
-      - 'data/**'
-    # ┌────────────────────────────────────────────────────────────────────────┐
-    # │ DECISION NEEDED (Tahi) — required-check + path-filter deadlock.         │
-    # │                                                                        │
-    # │ This `paths:` filter means the WHOLE workflow is skipped for a PR that  │
-    # │ touches no matching path (e.g. a README- or docs-only PR). GitHub then  │
-    # │ posts NO status for `fast`/`security`/`a11y-perf`. If you mark any of   │
-    # │ those as *required* status checks in branch protection, such a PR sits  │
-    # │ "Expected — waiting for status" forever and can never merge.            │
-    # │                                                                         │
-    # │ Two ways out — pick one before making checks required:                  │
-    # │  (A) Require ONLY the `ci-required` umbrella job below (added, needs all,│
-    # │      if: always()). It works as the single required check ONLY IF the   │
-    # │      workflow actually runs — so combine it with (B).                   │
-    # │  (B) Drop this `on:`-level `paths:` filter so the workflow always runs, │
-    # │      and gate the expensive work INSIDE each job with a `changes` step  │
-    # │      (dorny/paths-filter or a `git diff` guard). Then `ci-required`     │
-    # │      always posts a status and nothing deadlocks.                       │
-    # │                                                                         │
-    # │ Left as-is here (filter retained per the S3 path-list fix). Moving to a │
-    # │ full in-job `changes` gate is a restructure I can't verify without a    │
-    # │ live PR, so it's documented, not applied. `ci-required` is added ready  │
-    # │ for when you drop the filter.                                           │
-    # └────────────────────────────────────────────────────────────────────────┘
+    # No paths filter, on purpose (dropped 8 Nov 2026, resolving the old
+    # "DECISION NEEDED" block that lived here). The workflow now runs on every
+    # PR so ci-required, the single required check in branch protection,
+    # always posts a status. With a filter, a PR touching no matching path
+    # (docs-only, say) skipped the whole workflow and a required check waited
+    # on it forever. The cheap jobs (fast, security, audit-tests) simply run;
+    # the expensive browser job (a11y-perf) gates itself in-job on what the
+    # PR actually changed.
 
 # Check-only: this workflow never writes to the repo.
 permissions:
@@ -230,8 +190,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # Changed shipped pages -> URLs. Falls back to the homepage when a PR only
-      # touches CSS/config so we always have at least one page to test.
+      # Changed shipped pages -> URLs. A PR that changes no shipped page falls
+      # back to the homepage when it touches something rendering-relevant
+      # (stylesheets, root scripts, serving or budget config), and otherwise
+      # skips the browser work entirely: since the workflow runs on every PR
+      # (no paths filter), a docs- or scripts-only PR should cost no Chrome
+      # minutes. Skipped steps still leave the job green, which ci-required
+      # counts as a pass.
       # Untrusted input (base_ref, PR filenames) is passed via env and each slug
       # is charset-sanitised, so nothing attacker-controlled reaches the shell.
       - name: Determine changed pages
@@ -251,18 +216,32 @@ jobs:
             case "$slug" in *[!a-zA-Z0-9/_-]*) echo "skip unsafe filename: $f"; continue;; esac
             urls="$urls http://localhost:3000/$slug"
           done
-          [ -z "$(echo "$urls" | tr -d ' ')" ] && urls="http://localhost:3000/"
+          # Rendering-relevant non-page changes: any stylesheet, a root script
+          # (:(glob) keeps * from crossing /, so api/ and scripts/ stay out),
+          # or the serving and budget config.
+          cfg=$(git diff --name-only --diff-filter=d "origin/$BASE_REF"...HEAD -- '*.css' ':(glob)*.js' 'vercel.json' 'lighthouserc.json' || true)
+          if [ -n "$(echo "$urls" | tr -d ' ')" ]; then
+            run=true
+          elif [ -n "$cfg" ]; then
+            urls="http://localhost:3000/"
+            run=true
+          else
+            run=false
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
           echo "urls=$(echo "$urls" | xargs)" >> "$GITHUB_OUTPUT"
-          echo "Testing: $urls"
+          echo "run=$run urls=${urls:-none}"
 
       # Serve the static site the way Vercel does (clean URLs). Backgrounded so
       # it stays up for the axe and Lighthouse steps that follow.
       - name: Serve static site
+        if: steps.changed.outputs.run == 'true'
         run: |
           pnpm dlx serve@14 -l 3000 . > /tmp/serve.log 2>&1 &
           pnpm dlx wait-on@7 http://localhost:3000 --timeout 30000
 
       - name: Accessibility (axe-core)
+        if: steps.changed.outputs.run == 'true'
         env:
           URLS: ${{ steps.changed.outputs.urls }}
         run: |
@@ -286,6 +265,7 @@ jobs:
           done
 
       - name: Performance budgets (Lighthouse CI)
+        if: steps.changed.outputs.run == 'true'
         env:
           URLS: ${{ steps.changed.outputs.urls }}
           CHROME_PATH: /usr/bin/google-chrome
@@ -300,9 +280,9 @@ jobs:
   # regardless of the others' outcome (if: always()) and fails if any of them
   # failed or was cancelled; jobs that were SKIPPED (e.g. a11y-perf when fast
   # failed) don't fail it on their own — fast's failure already does. This makes
-  # the required check deterministic once the workflow runs. See the deadlock note
-  # at the top: this only helps once the `on:` path filter is dropped, since a PR
-  # matching no path skips the whole workflow (this job included).
+  # the required check deterministic. The on-level paths filter was dropped on
+  # 8 Nov 2026, so the workflow (this job included) runs and posts a status on
+  # every PR.
   # ---------------------------------------------------------------------------
   ci-required:
     needs: [fast, security, audit-tests, a11y-perf]

@@ -416,7 +416,10 @@
     <div class="prompt-box">
       <div class="prompt-box-head">
         <span>Prompt</span>
-        <button class="copy-btn" type="button" data-copy-target="prompt-text">Copy</button>
+        <!-- Give the real page a .copy-count span with data-copy-slug, and the
+             same slug plus data-copy-event / data-copy-event-title on this
+             button, once the prompt has a Notion counter (see /prompts/deslop). -->
+        <button class="copy-btn" type="button" data-copy-target="prompt-text" data-copy-event="prompt_copy" data-copy-event-title>Copy</button>
       </div>
       <pre id="prompt-text">[Full copy-pasteable prompt text goes here. Keep it verbatim and runnable. Use [SQUARE BRACKETS] for the bits the reader fills in.]</pre>
     </div>
@@ -482,23 +485,9 @@
   </div>
 </footer>
 
-<script>
-  document.querySelectorAll('.copy-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var target = document.getElementById(btn.getAttribute('data-copy-target'));
-      if (!target) return;
-      navigator.clipboard.writeText(target.textContent.trim()).then(function () {
-        var original = btn.textContent;
-        btn.textContent = 'Copied';
-        btn.classList.add('copied');
-        setTimeout(function () {
-          btn.textContent = original;
-          btn.classList.remove('copied');
-        }, 2000);
-      });
-    });
-  });
-</script>
+<!-- Copy buttons (and the prompt disclosure, if the page uses one): shared
+     behaviour from /state.js, configured by data-copy-* attributes. -->
+<script src="/state.js"></script>
 
 </body>
 </html>

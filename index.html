@@ -347,6 +347,15 @@
   }
   .audit-msg { margin-top: 12px; font-size: 14px; color: var(--error); min-height: 1.2em; }
   .audit-msg:empty { margin-top: 0; min-height: 0; }
+  /* Step 2's way back: change the website without abandoning the form. */
+  .audit-back {
+    display: none; background: none; border: none; padding: 0; cursor: pointer;
+    font: inherit; font-size: 14px; color: var(--muted-small);
+    text-decoration: underline; text-underline-offset: 3px;
+  }
+  .audit-band[data-step="email"] .audit-back { display: inline-block; margin-top: 10px; }
+  .audit-back:hover { color: var(--ink); }
+  .audit-back:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
   /* Comparison slide-out (Q9 Treatment A): trigger + grid-rows disclosure. */
   .audit-disclose {
     display: inline-flex; align-items: center; gap: 8px; margin-top: 4px;
@@ -392,15 +401,17 @@
     .audit-cmp-table th:not(:first-child), .audit-cmp-table td:not(:first-child) { width: 52px; }
     .audit-cmp-card { padding: 14px; }
   }
-  /* State machine: [data-state] on the band toggles form vs confirmation.
-     No fake progress — "validating" only disables the submit button. */
+  /* The shared lead-form lifecycle (form-state.js): [data-state] on the form
+     toggles form vs confirmation. No fake progress: "submitting" and the
+     rate-limit "cooldown" only dim the submit while the fields sit disabled. */
   .audit-sent { display: none; margin-top: 24px; }
-  .audit-band[data-state="sent"] .audit-form { display: none; }
-  .audit-band[data-state="sent"] .audit-sent { display: block; }
+  .audit-form[data-state="sent"] { display: none; }
+  .audit-form[data-state="sent"] + .audit-sent { display: block; }
   .audit-sent-title { font-family: var(--serif); font-size: clamp(28px, 5vw, 40px); line-height: 1.1; }
   .audit-sent-body { margin-top: 8px; color: var(--muted-small); max-width: 46ch; }
   .audit-sent-email { color: var(--ink); }
-  .audit-band[data-state="validating"] .audit-submit { opacity: 0.5; pointer-events: none; }
+  .audit-form[data-state="submitting"] .audit-submit,
+  .audit-form[data-state="cooldown"] .audit-submit { opacity: 0.5; pointer-events: none; }
   /* Between the mobile stack and full width there isn't room for two 300px
      fields plus the button, so the pair narrows rather than wrapping. */
   @media (max-width: 820px) {
@@ -922,10 +933,11 @@
 </section>
 
 <!-- Free audit band (Treatment B): full-width surface band between Work and
-     Products. Morphs in place through 3 honest states via [data-state]:
-     input -> validating -> sent. The audit runs later (manual-first, R2); this
+     Products. Morphs in place through the shared lead-form lifecycle
+     (form-state.js) via [data-state]: idle -> submitting -> sent, with error
+     and a rate-limit cooldown. The audit runs later (manual-first, R2); this
      only captures the lead. See v1 audit ticket, Phase 1. -->
-<section class="section audit-band" id="audit" data-state="input" data-step="url">
+<section class="section audit-band" id="audit" data-step="url">
   <div class="section-inner">
     <div class="audit-band-inner" data-reveal="child: :scope > *; cap: 6">
       <div class="section-num"><strong>&#9733;</strong> No account, no catch <span class="rule"></span></div>
@@ -956,7 +968,7 @@
         </div>
       </div>
 
-      <form class="audit-form" novalidate>
+      <form class="audit-form" novalidate data-state="idle">
         <!-- Two-step breadcrumb: URL first (zero-cost ask), email second. The email
              step is a gate, not a receipt: nothing runs until it submits.
              Both fields sit side by side; the email one is collapsed to zero
@@ -975,6 +987,7 @@
           <button class="pill audit-submit" type="submit">Start <span class="arrow">&rarr;</span></button>
         </div>
         <p class="audit-msg" role="alert" aria-live="assertive"></p>
+        <button class="audit-back" type="button">&larr; Change website</button>
       </form>
 
       <div class="audit-sent" role="status" aria-live="polite">
@@ -984,6 +997,9 @@
     </div>
   </div>
 </section>
+<!-- Shared lead-form lifecycle; not deferred because the band script below
+     reads window.moochForm as it runs. -->
+<script src="/form-state.js"></script>
 <script>
 // Vercel Analytics custom events, shared by the audit band and the newsletter
 // band. window.va is bootstrapped near the insights script at the end of the
@@ -994,18 +1010,22 @@ function track(name, data) {
 
 // Free audit band: client-side validation + submit to /api/audit. The server
 // re-validates (mailchecker + dns.resolveMx), so this layer only catches obvious
-// typos fast and drives the 3 visual states. No fake progress: "validating" just
-// disables the button while the request is in flight.
+// typos fast and drives the shared lead-form lifecycle (form-state.js). No fake
+// progress: "submitting" just disables the fields while the request is in flight.
 (function () {
   var band = document.getElementById("audit");
-  if (!band) return;
+  if (!band || !window.moochForm) return;
   var form = band.querySelector(".audit-form");
   var urlEl = form.querySelector('input[name="url"]');
   var emailEl = form.querySelector('input[name="email"]');
   var msg = form.querySelector(".audit-msg");
   var submit = form.querySelector(".audit-submit");
+  var back = form.querySelector(".audit-back");
   var sentEmail = band.querySelector(".audit-sent-email");
   var SUBMIT_HTML = submit.innerHTML; // preserve label + arrow for restore
+  var m = window.moochForm.machine(form, {
+    controls: function () { return [urlEl, emailEl, submit]; }
+  });
 
   // The email field is still collapsed when step 2 begins, so focusing it can
   // make an ancestor scroll to chase it. Focus without scrolling.
@@ -1060,18 +1080,43 @@ function track(name, data) {
 
   function setInvalid(el, on) { if (el) el.setAttribute("aria-invalid", on ? "true" : "false"); }
   function fail(reason, focusEl) {
-    band.setAttribute("data-state", "input");
+    // A 429 holds the form shut for the cooldown; everything else lands in
+    // error, which a changed field or another submit can leave.
+    if (reason === "rate") m.cooldown(); else m.to("error");
     submit.innerHTML = SUBMIT_HTML; // restore the label after "Sending…"
     msg.textContent = VALIDATION_COPY[reason] || VALIDATION_COPY.store;
     if (focusEl) { setInvalid(focusEl, true); focusField(focusEl); }
     track("audit_validation_fail", { reason: reason });
   }
 
+  // A changed field clears the error straight away (not on the next submit)
+  // and is a new fill, so it gets a new idempotency key.
+  [urlEl, emailEl].forEach(function (el) {
+    el.addEventListener("input", function () {
+      m.refill();
+      if (m.state() !== "error") return;
+      msg.textContent = "";
+      setInvalid(urlEl, false);
+      setInvalid(emailEl, false);
+      m.to("idle");
+    });
+  });
+
+  // Step 2's way back: swap the website without retyping the email.
+  if (back) back.addEventListener("click", function () {
+    setStep("url");
+    msg.textContent = "";
+    setInvalid(emailEl, false);
+    focusField(urlEl);
+    track("audit_step_back", {});
+  });
+
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
-    // Guard against a second submit (e.g. double Enter) while a request is in
-    // flight, which would write two lead rows.
-    if (band.getAttribute("data-state") === "validating") return;
+    // Guard before validation: a second submit while a request is in flight
+    // (double Enter) would write two lead rows, and a submit during the
+    // rate-limit cooldown would just earn another 429.
+    if (m.busy()) return;
     msg.textContent = "";
     setInvalid(urlEl, false);
     setInvalid(emailEl, false);
@@ -1097,24 +1142,27 @@ function track(name, data) {
     // are the server's verdicts, returned as data.reason on a 400.
     if (!emailLooksReal(email)) return fail("syntax", emailEl);
 
-    band.setAttribute("data-state", "validating");
+    m.to("submitting");
     submit.textContent = "Sending…"; // honest in-flight cue, not fake progress
-    var res;
+    var res, data;
     try {
-      res = await fetch("/api/audit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url, email: email }),
-      });
+      // This fill's idempotency key (see form-state.js). The endpoint stores it
+      // as the row's Audit ID, so a retried submit finds its first row.
+      var out = await window.moochForm.fetchJSON(
+        "/api/audit",
+        { url: url, email: email, idempotency_key: m.key() },
+        { timeoutMs: 15000 }
+      );
+      res = out.res;
+      data = out.data || {};
     } catch (err) {
+      // Network gone or the 15s deadline hit: either way nothing arrived.
       return fail("network", null);
     }
 
-    var data = {};
-    try { data = await res.json(); } catch (err) {}
     if (res.ok && data.ok) {
       sentEmail.textContent = email;
-      band.setAttribute("data-state", "sent");
+      m.to("sent");
       track("audit_submit_success", {});
       return;
     }

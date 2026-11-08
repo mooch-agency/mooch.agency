@@ -17,6 +17,7 @@
 const SAYLESS_SYSTEM = require("./_say-less-system.js");
 const { startRun, endRun } = require("./_langsmith.js");
 const { pickers, pumpSSE } = require("./_stream.js");
+const { guard, makeLimiter, refererPolicy } = require("./_guard.js");
 
 const MODEL = process.env.SAYLESS_MODEL || "claude-sonnet-5";
 const MAX_TOKENS = 1500;           // headroom over the longest benchmark reply (~330 words)
@@ -26,33 +27,28 @@ const RATE_PER_DAY = 30;
 const PING_EVERY_MS = 2000;        // idle keep-alive; also surfaces a closed tab quickly
 const ALLOWED_HOSTS = ["mooch.agency", "localhost", "127.0.0.1"];
 
-const hits = new Map();
-function rateLimited(ip) {
-  const now = Date.now();
-  const rec = hits.get(ip) || { min: [], day: [] };
-  rec.min = rec.min.filter((t) => now - t < 60_000);
-  rec.day = rec.day.filter((t) => now - t < 86_400_000);
-  if (rec.min.length >= RATE_PER_MIN || rec.day.length >= RATE_PER_DAY) {
-    hits.set(ip, rec);
-    return true;
-  }
-  rec.min.push(now);
-  rec.day.push(now);
-  hits.set(ip, rec);
-  return false;
-}
+// Admission (method, kill switch, origin, per-IP rate caps) goes through
+// api/_guard.js, one door shared by every function here; quota is committed
+// only once the question has validated, so a 400 or 413 no longer burns it.
+const limiter = makeLimiter({ perMin: RATE_PER_MIN, perDay: RATE_PER_DAY });
 
-function originOk(req) {
-  const src = req.headers.origin || req.headers.referer || "";
-  if (!src) return true; // non-browser clients aren't the cost threat; the caps are
-  let host;
-  try { host = new URL(src).hostname; } catch { return false; }
-  return (
-    ALLOWED_HOSTS.includes(host) ||
-    host.endsWith(".mooch.agency") ||
-    host.endsWith(".vercel.app") // preview deployments
-  );
-}
+const ADMIT = {
+  methods: ["GET"],
+  killEnv: "SAYLESS_DISABLED",
+  // Non-browser clients aren't the cost threat; the caps are. A missing
+  // header passes, a present one must match.
+  origin: refererPolicy({
+    hosts: ALLOWED_HOSTS,
+    suffixes: [".mooch.agency", ".vercel.app"], // previews included
+  }),
+  limiter,
+  reply: {
+    method: (res) => { res.statusCode = 405; res.end("Method not allowed"); },
+    kill: (res) => { res.statusCode = 503; res.end("The demo is paused. Back shortly."); },
+    origin: (res) => { res.statusCode = 403; res.end("Forbidden"); },
+    rate: (res) => { res.statusCode = 429; res.end("Slow down a moment, then try again."); },
+  },
+};
 
 // Matches web/say-less.html's countWords exactly: every whitespace-run
 // token containing a letter or digit, code included. Same rule the
@@ -135,24 +131,9 @@ async function streamArm(arm, system, question, write, signal) {
 }
 
 module.exports = async function handler(req, res) {
-  if (req.method !== "GET") {
-    res.statusCode = 405;
-    return res.end("Method not allowed");
-  }
-  if (process.env.SAYLESS_DISABLED === "1") {
-    res.statusCode = 503;
-    return res.end("The demo is paused. Back shortly.");
-  }
-  if (!originOk(req)) {
-    res.statusCode = 403;
-    return res.end("Forbidden");
-  }
-
-  const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "anon";
-  if (rateLimited(ip)) {
-    res.statusCode = 429;
-    return res.end("Slow down a moment, then try again.");
-  }
+  const admit = guard(req, res, ADMIT);
+  if (!admit) return;
+  if (admit.rateLimited) return admit.replyRate();
 
   let q = (req.query && req.query.q) ||
     new URL(req.url, "http://internal").searchParams.get("q") || "";
@@ -175,6 +156,9 @@ module.exports = async function handler(req, res) {
     res.statusCode = 500;
     return res.end("Server missing API key.");
   }
+
+  // Validated and configured: this ask now costs quota, and only now.
+  admit.commitRate();
 
   res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
   res.setHeader("Cache-Control", "no-cache, no-transform");
