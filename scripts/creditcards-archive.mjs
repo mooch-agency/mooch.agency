@@ -14,6 +14,12 @@
 // ---------------------------------------------------------------------------
 
 export const ARCHIVE_PER_RUN = 5;
+
+// A project that cannot be archived is retried this many runs, then marked
+// archiveFailed and left alone: an unarchivable site (robots-blocked, dead,
+// or refusing the crawler) otherwise burns one of the run's five slots
+// forever. Clear archiveFailed (and archiveAttempts) by hand to retry.
+export const ARCHIVE_MAX_ATTEMPTS = 5;
 const AVAILABLE = 'https://archive.org/wayback/available?url=';
 const SAVE = 'https://web.archive.org/save/';
 const SNAPSHOT_RE = /^https:\/\/web\.archive\.org\/web\/\d{14}\//;
@@ -35,23 +41,33 @@ async function snapshotFor(p, fetchImpl) {
 }
 
 export async function archiveProjects(projects, fetchImpl = fetch, log = console.log, logErr = console.error) {
-  const missing = projects.filter((p) => p.status === 'approved' && !p.archive);
+  const wanting = (p) => p.status === 'approved' && !p.archive && !p.archiveFailed;
   let archived = 0;
-  for (const p of missing.slice(0, ARCHIVE_PER_RUN)) {
+  const miss = (p, why) => {
+    p.archiveAttempts = (p.archiveAttempts || 0) + 1;
+    if (p.archiveAttempts >= ARCHIVE_MAX_ATTEMPTS) {
+      p.archiveFailed = true;
+      logErr(`  - ${why} for ${p.name}; giving up after ${p.archiveAttempts} attempts (clear archiveFailed to retry)`);
+    } else {
+      logErr(`  - ${why} for ${p.name}, retrying next run (attempt ${p.archiveAttempts} of ${ARCHIVE_MAX_ATTEMPTS})`);
+    }
+  };
+  for (const p of projects.filter(wanting).slice(0, ARCHIVE_PER_RUN)) {
     try {
       const url = await snapshotFor(p, fetchImpl);
       if (url) {
         p.archive = url;
+        delete p.archiveAttempts;
         archived++;
         log(`  + archived ${p.name}: ${url}`);
       } else {
-        logErr(`  - no snapshot for ${p.name} yet, retrying next run`);
+        miss(p, 'no snapshot');
       }
     } catch (e) {
-      logErr(`  - archiving ${p.name} failed, retrying next run: ${e.message}`);
+      miss(p, `archiving failed (${e.message})`);
     }
   }
-  return { archived, left: missing.length - archived };
+  return { archived, left: projects.filter(wanting).length };
 }
 
 // Readable problems with the archive fields. Empty array means fine.
@@ -60,6 +76,8 @@ export function archiveProblems(projects) {
   for (const p of projects) {
     if (p.archive !== undefined && !SNAPSHOT_RE.test(p.archive)) out.push(`"${p.name}" (${p.id}) has archive "${p.archive}"; it must be a web.archive.org/web/<timestamp>/ link`);
     if (p.offline && !p.archive) out.push(`"${p.name}" (${p.id}) is marked offline but has no archive link to send visitors to`);
+    if (p.archiveFailed && p.archive) out.push(`"${p.name}" (${p.id}) has both an archive link and archiveFailed; drop archiveFailed`);
+    if (p.archiveAttempts !== undefined && !(Number.isInteger(p.archiveAttempts) && p.archiveAttempts > 0)) out.push(`"${p.name}" (${p.id}) has archiveAttempts "${p.archiveAttempts}"; it must be a positive integer or absent`);
   }
   return out;
 }

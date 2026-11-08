@@ -32,11 +32,11 @@
 // site pages.
 // ---------------------------------------------------------------------------
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { load } from 'cheerio';
-import { EXCLUDED, shippedPages } from './site-files.mjs';
+import { EXCLUDED, allHtmlFiles, htmlvalidateIgnoreContent, shippedPages } from './site-files.mjs';
 import { CATEGORY_SLUGS, categoryProblems } from './creditcards-categories.mjs';
 import { capNotice, capProblems, freezeProblems, statusProblems } from './creditcards-cap.mjs';
 import { copyrightYearOk } from './copyright-year.mjs';
@@ -52,6 +52,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // on which pages ship (and lychee never touches template/dev/lab pages).
 const ARGV = process.argv.slice(2);
 const LIST_PAGES = ARGV.includes('--list-pages');
+const WRITE_IGNORE = ARGV.includes('--write-ignore');
 const rootArg = ARGV.find((a) => !a.startsWith('-'));
 const ROOT = rootArg ? path.resolve(rootArg) : path.resolve(__dirname, '..');
 
@@ -406,6 +407,14 @@ function checkSocial(rel, raw, $) {
     .replace(/^https?:\/\/[^/]+/i, '')
     .replace(/[?#].*$/, '')
     .replace(/^\/+/, '');
+  // Every shipped page owns its card. og-image.png is the brand card: it IS the
+  // homepage's own (the `home` block in mooch-cards/og-site.sh writes it, with
+  // the homepage hero deck as its subtitle) and the fallback nowhere else. A new
+  // page gets a card block in og-site.sh and `pnpm cards:build` in the same
+  // change (CLAUDE.md, "New page").
+  if (rel !== 'index.html' && imgRel === 'og-image.png') {
+    fail('Social cards', rel, 'og:image is the brand fallback og-image.png; every shipped page owns its card (add a block to mooch-cards/og-site.sh and run pnpm cards:build)', lineOf(raw, /property=["']og:image["']/i));
+  }
   if (!has(imgRel)) {
     fail('Social cards', rel, `og:image "${ogImage}" does not resolve to a file on disk`, lineOf(raw, /property=["']og:image["']/i));
     return;
@@ -630,8 +639,66 @@ function checkCreditCardsData() {
 }
 
 // ---------------------------------------------------------------------------
+// Registry: the one list of shipped pages, and the cards that go with them.
+// Everything here is a pure function of committed files (CLAUDE.md: ci:check
+// stays deterministic, the Credit Cards daily job runs it on master).
+// ---------------------------------------------------------------------------
+function checkRegistry() {
+  // .htmlvalidateignore is generated from EXCLUDED (site-files.mjs), so
+  // html-validate and this checker can never drift on what a page is. The
+  // file stays committed; this check keeps it honest.
+  const ignoreRel = '.htmlvalidateignore';
+  const want = htmlvalidateIgnoreContent();
+  if (!has(ignoreRel) || read(ignoreRel) !== want) {
+    fail('Registry', ignoreRel, 'out of step with EXCLUDED in scripts/site-files.mjs; regenerate with `node scripts/check-site.mjs --write-ignore`');
+  }
+
+  // Cards: every root og-*.png is pointed at by some page's og:image or
+  // twitter:image, or kept alive as a vercel.json redirect destination; and
+  // every card a page points at exists, or is a redirect source (a retired
+  // card per CLAUDE.md, "Retiring a card"). ready.html and friends count:
+  // non-shipped pages still carry card URLs that must stay resolvable.
+  let redirects = [];
+  try { redirects = JSON.parse(read('vercel.json')).redirects || []; } catch { /* vercel.json has its own failure modes elsewhere */ }
+  const toPath = (u) => (u || '').replace(/^https?:\/\/(www\.)?mooch\.agency/i, '').replace(/[?#].*$/, '').replace(/^\/+/, '');
+  const redirectSources = new Set(redirects.map((r) => toPath(r.source)).filter((p) => p.endsWith('.png')));
+  const redirectDests = new Set(redirects.map((r) => toPath(r.destination)).filter((p) => p.endsWith('.png')));
+
+  const referenced = new Map(); // card path -> first page that points at it
+  for (const rel of allHtmlFiles(ROOT)) {
+    const $ = load(read(rel));
+    for (const sel of ['meta[property="og:image"]', 'meta[name="twitter:image"]']) {
+      const url = ($(sel).first().attr('content') || '').trim();
+      if (!url) continue;
+      const p = toPath(url);
+      if (!/^og-.*\.png$/.test(p)) continue;
+      // Templates carry og-[slug].png on purpose: a placeholder for the page
+      // that gets made from them, not a card that could resolve.
+      if (/[\[\]]/.test(p)) continue;
+      if (!referenced.has(p)) referenced.set(p, rel);
+      if (!has(p) && !redirectSources.has(p)) {
+        fail('Registry', rel, `card "${p}" is neither a file nor a vercel.json redirect source; a card URL must never 404 (CLAUDE.md, "Retiring a card")`);
+      }
+    }
+  }
+  for (const file of readdirSync(ROOT).filter((f) => /^og-.*\.png$/.test(f))) {
+    if (!referenced.has(file) && !redirectDests.has(file)) {
+      fail('Registry', file, 'orphan card: no page og:image/twitter:image and no vercel.json redirect points at it; wire it up or retire it behind a redirect');
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
+
+// `--write-ignore`: regenerate .htmlvalidateignore from EXCLUDED and exit.
+if (WRITE_IGNORE) {
+  writeFileSync(path.join(ROOT, '.htmlvalidateignore'), htmlvalidateIgnoreContent());
+  console.log('wrote .htmlvalidateignore from EXCLUDED and VALIDATION_GRANDFATHERED in scripts/site-files.mjs');
+  process.exit(0);
+}
+
 const pages = discoverPages();
 
 // `--list-pages`: print the shipped-page set and exit. CI feeds this straight to
@@ -647,11 +714,12 @@ checkUniqueness(seenTitles, seenDescs);
 checkIndexHygiene(pages);
 checkFragments(pages);
 checkCreditCardsData();
+checkRegistry();
 
 // ---------------------------------------------------------------------------
 // Output, grouped by discipline, file + line where feasible.
 // ---------------------------------------------------------------------------
-const DISCIPLINES = ['SEO & Meta', 'Content hygiene', 'Trust & contactability', 'Mobile', 'Design tokens', 'Stale comments', 'Social cards', 'Fragments', 'Index hygiene', 'Uniqueness & structure', 'Data'];
+const DISCIPLINES = ['SEO & Meta', 'Content hygiene', 'Trust & contactability', 'Mobile', 'Design tokens', 'Stale comments', 'Social cards', 'Fragments', 'Index hygiene', 'Uniqueness & structure', 'Data', 'Registry'];
 console.log(`check-site: ${pages.length} shipped pages under ${ROOT}`);
 console.log(pages.map((p) => `  - ${p}`).join('\n'));
 console.log('');

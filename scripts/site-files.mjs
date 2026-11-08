@@ -50,3 +50,28 @@ export function allHtmlFiles(root) {
 export function shippedPages(root) {
   return allHtmlFiles(root).filter((rel) => !EXCLUDED.has(rel));
 }
+
+// Shipped pages that html-validate skips anyway, each with a reason and a
+// date. This list only shrinks: fix the page, then delete its line here and
+// regenerate the ignore file.
+export const VALIDATION_GRANDFATHERED = new Set([
+  // TODO (8 Nov 2026): 12 errors (implicit button types, aria-hidden on
+  // focusable mobile-hero controls, one inline style, one div-for-section).
+  // Shipped and should validate; fix in its own change.
+  'paulgraham.html',
+]);
+
+// .htmlvalidateignore, generated from the two lists above so html-validate and
+// the shipped-page checks can never disagree on scope by accident (they had:
+// paulgraham.html skipped with no stated reason, og-explorations.html
+// validated while internal). check-site compares the committed file against
+// this; regenerate with `node scripts/check-site.mjs --write-ignore`.
+export function htmlvalidateIgnoreContent() {
+  return [
+    '# GENERATED from EXCLUDED and VALIDATION_GRANDFATHERED in',
+    '# scripts/site-files.mjs. Do not hand-edit: regenerate with',
+    '# `node scripts/check-site.mjs --write-ignore`.',
+    ...[...EXCLUDED, ...VALIDATION_GRANDFATHERED].sort(),
+    '',
+  ].join('\n');
+}

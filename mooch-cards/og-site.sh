@@ -119,6 +119,15 @@ card unblocked \
 # No `ready` card: /ready was retired in the Phase 0 roadmap decision and now
 # 301s to /, so a sharer never reaches a page that would use one.
 
+echo "Pages"
+# Subtitle is the page's own description line, so the card and the page agree.
+card privacy \
+  --eyebrow "Policy" \
+  --title "*Privacy* policy." \
+  --subtitle "No tracking cookies or pixels, no third-party ads." \
+  --domain "mooch.agency/privacy" \
+  --scale 1.45
+
 echo "Measures"
 
 # Subtitle is the board's own lede, minus the chain count: the card outlives a
