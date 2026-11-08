@@ -576,8 +576,8 @@
       <div class="prompt-box-head">
         <span>Prompt &middot; v1.2</span>
         <span class="copy-cluster">
-          <span class="copy-count" data-copy-count="17">Copied 17 times</span>
-          <button class="copy-btn" type="button" data-copy-target="prompt-text">Copy</button>
+          <span class="copy-count" data-copy-count="17" data-copy-slug="deslop">Copied 17 times</span>
+          <button class="copy-btn" type="button" data-copy-target="prompt-text" data-copy-event="prompt_copy" data-copy-event-title data-copy-slug="deslop">Copy</button>
         </span>
       </div>
       <div class="disclosure" id="promptDisclosure" style="--disclosure-bg: var(--surface); --disclosure-max: min(46vh, 400px);">
@@ -661,7 +661,7 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
     <div class="prompt-box">
       <div class="prompt-box-head">
         <span>Claude Code</span>
-        <button class="copy-btn" type="button" data-copy-target="install-commands">Copy</button>
+        <button class="copy-btn" type="button" data-copy-target="install-commands" data-copy-event="install_copy" data-copy-event-title>Copy</button>
       </div>
       <pre id="install-commands">/plugin marketplace add mooch-agency/skills
 /plugin install skills@mooch-agency</pre>
@@ -728,149 +728,16 @@ Rewrite passive constructions in active voice. The subject does the thing. No ex
   </div>
 </footer>
 
-<script>
-  document.querySelectorAll('.copy-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var target = document.getElementById(btn.getAttribute('data-copy-target'));
-      if (!target) return;
-      navigator.clipboard.writeText(target.textContent.trim()).then(function () {
-        var original = btn.textContent;
-        btn.textContent = 'Copied';
-        btn.classList.add('copied');
-        setTimeout(function () {
-          btn.textContent = original;
-          btn.classList.remove('copied');
-        }, 2000);
-      });
-    });
-  });
-
-  // Progressive disclosure on the full prompt. The collapse itself is
-  // JS-gated (.is-collapsible): with no JS the prompt renders in full
-  // rather than being clipped behind a toggle that never appears.
-  document.querySelectorAll('.disclosure-toggle[aria-controls]').forEach(function (btn) {
-    var body = document.getElementById(btn.getAttribute('aria-controls'));
-    if (!body) return;
-    var openLabel = 'Show less';
-    var closedLabel = btn.textContent.trim();
-    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-    // Clamp first, then measure: scrollHeight is the full content height
-    // either way, but clientHeight must reflect the collapsed box.
-    body.classList.add('is-collapsible');
-    btn.hidden = body.scrollHeight <= body.clientHeight + 24;
-
-    // Hold the measured height only while the open animation runs, then
-    // release it. Leaving a pixel cap in place would re-clip the content
-    // the next time it reflows taller (narrower window, late font swap).
-    function release() {
-      body.style.maxHeight = 'none';
-    }
-    btn.addEventListener('click', function () {
-      var open = !body.classList.contains('open');
-      if (open) {
-        body.style.maxHeight = body.scrollHeight + 'px';
-        body.classList.add('open');
-        if (reduced.matches) {
-          release();                       // no transition fires, so don't wait
-        } else {
-          body.addEventListener('transitionend', function done (e) {
-            if (e.target !== body || e.propertyName !== 'max-height') return;
-            body.removeEventListener('transitionend', done);
-            release();
-          });
-        }
-      } else {
-        // Animating down from `none` doesn't transition, so land on a
-        // concrete height for a frame before removing .open.
-        body.style.maxHeight = body.scrollHeight + 'px';
-        requestAnimationFrame(function () {
-          requestAnimationFrame(function () {
-            body.classList.remove('open');
-            body.style.maxHeight = '';
-          });
-        });
-      }
-      btn.textContent = open ? openLabel : closedLabel;
-      btn.setAttribute('aria-expanded', String(open));
-    });
-  });
-</script>
-
-
 <!-- Vercel Web Analytics -->
 <script>
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
 <script defer src="/analytics.js"></script>
 
-<script>
-  // Custom Vercel Analytics events for prompt pages.
-  //
-  // There are two copy buttons here, the prompt itself and the install
-  // commands, and they used to report as the same prompt_copy event. That made
-  // the number unreadable: "someone took the prompt" and "someone is installing
-  // the skill" are different intents, and the on-page counter is built from the
-  // first. Split by target, matching how /say-less already separates
-  // sayless_copy_prompt from sayless_copy_commands.
-  document.addEventListener("DOMContentLoaded", function () {
-    var counter = document.querySelector(".copy-count");
-
-    // The number shown on page load is whatever scripts/copy-counts.mjs baked
-    // in at the last deploy: real, but as stale as the time since. This
-    // refreshes it from /api/copy-count (backed by the Copy Counters database
-    // in Notion) so every visitor sees the same live figure, then the click
-    // handler below asks the same endpoint to increment it. Failures here just
-    // leave the build-time number in place, so a Notion hiccup never breaks
-    // the copy button itself.
-    // The load-GET and the click-POST both land here, and either can resolve
-    // after the other (Notion round-trips are slow and uneven). Without an
-    // ordering guard the counter can tick up on the POST reply and then back
-    // down when the older GET finally lands, so this refuses to render a
-    // value lower than the one already shown. `shown` resets on every page
-    // load, so a value corrected downward in Notion still appears next visit.
-    var shown = null;
-    // animate is true only for a click-driven increment, never the silent
-    // load-time sync: a visitor reloading shouldn't see a tick just because
-    // the page fetched the current total.
-    function setCounter(count, animate) {
-      if (!counter) return;
-      if (shown !== null && count < shown) return;
-      shown = count;
-      // Setting the attribute is what un-hides a fresh page's "0" state too:
-      // ui.css hides the element only while data-copy-count="0".
-      counter.setAttribute("data-copy-count", count);
-      counter.textContent = "Copied " + count.toLocaleString("en-GB") + (count === 1 ? " time" : " times");
-      if (animate) {
-        counter.classList.add("just-copied");
-        setTimeout(function () { counter.classList.remove("just-copied"); }, 400);
-      }
-    }
-
-    if (counter) {
-      fetch("/api/copy-count?slug=deslop")
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (data) { if (data) setCounter(data.count); })
-        .catch(function () {});
-    }
-
-    document.querySelectorAll(".copy-btn").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        var isPrompt = btn.getAttribute("data-copy-target") !== "install-commands";
-        var name = isPrompt ? "prompt_copy" : "install_copy";
-        window.va("event", { name: name, data: { prompt: document.title } });
-        if (!isPrompt) return;
-        fetch("/api/copy-count", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ slug: "deslop" }),
-        })
-          .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (data) { if (data) setCounter(data.count, true); })
-          .catch(function () {});
-      });
-    });
-  });
-</script>
+<!-- Copy buttons, the live copy counter and the prompt disclosure: shared
+     behaviour from /state.js, configured by the data-copy-* attributes on the
+     buttons above. Events and the counter POST fire only after the clipboard
+     write succeeds. -->
+<script src="/state.js"></script>
 </body>
 </html>

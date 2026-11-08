@@ -731,11 +731,11 @@
       terminal and the desktop app.</p>
 
     <div class="install-actions">
-      <button class="pill" type="button" data-copy-target="install-prompt">Copy the prompt</button>
+      <button class="pill" type="button" data-copy-target="install-prompt" data-copy-event="sayless_copy_prompt" data-copy-slug="say-less">Copy the prompt</button>
       <button class="ghost" type="button" id="promptToggle" aria-expanded="false" aria-controls="promptDetails">
         <span class="chev" aria-hidden="true">&#9662;</span> <span class="toggle-label">Show the prompt</span>
       </button>
-      <span class="copy-count" data-copy-count="20">Copied 20 times</span>
+      <span class="copy-count" data-copy-count="20" data-copy-slug="say-less">Copied 20 times</span>
     </div>
 
     <div class="prompt-details" id="promptDetails">
@@ -743,7 +743,7 @@
       <div class="codeblock">
         <div class="codeblock-head">
           <span>Prompt</span>
-          <button class="copy-btn" type="button" data-copy-target="install-prompt">Copy</button>
+          <button class="copy-btn" type="button" data-copy-target="install-prompt" data-copy-event="sayless_copy_prompt" data-copy-slug="say-less">Copy</button>
         </div>
         <pre id="install-prompt">Install the Say Less plugin from mooch-agency/say-less: run the CLI commands in AGENTS.md if you can, otherwise merge install.json from that repo into ~/.claude/settings.json. See github.com/mooch-agency/say-less/blob/master/AGENTS.md for the exact steps.</pre>
       </div>
@@ -751,7 +751,7 @@
       <div class="codeblock">
         <div class="codeblock-head">
           <span>Terminal</span>
-          <button class="copy-btn" type="button" data-copy-target="install-commands">Copy</button>
+          <button class="copy-btn" type="button" data-copy-target="install-commands" data-copy-event="sayless_copy_commands">Copy</button>
         </div>
         <pre id="install-commands">/plugin marketplace add mooch-agency/say-less
 /plugin install say-less@say-less</pre>
@@ -1396,69 +1396,9 @@ f.addEventListener("submit", (e) => {
   };
 });
 
-// Global copy counter, backed by /api/copy-count (the Copy Counters database
-// in Notion). Same mechanism as the prompt pages: the count shown on load is
-// whatever's baked into the page, refreshed live on load, then bumped by the
-// endpoint's own response after a real prompt copy, not a local guess.
-var copyCounter = document.querySelector(".copy-count");
-// The load-GET and the click-POST both land here, and either can resolve
-// after the other (Notion round-trips are slow and uneven). Without an
-// ordering guard the counter can tick up on the POST reply and then back
-// down when the older GET finally lands, so this refuses to render a value
-// lower than the one already shown. `shownCopyCount` resets on every page
-// load, so a value corrected downward in Notion still appears next visit.
-var shownCopyCount = null;
-// animate is true only for a click-driven increment, never the silent
-// load-time sync: a visitor reloading shouldn't see a tick just because the
-// page fetched the current total.
-function setCopyCount(count, animate) {
-  if (!copyCounter) return;
-  if (shownCopyCount !== null && count < shownCopyCount) return;
-  shownCopyCount = count;
-  copyCounter.setAttribute("data-copy-count", count);
-  copyCounter.textContent = "Copied " + count.toLocaleString("en-GB") + (count === 1 ? " time" : " times");
-  if (animate) {
-    copyCounter.classList.add("just-copied");
-    setTimeout(function () { copyCounter.classList.remove("just-copied"); }, 400);
-  }
-}
-if (copyCounter) {
-  fetch("/api/copy-count?slug=say-less")
-    .then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (data) { if (data) setCopyCount(data.count); })
-    .catch(function () {});
-}
-
-// Targets the data attribute rather than a class, so a copy control can be
-// styled as whatever the block around it needs.
-document.querySelectorAll("[data-copy-target]").forEach(function (btn) {
-  btn.addEventListener("click", function () {
-    var targetId = btn.getAttribute("data-copy-target");
-    var target = document.getElementById(targetId);
-    if (!target) return;
-    var isPrompt = targetId !== "install-commands";
-    track(isPrompt ? "sayless_copy_prompt" : "sayless_copy_commands");
-    if (isPrompt) {
-      fetch("/api/copy-count", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ slug: "say-less" }),
-      })
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (data) { if (data) setCopyCount(data.count, true); })
-        .catch(function () {});
-    }
-    navigator.clipboard.writeText(target.textContent.trim()).then(function () {
-      var original = btn.textContent;
-      btn.textContent = "Copied";
-      btn.classList.add("copied");
-      setTimeout(function () {
-        btn.textContent = original;
-        btn.classList.remove("copied");
-      }, 2000);
-    });
-  });
-});
+// Copy buttons and the live copy counter moved to the shared /state.js
+// (loaded below), configured by the data-copy-* attributes on the buttons.
+// Events and the counter POST fire only after the clipboard write succeeds.
 
 var feedbackLink = document.getElementById("feedbackLink");
 if (feedbackLink) {
@@ -1474,6 +1414,7 @@ if (feedbackLink) {
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
 <script defer src="/analytics.js"></script>
+<script src="/state.js"></script>
 
 </body>
 </html>
