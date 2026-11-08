@@ -728,7 +728,16 @@ var BANDS = [
   // The final value is written up front, so if rAF never fires (e.g. a backgrounded
   // tab pauses the frame loop) the correct score still shows. The animation then
   // overwrites from 0 and settles back on it, and a timeout guarantees the end state.
+  // One count-up at a time: retake must be able to kill a live one, or its
+  // rAF chain and safety timeout write the old score into the fresh view.
+  var countRaf = null, countTimer = null;
+  function cancelCountUp() {
+    if (countRaf !== null) cancelAnimationFrame(countRaf);
+    clearTimeout(countTimer);
+    countRaf = null; countTimer = null;
+  }
   function countUp(el, target) {
+    cancelCountUp();
     el.textContent = String(target);
     if (reduceMotion) return;
     el.textContent = '0';
@@ -740,14 +749,20 @@ var BANDS = [
       // easeOutCubic for a quick start that settles gently on the final value.
       var eased = 1 - Math.pow(1 - p, 3);
       el.textContent = String(Math.round(eased * target));
-      if (p < 1) requestAnimationFrame(tick);
+      if (p < 1) countRaf = requestAnimationFrame(tick);
     }
-    requestAnimationFrame(tick);
+    countRaf = requestAnimationFrame(tick);
     // Safety net: snap to the final value even if the frame loop is throttled.
-    setTimeout(function () { el.textContent = String(target); }, dur + 120);
+    countTimer = setTimeout(function () { el.textContent = String(target); }, dur + 120);
   }
 
+  // The 360ms leaving phase would otherwise let a fast double click run the
+  // swap, and the ready_score event, twice. Cleared only on retake.
+  var presenting = false;
+
   function showResult() {
+    if (presenting) return;
+    presenting = true;
     var score = computeScore();
     var b = bandFor(score);
 
@@ -853,6 +868,8 @@ var BANDS = [
   });
 
   document.getElementById('retakeBtn').addEventListener('click', function () {
+    presenting = false;
+    cancelCountUp();
     form.reset();
     refresh();
     resultView.classList.remove('show');

@@ -1164,6 +1164,7 @@ let interceptTriggered = false;   // fired once, by whichever condition wins
 let interceptShown = false;       // the dialog has actually opened
 let interceptReturnFocus = null;
 let responseId = null;            // the Feedback row's Notion page id, held client-side only
+let shownPost = Promise.resolve(null); // settles when the "shown" row exists; answers queue on it
 
 const DWELL_FLOOR_MS = 8000;
 const DWELL_CAP_MS = 20000;
@@ -1214,7 +1215,7 @@ function showIntercept(trigger) {
   const yesBtn = intercept.querySelector('[data-answer="yes"]');
   if (yesBtn) yesBtn.focus({ preventScroll: true });
   track("sayless_intercept_shown", { trigger });
-  feedbackPost({ event: "shown", trigger }).then((d) => { if (d && d.id) responseId = d.id; });
+  shownPost = feedbackPost({ event: "shown", trigger }).then((d) => { if (d && d.id) responseId = d.id; });
 }
 
 function closeIntercept(focusEl) {
@@ -1229,11 +1230,16 @@ function closeIntercept(focusEl) {
 
 function feedbackAnswer(wouldUse, reason, note) {
   track("sayless_intercept_answer", { would_use: wouldUse, reason: reason || null });
-  if (!responseId) return;
-  const body = { event: "answered", id: responseId, would_use: wouldUse };
-  if (reason) body.reason = reason;
-  if (note) body.note = note;
-  feedbackPost(body);
+  // The Yes button has focus the moment the dialog opens, so an answer can
+  // beat the "shown" POST that mints responseId. Queue it on that POST
+  // instead of dropping it; a failed POST still skips silently (null id).
+  shownPost.then(() => {
+    if (!responseId) return;
+    const body = { event: "answered", id: responseId, would_use: wouldUse };
+    if (reason) body.reason = reason;
+    if (note) body.note = note;
+    feedbackPost(body);
+  });
 }
 
 // Answered means done: the dialog closes itself after a beat rather than

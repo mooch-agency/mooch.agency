@@ -825,6 +825,9 @@ async function rewrite(){
       showHeroError(msg, full.trim());
     } else if (full.trim()){
       errEl.textContent = msg;
+      // The partial kept on screen is copyable, same as a full result.
+      copyBtn.dataset.text = full.trim();
+      copyBtn.classList.remove("hidden");
     } else {
       output.innerHTML = '<span class="placeholder-out">His rewrite appears here.</span>';
       errEl.textContent = msg;
@@ -891,13 +894,20 @@ function finalizeMobileHero(text, score) {
 }
 
 // Error while the hero is open: show it where the rewrite would be.
-function showHeroError(msg, hadPartial) {
+// partial is the streamed text kept on screen, "" when nothing arrived.
+// Copy only re-enables once dataset.text holds that partial: the button
+// was blanked and disabled at loading start, so enabling without the
+// text here made it copy an empty string.
+function showHeroError(msg, partial) {
   const e = document.createElement("div");
-  e.style.cssText = "color:var(--error);font-size:14px;" + (hadPartial ? "margin-top:12px;" : "");
+  e.style.cssText = "color:var(--error);font-size:14px;" + (partial ? "margin-top:12px;" : "");
   e.textContent = msg;
-  if (!hadPartial) mOutputText.textContent = "";
+  if (!partial) mOutputText.textContent = "";
   mOutputText.appendChild(e);
-  if (hadPartial) mCopyBtn.removeAttribute("aria-disabled");
+  if (partial) {
+    mCopyBtn.dataset.text = partial;
+    mCopyBtn.removeAttribute("aria-disabled");
+  }
 }
 
 function closeMobileHero() {
