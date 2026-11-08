@@ -1146,8 +1146,8 @@ function track(name, data) {
     submit.textContent = "Sending…"; // honest in-flight cue, not fake progress
     var res, data;
     try {
-      // key is this fill's idempotency id (see form-state.js): inert to the
-      // server today, there for it to dedupe retries once it reads it.
+      // This fill's idempotency key (see form-state.js). The endpoint stores it
+      // as the row's Audit ID, so a retried submit finds its first row.
       var out = await window.moochForm.fetchJSON(
         "/api/audit",
         { url: url, email: email, idempotency_key: m.key() },
