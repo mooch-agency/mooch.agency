@@ -137,6 +137,11 @@ jobs:
       - name: Run site checks
         run: pnpm run ci:check
 
+      # 4. Root unit tests (scripts/*.test.mjs). Until Nov 2026 these ran
+      #    nowhere but by hand: only audit/'s own suite ran in CI.
+      - name: Run unit tests
+        run: pnpm test
+
   # ---------------------------------------------------------------------------
   # security — secret scanning + dependency audit. Parallel with `fast`.
   # ---------------------------------------------------------------------------

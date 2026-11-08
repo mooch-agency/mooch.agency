@@ -131,19 +131,26 @@ From that date it reports as `/paulgraham`.
 
 Prompt pages show how many times the prompt has actually been copied, next to
 the copy button (`.copy-cluster` / `.copy-count` in `ui.css`). The number is
-baked into the HTML by `pnpm counts:build`, which reads the `prompt_copy` event
-for that page's path.
+baked into the HTML by `pnpm counts:build`, which reads it from Notion: the
+same Count property `api/copy-count.js` increments and serves at runtime. It
+used to read the `prompt_copy` analytics event, but analytics misses anyone
+blocking the script, so the baked number sat low and visibly jumped when the
+runtime fetch landed; `scripts/copy-counts.mjs` has the history. The script
+needs `NOTION_TOKEN` (the endpoint's own token; `vercel env pull` fetches it).
 
-Build time, not request time, and deliberately: Vercel issues no read-only
-analytics token, so a page that fetched this on load would mean keeping a
-full-account token in production to render one integer. This way the token never
-leaves the machine running the script and the page ships static.
+Build time, not request time, and deliberately: the page ships static with a
+sensible number already in it, and the runtime fetch merely confirms or
+nudges it instead of overwriting a blank.
 
 The number therefore only moves on deploy, which is fine at these volumes. It is
-a floor, not a true total, since it misses anyone blocking the script. A count of
+a floor, not a true total, until the runtime fetch lands. A count of
 0 hides itself. `pnpm counts:check` fails if a page's number has drifted from
-what analytics now reports; it is **not** in `ci:check`, because the count
+what Notion now reports; it is **not** in `ci:check`, because the count
 legitimately goes stale between deploys and would otherwise fail every PR.
+Everything that **is** in `ci:check` must stay deterministic on committed
+files: the Credit Cards daily job runs it on master before committing, so a
+gate that depends on the network, the environment or the clock silently stops
+perk and archive updates the day it wobbles.
 
 ## Agent discovery
 

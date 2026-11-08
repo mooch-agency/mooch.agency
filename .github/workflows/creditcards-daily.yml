@@ -36,6 +36,7 @@ on:
 
 permissions:
   contents: write
+  issues: write # the failure step below opens an issue
 
 concurrency:
   group: creditcards-daily
@@ -83,3 +84,22 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "Credit Cards: daily refresh"
           git push
+
+      # A failed run means perk flips, New tags, stats and archiving have
+      # stopped, and nothing else says so: scheduled runs fail silently unless
+      # someone watches the Actions tab. One open issue carries the alarm;
+      # repeat failures comment on it rather than piling up duplicates.
+      - name: Open an issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Credit Cards daily job is failing"
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "Failed again: $RUN_URL"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" \
+              --body "The daily job failed, so perk flips, New tags, stats and archiving are stopped until it is fixed. Run: $RUN_URL"
+          fi

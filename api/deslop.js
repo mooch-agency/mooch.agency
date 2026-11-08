@@ -8,7 +8,9 @@
 //   2. X-PAYMENT present    -> facilitator /verify -> run the model ->
 //                              facilitator /settle -> 200 + X-PAYMENT-RESPONSE
 // Settlement happens after the model call succeeds, so a failed run never
-// takes the money.
+// takes the money. A thrown settle is ambiguous (the payment may have landed
+// on-chain), so the paid output is returned with settlement_uncertain: true
+// rather than discarded.
 //
 // Config (Vercel env):
 //   X402_PAY_TO          receiving wallet address. UNSET => endpoint replies
@@ -106,7 +108,12 @@ function rateLimited(ip) {
 // for processing so a duplicate is rejected before it costs an LLM call.
 // Same per-instance caveat as the rate limiter above: good enough to stop
 // casual replay, not a substitute for settle() being the real source of truth.
-const seenNonces = new Map(); // nonce -> "in-flight" | "settled"
+// Nonce lifecycle: "in-flight" from claim until settle resolves, "settled"
+// once the facilitator confirms, "uncertain" when settle threw after the
+// output was produced (the payment may or may not have landed on-chain).
+// "settled" and "uncertain" both block replays for the TTL; only a clean
+// failure releases the nonce for another try.
+const seenNonces = new Map(); // nonce -> { at, state: "in-flight" | "settled" | "uncertain" }
 const NONCE_TTL_MS = 10 * 60_000; // matches the ballpark of a payment's own validity window
 function pruneNonces() {
   const now = Date.now();
@@ -115,8 +122,12 @@ function pruneNonces() {
 function claimNonce(nonce) {
   pruneNonces();
   if (seenNonces.has(nonce)) return false;
-  seenNonces.set(nonce, { at: Date.now() });
+  seenNonces.set(nonce, { at: Date.now(), state: "in-flight" });
   return true;
+}
+function markNonce(nonce, state) {
+  const rec = seenNonces.get(nonce);
+  if (rec) rec.state = state;
 }
 function releaseNonce(nonce) {
   seenNonces.delete(nonce);
@@ -222,7 +233,19 @@ async function runDeslop(text) {
   };
 }
 
-module.exports = async (req, res) => {
+// Test seams. Production uses exactly these defaults; the unit tests
+// (scripts/api-deslop.test.mjs) swap them to drive every payment exit
+// without a facilitator, a wallet or a model call. Vercel still receives
+// the bare handler as module.exports; these ride along as a property.
+const deps = {
+  useFacilitator,
+  runDeslop,
+  decodePayment: (header) => exact.evm.decodePayment(header),
+  findMatchingPaymentRequirements,
+  settleResponseHeader,
+};
+
+const handler = async (req, res) => {
   // Meant for the open agent ecosystem, not just same-origin callers: allow
   // any origin, and let a browser-based agent client past the preflight its
   // fetch triggers for the custom X-PAYMENT header.
@@ -267,13 +290,22 @@ module.exports = async (req, res) => {
 
   let decoded;
   try {
-    decoded = exact.evm.decodePayment(paymentHeader);
+    decoded = deps.decodePayment(paymentHeader);
     decoded.x402Version = X402_VERSION;
   } catch (e) {
     return reply402(res, accepts, "Invalid or malformed payment header");
   }
-  const selected = findMatchingPaymentRequirements(accepts, decoded);
+  const selected = deps.findMatchingPaymentRequirements(accepts, decoded);
   if (!selected) return reply402(res, accepts, "Unable to find matching payment requirements");
+
+  // Validate the body before any stateful or paid work: a bad request must
+  // not cost a facilitator round trip or burn the nonce's claim.
+  const text = String(parseBody(req).text || "");
+  const words = totalWords(text);
+  if (!words) return res.status(400).json({ error: "Body must be JSON: { \"text\": \"...\" }" });
+  if (words > WORD_CAP) {
+    return res.status(400).json({ error: `Too long: ${words} words, cap is ${WORD_CAP}.` });
+  }
 
   // Claim the nonce before doing any paid work. verify() alone doesn't spend
   // it, so without this a replayed X-PAYMENT header across concurrent
@@ -286,7 +318,7 @@ module.exports = async (req, res) => {
   const releaseOnFailure = () => { if (nonce) releaseNonce(nonce); };
 
   const useCdpAuth = NETWORK === "base" && CDP_API_KEY_ID && CDP_API_KEY_SECRET;
-  const { verify, settle } = useFacilitator({
+  const { verify, settle } = deps.useFacilitator({
     url: FACILITATOR_URL,
     ...(useCdpAuth ? { createAuthHeaders: createCdpAuthHeaders } : {}),
   });
@@ -294,43 +326,60 @@ module.exports = async (req, res) => {
     const v = await verify(decoded, selected);
     if (!v.isValid) { releaseOnFailure(); return reply402(res, accepts, v.invalidReason || "Payment invalid"); }
   } catch (e) {
+    // A facilitator we cannot reach is not a bad payment: answer 503 so the
+    // caller retries later, rather than a 402 that reads as "pay again".
     console.error("verify error", e);
     releaseOnFailure();
-    return reply402(res, accepts, "Payment verification failed");
+    return res.status(503).json({ error: "Payment verification unavailable. Try again soon." });
   }
 
   // Payment verified. Do the work BEFORE settling, so a model failure costs
   // the caller nothing.
-  const text = String(parseBody(req).text || "");
-  const words = totalWords(text);
-  if (!words) { releaseOnFailure(); return res.status(400).json({ error: "Body must be JSON: { \"text\": \"...\" }" }); }
-  if (words > WORD_CAP) {
-    releaseOnFailure();
-    return res.status(400).json({ error: `Too long: ${words} words, cap is ${WORD_CAP}.` });
-  }
-
   let result;
-  try { result = await runDeslop(text); }
+  try { result = await deps.runDeslop(text); }
   catch (e) { releaseOnFailure(); return res.status(502).json({ error: "The editor choked. You were not charged." }); }
 
-  try {
-    const s = await settle(decoded, selected);
-    if (!s.success) { releaseOnFailure(); return reply402(res, accepts, s.errorReason || "Payment settlement failed"); }
-    res.setHeader("X-PAYMENT-RESPONSE", settleResponseHeader(s));
-  } catch (e) {
-    console.error("settle error", e);
-    releaseOnFailure();
-    return reply402(res, accepts, "Payment settlement failed");
-  }
-  // Settled: leave the nonce marked as seen for the rest of its TTL so a
-  // stray duplicate request with the same (now-spent) header gets an
-  // instant, cheap rejection instead of a wasted verify() round trip.
-
-  return res.status(200).json({
+  const resultBody = (extra) => ({
     cleaned: result.cleaned,
     changelog: result.changelog,
     words_in: words,
     words_out: totalWords(result.cleaned),
     price: `$${PRICE} USDC on ${NETWORK}`,
+    ...extra,
   });
+
+  try {
+    const s = await settle(decoded, selected);
+    if (!s.success) {
+      // A clean decline: the facilitator answered and the payment did not
+      // land, so the caller was not charged and discarding the output is safe.
+      releaseOnFailure();
+      return reply402(res, accepts, s.errorReason || "Payment settlement failed");
+    }
+    if (nonce) markNonce(nonce, "settled");
+    res.setHeader("X-PAYMENT-RESPONSE", deps.settleResponseHeader(s));
+  } catch (e) {
+    // A thrown settle is ambiguous: the broadcast may have landed, so the
+    // caller may already be charged. The model cost is sunk either way, so
+    // hand over the paid output rather than discard it, keep the nonce
+    // claimed so the same header cannot be replayed, and log enough to
+    // reconcile against the wallet by hand.
+    if (nonce) markNonce(nonce, "uncertain");
+    const auth = (decoded.payload && decoded.payload.authorization) || {};
+    console.error("settle uncertain: output returned without settlement confirmation", {
+      nonce,
+      payer: auth.from,
+      amount: selected.maxAmountRequired,
+      error: String((e && e.message) || e),
+    });
+    return res.status(200).json(resultBody({ settlement_uncertain: true }));
+  }
+  // Settled: leave the nonce marked as seen for the rest of its TTL so a
+  // stray duplicate request with the same (now-spent) header gets an
+  // instant, cheap rejection instead of a wasted verify() round trip.
+
+  return res.status(200).json(resultBody());
 };
+
+module.exports = handler;
+module.exports.deps = deps;

@@ -38,7 +38,8 @@ import path from 'node:path';
 import { load } from 'cheerio';
 import { EXCLUDED, shippedPages } from './site-files.mjs';
 import { CATEGORY_SLUGS, categoryProblems } from './creditcards-categories.mjs';
-import { capNotice, capProblems } from './creditcards-cap.mjs';
+import { capNotice, capProblems, freezeProblems, statusProblems } from './creditcards-cap.mjs';
+import { copyrightYearOk } from './copyright-year.mjs';
 import { archiveProblems } from './creditcards-archive.mjs';
 import { PERK_STATUSES, perkProblems } from './creditcards-perks.mjs';
 import { accessProblems } from './creditcards-access.mjs';
@@ -247,7 +248,10 @@ function checkPage(rel, seenTitles, seenDescs) {
   if (cy) {
     const years = cy[1].match(/\d{4}/g);
     const last = Number(years[years.length - 1]);
-    if (last !== CURRENT_YEAR) {
+    // copyrightYearOk lets January keep last year: the Credit Cards daily job
+    // runs ci:check on master, so an exact-year check stops its bakes on
+    // 1 January until every footer is bumped.
+    if (!copyrightYearOk(last)) {
       fail('Content hygiene', rel, `copyright year is ${cy[1]} (current year is ${CURRENT_YEAR})`, offsetToLine(raw, cy.index));
     }
   }
@@ -584,6 +588,8 @@ function checkCreditCardsData() {
   for (const msg of categoryProblems(data.projects || [])) fail('Data', dataRel, msg);
   for (const msg of accessProblems(data.projects || [])) fail('Data', dataRel, msg);
   for (const msg of capProblems(data.projects || [])) fail('Data', dataRel, msg);
+  for (const msg of statusProblems(data.projects || [])) fail('Data', dataRel, msg);
+  for (const msg of freezeProblems(data)) fail('Data', dataRel, msg);
   for (const msg of archiveProblems(data.projects || [])) fail('Data', dataRel, msg);
   // Not a failure at exactly 50: the PR that approves the 50th says so on CI.
   const notice = capNotice(data.projects || [], data.meta && data.meta.frozenOn);

@@ -9,6 +9,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { clientAbort, pickers, pumpSSE } = require("./_stream.js");
 
 // Provider is a config switch. Default OpenAI (gpt-5.5), the chosen voice for
 // v0.1; Claude is a ready fallback so switching back is a one-env-var change.
@@ -142,51 +143,48 @@ module.exports = async function handler(req, res) {
     : { model: OPENAI_MODEL, max_completion_tokens: MAX_TOKENS, stream: true,
         messages: [{ role: "system", content: system }, { role: "user", content: text.trim() }] };
 
-  let upstream;
-  try {
-    upstream = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
-  } catch (e) {
-    res.write(`event: error\ndata: ${JSON.stringify("Upstream unreachable.")}\n\n`);
-    return res.end();
-  }
-  if (!upstream.ok || !upstream.body) {
-    const detail = await upstream.text().catch(() => "");
-    res.write(`event: error\ndata: ${JSON.stringify("Rewrite failed. Try again.")}\n\n`);
-    console.error(`${PROVIDER} error`, upstream.status, detail.slice(0, 500));
-    return res.end();
+  const sendError = (msg) => {
+    try { res.write(`event: error\ndata: ${JSON.stringify(msg)}\n\n`); } catch {}
+    try { res.end(); } catch {}
+  };
+
+  // Abort the upstream call the moment the client goes away: without this a
+  // closed tab still billed a full completion that nobody read.
+  const guard = clientAbort(res);
+  const result = await pumpSSE({
+    url,
+    headers,
+    body,
+    signal: guard.signal,
+    onToken: (tok) => {
+      try { res.write(`data: ${JSON.stringify(tok)}\n\n`); } catch {}
+    },
+    ...(claude ? pickers.claude : pickers.openaiChat),
+  });
+  guard.settle();
+
+  switch (result.outcome) {
+    case "aborted":
+      try { res.end(); } catch {}
+      return;
+    case "unreachable":
+      return sendError("Upstream unreachable.");
+    case "http_error":
+      console.error(`${PROVIDER} error`, result.status, (result.detail || "").slice(0, 500));
+      return sendError("Rewrite failed. Try again.");
+    case "upstream_error":
+      console.error(`${PROVIDER} stream error`, result.error);
+      return sendError("Rewrite failed. Try again.");
+    case "timeout":
+    case "interrupted":
+      return sendError("Stream interrupted.");
   }
 
-  // Both providers stream SSE; pull the text delta out of each event and
-  // forward it as a clean token. Claude: content_block_delta.delta.text.
-  // OpenAI: choices[0].delta.content.
-  const pickDelta = claude
-    ? (o) => (o.type === "content_block_delta" && o.delta ? o.delta.text : "")
-    : (o) => (o.choices && o.choices[0] && o.choices[0].delta ? o.choices[0].delta.content || "" : "");
-
-  const reader = upstream.body.getReader();
-  const decoder = new TextDecoder();
-  let buf = "";
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const events = buf.split("\n\n");
-      buf = events.pop() || "";
-      for (const ev of events) {
-        const line = ev.split("\n").find((l) => l.startsWith("data:"));
-        if (!line) continue;
-        const payload = line.slice(5).trim();
-        if (!payload || payload === "[DONE]") continue;
-        let obj;
-        try { obj = JSON.parse(payload); } catch { continue; }
-        const tok = pickDelta(obj);
-        if (tok) res.write(`data: ${JSON.stringify(tok)}\n\n`);
-      }
-    }
-  } catch (e) {
-    res.write(`event: error\ndata: ${JSON.stringify("Stream interrupted.")}\n\n`);
-    return res.end();
+  // Clean end. A capped or unterminated stream is flagged first; the data
+  // payload stays "end" because the page's parser skips that value, so older
+  // copies of the page cannot render an event's data as rewrite text.
+  if (result.truncated || !result.sawStop) {
+    res.write("event: truncated\ndata: end\n\n");
   }
   res.write("event: done\ndata: end\n\n");
   res.end();
