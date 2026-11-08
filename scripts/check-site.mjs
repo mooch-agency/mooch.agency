@@ -197,6 +197,38 @@ const discoverPages = () => shippedPages(ROOT);
 
 
 // ---------------------------------------------------------------------------
+// Lead forms: explicit lifecycle
+// ---------------------------------------------------------------------------
+// A form that feeds a lead endpoint must wire the shared lifecycle in
+// form-state.js: the state lives on the form's own data-state, so the page can
+// neither double-submit silently nor strand a form in a half-state CSS cannot
+// see. A lead form may be static markup (the audit band) or a JS template
+// string (AXBeat's rowCta), so this reads the raw page text, not the DOM.
+// Deterministic on committed files only (the ci:check rule in CLAUDE.md).
+const LEAD_ENDPOINTS = ['/api/audit', '/api/axbeat-lead'];
+// The classes lead forms carry today. A new lead form joins this list (and
+// form-state.js) rather than inventing a third lifecycle.
+const LEAD_FORM_TAG = /<form\b[^>]*class=["'][^"']*\b(?:audit-form|mail)\b[^"']*["'][^>]*>/g;
+function checkLeadForms(rel, raw) {
+  if (!LEAD_ENDPOINTS.some((e) => raw.includes(e))) return;
+  if (!/src=["']\/form-state\.js["']/.test(raw)) {
+    fail('Lead forms', rel, 'page posts to a lead endpoint but does not load /form-state.js', null);
+  }
+  LEAD_FORM_TAG.lastIndex = 0;
+  let m;
+  let found = 0;
+  while ((m = LEAD_FORM_TAG.exec(raw))) {
+    found++;
+    if (!/\bdata-state=/.test(m[0])) {
+      fail('Lead forms', rel, 'lead form without data-state (the shared lifecycle in form-state.js)', offsetToLine(raw, m.index));
+    }
+  }
+  if (!found) {
+    fail('Lead forms', rel, 'page posts to a lead endpoint but no lead form (class audit-form or mail) was found: if the form was renamed, update LEAD_FORM_TAG in check-site.mjs', null);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Per-page checks
 // ---------------------------------------------------------------------------
 function checkPage(rel, seenTitles, seenDescs) {
@@ -280,6 +312,9 @@ function checkPage(rel, seenTitles, seenDescs) {
 
   // --- Social cards ---
   checkSocial(rel, raw, $);
+
+  // --- Lead forms: explicit lifecycle ---
+  checkLeadForms(rel, raw);
 
   // --- Uniqueness bookkeeping (evaluated site-wide later) ---
   if (title) (seenTitles[title] ||= []).push(rel);
