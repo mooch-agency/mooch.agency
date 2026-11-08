@@ -79,17 +79,18 @@ Products we ship, prompts you can steal, things we built for fun.
 
 - [Plaything gravity vibe coding app that roasts your ideas. Play→](https://gravity-v0.vercel.app)
 
-**03** How to work with us
+**03** How we work
 
-## Ways to *start*.
+## Decide *slow*, deliver *fast*.
 
-A few ways to start with us depending on what's important to you.
+For every project, we take the time to make good decisions upfront, so that we deliver the right thing in the end.
 
-- [Fixed scope AI Automation *Setup* We find your single highest-leverage AI automation and ship it end to end. Discovery, build and handover included. From €2,500 Book AI Setup→ Starts with a 20-min call](https://cal.eu/mooch/discovery?notes=AI%20Automation%20Setup)
+1. Discover Evidence before opinions  We talk to your users and study the evidence around them: your analytics, your content, your market. No decisions are made on a hunch.
+2. Decide Deliberately slow  We make the calls together: what's in scope, what's out and what matters most. Once we're aligned, building starts.
+3. Deliver Rapid prototyping, then build  Fast, because the key decisions are already made. We prototype, test and build, reviewed with you at every step.
+4. Develop Ongoing  We monitor what we've shipped and keep working with you to iterate, improve and build on what works.
 
-- [01 Whole site Content & UX *Audit* A full review of your site's content and UX, with a prioritised list of fixes. Starts with a 20-min call From €5,000 Get an audit→](https://cal.eu/mooch/discovery?notes=Content%20%26%20UX%20Audit)
-
-- [02 One week UX Research *Sprint* One week of focused user research that tells you what to build next, and what to drop. Starts with a 20-min call From €15,000 Start a sprint→](https://cal.eu/mooch/discovery?notes=UX%20Research%20Sprint)
+This approach ensures you pay to build the right thing once, not the wrong thing twice.
 
 Last Week in AI
 
