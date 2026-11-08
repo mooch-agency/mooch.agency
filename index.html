@@ -1150,7 +1150,7 @@ function track(name, data) {
       // server today, there for it to dedupe retries once it reads it.
       var out = await window.moochForm.fetchJSON(
         "/api/audit",
-        { url: url, email: email, key: m.key() },
+        { url: url, email: email, idempotency_key: m.key() },
         { timeoutMs: 15000 }
       );
       res = out.res;

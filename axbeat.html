@@ -1585,7 +1585,7 @@ function wireReportForms(root) {
 
       // key is this fill's idempotency id (see form-state.js): inert to the
       // server today, there for it to dedupe retries once it reads it.
-      window.moochForm.fetchJSON("/api/axbeat-lead", { email: email, key: m.key() }, { timeoutMs: 15000 })
+      window.moochForm.fetchJSON("/api/axbeat-lead", { email: email, idempotency_key: m.key() }, { timeoutMs: 15000 })
         .then(function (r) {
           settle(r.data && typeof r.data === "object" ? r.data : { ok: false, error: "server" }, null);
         }, function () {

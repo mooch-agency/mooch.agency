@@ -40,9 +40,10 @@
     return (MOVES[from] || []).indexOf(to) !== -1;
   }
 
-  /* Random id per form fill. Rides along on each lead POST as `key`, so the
-     server can drop a retried submission as a duplicate once it learns to
-     read it; until then it is an inert field. */
+  /* Random id per form fill. Rides along on each lead POST as
+     `idempotency_key`, which api/audit.js and api/axbeat-lead.js store as the
+     row's Audit ID, so a retried submission finds its first row instead of
+     duplicating it. */
   function newKey() {
     var bytes = null;
     try {
