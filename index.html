@@ -580,8 +580,8 @@
   /* ───────── How we work ───────── */
   /* The process as an editorial list, the same shape as the work list above it
      so the page reads as one system. An <ol> because the stages are a real
-     sequence; role="list" keeps the semantics once list-style is removed
-     (Safari drops them otherwise). The visible 01-04 is decorative, hence
+     sequence. No role="list": html-validate rejects it as redundant, and CI
+     runs html-validate. The visible 01-04 is decorative, hence
      aria-hidden. Sub-14px labels use --muted-small for AA. */
   .hww-list { list-style: none; border-top: 1px solid var(--hairline); }
   .hww-row {
@@ -1248,7 +1248,7 @@ function track(name, data) {
       </div>
     </div>
 
-    <ol class="hww-list" role="list" data-reveal="child: :scope > *; cap: 5">
+    <ol class="hww-list" data-reveal="child: :scope > *; cap: 5">
       <li class="hww-row">
         <span class="hww-num" aria-hidden="true">01</span>
         <div>
