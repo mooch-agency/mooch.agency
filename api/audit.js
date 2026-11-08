@@ -4,6 +4,13 @@
 // The audit itself is run later by the moochbot batch-runner (manual-first, R2):
 // this endpoint only captures the lead. No audit runs here, no keys but Notion's.
 //
+// Admission (method, kill switch, origin, per-IP rate caps) goes through
+// api/_guard.js, one door shared by every function here; the Notion write goes
+// through api/_notion.js, which carries a real timeout (504 on timeout, 502 on
+// a refusal) and the lead-idempotency lookup. A client may send a one-time
+// idempotency_key with the submission; it becomes the row's Audit ID, so a
+// retried POST finds the row its first attempt created instead of duplicating.
+//
 // Junk defence at the door (v1 audit ticket, story 15 / Work Log 18 Jul):
 //   client-side syntax  ->  mailchecker blocklist  ->  dns.resolveMx.
 // The MX check FAILS OPEN on timeout: one junk row reaching manual review beats a
@@ -16,11 +23,15 @@
 //   NATALIE_USER_ID     Notion user id set as Reviewer on every new row
 //   AUDIT_KILL          optional "1" kill switch -> 503
 
-const dns = require("node:dns").promises;
 const Mailchecker = require("mailchecker");
-
-// The integration was created against this API version (Keystore > Notion).
-const NOTION_VERSION = "2026-03-11";
+const {
+  guard,
+  makeLimiter,
+  sameOriginPolicy,
+  parseGivenBody,
+  hasMailExchanger,
+} = require("./_guard.js");
+const { notion, findLeadByAuditId, isNotionTimeout } = require("./_notion.js");
 
 // Natalie's Notion user id. Overridable by env, but hardcoded so a missing env
 // var never silently drops the Reviewer (which fires her review notification).
@@ -30,9 +41,9 @@ const NATALIE_USER_ID =
 const DATA_SOURCE_ID =
   process.env.AUDIT_LEADS_DS_ID || "fd9fd4d9-944a-4b94-b3ff-7c753be81605";
 
-// Extra hosts allowed on top of the same-origin match below (apex, www, local
-// dev). Preview deploys (*.vercel.app) don't need listing: they pass the
-// same-origin check because their Origin host equals the request Host.
+// Extra hosts allowed on top of the same-origin match (apex, www, local dev).
+// Preview deploys (*.vercel.app) don't need listing: they pass the same-origin
+// check because their Origin host equals the request Host.
 const ALLOWED_HOSTS = [
   "mooch.agency",
   "www.mooch.agency",
@@ -40,37 +51,38 @@ const ALLOWED_HOSTS = [
   "127.0.0.1",
 ];
 
-// The endpoint only ever gets same-origin POSTs from the band, so the real test
-// is "does the Origin host match the host this request came in on". That holds
-// on production, on every Vercel preview URL, and on localhost, with no deploy
-// hostnames hardcoded. A genuine cross-site POST (Origin host != request Host)
-// still fails and is rejected. The static list above is a belt-and-braces extra.
-function originAllowed(origin, host) {
-  let originHost;
-  try {
-    originHost = new URL(origin).hostname.toLowerCase();
-  } catch {
-    return false;
-  }
-  const reqHost = String(host || "").split(":")[0].toLowerCase();
-  if (reqHost && originHost === reqHost) return true;
-  return ALLOWED_HOSTS.includes(originHost);
-}
-
-// Best-effort in-memory limiter, same pattern as api/rewrite.js. Resets when the
-// instance recycles, so it stops casual loops but isn't durable. Three layers:
-// per-IP (min + day), per-audited-domain (day, so one target can't be spammed),
-// and a global daily floor. Durable caps + Cloudflare Turnstile are R3 (story 12);
-// at R2 nothing runs until a human approves the lead, so the real exposure is junk
-// rows, not agent spend. This is the cheap floor until then.
+// Best-effort in-memory limits, per instance. The per-IP caps live in the
+// shared guard (checked at the door, committed only on an otherwise-valid
+// submission, so bad-email attempts no longer burn quota); the two below are
+// endpoint-specific. Durable caps + Cloudflare Turnstile are R3 (story 12);
+// at R2 nothing runs until a human approves the lead, so the real exposure is
+// junk rows, not agent spend.
 const RATE_PER_MIN = 5;
 const RATE_PER_DAY = 30;
 const PER_TARGET_PER_DAY = 10;
 const GLOBAL_PER_DAY = 300;
 const DAY = 86_400_000;
-const hits = new Map();
+const limiter = makeLimiter({ perMin: RATE_PER_MIN, perDay: RATE_PER_DAY });
 const targetHits = new Map();
 let globalDay = [];
+
+const ADMIT = {
+  methods: ["POST"],
+  killEnv: "AUDIT_KILL",
+  // Same-origin only; a missing header is allowed (non-browser callers aren't
+  // the threat here), a present one must match. Blocks casual cross-site abuse.
+  origin: sameOriginPolicy({ hosts: ALLOWED_HOSTS, require: false }),
+  limiter,
+  reply: {
+    method: (res) => {
+      res.setHeader("Allow", "POST");
+      res.status(405).json({ ok: false, error: "method" });
+    },
+    kill: (res) => res.status(503).json({ ok: false, error: "unavailable" }),
+    origin: (res) => res.status(403).json({ ok: false, error: "origin" }),
+    rate: (res) => res.status(429).json({ ok: false, error: "rate" }),
+  },
+};
 
 // Trims a timestamp list to the last `windowMs` and returns whether adding one
 // more would exceed `cap`. Does not mutate on a reject.
@@ -79,21 +91,6 @@ function overCap(list, cap, windowMs, now) {
   list.length = 0;
   list.push(...fresh);
   return fresh.length >= cap;
-}
-
-function rateLimited(ip) {
-  const now = Date.now();
-  const rec = hits.get(ip) || { min: [], day: [] };
-  rec.min = rec.min.filter((t) => now - t < 60_000);
-  rec.day = rec.day.filter((t) => now - t < DAY);
-  if (rec.min.length >= RATE_PER_MIN || rec.day.length >= RATE_PER_DAY) {
-    hits.set(ip, rec);
-    return true;
-  }
-  rec.min.push(now);
-  rec.day.push(now);
-  hits.set(ip, rec);
-  return false;
 }
 
 // Per-audited-domain daily cap + global daily floor. Checked after the URL is
@@ -143,68 +140,25 @@ function emailSyntaxOk(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
-// dns.resolveMx deliverability check. FAILS OPEN on timeout or transient resolver
-// error (better one junk row at review than a lost real lead), but FAILS CLOSED on
-// a definitive negative: NXDOMAIN (ENOTFOUND) = the domain doesn't exist, and
-// no-MX-plus-no-A = nothing to receive mail. Those are the "can't receive mail"
-// verdicts the visitor should see. Fallback to A record covers domains that take
-// mail on the apex without an explicit MX.
-async function hasMailExchanger(domain) {
-  const withTimeout = (p, ms) =>
-    Promise.race([
-      p,
-      new Promise((_, rej) =>
-        setTimeout(() => rej(new Error("__timeout__")), ms)
-      ),
-    ]);
-  const hasARecord = async () => {
-    try {
-      const a = await withTimeout(dns.resolve(domain), 2000);
-      return Array.isArray(a) && a.length > 0;
-    } catch {
-      return false;
-    }
-  };
-  try {
-    const mx = await withTimeout(dns.resolveMx(domain), 3000);
-    if (mx && mx.length > 0) return true;
-    return await hasARecord(); // resolved but empty -> A-record fallback
-  } catch (err) {
-    if (err && err.message === "__timeout__") return true; // slow DNS -> fail open
-    // ENODATA = domain exists but has no MX; fall back to its A record.
-    if (err && err.code === "ENODATA") return await hasARecord();
-    // ENOTFOUND = NXDOMAIN, definitively undeliverable -> fail closed.
-    if (err && err.code === "ENOTFOUND") return false;
-    return true; // any other resolver error -> fail open
-  }
+// A client retry key: becomes the Audit ID, so it has to be filename-plain and
+// long enough not to collide by accident. Anything else is ignored and the
+// server mints its own id, exactly as before the key existed.
+function clientKey(body) {
+  const k = body.idempotency_key;
+  return typeof k === "string" && /^[A-Za-z0-9_-]{8,64}$/.test(k) ? k : null;
 }
 
 async function createLeadRow({ url, email, auditId }) {
-  const token = process.env.NOTION_TOKEN;
-  if (!token) throw new Error("NOTION_TOKEN not set");
-  const res = await fetch("https://api.notion.com/v1/pages", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Notion-Version": NOTION_VERSION,
-      "Content-Type": "application/json",
+  return deps.notion("pages", "POST", {
+    parent: { type: "data_source_id", data_source_id: DATA_SOURCE_ID },
+    properties: {
+      "Site URL": { title: [{ text: { content: url } }] },
+      Email: { email },
+      "Audit ID": { rich_text: [{ text: { content: auditId } }] },
+      Status: { select: { name: "New" } },
+      Reviewer: { people: [{ id: NATALIE_USER_ID }] },
     },
-    body: JSON.stringify({
-      parent: { type: "data_source_id", data_source_id: DATA_SOURCE_ID },
-      properties: {
-        "Site URL": { title: [{ text: { content: url } }] },
-        Email: { email },
-        "Audit ID": { rich_text: [{ text: { content: auditId } }] },
-        Status: { select: { name: "New" } },
-        Reviewer: { people: [{ id: NATALIE_USER_ID }] },
-      },
-    }),
   });
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    throw new Error(`Notion ${res.status}: ${detail.slice(0, 300)}`);
-  }
-  return res.json();
 }
 
 // A short, opaque run id that threads the lead through the pipeline, report and
@@ -215,38 +169,16 @@ function makeAuditId() {
   return `aud_${t}${r}`;
 }
 
-module.exports = async (req, res) => {
-  if (process.env.AUDIT_KILL === "1") {
-    return res.status(503).json({ ok: false, error: "unavailable" });
-  }
-  if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
-    return res.status(405).json({ ok: false, error: "method" });
-  }
+const handler = async (req, res) => {
+  const admit = guard(req, res, ADMIT);
+  if (!admit) return;
+  if (admit.rateLimited) return admit.replyRate();
 
-  // Same-origin only. Blocks casual cross-site abuse of a public write endpoint.
-  const origin = req.headers.origin || "";
-  if (origin && !originAllowed(origin, req.headers.host)) {
-    return res.status(403).json({ ok: false, error: "origin" });
+  const parsed = parseGivenBody(req);
+  if (!parsed.ok) {
+    return res.status(400).json({ ok: false, error: "badjson" });
   }
-
-  const ip =
-    (req.headers["x-forwarded-for"] || "").split(",")[0].trim() ||
-    req.socket?.remoteAddress ||
-    "unknown";
-  if (rateLimited(ip)) {
-    return res.status(429).json({ ok: false, error: "rate" });
-  }
-
-  let body = req.body;
-  if (typeof body === "string") {
-    try {
-      body = JSON.parse(body);
-    } catch {
-      return res.status(400).json({ ok: false, error: "badjson" });
-    }
-  }
-  body = body || {};
+  const body = parsed.body;
 
   const url = normaliseUrl(body.url);
   if (!url) {
@@ -264,9 +196,12 @@ module.exports = async (req, res) => {
       .json({ ok: false, error: "email", reason: "blocklist" });
   }
   const domain = email.split("@")[1];
-  if (!(await hasMailExchanger(domain))) {
+  if (!(await deps.hasMailExchanger(domain))) {
     return res.status(400).json({ ok: false, error: "email", reason: "mx" });
   }
+
+  // Validated: this submission now costs per-IP quota, and only now.
+  admit.commitRate();
 
   // Per-audited-domain + global daily caps, counted only on otherwise-valid
   // submissions so bad-email attempts can't exhaust a target's allowance.
@@ -281,15 +216,41 @@ module.exports = async (req, res) => {
     return res.status(429).json({ ok: false, error: "rate" });
   }
 
-  const auditId = makeAuditId();
+  const key = clientKey(body);
+  const auditId = key ? `aud_${key}` : makeAuditId();
+
+  // A keyed retry finds the row its first attempt created. The lookup fails
+  // open to a create: a rare duplicate at manual review beats a lost lead.
+  if (key) {
+    try {
+      const existing = await deps.findLeadByAuditId(DATA_SOURCE_ID, auditId);
+      if (existing) return res.status(200).json({ ok: true, auditId });
+    } catch (err) {
+      console.error("[audit] idempotency lookup failed:", err.message);
+    }
+  }
+
   try {
     await createLeadRow({ url, email, auditId });
   } catch (err) {
     // The lead IS the product: never silently drop it. Surface a retryable error
     // so the visitor can resubmit, and log loudly for us (Vercel captures stderr).
     console.error("[audit] lead write failed:", err.message);
-    return res.status(502).json({ ok: false, error: "store" });
+    const status = isNotionTimeout(err) ? 504 : 502;
+    return res.status(status).json({ ok: false, error: "store" });
   }
 
   return res.status(200).json({ ok: true, auditId });
 };
+
+// Test seams, same pattern as api/deslop.js: production uses exactly these
+// defaults, the unit tests swap them to drive every exit with no DNS and no
+// Notion. Vercel still receives the bare handler as module.exports.
+const deps = {
+  hasMailExchanger,
+  notion,
+  findLeadByAuditId,
+};
+
+module.exports = handler;
+module.exports.deps = deps;

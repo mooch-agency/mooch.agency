@@ -16,56 +16,35 @@
 // edge refreshes behind it. The page bakes fallback numbers at build time, so
 // a failure here changes nothing visible.
 
+const { guard, makeLimiter, refererPolicy } = require("./_guard.js");
+
 const ALLOWED_HOSTS = ["mooch.agency", "localhost", "127.0.0.1"];
 
-const RATE_PER_MIN = 60;
-const RATE_PER_DAY = 2000;
+// Admission goes through api/_guard.js, the same door as every other
+// function here. CREDITCARDS_STATS_KILL=1 pauses the endpoint, same
+// convention as the others.
+const limiter = makeLimiter({ perMin: 60, perDay: 2000 });
 
-const hits = new Map();
-function rateLimited(ip) {
-  const now = Date.now();
-  const rec = hits.get(ip) || { min: [], day: [] };
-  rec.min = rec.min.filter((t) => now - t < 60_000);
-  rec.day = rec.day.filter((t) => now - t < 86_400_000);
-  if (rec.min.length >= RATE_PER_MIN || rec.day.length >= RATE_PER_DAY) {
-    hits.set(ip, rec);
-    return true;
-  }
-  rec.min.push(now);
-  rec.day.push(now);
-  hits.set(ip, rec);
-  return false;
-}
-
-// Matches api/copy-count.js: drop records with nothing left in a live window,
-// so a warm instance doesn't hold a key for every IP that ever visited.
-function pruneDeadHits() {
-  const now = Date.now();
-  for (const [key, rec] of hits) {
-    const liveMin = rec.min.some((t) => now - t < 60_000);
-    const liveDay = rec.day.some((t) => now - t < 86_400_000);
-    if (!liveMin && !liveDay) hits.delete(key);
-  }
-}
-
-function isAllowedHost(host) {
-  return (
-    ALLOWED_HOSTS.includes(host) ||
-    host.endsWith(".mooch.agency") ||
-    host === "mooch-agency.vercel.app" ||
-    (host.startsWith("mooch-agency-") && host.endsWith(".vercel.app"))
-  );
-}
-
-function originOk(req) {
-  const src = req.headers.origin || req.headers.referer || "";
+const ADMIT = {
+  methods: ["GET"],
+  killEnv: "CREDITCARDS_STATS_KILL",
   // Read-only endpoint: a privacy browser stripping both headers isn't worth
   // blocking, the rate caps are the backstop. Same stance as copy-count GET.
-  if (!src) return true;
-  let host;
-  try { host = new URL(src).hostname; } catch { return false; }
-  return isAllowedHost(host);
-}
+  // Only this project's own preview names count as trusted, not all of
+  // vercel.app.
+  origin: refererPolicy({
+    hosts: ALLOWED_HOSTS,
+    suffixes: [".mooch.agency"],
+    projectPreviews: true,
+  }),
+  limiter,
+  reply: {
+    method: (res) => { res.statusCode = 405; res.end("Method not allowed"); },
+    kill: (res) => { res.statusCode = 503; res.end("Stats are paused. Back shortly."); },
+    origin: (res) => { res.statusCode = 403; res.end("Forbidden"); },
+    rate: (res) => { res.statusCode = 429; res.end("Slow down a moment, then try again."); },
+  },
+};
 
 async function opensea(path) {
   const headers = { accept: "application/json" };
@@ -79,22 +58,11 @@ async function opensea(path) {
 }
 
 module.exports = async function handler(req, res) {
-  if (req.method !== "GET") {
-    res.statusCode = 405;
-    return res.end("Method not allowed");
-  }
-  if (!originOk(req)) {
-    res.statusCode = 403;
-    return res.end("Forbidden");
-  }
-
-  const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "anon";
-  const limited = rateLimited(ip);
-  pruneDeadHits();
-  if (limited) {
-    res.statusCode = 429;
-    return res.end("Slow down a moment, then try again.");
-  }
+  const admit = guard(req, res, ADMIT);
+  if (!admit) return;
+  if (admit.rateLimited) return admit.replyRate();
+  // Nothing to validate on a bare GET: the request is admitted, so it counts.
+  admit.commitRate();
 
   res.setHeader("Content-Type", "application/json; charset=utf-8");
 
