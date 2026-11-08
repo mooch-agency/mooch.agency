@@ -16,6 +16,7 @@
 
 const SAYLESS_SYSTEM = require("./_say-less-system.js");
 const { startRun, endRun } = require("./_langsmith.js");
+const { pickers, pumpSSE } = require("./_stream.js");
 
 const MODEL = process.env.SAYLESS_MODEL || "claude-sonnet-5";
 const MAX_TOKENS = 1500;           // headroom over the longest benchmark reply (~330 words)
@@ -77,68 +78,57 @@ async function streamArm(arm, system, question, write, signal) {
   };
   if (system) body.system = system;
 
-  let upstream;
-  try {
-    upstream = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify(body),
-      signal,
-    });
-  } catch (e) {
-    write({ arm, error: "Upstream unreachable." });
-    return { error: "Upstream unreachable." };
-  }
-  if (!upstream.ok || !upstream.body) {
-    const detail = await upstream.text().catch(() => "");
-    console.error("anthropic error", arm, upstream.status, detail.slice(0, 500));
-    write({ arm, error: "Answer failed. Try again." });
-    return { error: "http " + upstream.status };
+  // The pump owns the lifecycle: abort on the caller's signal, mid-stream
+  // provider errors surfaced instead of falling through to "done", a
+  // truncated answer flagged, and its own timeout so one hung arm cannot
+  // hold the whole response to the platform kill.
+  let full = "";
+  const result = await pumpSSE({
+    url: "https://api.anthropic.com/v1/messages",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": process.env.ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+    },
+    body,
+    signal,
+    onToken: (tok) => {
+      full += tok;
+      write({ arm, delta: tok });
+    },
+    ...pickers.claude,
+  });
+
+  const words = totalWords(full);
+  switch (result.outcome) {
+    case "unreachable":
+      write({ arm, error: "Upstream unreachable." });
+      return { error: "Upstream unreachable." };
+    case "http_error":
+      console.error("anthropic error", arm, result.status, (result.detail || "").slice(0, 500));
+      write({ arm, error: "Answer failed. Try again." });
+      return { error: "http " + result.status };
+    case "upstream_error": {
+      const msg = result.error || "Answer failed. Try again.";
+      write({ arm, error: msg });
+      return { error: msg, text: full, words };
+    }
+    case "timeout":
+      write({ arm, error: "Answer timed out. Try again." });
+      return { error: "timeout", text: full, words };
+    case "aborted":
+      // Client gone: write() is already a no-op. Recorded for the trace.
+      return { error: "aborted", text: full, words };
+    case "interrupted":
+      write({ arm, error: "Stream interrupted." });
+      return { error: "Stream interrupted.", text: full, words };
   }
 
-  const reader = upstream.body.getReader();
-  const decoder = new TextDecoder();
-  let buf = "";
-  let full = "";
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const events = buf.split("\n\n");
-      buf = events.pop() || "";
-      for (const ev of events) {
-        const line = ev.split("\n").find((l) => l.startsWith("data:"));
-        if (!line) continue;
-        const payload = line.slice(5).trim();
-        if (!payload || payload === "[DONE]") continue;
-        let obj;
-        try { obj = JSON.parse(payload); } catch { continue; }
-        // A mid-stream error (overloaded_error and friends) closes the
-        // upstream without a further content_block_delta; without this
-        // check the loop falls through to "done" below and reports a
-        // truncated answer as a clean, complete one.
-        if (obj.type === "error") {
-          const msg = (obj.error && obj.error.message) || "Answer failed. Try again.";
-          write({ arm, error: msg });
-          return { error: msg, text: full, words: totalWords(full) };
-        }
-        if (obj.type === "content_block_delta" && obj.delta && obj.delta.text) {
-          full += obj.delta.text;
-          write({ arm, delta: obj.delta.text });
-        }
-      }
-    }
-  } catch (e) {
-    write({ arm, error: "Stream interrupted." });
-    return { error: "Stream interrupted.", text: full, words: totalWords(full) };
-  }
-  const words = totalWords(full);
-  write({ arm, done: true, words });
+  const evt = { arm, done: true, words };
+  // A capped answer is not a clean one; say so rather than pass it off. The
+  // page ignores fields it does not read, so this is additive on the wire.
+  if (result.truncated || !result.sawStop) evt.truncated = true;
+  write(evt);
   // Returned so the handler can close the LangSmith trace with both answers
   // side by side; the client already has everything it needs from write().
   return { text: full, words };
