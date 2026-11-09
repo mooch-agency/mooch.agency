@@ -135,7 +135,11 @@ const CHECK = ARGV.includes('--check');
 const prevIdx = ARGV.indexOf('--prev');
 const PREV_ARG = prevIdx === -1 ? null : ARGV[prevIdx + 1];
 if (prevIdx !== -1 && !PREV_ARG) { console.error('axbeat-data: --prev needs a file'); process.exit(1); }
-const scanArg = ARGV.find((a, i) => !a.startsWith('-') && i !== prevIdx + 1);
+// The scan path is the first bare argument that is not --prev's value. Guard on
+// prevIdx: without --prev it is -1, and `i !== prevIdx + 1` alone would skip
+// index 0, silently dropping the path the weekly CI bake passes (`..`) and
+// falling back to ../ax-audit, which does not exist on the runner (9 Nov 2026).
+const scanArg = ARGV.find((a, i) => !a.startsWith('-') && (prevIdx === -1 || i !== prevIdx + 1));
 
 const die = (msg) => { console.error(`axbeat-data: ${msg}`); process.exit(1); };
 

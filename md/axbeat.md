@@ -12,34 +12,34 @@ We run [Cloudflare’s agent-readiness](https://blog.cloudflare.com/agent-readin
 
 [What is AX?](https://moochagency.substack.com/p/ax-ux-for-the-other-half-of-the-web) Our essay on agent experience, and why we built AXBeat.
 
-The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's scored agent-readiness checks each passed for their website and their docs, scanned 2 November 2026.
+The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's scored agent-readiness checks each passed for their website and their docs, scanned 9 November 2026.
 
 | # | Chain | Website score | Docs score |
 | --- | --- | --- | --- |
 | 1 | BOB gobob.xyz | 11/17 Agent-Native | 3/17 Basic Web Presence |
-| 2 | Base base.org | 6/17 , up 3 places since 19 Oct Bot-Aware | 10/17 Agent-Integrated |
-| 3 | Lighter lighter.xyz | 4/17 , down 1 place since 19 Oct Basic Web Presence | 7/17 Agent-Integrated |
-| 4 | INTMAX intmax.io | 4/17 Basic Web Presence | 1/17 Not Ready |
-| 5 | Optimism optimism.io | 3/17 , up 1 place since 19 Oct Basic Web Presence | 10/17 Agent-Integrated |
-| 6 | Mantle mantle.xyz | 3/17 , up 1 place since 19 Oct Basic Web Presence | 7/17 Agent-Integrated |
-| 7 | Starknet starknet.io | 3/17 , down 4 places since 19 Oct Basic Web Presence | 9/17 Agent-Integrated |
-| 8 | Linea linea.build | 3/17 Basic Web Presence | 7/17 Agent-Integrated |
-| 9 | Ink inkonchain.com | 3/17 Basic Web Presence | 3/17 Basic Web Presence |
-| 10 | ZKsync zksync.io | 3/17 Basic Web Presence | 3/17 Basic Web Presence |
-| 11 | Morph morph.network | 3/17 Basic Web Presence | 1/17 Not Ready |
-| 12 | Katana katana.network | 3/17 Basic Web Presence | 3/17 Basic Web Presence |
-| 13 | Abstract abs.xyz | 3/17 Basic Web Presence | 9/17 Agent-Integrated |
-| 14 | Scroll scroll.io | 3/17 Basic Web Presence | 1/17 Not Ready |
-| 15 | Taiko taiko.xyz | 3/17 Basic Web Presence | 3/17 Basic Web Presence |
-| 16 | Honeypot v2 cartesi.io | 3/17 Basic Web Presence | 1/17 Not Ready |
-| 17 | Arbitrum arbitrum.io | 2/17 Not Ready | 7/17 Bot-Aware |
-| 18 | Aztec aztec.network | 1/17 Not Ready | 4/17 Basic Web Presence |
+| 2 | Base base.org | 6/17 Bot-Aware | 10/17 Agent-Integrated |
+| 3 | Aztec aztec.network | 5/17 , up 15 places since 2 Nov Agent-Readable | 6/17 Agent-Readable |
+| 4 | Starknet starknet.io | 4/17 , up 3 places since 2 Nov Basic Web Presence | 9/17 Agent-Integrated |
+| 5 | INTMAX intmax.io | 4/17 , down 1 place since 2 Nov Basic Web Presence | 1/17 Not Ready |
+| 6 | Optimism optimism.io | 3/17 , down 1 place since 2 Nov Basic Web Presence | 10/17 Agent-Integrated |
+| 7 | Mantle mantle.xyz | 3/17 , down 1 place since 2 Nov Basic Web Presence | 7/17 Agent-Integrated |
+| 8 | Lighter lighter.xyz | 3/17 , down 5 places since 2 Nov Basic Web Presence | 7/17 Agent-Integrated |
+| 9 | Linea linea.build | 3/17 , down 1 place since 2 Nov Basic Web Presence | 7/17 Agent-Integrated |
+| 10 | Ink inkonchain.com | 3/17 , down 1 place since 2 Nov Basic Web Presence | 3/17 Basic Web Presence |
+| 11 | ZKsync zksync.io | 3/17 , down 1 place since 2 Nov Basic Web Presence | 3/17 Basic Web Presence |
+| 12 | Morph morph.network | 3/17 , down 1 place since 2 Nov Basic Web Presence | 1/17 Not Ready |
+| 13 | Katana katana.network | 3/17 , down 1 place since 2 Nov Basic Web Presence | 3/17 Basic Web Presence |
+| 14 | Abstract abs.xyz | 3/17 , down 1 place since 2 Nov Basic Web Presence | 9/17 Agent-Integrated |
+| 15 | Scroll scroll.io | 3/17 , down 1 place since 2 Nov Basic Web Presence | 1/17 Not Ready |
+| 16 | Taiko taiko.xyz | 3/17 , down 1 place since 2 Nov Basic Web Presence | 3/17 Basic Web Presence |
+| 17 | Honeypot v2 cartesi.io | 3/17 , down 1 place since 2 Nov Basic Web Presence | 1/17 Not Ready |
+| 18 | Arbitrum arbitrum.io | 2/17 , down 1 place since 2 Nov Not Ready | 7/17 Bot-Aware |
 | 19 | Unichain unichain.org | 0/17 Not Ready | 9/17 Agent-Integrated |
 | 20 | ADI Chain adi.foundation | 0/17 Not Ready | 7/17 Agent-Integrated |
 | 21 | Facet facet.org | 0/17 Not Ready | 7/17 Agent-Integrated |
 | 22 | Ethscriptions ethscriptions.com | 0/17 Not Ready | 7/17 Agent-Integrated |
 
-▲▼ Change in rank since the 19 Oct scan.
+▲▼ Change in rank since the 2 Nov scan.
 
 Source: https://mooch.agency/axbeat  
 Contact: hey@mooch.agency
