@@ -135,11 +135,41 @@
     }).finally(function () { clearTimeout(t); });
   }
 
+  /* The way out when a lead can't be saved on our side (a server or network
+     failure, never a validation verdict). A dead Notion token once ate every
+     lead for weeks while the form just said "try again"; one visitor gave up
+     and asked on X instead. So the failure message now carries a mailto link
+     with the request already written, so sending it takes one click. */
+  var FALLBACK_TO = "hey@mooch.agency";
+  function mailtoHref(subject, body) {
+    return "mailto:" + FALLBACK_TO +
+      "?subject=" + encodeURIComponent(subject || "") +
+      "&body=" + encodeURIComponent(body || "");
+  }
+  /* Fills `el` with "<lead> <a>Email hey@mooch.agency</a>". Built from DOM
+     nodes rather than innerHTML, so nothing the visitor typed can inject
+     markup. onClick (optional) is for the page's analytics event. */
+  function renderFallback(el, lead, subject, body, onClick) {
+    if (!el) return;
+    var doc = el.ownerDocument || document;
+    el.textContent = "";
+    el.appendChild(doc.createTextNode(lead + " "));
+    var a = doc.createElement("a");
+    a.className = "form-fallback";
+    a.href = mailtoHref(subject, body);
+    a.textContent = "Email " + FALLBACK_TO;
+    if (onClick) a.addEventListener("click", onClick);
+    el.appendChild(a);
+  }
+
   return {
     machine: machine,
     canMove: canMove,
     newKey: newKey,
     fetchJSON: fetchJSON,
+    mailtoHref: mailtoHref,
+    renderFallback: renderFallback,
+    FALLBACK_TO: FALLBACK_TO,
     COOLDOWN_MS: COOLDOWN_MS,
     MOVES: MOVES
   };
