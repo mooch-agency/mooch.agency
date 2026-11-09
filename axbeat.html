@@ -581,6 +581,10 @@ form.mail { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .secondary { font-size:13px; color:var(--muted); text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--hairline-focus); }
 .secondary:hover { color:var(--ink); text-decoration-color:var(--ink); }
 .said { font-size:13px; color:var(--success); }
+/* A failure used to show in the success green. Errors read as errors, and the
+   mail fallback (form-state.js renderFallback) is a visible underlined link. */
+.mail[data-state="error"] .said { color:var(--error); }
+.said .form-fallback { text-decoration:underline; text-underline-offset:2px; }
 
 /* Column names bolded inside the "How it works" disclosure, so a scanner can
    jump to the sentence about the column they are squinting at. */
@@ -1496,6 +1500,7 @@ function wire(section) {
 function leadErrorCopy(why) {
   return why === "email" ? "That address didn’t check out. Try another." :
     why === "rate" ? "That’s a few too many at once. Try again in a minute." :
+    /* Plain-text fallback only: settle() renders the mailto link instead. */
     "That didn’t send. Mail hey@mooch.agency and we’ll sort it.";
 }
 function wireReportForms(root) {
@@ -1582,7 +1587,16 @@ function wireReportForms(root) {
         live.setAttribute("data-state", "error");
         live.querySelectorAll("input, button").forEach(function (el) { el.disabled = false; });
         var liveSaid = live.querySelector("[data-role=said]");
-        if (liveSaid) liveSaid.textContent = leadErrorCopy(why);
+        if (!liveSaid) return;
+        if (why === "email") { liveSaid.textContent = leadErrorCopy(why); return; }
+        // Our side failed (server, store, network): hand over a ready-written
+        // email so the request still reaches us. See form-state.js.
+        window.moochForm.renderFallback(liveSaid,
+          "That didn’t send on our end.",
+          "AXBeat: " + (chain || "full") + " report request",
+          "Hi Tahi and Natalie,\n\nPlease send me " + (chain ? chain + "’s" : "the") +
+            " full AXBeat report.\n\nWork email: " + email + "\n",
+          function () { track("axbeat_report_fallback", ctx); });
       }
 
       // This fill's idempotency key (see form-state.js). The endpoint stores it

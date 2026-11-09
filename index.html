@@ -347,6 +347,9 @@
   }
   .audit-msg { margin-top: 12px; font-size: 14px; color: var(--error); min-height: 1.2em; }
   .audit-msg:empty { margin-top: 0; min-height: 0; }
+  /* The mail fallback (form-state.js renderFallback): page links carry no
+     underline by default, so this one needs it to read as a link. */
+  .audit-msg .form-fallback { text-decoration: underline; text-underline-offset: 2px; }
   /* Step 2's way back: change the website without abandoning the form. */
   .audit-back {
     display: none; background: none; border: none; padding: 0; cursor: pointer;
@@ -1073,9 +1076,9 @@ function track(name, data) {
     syntax: "That email doesn't look right. Mind checking it?",
     blocklist: "That email doesn't look like it can receive mail. Try another?",
     mx: "That email doesn't look like it can receive mail. Try another?",
-    store: "Something went wrong on our end. Give it another go in a moment.",
+    store: "Something went wrong on our end.",
     rate: "That's a few tries quickly. Give it a minute and try again.",
-    network: "Couldn't reach us just now. Check your connection and try again.",
+    network: "Couldn't reach us just now.",
   };
 
   function setInvalid(el, on) { if (el) el.setAttribute("aria-invalid", on ? "true" : "false"); }
@@ -1084,7 +1087,18 @@ function track(name, data) {
     // error, which a changed field or another submit can leave.
     if (reason === "rate") m.cooldown(); else m.to("error");
     submit.innerHTML = SUBMIT_HTML; // restore the label after "Sending…"
-    msg.textContent = VALIDATION_COPY[reason] || VALIDATION_COPY.store;
+    var copy = VALIDATION_COPY[reason] || VALIDATION_COPY.store;
+    if (reason === "store" || reason === "network" || !VALIDATION_COPY[reason]) {
+      // Our side failed: hand over a ready-written email so the request still
+      // reaches us instead of dying in "try again". See form-state.js.
+      window.moochForm.renderFallback(msg, copy,
+        "Free content audit request",
+        "Hi Tahi and Natalie,\n\nPlease run a free content audit.\n\nWebsite: " +
+          urlEl.value.trim() + "\nEmail: " + emailEl.value.trim() + "\n",
+        function () { track("audit_fallback", { reason: reason }); });
+    } else {
+      msg.textContent = copy;
+    }
     if (focusEl) { setInvalid(focusEl, true); focusField(focusEl); }
     track("audit_validation_fail", { reason: reason });
   }

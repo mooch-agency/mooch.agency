@@ -165,3 +165,11 @@ test('fetchJSON sends the body as JSON and aborts past its deadline', async () =
     /aborted/
   );
 });
+
+// The save-failure fallback: a mailto with the request pre-written, so a lead
+// survives our side failing (a dead Notion token once ate every lead).
+test('mailtoHref pre-fills subject and body, encoded', () => {
+  const href = formState.mailtoHref('AXBeat: Starknet report', 'Email: a&b@x.co\nThanks');
+  assert.equal(href,
+    'mailto:hey@mooch.agency?subject=AXBeat%3A%20Starknet%20report&body=Email%3A%20a%26b%40x.co%0AThanks');
+});
