@@ -522,9 +522,9 @@
   }
   .bento-card:hover { border-color: var(--muted); }
   .bento-card:active { transform: scale(0.96); }
-  .bento-card[data-cat="product"] { background: var(--cat-product); }
-  .bento-card[data-cat="prompt"] { background: var(--cat-prompt); }
-  .bento-card[data-cat="plaything"] { background: var(--cat-plaything); }
+  .bento-card[data-cat="product"] { background: color-mix(in srgb, var(--cat-product) var(--cat-wash), var(--paper)); }
+  .bento-card[data-cat="prompt"] { background: color-mix(in srgb, var(--cat-prompt) var(--cat-wash), var(--paper)); }
+  .bento-card[data-cat="plaything"] { background: color-mix(in srgb, var(--cat-plaything) var(--cat-wash), var(--paper)); }
   .bento-card .label {
     font-family: var(--mono);
     font-size: 10px;
@@ -582,16 +582,22 @@
      so the page reads as one system. An <ol> because the stages are a real
      sequence. No role="list": html-validate rejects it as redundant, and CI
      runs html-validate. The visible 01-04 is decorative, hence
-     aria-hidden. Sub-14px labels use --muted-small for AA. */
+     aria-hidden. Text on the tinted rows uses --muted-small for AA. */
   .hww-list { list-style: none; border-top: 1px solid var(--hairline); }
   .hww-row {
     display: grid;
     grid-template-columns: 40px minmax(0, 1fr);
     gap: 12px 24px;
     align-items: baseline;
-    padding: 36px 4px;
+    padding: 36px clamp(16px, 2.5vw, 28px);
     border-bottom: 1px solid var(--hairline);
   }
+  /* Each stage washed in a category tint, the same pastels and strength as
+     the bento cards above, so the two lists read as one system. */
+  .hww-row[data-cat="ai"] { background: color-mix(in srgb, var(--cat-ai) var(--cat-wash), var(--paper)); }
+  .hww-row[data-cat="prompt"] { background: color-mix(in srgb, var(--cat-prompt) var(--cat-wash), var(--paper)); }
+  .hww-row[data-cat="plaything"] { background: color-mix(in srgb, var(--cat-plaything) var(--cat-wash), var(--paper)); }
+  .hww-row[data-cat="product"] { background: color-mix(in srgb, var(--cat-product) var(--cat-wash), var(--paper)); }
   .hww-num { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: var(--muted-small); }
   .hww-name {
     font-family: var(--serif);
@@ -610,7 +616,7 @@
     letter-spacing: 0.14em;
     color: var(--muted-small);
   }
-  .hww-body { grid-column: 2; color: var(--muted); max-width: 56ch; text-wrap: pretty; }
+  .hww-body { grid-column: 2; color: var(--muted-small); /* AA on the tints */ max-width: 56ch; text-wrap: pretty; }
   .hww-coda { margin-top: 48px; font-size: 15px; color: var(--muted); max-width: 52ch; text-wrap: pretty; }
   @media (min-width: 880px) {
     .hww-row { grid-template-columns: 56px minmax(0, 420px) minmax(0, 1fr); }
@@ -1249,7 +1255,7 @@ function track(name, data) {
     </div>
 
     <ol class="hww-list" data-reveal="child: :scope > *; cap: 5">
-      <li class="hww-row">
+      <li class="hww-row" data-cat="ai">
         <span class="hww-num" aria-hidden="true">01</span>
         <div>
           <h3 class="hww-name">Discover</h3>
@@ -1257,7 +1263,7 @@ function track(name, data) {
         </div>
         <p class="hww-body">We talk to your users and study the evidence around them: your analytics, your content, your market. No decisions are made on a hunch.</p>
       </li>
-      <li class="hww-row">
+      <li class="hww-row" data-cat="prompt">
         <span class="hww-num" aria-hidden="true">02</span>
         <div>
           <h3 class="hww-name">Decide</h3>
@@ -1265,7 +1271,7 @@ function track(name, data) {
         </div>
         <p class="hww-body">We make the calls together: what's in scope, what's out and what matters most. Once we're aligned, building starts.</p>
       </li>
-      <li class="hww-row">
+      <li class="hww-row" data-cat="plaything">
         <span class="hww-num" aria-hidden="true">03</span>
         <div>
           <h3 class="hww-name">Deliver</h3>
@@ -1273,7 +1279,7 @@ function track(name, data) {
         </div>
         <p class="hww-body">Fast, because the key decisions are already made. We prototype, test and build, reviewed with you at every step.</p>
       </li>
-      <li class="hww-row">
+      <li class="hww-row" data-cat="product">
         <span class="hww-num" aria-hidden="true">04</span>
         <div>
           <h3 class="hww-name">Develop</h3>
