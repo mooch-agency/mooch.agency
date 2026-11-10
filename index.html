@@ -525,9 +525,9 @@
   }
   .bento-card:hover { border-color: var(--muted); }
   .bento-card:active { transform: scale(0.96); }
-  .bento-card[data-cat="product"] { background: var(--cat-product); }
-  .bento-card[data-cat="prompt"] { background: var(--cat-prompt); }
-  .bento-card[data-cat="plaything"] { background: var(--cat-plaything); }
+  .bento-card[data-cat="product"] { background: color-mix(in srgb, var(--cat-product) var(--cat-wash), var(--paper)); }
+  .bento-card[data-cat="prompt"] { background: color-mix(in srgb, var(--cat-prompt) var(--cat-wash), var(--paper)); }
+  .bento-card[data-cat="plaything"] { background: color-mix(in srgb, var(--cat-plaything) var(--cat-wash), var(--paper)); }
   .bento-card .label {
     font-family: var(--mono);
     font-size: 10px;
@@ -580,71 +580,51 @@
     .bento-card.tall .name { font-size: 36px; }
   }
 
-  /* ───────── Offers: How to work with us ───────── */
-  /* Featured index: the AI Automation Setup wedge is featured as a tinted hero,
-     the other two sit as numbered rows. Reads as a menu of entry points, not a
-     tiered plan picker. See offer layout explorations for the rationale. */
-
-  .fi-kicker { display: none; } /* section lead already frames the offers */
-  /* These are spans inside an <a>; force block so they stack. */
-  .fi-cat, .fi-name, .fi-blurb { display: block; }
-  .fi-name { text-wrap: balance; }
-  .fi-blurb { text-wrap: pretty; }
-  .fi-hero .fi-foot { display: flex; }
-  .fi-hero {
-    display: block;
-    background: var(--cat-ai);
-    border: 1px solid var(--hairline);
-    border-radius: 4px;
-    padding: clamp(28px, 4vw, 40px);
-    margin-bottom: 8px;
-    text-decoration: none; color: inherit;
-    transition: border-color 0.15s ease, transform 0.15s ease;
-  }
-  .fi-hero:hover { border-color: var(--muted); }
-  @media (prefers-reduced-motion: no-preference) { .fi-hero:hover { transform: translateY(-2px); } }
-  .fi-hero:focus-visible, .fi-row:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-  .fi-cat {
-    font-family: var(--mono);
-    font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em;
-    color: var(--ink); font-weight: 600; margin-bottom: 8px;
-  }
-  .fi-hero .fi-name { font-family: var(--serif); font-size: clamp(34px, 5vw, 48px); line-height: 1; letter-spacing: -0.02em; color: var(--black); margin-bottom: 12px; }
-  .fi-name em { font-style: italic; }
-  .fi-hero .fi-blurb { font-size: 15px; line-height: 1.5; color: var(--ink); opacity: 0.75; max-width: 44ch; margin-bottom: 20px; }
-  .fi-foot { display: flex; align-items: baseline; gap: 16px; }
-  .fi-price { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
-  .fi-act { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted-small); display: inline-flex; align-items: center; gap: 6px; }
-  .fi-act .arrow { font-size: 14px; color: var(--ink); transition: transform 0.2s ease; }
-  .fi-hero:hover .fi-act .arrow, .fi-row:hover .fi-act .arrow { transform: translateX(4px); }
-  .fi-row {
+  /* ───────── How we work ───────── */
+  /* The process as an editorial list, the same shape as the work list above it
+     so the page reads as one system. An <ol> because the stages are a real
+     sequence. No role="list": html-validate rejects it as redundant, and CI
+     runs html-validate. The visible 01-04 is decorative, hence
+     aria-hidden. Text on the tinted rows uses --muted-small for AA. */
+  .hww-list { list-style: none; border-top: 1px solid var(--hairline); }
+  .hww-row {
     display: grid;
-    grid-template-columns: 48px minmax(0,1fr) auto;
-    gap: clamp(16px, 3vw, 32px);
-    align-items: center;
-    padding: 24px 0;
-    border-top: 1px solid var(--hairline);
-    text-decoration: none; color: inherit;
-    transition: background 0.15s ease;
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 12px 24px;
+    align-items: baseline;
+    padding: 36px clamp(16px, 2.5vw, 28px);
+    border-bottom: 1px solid var(--hairline);
   }
-  .fi-row:first-of-type { margin-top: 12px; }
-  .fi-row:hover { background: var(--surface); }
-  .fi-num { font-family: var(--mono); font-size: 13px; color: var(--muted); align-self: start; padding-top: 2px; }
-  .fi-row .fi-cat { font-weight: 400; color: var(--muted); }
-  .fi-row .fi-name { font-family: var(--serif); font-size: clamp(22px, 3.2vw, 26px); line-height: 1; letter-spacing: -0.015em; color: var(--black); margin: 6px 0 8px; }
-  .fi-row .fi-blurb { font-size: 13px; line-height: 1.5; color: var(--muted); max-width: 42ch; }
-  .fi-end { text-align: right; white-space: nowrap; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
-  /* "Starts with a 20-min call" sub-line beneath each offer tile */
-  .fi-sub {
+  /* Each stage washed in a category tint, the same pastels and strength as
+     the bento cards above, so the two lists read as one system. */
+  .hww-row[data-cat="ai"] { background: color-mix(in srgb, var(--cat-ai) var(--cat-wash), var(--paper)); }
+  .hww-row[data-cat="prompt"] { background: color-mix(in srgb, var(--cat-prompt) var(--cat-wash), var(--paper)); }
+  .hww-row[data-cat="plaything"] { background: color-mix(in srgb, var(--cat-plaything) var(--cat-wash), var(--paper)); }
+  .hww-row[data-cat="product"] { background: color-mix(in srgb, var(--cat-product) var(--cat-wash), var(--paper)); }
+  .hww-num { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: var(--muted-small); }
+  .hww-name {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(28px, 3.4vw, 40px);
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    color: var(--black);
+  }
+  .hww-pace {
     display: block;
+    margin-top: 14px;
     font-family: var(--mono);
     font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     color: var(--muted-small);
-    margin-top: 12px;
   }
-  .fi-hero .fi-sub { margin-top: 16px; }
+  .hww-body { grid-column: 2; color: var(--muted-small); /* AA on the tints */ max-width: 56ch; text-wrap: pretty; }
+  .hww-coda { margin-top: 48px; font-size: 15px; color: var(--muted); max-width: 52ch; text-wrap: pretty; }
+  @media (min-width: 880px) {
+    .hww-row { grid-template-columns: 56px minmax(0, 420px) minmax(0, 1fr); }
+    .hww-body { grid-column: 3; }
+  }
 
   /* Contact closer: email fallback text link */
   .contact-fallback {
@@ -658,11 +638,6 @@
     transition: border-color 0.15s ease;
   }
   .contact-fallback a:hover { border-bottom-color: var(--ink); }
-
-  @media (max-width: 600px) {
-    .fi-row { grid-template-columns: 36px 1fr; }
-    .fi-end { grid-column: 2; text-align: left; align-items: flex-start; }
-  }
 
   /* ───────── Newsletter band ───────── */
   /* Hands off to Substack's own /subscribe page with the email prefilled,
@@ -1279,64 +1254,56 @@ function track(name, data) {
   </div>
 </section>
 
-<section class="section" id="offers">
+<!-- How we work: the process, not a menu. Replaced the "Ways to start" offer
+     tiles on 8 Nov 2026. Pure reassurance, so it carries no CTA of its own;
+     the audit band and the contact closer do the converting. Four stages,
+     always in this order (Notion ticket 193ec94c). -->
+<section class="section" id="how-we-work" aria-labelledby="hww-title">
   <div class="section-inner">
     <div class="section-head">
       <div data-reveal="child: :scope > *; cap: 5">
-        <div class="section-num"><strong>03</strong> How to work with us <span class="rule"></span></div>
-        <h2 class="section-title">Ways to <em>start</em>.</h2>
-        <p class="section-lead">A few ways to start with us depending on what's important to you.</p>
+        <div class="section-num"><strong>03</strong> How we work <span class="rule"></span></div>
+        <h2 class="section-title" id="hww-title">Decide <em>slow</em>, deliver <em>fast</em>.</h2>
+        <p class="section-lead">For every project, we take the time to make good decisions upfront, so that we deliver the right thing in the end.</p>
       </div>
     </div>
 
-    <div class="offer-index" data-reveal="child: :scope > *; cap: 5">
-      <!-- Offer tiles: each opens the cal.eu discovery booking in a new tab,
-           with a prefilled ?notes= param naming the offer. -->
-      <a class="fi-hero" data-cat="ai"
-         href="https://cal.eu/mooch/discovery?notes=AI%20Automation%20Setup"
-         target="_blank" rel="noopener">
-        <span class="fi-cat">Fixed scope</span>
-        <span class="fi-name">AI Automation <em>Setup</em></span>
-        <span class="fi-blurb">We find your single highest-leverage AI automation and ship it end to end. Discovery, build and handover included.</span>
-        <span class="fi-foot">
-          <span class="fi-price">From &euro;2,500</span>
-          <span class="fi-act"><span>Book AI Setup</span><span class="arrow">&rarr;</span></span>
-        </span>
-        <span class="fi-sub">Starts with a 20-min call</span>
-      </a>
+    <ol class="hww-list" data-reveal="child: :scope > *; cap: 5">
+      <li class="hww-row" data-cat="ai">
+        <span class="hww-num" aria-hidden="true">01</span>
+        <div>
+          <h3 class="hww-name">Discover</h3>
+          <span class="hww-pace">Evidence before opinions</span>
+        </div>
+        <p class="hww-body">We talk to your users and study the evidence around them: your analytics, your content, your market. No decisions are made on a hunch.</p>
+      </li>
+      <li class="hww-row" data-cat="prompt">
+        <span class="hww-num" aria-hidden="true">02</span>
+        <div>
+          <h3 class="hww-name">Decide</h3>
+          <span class="hww-pace">Deliberately slow</span>
+        </div>
+        <p class="hww-body">We make the calls together: what's in scope, what's out and what matters most. Once we're aligned, building starts.</p>
+      </li>
+      <li class="hww-row" data-cat="plaything">
+        <span class="hww-num" aria-hidden="true">03</span>
+        <div>
+          <h3 class="hww-name">Deliver</h3>
+          <span class="hww-pace">Rapid prototyping, then build</span>
+        </div>
+        <p class="hww-body">Fast, because the key decisions are already made. We prototype, test and build, reviewed with you at every step.</p>
+      </li>
+      <li class="hww-row" data-cat="product">
+        <span class="hww-num" aria-hidden="true">04</span>
+        <div>
+          <h3 class="hww-name">Develop</h3>
+          <span class="hww-pace">Ongoing</span>
+        </div>
+        <p class="hww-body">We monitor what we've shipped and keep working with you to iterate, improve and build on what works.</p>
+      </li>
+    </ol>
 
-      <a class="fi-row" data-cat="audit"
-         href="https://cal.eu/mooch/discovery?notes=Content%20%26%20UX%20Audit"
-         target="_blank" rel="noopener">
-        <span class="fi-num">01</span>
-        <span>
-          <span class="fi-cat">Whole site</span>
-          <span class="fi-name">Content &amp; UX <em>Audit</em></span>
-          <span class="fi-blurb">A full review of your site's content and UX, with a prioritised list of fixes.</span>
-          <span class="fi-sub">Starts with a 20-min call</span>
-        </span>
-        <span class="fi-end">
-          <span class="fi-price">From &euro;5,000</span>
-          <span class="fi-act"><span>Get an audit</span><span class="arrow">&rarr;</span></span>
-        </span>
-      </a>
-
-      <a class="fi-row" data-cat="ux"
-         href="https://cal.eu/mooch/discovery?notes=UX%20Research%20Sprint"
-         target="_blank" rel="noopener">
-        <span class="fi-num">02</span>
-        <span>
-          <span class="fi-cat">One week</span>
-          <span class="fi-name">UX Research <em>Sprint</em></span>
-          <span class="fi-blurb">One week of focused user research that tells you what to build next, and what to drop.</span>
-          <span class="fi-sub">Starts with a 20-min call</span>
-        </span>
-        <span class="fi-end">
-          <span class="fi-price">From &euro;15,000</span>
-          <span class="fi-act"><span>Start a sprint</span><span class="arrow">&rarr;</span></span>
-        </span>
-      </a>
-    </div>
+    <p class="hww-coda">This approach ensures you pay to build the right thing once, not the wrong thing twice.</p>
   </div>
 </section>
 
@@ -1407,7 +1374,7 @@ function track(name, data) {
         <h4>Studio</h4>
         <a href="#work">Work we've done</a>
         <a href="#audit">Free content audit</a>
-        <a href="#offers">Ways to start</a>
+        <a href="#how-we-work">How we work</a>
         <a href="#about">About</a>
       </div>
       <div class="colophon-col">
@@ -1488,14 +1455,6 @@ function track(name, data) {
       card.addEventListener('click', function () {
         var name = card.querySelector('.name');
         window.va('event', { name: 'bento_click', data: { item: name ? name.textContent.trim() : card.href } });
-      });
-    });
-
-    // Offer tiles (How to work with us): open the cal.eu discovery booking in a new tab
-    document.querySelectorAll('.fi-hero, .fi-row').forEach(function (card) {
-      card.addEventListener('click', function () {
-        var name = card.querySelector('.fi-name');
-        window.va('event', { name: 'offer_cta', data: { offer: name ? name.textContent.trim() : card.href } });
       });
     });
 
