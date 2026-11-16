@@ -59,5 +59,14 @@
     },
     "Aztec": { "logo": "/axbeat-logos/aztecnetwork.png" },
     "Ethscriptions": { "logo": "/axbeat-logos/ethscriptions.png" }
-  }
+  },
+  "notChecked": [
+    {
+      "label": "Unichain (apex)",
+      "brand": "Unichain",
+      "check": "discovery.webMcp",
+      "scan": "2026-11-16",
+      "note": "Cloudflare’s WebMCP check timed out on unichain.org in every attempt on 16 Nov, so that check is left out of this week’s website score."
+    }
+  ]
 }

@@ -199,7 +199,8 @@ function flattenChecks(agentReadiness) {
       out[key] = {
         s: check.status,
         m: check.message,
-        v: checkValueFrom(key, check),
+        // A waived check has no answer to read a value from (see applyNotChecked).
+        v: check.status === 'notChecked' ? 'not checked' : checkValueFrom(key, check),
       };
     }
   }
@@ -383,6 +384,51 @@ function checkValueFrom(key, check) {
     return v;
   }
   return null;
+}
+
+// One-scan waivers for a check Cloudflare could not answer (added 16 Nov 2026).
+//
+// The gate below holds the whole board on any unableToCheck. On 16 Nov one check
+// (Unichain's website, discovery.webMcp) came back unableToCheck on 10 of 10
+// attempts across two runs while every other row was clean, and Tahi chose to
+// publish with that one check shown as not checked rather than hold the week.
+//
+// A waiver lives in scripts/axbeat-chains.json under "notChecked" and names the
+// scan label, the check (category.key, as the gate prints it) and the scan date
+// (YYYY-MM-DD, UTC). It only applies to a scan from that exact date, so it can
+// never quietly cover a later week: an unmatched waiver is ignored with a warning
+// and can be deleted. A waived check is baked with status "notChecked", which
+// the scores leave out exactly like Cloudflare's own "neutral" (so the host is
+// scored out of one fewer check), and the waiver's note joins the row's note.
+// --check refuses any notChecked status that no waiver for that date covers.
+function applyNotChecked(scan, waivers) {
+  const day = String(scan.scannedAt || '').slice(0, 10);
+  const used = [];
+  for (const w of waivers) {
+    if (w.scan !== day) {
+      console.warn(`axbeat-data: notChecked waiver for ${w.label} ${w.check} is for ${w.scan}, not this ${day} scan; ignored (delete it)`);
+      continue;
+    }
+    const [category, key] = String(w.check).split('.');
+    const row = scan.results.find((r) => r.label === w.label);
+    const check = row?.agentReadiness?.checks?.[category]?.[key];
+    if (!check) die(`notChecked waiver names ${w.label} ${w.check}, which is not in the scan`);
+    if (check.status !== 'unableToCheck') {
+      console.warn(`axbeat-data: ${w.label} ${w.check} came back ${check.status}, so its waiver is not needed; ignored`);
+      continue;
+    }
+    if (!w.brand || !w.note) die(`notChecked waiver for ${w.label} needs a brand and a note`);
+    check.status = 'notChecked';
+    used.push(w);
+  }
+  return used;
+}
+
+// Mirrors the waiver test above for --check, which only has the baked page.
+function waived(waivers, scannedAt, brandName, key) {
+  const day = String(scannedAt || '').slice(0, 10);
+  return waivers.some((w) => w.scan === day && w.check.split('.')[1] === key &&
+    (w.name || w.brand) === brandName);
 }
 
 // The publication gate, mirroring ax-audit/bin/gate.mjs. See the header note.
@@ -601,6 +647,10 @@ function build(scanPath) {
     die(`scan has ${scan.results.length} rows but the targets file lists ${targets.targets.length}`);
   }
 
+  // One-off waivers (see applyNotChecked). Applied before the gate so a waived
+  // check no longer reads as unableToCheck; anything not waived still holds.
+  const notChecked = applyNotChecked(scan, JSON.parse(readFileSync(OVERLAY, 'utf8')).notChecked || []);
+
   // Hold the whole run on any row we cannot stand behind, and say which.
   const held = scan.results
     .map((row, i) => ({ label: row.label || targets.targets[i]?.label, why: heldReason(row) }))
@@ -630,12 +680,14 @@ function build(scanPath) {
       if (!e.site || !e.docs) die(`${e.brand} is missing its ${e.site ? 'docs' : 'apex'} host`);
       const ed = overlay[e.brand] || {};
       if (!ed.logo) die(`${e.brand} has no logo in scripts/axbeat-chains.json`);
+      // A waived check says so in the row's own note, after any standing caveat.
+      const notes = [ed.note, ...notChecked.filter((w) => w.brand === e.brand).map((w) => w.note)].filter(Boolean);
       return {
         name: ed.name || e.brand,
         slug: slugFrom(ed.name || e.brand),
         domain: e.site.url,
         tvs: e.tvs,
-        note: ed.note || null,
+        note: notes.length ? notes.join(' ') : null,
         logo: ed.logo,
         site: e.site,
         docs: e.docs,
@@ -687,7 +739,7 @@ function scoredCount(view) {
   let total = 0;
   for (const [key, check] of Object.entries(view.checks || {})) {
     if (PAYMENT_KEYS.includes(key)) continue;
-    if (check.s === 'neutral') continue;
+    if (check.s === 'neutral' || check.s === 'notChecked') continue;
     total += 1;
     if (check.s === 'pass') found += 1;
   }
@@ -811,6 +863,12 @@ function check() {
       const unable = Object.entries(h.checks || {}).filter(([, c]) => c.s === 'unableToCheck');
       want(unable.length === 0,
         `${r.name} ${view}: shipped with unableToCheck on ${unable.map(([k]) => k).join(', ')}`);
+      // A notChecked check is only allowed under a waiver for this scan's date.
+      const waivers = JSON.parse(readFileSync(OVERLAY, 'utf8')).notChecked || [];
+      for (const [k] of Object.entries(h.checks || {}).filter(([, c]) => c.s === 'notChecked')) {
+        want(waived(waivers, data.scannedAt, r.name, k),
+          `${r.name} ${view}: ${k} is notChecked with no waiver for this scan in scripts/axbeat-chains.json`);
+      }
       want(typeof h.url === 'string' && h.url.length > 0, `${r.name} ${view}: no host`);
     }
   }
@@ -918,6 +976,12 @@ function check() {
       const h = r[view];
       if (!h) continue;
       for (const [key, c] of Object.entries(h.checks || {})) {
+        // A waived check (applyNotChecked) has no answer to verify; the waiver
+        // itself is asserted above, so here it only has to carry the fixed word.
+        if (c.s === 'notChecked') {
+          want(c.v === 'not checked', `${r.name} ${view} ${key}: notChecked but its panel value is "${c.v}"`);
+          continue;
+        }
         if (HTTP_STATUS_KEYS.has(key)) {
           if (c.s === 'pass') {
             want(/^2\d\d$/.test(c.v || ''),
