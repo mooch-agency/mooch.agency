@@ -16,14 +16,14 @@ The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's score
 
 | # | Chain | Website score | Docs score |
 | --- | --- | --- | --- |
-| 1 | Aztec aztec.network | 13/17 , up 2 places since 9 Nov Agent-Integrated | 6/17 Agent-Readable |
-| 2 | BOB gobob.xyz | 11/17 , down 1 place since 9 Nov Agent-Native | 3/17 Basic Web Presence |
-| 3 | Base base.org | 6/17 , down 1 place since 9 Nov Bot-Aware | 10/17 Agent-Integrated |
-| 4 | Starknet starknet.io | 4/17 Basic Web Presence | 9/17 Agent-Integrated |
-| 5 | INTMAX intmax.io | 4/17 Basic Web Presence | 1/17 Not Ready |
-| 6 | Optimism optimism.io | 3/17 Basic Web Presence | 10/17 Agent-Integrated |
-| 7 | Mantle mantle.xyz | 3/17 Basic Web Presence | 7/17 Agent-Integrated |
-| 8 | Lighter lighter.xyz | 3/17 Basic Web Presence | 7/17 Agent-Integrated |
+| 1 | Aztec aztec.network | 13/17 Agent-Integrated | 6/17 Agent-Readable |
+| 2 | BOB gobob.xyz | 11/17 Agent-Native | 3/17 Basic Web Presence |
+| 3 | Base base.org | 6/17 Bot-Aware | 10/17 Agent-Integrated |
+| 4 | INTMAX intmax.io | 4/17 , up 1 place since 16 Nov Basic Web Presence | 1/17 Not Ready |
+| 5 | Optimism optimism.io | 3/17 , up 1 place since 16 Nov Basic Web Presence | 10/17 Agent-Integrated |
+| 6 | Mantle mantle.xyz | 3/17 , up 1 place since 16 Nov Basic Web Presence | 7/17 Agent-Integrated |
+| 7 | Lighter lighter.xyz | 3/17 , up 1 place since 16 Nov Basic Web Presence | 7/17 Agent-Integrated |
+| 8 | Starknet starknet.io | 3/17 , down 4 places since 16 Nov Basic Web Presence | 9/17 Agent-Integrated |
 | 9 | Linea linea.build | 3/17 Basic Web Presence | 7/17 Agent-Integrated |
 | 10 | Ink inkonchain.com | 3/17 Basic Web Presence | 3/17 Basic Web Presence |
 | 11 | ZKsync zksync.io | 3/17 Basic Web Presence | 3/17 Basic Web Presence |
@@ -34,12 +34,12 @@ The top 22 Layer 2 rollups by value secured, with how many of Cloudflare's score
 | 16 | Taiko taiko.xyz | 3/17 Basic Web Presence | 3/17 Basic Web Presence |
 | 17 | Honeypot v2 cartesi.io | 3/17 Basic Web Presence | 1/17 Not Ready |
 | 18 | Arbitrum arbitrum.io | 2/17 Not Ready | 7/17 Bot-Aware |
-| 19 | Unichain unichain.org | 0/16 Not Ready | 9/17 Agent-Integrated |
+| 19 | Unichain unichain.org | 0/17 Not Ready | 9/17 Agent-Integrated |
 | 20 | ADI Chain adi.foundation | 0/17 Not Ready | 7/17 Agent-Integrated |
 | 21 | Facet facet.org | 0/17 Not Ready | 7/17 Agent-Integrated |
 | 22 | Ethscriptions ethscriptions.com | 0/17 Not Ready | 7/17 Agent-Integrated |
 
-▲▼ Change in rank since the 9 Nov scan.
+▲▼ Change in rank since the 16 Nov scan.
 
 Source: https://mooch.agency/axbeat  
 Contact: hey@mooch.agency
