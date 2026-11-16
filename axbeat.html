@@ -391,8 +391,11 @@ table.board tr.row:focus-visible {
    invisible even at 12px; a separate Move column squeezed the chain name to
    "Optimis" on a phone; this sits in the score cell's spare room instead.
    Green and red are a second use of the board's one colour (see the score
-   comment above): accepted, because a rank move is a result, like a pass. */
-.mv { font-family:var(--mono); font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; line-height:1; white-space:nowrap; }
+   comment above): accepted, because a rank move is a result, like a pass.
+   margin-left:auto pins every marker to the cell's right edge (Tahi, 16 Nov
+   2026): beside the number it drifted left on a shorter score ("6/17" vs
+   "13/17"), so the column of markers read ragged. */
+.mv { margin-left:auto; font-family:var(--mono); font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; line-height:1; white-space:nowrap; }
 .mv-up { color:var(--success); }
 .mv-down { color:var(--error); }
 .mv-new { font-size:9.5px; font-weight:400; text-transform:uppercase; letter-spacing:.08em; color:var(--muted-small); }
@@ -460,8 +463,10 @@ table.board col.c-chain { width:auto; }
 table.board col.c-url { width:auto; }
 table.board col.c-ai { width:auto; }
 table.board col.c-plat { width:auto; }
-/* 11.5em, up from 9.5em, to hold the rank move after "11/17" (see .mv). */
-table.board col.c-score { width:11.5em; }
+/* 12em, up from 9.5em, to hold the rank move after "13/17" (see .mv). At
+   11.5em a two-digit score plus its marker overflowed the cell by ~7px, which
+   left those markers further right than a "6/17" row's (16 Nov 2026). */
+table.board col.c-score { width:12em; }
 
 /* URL, Built on and AI Rules change value with the view (the docs host has
    its own address and builder), so the column widths have to be law rather
