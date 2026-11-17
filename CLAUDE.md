@@ -334,6 +334,36 @@ Perks view) and its baked opening line (`perksLine()`), but is now a link to
 (`/api/creditcards-subscribe` 303, `/api/creditcards-portal` 302, in
 `vercel.json`), so emails already sent still land somewhere useful.
 
+## Workshop kits (`/kit/<slug>`)
+
+Each workshop's recipe kit is a static page, baked from its Notion page into
+`kit/<slug>.html` and served at `mooch.agency/kit/<slug>`. Added 17 Nov 2026
+after the Heed Capital kit, served from Notion Sites, stalled on the venue's
+shared Wi-Fi on both days: one Notion page load is about 8 MB across about 790
+requests, the baked page is about 23 KB plus the shared CSS.
+
+**Notion stays the source.** Never hand-edit `kit/*.html`: edit the kit in
+Notion, then re-bake and commit.
+
+```
+NOTION_TOKEN=ntn_... pnpm kit:build          # every kit in data/kits.json
+NOTION_TOKEN=ntn_... pnpm kit:build heed     # one kit
+```
+
+- Register a kit in `data/kits.json` (slug, Notion page id, meta description).
+- The token is the "moochbot" integration's (Keystore, Notion section), and the
+  kit page must be shared with that integration. The bake needs the network, so
+  it is not in `ci:check`; `ci:validate-html` does cover `kit/*.html`.
+- `scripts/kit-render.mjs` renders the block types the kits use (paragraphs,
+  headings, toggles, callouts, code, tables, lists, dividers) and **throws on
+  anything else**, so a kit never ships with a section silently missing.
+- Every code block is a prompt, so each gets a Copy button (`state.js`,
+  event `kit_copy` with the page title).
+- Kits are client handouts, not site pages: `noindex`, in `kit/` where
+  `check-site` doesn't look, and out of `sitemap.xml` and `llms.txt`.
+- Send attendees the link the day before, so they open it before the room's
+  Wi-Fi fills up.
+
 ## Voice
 British English, terse, no em dashes. Full house style: MOOCHBOT.md in Notion.
 
